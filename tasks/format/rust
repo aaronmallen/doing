@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+#MISE description="Format rust files"
+#MISE tools.rust="nightly"
+#MISE alias=["fmt:rust", "fmt:rs", "format:rs"]
+
+set -e
+
+cargo sort --workspace --config .config/tomlfmt.toml
+cargo +nightly fmt --all -- --config-path .config/rustfmt.toml
+cargo clippy --fix --allow-dirty --allow-staged

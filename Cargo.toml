@@ -1,0 +1,7 @@
+[package]
+description = "A command line tool for remembering what you were doing and tracking what you've done"
+edition = "2024"
+license = "MIT"
+name = "doing"
+repository = "https://github.com/aaronmallen/doing"
+version = "0.1.0"

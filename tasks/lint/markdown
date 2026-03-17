@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Lint markdown files"
+#MISE alias=["l:md", "l:markdown", "lint:md"]
+
+set -e
+
+markdownlint-cli2 --config .config/.markdownlint.yml "*.md" "**/*.md" "#.cargo" "#.mise" "#.mise-data" "#coverage" "#target" "#tmp" "$@"

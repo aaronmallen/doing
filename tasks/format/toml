@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Format toml files"
+#MISE alias=["fmt:toml"]
+
+set -e
+
+taplo format --config .config/taplo.toml

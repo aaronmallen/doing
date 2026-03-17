@@ -1,0 +1,34 @@
+[settings]
+lockfile = true
+
+[task_config]
+includes = ["tasks"]
+
+[tasks.format]
+description = "Format all files"
+alias = ["fmt"]
+depends = ["format:**"]
+
+[tasks.lint]
+description = "Lint all files"
+alias = ["l"]
+depends = ["lint:**"]
+
+[tools]
+"cargo:cargo-audit" = "latest"
+"cargo:cargo-llvm-cov" = "latest"
+"cargo:cargo-nextest" = "latest"
+"cargo:cargo-outdated" = "latest"
+"cargo:cargo-sort" = "latest"
+editorconfig-checker = "latest"
+"gem:doing" = "latest"
+markdownlint-cli2 = "latest"
+taplo = "latest"
+
+[[tools.rust]]
+components = "clippy"
+version = "latest"
+
+[[tools.rust]]
+components = "rustfmt"
+version = "nightly"

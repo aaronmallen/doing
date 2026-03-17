@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Audit dependencies"
+
+set -e
+
+cargo audit
+cargo outdated

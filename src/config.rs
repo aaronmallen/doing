@@ -18,6 +18,7 @@ use crate::{errors::Result, paths::expand_tilde};
 #[serde(default)]
 pub struct AutotagConfig {
   pub synonyms: HashMap<String, Vec<String>>,
+  pub transform: Vec<String>,
   pub whitelist: Vec<String>,
 }
 

@@ -1,7 +1,7 @@
 use regex::Regex;
 use sublime_fuzzy::best_match;
 
-use crate::config::SearchConfig;
+use crate::{config::SearchConfig, taskpaper::Entry};
 
 /// How text comparisons handle letter case.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -42,6 +42,25 @@ pub fn matches(text: &str, mode: &SearchMode, case: CaseSensitivity) -> bool {
     SearchMode::Pattern(tokens) => matches_pattern(text, tokens, case),
     SearchMode::Regex(rx) => rx.is_match(text),
   }
+}
+
+/// Test whether an entry matches the given search mode and case sensitivity.
+///
+/// Searches the entry title, and optionally the note lines when `include_notes` is `true`.
+/// Returns `true` if the title or any note line matches.
+pub fn matches_entry(entry: &Entry, mode: &SearchMode, case: CaseSensitivity, include_notes: bool) -> bool {
+  if matches(entry.title(), mode, case) {
+    return true;
+  }
+
+  if include_notes {
+    let note_text = entry.note().lines().join(" ");
+    if !note_text.is_empty() && matches(&note_text, mode, case) {
+      return true;
+    }
+  }
+
+  false
 }
 
 /// Build a [`SearchMode`] and [`CaseSensitivity`] from a raw query string and config.
@@ -392,6 +411,72 @@ mod test {
         "ab",
         0,
         CaseSensitivity::Sensitive
+      ));
+    }
+  }
+
+  mod matches_entry {
+    use chrono::{Local, TimeZone};
+
+    use super::*;
+    use crate::taskpaper::{Note, Tags};
+
+    fn sample_entry() -> Entry {
+      Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "Working on search feature",
+        Tags::new(),
+        Note::from_str("Added fuzzy matching\nFixed regex parsing"),
+        "Currently",
+        None::<String>,
+      )
+    }
+
+    #[test]
+    fn it_matches_title() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("search".into())]);
+
+      assert!(super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_matches_note_when_include_notes_enabled() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
+
+      assert!(super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        true,
+      ));
+    }
+
+    #[test]
+    fn it_skips_note_when_include_notes_disabled() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
+
+      assert!(!super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_returns_false_when_nothing_matches() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("nonexistent".into())]);
+
+      assert!(!super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        true,
       ));
     }
   }

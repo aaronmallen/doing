@@ -1,5 +1,6 @@
 pub mod args;
 pub mod editor;
+pub mod pager;
 
 use std::{ffi::OsString, path::PathBuf};
 

@@ -1,0 +1,108 @@
+use std::{
+  io::{self, Write},
+  process::{Command, Stdio},
+};
+
+use crate::config::Config;
+
+/// Write output, using the pager when pagination is enabled.
+///
+/// Paginates when `force_pager` is `true` or when config `paginate` is `true`.
+/// Otherwise writes directly to stdout.
+pub fn output(content: &str, config: &Config, force_pager: bool) -> io::Result<()> {
+  if force_pager || config.paginate {
+    paginate(content, config)
+  } else {
+    io::stdout().write_all(content.as_bytes())
+  }
+}
+
+/// Pipe output through the configured pager.
+///
+/// If the pager cannot be launched (e.g. command not found), the content is written
+/// directly to stdout as a fallback.
+pub fn paginate(content: &str, config: &Config) -> io::Result<()> {
+  let pager = resolve_pager(config);
+  let parts: Vec<&str> = pager.split_whitespace().collect();
+  let (cmd, args) = parts.split_first().expect("pager command must not be empty");
+
+  match Command::new(cmd).args(args).stdin(Stdio::piped()).spawn() {
+    Ok(mut child) => {
+      if let Some(ref mut stdin) = child.stdin {
+        let _ = stdin.write_all(content.as_bytes());
+      }
+      child.wait()?;
+      Ok(())
+    }
+    Err(_) => {
+      // Pager not available, write directly to stdout.
+      io::stdout().write_all(content.as_bytes())
+    }
+  }
+}
+
+/// Resolve the pager command to use.
+///
+/// Priority: config `editors.pager` → `$PAGER` → `less -FRX`.
+fn resolve_pager(config: &Config) -> String {
+  if let Some(ref pager) = config.editors.pager {
+    return pager.clone();
+  }
+
+  if let Ok(pager) = crate::config::env::PAGER.value() {
+    return pager;
+  }
+
+  "less -FRX".into()
+}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  mod output {
+    use super::*;
+
+    #[test]
+    fn it_does_not_paginate_when_disabled() {
+      let config = Config {
+        paginate: false,
+        ..Config::default()
+      };
+
+      let result = super::super::output("", &config, false);
+
+      assert!(result.is_ok());
+    }
+  }
+
+  mod resolve_pager {
+    use super::*;
+
+    #[test]
+    fn it_returns_a_pager_command() {
+      let config = Config::default();
+
+      let pager = super::super::resolve_pager(&config);
+
+      assert!(!pager.is_empty());
+    }
+
+    #[test]
+    fn it_uses_config_pager_when_set() {
+      let config = Config {
+        editors: crate::config::EditorsConfig {
+          config: None,
+          default: None,
+          doing_file: None,
+          pager: Some("bat".into()),
+        },
+        ..Config::default()
+      };
+
+      let pager = super::super::resolve_pager(&config);
+
+      assert_eq!(pager, "bat");
+    }
+  }
+}

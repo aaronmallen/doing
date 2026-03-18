@@ -21,5 +21,8 @@ pub static DOING_QUIET: Envar<bool> = Envar::on_demand("DOING_QUIET", || EnvarDe
 /// Standard `$EDITOR` environment variable.
 pub static EDITOR: Envar<String> = Envar::on_demand("EDITOR", || EnvarDef::Unset);
 
+/// Standard `$PAGER` environment variable.
+pub static PAGER: Envar<String> = Envar::on_demand("PAGER", || EnvarDef::Unset);
+
 /// Standard `$VISUAL` environment variable.
 pub static VISUAL: Envar<String> = Envar::on_demand("VISUAL", || EnvarDef::Unset);

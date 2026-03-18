@@ -1,8 +1,11 @@
+mod document;
 mod entries;
 mod note;
 mod section;
 mod tags;
 
+#[allow(unused_imports)]
+pub use document::Document;
 #[allow(unused_imports)]
 pub use entries::Entry;
 #[allow(unused_imports)]

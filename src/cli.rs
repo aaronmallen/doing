@@ -223,8 +223,9 @@ enum Command {
   Recent,
   /// Redo the last undone change
   Redo,
-  /// Reset the doing file
-  Reset,
+  /// Reset the start date of the last entry
+  #[command(visible_alias = "begin")]
+  Reset(commands::reset::Command),
   /// Move entries between sections
   Rotate,
   /// List available sections
@@ -271,6 +272,7 @@ impl Command {
       Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Note(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
+      Self::Reset(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
       _ => todo!(),
     }

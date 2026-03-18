@@ -118,6 +118,11 @@ impl Entry {
     &self.section
   }
 
+  /// Set the start date.
+  pub fn set_date(&mut self, date: DateTime<Local>) {
+    self.date = date;
+  }
+
   /// Check whether the entry should receive a `@done` tag.
   ///
   /// Returns `false` if any pattern in `never_finish` matches this entry's

@@ -1,3 +1,4 @@
+mod cli;
 mod config;
 mod errors;
 mod ops;
@@ -7,5 +8,8 @@ mod template;
 mod time;
 
 fn main() {
-  println!("Hello, world!");
+  if let Err(e) = cli::run() {
+    eprintln!("{e}");
+    std::process::exit(1);
+  }
 }

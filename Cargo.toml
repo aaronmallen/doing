@@ -8,8 +8,11 @@ version = "0.1.0"
 
 [dependencies]
 chrono = { features = ["serde"], version = "0.4" }
+clap = { features = ["derive"], version = "4" }
 dir_spec = "0.5"
+env_logger = "0.11"
 json_comments = "0.2"
+log = "0.4"
 md5 = "0.8"
 regex = "1"
 serde = { features = ["derive"], version = "1" }

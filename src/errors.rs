@@ -10,6 +10,10 @@ pub enum Error {
   #[error("configuration error: {0}")]
   Config(String),
 
+  /// An invalid or unrecognized time expression was provided.
+  #[error("invalid time expression: {0}")]
+  InvalidTimeExpression(String),
+
   /// An I/O error occurred.
   #[error(transparent)]
   Io(#[from] io::Error),

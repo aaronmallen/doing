@@ -225,7 +225,7 @@ enum Command {
   /// Show recent entries
   Recent(commands::recent::Command),
   /// Redo the last undone change
-  Redo,
+  Redo(commands::redo::Command),
   /// Reset the start date of the last entry
   #[command(visible_alias = "begin")]
   Reset(commands::reset::Command),
@@ -251,7 +251,7 @@ enum Command {
   /// Show entries from today
   Today(commands::today::Command),
   /// Undo the last change
-  Undo,
+  Undo(commands::undo::Command),
   /// Update doing to the latest version
   #[command(hide = true)]
   Update,
@@ -282,6 +282,7 @@ impl Command {
       Self::On(cmd) => cmd.call(ctx),
       Self::Open(cmd) => cmd.call(ctx),
       Self::Recent(cmd) => cmd.call(ctx),
+      Self::Redo(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),
       Self::Rotate(cmd) => cmd.call(ctx),
       Self::Sections(cmd) => cmd.call(ctx),
@@ -291,6 +292,7 @@ impl Command {
       Self::TagDir(cmd) => cmd.call(ctx),
       Self::Tags(cmd) => cmd.call(ctx),
       Self::Today(cmd) => cmd.call(ctx),
+      Self::Undo(cmd) => cmd.call(ctx),
       Self::View(cmd) => cmd.call(ctx),
       Self::Views(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),

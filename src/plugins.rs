@@ -1,3 +1,8 @@
+mod csv;
+mod doing;
+mod json;
+mod taskpaper;
+
 use std::collections::HashMap;
 
 use regex::Regex;
@@ -119,8 +124,12 @@ struct RegisteredPlugin {
 
 /// Build the default export registry with all built-in export plugins.
 pub fn default_registry() -> ExportRegistry {
-  // Built-in plugins will be registered here as they are implemented.
-  ExportRegistry::new()
+  let mut registry = ExportRegistry::new();
+  registry.register(Box::new(csv::CsvExport));
+  registry.register(Box::new(doing::DoingExport));
+  registry.register(Box::new(json::JsonExport));
+  registry.register(Box::new(taskpaper::TaskPaperExport));
+  registry
 }
 
 /// Normalize a trigger string for use as a regex pattern.
@@ -167,13 +176,15 @@ mod test {
   }
 
   mod default_registry {
+    use pretty_assertions::assert_eq;
+
     use super::*;
 
     #[test]
-    fn it_returns_an_empty_registry() {
+    fn it_registers_all_built_in_plugins() {
       let registry = default_registry();
 
-      assert!(registry.available_formats().is_empty());
+      assert_eq!(registry.available_formats(), vec!["csv", "doing", "json", "taskpaper"]);
     }
   }
 

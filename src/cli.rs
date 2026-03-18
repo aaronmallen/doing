@@ -229,8 +229,8 @@ enum Command {
   /// Reset the start date of the last entry
   #[command(visible_alias = "begin")]
   Reset(commands::reset::Command),
-  /// Move entries between sections
-  Rotate,
+  /// Move entries to a dated archive file
+  Rotate(commands::rotate::Command),
   /// List available sections
   Sections(commands::sections::Command),
   /// Interactively select entries to act on
@@ -281,6 +281,7 @@ impl Command {
       Self::On(cmd) => cmd.call(ctx),
       Self::Recent(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),
+      Self::Rotate(cmd) => cmd.call(ctx),
       Self::Sections(cmd) => cmd.call(ctx),
       Self::Show(cmd) => cmd.call(ctx),
       Self::Since(cmd) => cmd.call(ctx),

@@ -194,8 +194,6 @@ enum Command {
   External(Vec<OsString>),
   /// Mark the last entry as finished
   Finish(commands::finish::Command),
-  /// Flag the last entry
-  Flag,
   /// Search for entries matching a pattern
   Grep,
   /// Import entries from other sources
@@ -205,6 +203,9 @@ enum Command {
   InstallFzf,
   /// Show the last entry
   Last,
+  /// Toggle the marker tag on the last entry
+  #[command(visible_alias = "flag")]
+  Mark(commands::mark::Command),
   /// Add an entry while finishing the last
   Meanwhile(commands::meanwhile::Command),
   /// Add or display notes on the last entry
@@ -266,6 +267,7 @@ impl Command {
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
+      Self::Mark(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Note(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),

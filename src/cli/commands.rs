@@ -3,6 +3,7 @@ pub mod autotag;
 pub mod cancel;
 pub mod done;
 pub mod finish;
+pub mod mark;
 pub mod meanwhile;
 pub mod note;
 pub mod now;

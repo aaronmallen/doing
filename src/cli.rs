@@ -196,7 +196,8 @@ enum Command {
   /// Mark the last entry as finished
   Finish(commands::finish::Command),
   /// Search for entries matching a pattern
-  Grep,
+  #[command(visible_alias = "search")]
+  Grep(commands::grep::Command),
   /// Import entries from other sources
   Import,
   /// Install fzf for fuzzy selection
@@ -269,6 +270,7 @@ impl Command {
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
+      Self::Grep(cmd) => cmd.call(ctx),
       Self::Last(cmd) => cmd.call(ctx),
       Self::Mark(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),

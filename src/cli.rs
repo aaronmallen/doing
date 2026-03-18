@@ -123,7 +123,8 @@ impl Cli {
       doing_file,
     };
 
-    self.command.as_ref().unwrap_or(&Command::Recent).call(&mut ctx)
+    let default_cmd = Command::Recent(commands::recent::Command::default());
+    self.command.as_ref().unwrap_or(&default_cmd).call(&mut ctx)
   }
 
   fn include_notes(&self) -> bool {
@@ -202,7 +203,7 @@ enum Command {
   #[command(name = "install_fzf", hide = true)]
   InstallFzf,
   /// Show the last entry
-  Last,
+  Last(commands::last::Command),
   /// Toggle the marker tag on the last entry
   #[command(visible_alias = "flag")]
   Mark(commands::mark::Command),
@@ -220,7 +221,7 @@ enum Command {
   /// List installed plugins
   Plugins,
   /// Show recent entries
-  Recent,
+  Recent(commands::recent::Command),
   /// Redo the last undone change
   Redo,
   /// Reset the start date of the last entry
@@ -246,7 +247,7 @@ enum Command {
   /// Show or edit entry templates
   Template,
   /// Show entries from today
-  Today,
+  Today(commands::today::Command),
   /// Undo the last change
   Undo,
   /// Update doing to the latest version
@@ -257,7 +258,7 @@ enum Command {
   /// List available views
   Views,
   /// Show entries from yesterday
-  Yesterday,
+  Yesterday(commands::yesterday::Command),
 }
 
 impl Command {
@@ -268,13 +269,17 @@ impl Command {
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
+      Self::Last(cmd) => cmd.call(ctx),
       Self::Mark(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Note(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
+      Self::Recent(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),
       Self::Show(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
+      Self::Today(cmd) => cmd.call(ctx),
+      Self::Yesterday(cmd) => cmd.call(ctx),
       _ => todo!(),
     }
   }

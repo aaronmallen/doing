@@ -233,7 +233,7 @@ enum Command {
   /// Interactively select entries to act on
   Select,
   /// Show entries from a section
-  Show,
+  Show(commands::show::Command),
   /// Show entries since a given date
   Since,
   /// Add or remove tags from entries
@@ -273,6 +273,7 @@ impl Command {
       Self::Note(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),
+      Self::Show(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
       _ => todo!(),
     }

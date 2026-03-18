@@ -144,9 +144,106 @@ fn env_config_path() -> Option<PathBuf> {
   if path.exists() { Some(path) } else { None }
 }
 
+/// Deep-merge two JSON [`Value`] trees.
+///
+/// - Objects merge recursively: keys from `overlay` are applied on top of `base`.
+/// - Arrays concatenate: `overlay` elements are appended to `base` elements.
+/// - All other types: `overlay` wins.
+pub fn deep_merge(base: &Value, overlay: &Value) -> Value {
+  match (base, overlay) {
+    (Value::Object(base_map), Value::Object(overlay_map)) => {
+      let mut merged = base_map.clone();
+      for (key, overlay_val) in overlay_map {
+        let merged_val = match merged.get(key) {
+          Some(base_val) => deep_merge(base_val, overlay_val),
+          None => overlay_val.clone(),
+        };
+        merged.insert(key.clone(), merged_val);
+      }
+      Value::Object(merged)
+    }
+    (Value::Array(base_arr), Value::Array(overlay_arr)) => {
+      let mut merged = base_arr.clone();
+      merged.extend(overlay_arr.iter().cloned());
+      Value::Array(merged)
+    }
+    (_, overlay) => overlay.clone(),
+  }
+}
+
 #[cfg(test)]
 mod test {
   use super::*;
+
+  mod deep_merge {
+    use pretty_assertions::assert_eq;
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn it_merges_objects_recursively() {
+      let base = json!({"search": {"case": "smart", "distance": 3}});
+      let overlay = json!({"search": {"distance": 5}});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"search": {"case": "smart", "distance": 5}}));
+    }
+
+    #[test]
+    fn it_concatenates_arrays() {
+      let base = json!({"tags": ["done", "waiting"]});
+      let overlay = json!({"tags": ["custom"]});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"tags": ["done", "waiting", "custom"]}));
+    }
+
+    #[test]
+    fn it_overwrites_scalars() {
+      let base = json!({"order": "asc", "paginate": false});
+      let overlay = json!({"order": "desc"});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"order": "desc", "paginate": false}));
+    }
+
+    #[test]
+    fn it_adds_new_keys() {
+      let base = json!({"order": "asc"});
+      let overlay = json!({"marker_tag": "flagged"});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"order": "asc", "marker_tag": "flagged"}));
+    }
+
+    #[test]
+    fn it_handles_nested_objects_with_arrays() {
+      let base = json!({"autotag": {"whitelist": ["work"], "synonyms": {}}});
+      let overlay = json!({"autotag": {"whitelist": ["play"]}});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(
+        result,
+        json!({"autotag": {"whitelist": ["work", "play"], "synonyms": {}}})
+      );
+    }
+
+    #[test]
+    fn it_replaces_scalar_with_object() {
+      let base = json!({"editors": "vim"});
+      let overlay = json!({"editors": {"default": "nvim"}});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"editors": {"default": "nvim"}}));
+    }
+  }
 
   mod from_extension {
     use pretty_assertions::assert_eq;

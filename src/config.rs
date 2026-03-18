@@ -3,11 +3,15 @@ pub mod loader;
 
 use std::{
   collections::HashMap,
+  env as std_env,
   fmt::{self, Display, Formatter},
   path::PathBuf,
 };
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+use crate::{errors::Result, paths::expand_tilde};
 
 /// Autotag configuration for automatic tag assignment.
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -100,6 +104,75 @@ impl Default for Config {
       views: HashMap::new(),
     }
   }
+}
+
+impl Config {
+  /// Load the fully resolved configuration.
+  ///
+  /// Discovery order:
+  /// 1. Parse global config file (env var → XDG → `~/.doingrc`).
+  /// 2. Parse local `.doingrc` files (walked root-to-leaf from CWD).
+  /// 3. Deep-merge all layers (local overrides global).
+  /// 4. Apply environment variable overrides.
+  /// 5. Deserialize into `Config` (serde fills defaults for missing keys).
+  /// 6. Expand `~` in path fields.
+  ///
+  /// Missing config files produce defaults, not errors.
+  pub fn load() -> Result<Self> {
+    let cwd = std_env::current_dir().unwrap_or_default();
+    Self::load_from(&cwd)
+  }
+
+  /// Load configuration using a specific directory for local config discovery.
+  pub fn load_from(start_dir: &std::path::Path) -> Result<Self> {
+    let mut merged = match loader::discover_global_config() {
+      Some(path) => loader::parse_file(&path)?,
+      None => Value::Object(serde_json::Map::new()),
+    };
+
+    for local_path in loader::discover_local_configs(start_dir) {
+      let local = loader::parse_file(&local_path)?;
+      merged = loader::deep_merge(&merged, &local);
+    }
+
+    merged = apply_env_overrides(merged);
+
+    let mut config: Config = serde_json::from_value(merged)
+      .map_err(|e| crate::errors::Error::Config(format!("deserialization error: {e}")))?;
+
+    config.expand_paths();
+    Ok(config)
+  }
+
+  fn expand_paths(&mut self) {
+    self.backup_dir = expand_tilde(&self.backup_dir);
+    self.doing_file = expand_tilde(&self.doing_file);
+    self.plugins.command_path = expand_tilde(&self.plugins.command_path);
+    self.plugins.plugin_path = expand_tilde(&self.plugins.plugin_path);
+  }
+}
+
+/// Apply environment variable overrides to a config value tree.
+fn apply_env_overrides(mut value: Value) -> Value {
+  let obj = match value.as_object_mut() {
+    Some(obj) => obj,
+    None => return value,
+  };
+
+  if let Ok(backup_dir) = env::DOING_BACKUP_DIR.value() {
+    obj.insert("backup_dir".into(), Value::String(backup_dir));
+  }
+
+  if let Ok(editor) = env::DOING_EDITOR.value() {
+    let editors = obj
+      .entry("editors")
+      .or_insert_with(|| Value::Object(serde_json::Map::new()));
+    if let Some(editors_obj) = editors.as_object_mut() {
+      editors_obj.insert("default".into(), Value::String(editor));
+    }
+  }
+
+  value
 }
 
 /// Editor configuration for various contexts.
@@ -255,6 +328,90 @@ impl Default for ViewConfig {
       tags_bool: "OR".into(),
       template: String::new(),
       wrap_width: 0,
+    }
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use std::fs;
+
+  use super::*;
+
+  mod load_from {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_returns_defaults_when_no_config_exists() {
+      let dir = tempfile::tempdir().unwrap();
+
+      let config = Config::load_from(dir.path()).unwrap();
+
+      assert_eq!(config.current_section, "Currently");
+      assert_eq!(config.history_size, 15);
+      assert_eq!(config.order, SortOrder::Asc);
+    }
+
+    #[test]
+    fn it_loads_from_local_doingrc() {
+      let dir = tempfile::tempdir().unwrap();
+      fs::write(
+        dir.path().join(".doingrc"),
+        "current_section: Working\nhistory_size: 30\n",
+      )
+      .unwrap();
+
+      let config = Config::load_from(dir.path()).unwrap();
+
+      assert_eq!(config.current_section, "Working");
+      assert_eq!(config.history_size, 30);
+    }
+
+    #[test]
+    fn it_merges_nested_local_configs() {
+      let dir = tempfile::tempdir().unwrap();
+      let root = dir.path();
+      let child = root.join("projects/myapp");
+      fs::create_dir_all(&child).unwrap();
+      fs::write(root.join(".doingrc"), "current_section: Root\nhistory_size: 50\n").unwrap();
+      fs::write(child.join(".doingrc"), "current_section: Child\n").unwrap();
+
+      let config = Config::load_from(&child).unwrap();
+
+      assert_eq!(config.current_section, "Child");
+      assert_eq!(config.history_size, 50);
+    }
+
+    #[test]
+    fn it_expands_tilde_in_paths() {
+      let dir = tempfile::tempdir().unwrap();
+      fs::write(
+        dir.path().join(".doingrc"),
+        "doing_file: ~/my_doing.md\nbackup_dir: ~/backups\n",
+      )
+      .unwrap();
+
+      let config = Config::load_from(dir.path()).unwrap();
+
+      assert!(config.doing_file.is_absolute());
+      assert!(config.doing_file.ends_with("my_doing.md"));
+      assert!(config.backup_dir.is_absolute());
+      assert!(config.backup_dir.ends_with("backups"));
+    }
+
+    #[test]
+    fn it_preserves_defaults_for_missing_keys() {
+      let dir = tempfile::tempdir().unwrap();
+      fs::write(dir.path().join(".doingrc"), "history_size: 99\n").unwrap();
+
+      let config = Config::load_from(dir.path()).unwrap();
+
+      assert_eq!(config.history_size, 99);
+      assert_eq!(config.current_section, "Currently");
+      assert_eq!(config.marker_tag, "flagged");
+      assert_eq!(config.search.matching, "pattern");
     }
   }
 }

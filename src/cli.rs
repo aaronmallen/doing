@@ -257,7 +257,7 @@ enum Command {
   /// Display a custom view
   View(commands::view::Command),
   /// List available views
-  Views,
+  Views(commands::views::Command),
   /// Show entries from yesterday
   Yesterday(commands::yesterday::Command),
 }
@@ -284,6 +284,7 @@ impl Command {
       Self::Tag(cmd) => cmd.call(ctx),
       Self::Today(cmd) => cmd.call(ctx),
       Self::View(cmd) => cmd.call(ctx),
+      Self::Views(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),
       Self::External(args) => {
         let name = args.first().and_then(|s| s.to_str()).unwrap_or("");

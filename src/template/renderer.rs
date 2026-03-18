@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 
+use regex::Regex;
+use yansi::Paint;
+
 use super::{
+  colors,
   parser::{self, Indent, IndentChar, Token, TokenKind},
+  totals::TagTotals,
   wrap,
 };
 use crate::{
@@ -43,6 +48,77 @@ impl RenderOptions {
       wrap_width: tc.wrap_width,
     }
   }
+}
+
+/// Render a collection of entries, applying colors, wrapping, marker highlighting,
+/// and optionally appending tag totals.
+pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config, show_totals: bool) -> String {
+  let lines: Vec<String> = entries
+    .iter()
+    .map(|entry| {
+      let mut line = render(entry, options, config);
+
+      // Apply marker color to flagged entries
+      if entry.tags().iter().any(|t| t.name() == config.marker_tag)
+        && let Some(color) = colors::Color::parse(&config.marker_color)
+      {
+        let ansi = color.to_ansi();
+        if !ansi.is_empty() {
+          let reset = colors::Color::parse("reset").map(|c| c.to_ansi()).unwrap_or_default();
+          line = format!("{ansi}{line}{reset}");
+        }
+      }
+
+      line
+    })
+    .collect();
+
+  let mut output = lines.join("\n");
+
+  if show_totals {
+    let totals = TagTotals::from_entries(entries);
+    if !totals.is_empty() {
+      output.push_str(&totals.render());
+    }
+  }
+
+  output
+}
+
+/// Highlight `@tags` in a string with the given color name.
+pub fn highlight_tags(text: &str, color_name: &str) -> String {
+  if color_name.is_empty() {
+    return text.to_string();
+  }
+  let color = match colors::Color::parse(color_name) {
+    Some(c) => c.to_ansi(),
+    None => return text.to_string(),
+  };
+  if color.is_empty() {
+    return text.to_string();
+  }
+  let reset = colors::Color::parse("reset").map(|c| c.to_ansi()).unwrap_or_default();
+  let re = Regex::new(r"(\s|^)(@\S+)").expect("tag highlight regex is valid");
+  re.replace_all(text, |caps: &regex::Captures| {
+    format!("{}{color}{}{reset}", &caps[1], &caps[2])
+  })
+  .into_owned()
+}
+
+/// Highlight search matches in a string with a yellow background.
+pub fn highlight_search(text: &str, search: &str) -> String {
+  if search.is_empty() {
+    return text.to_string();
+  }
+  let escaped = regex::escape(search);
+  let re = match Regex::new(&format!("(?i){escaped}")) {
+    Ok(re) => re,
+    Err(_) => return text.to_string(),
+  };
+  re.replace_all(text, |caps: &regex::Captures| {
+    format!("{}", caps[0].on_yellow().black())
+  })
+  .into_owned()
 }
 
 /// Render a single entry against a template string, returning the formatted output.

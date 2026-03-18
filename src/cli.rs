@@ -1,4 +1,5 @@
 pub mod args;
+pub mod commands;
 pub mod editor;
 pub mod pager;
 
@@ -14,7 +15,7 @@ use crate::{
 };
 
 /// Shared application context passed to all command handlers.
-struct AppContext {
+pub(crate) struct AppContext {
   pub config: Config,
   pub document: Document,
   pub doing_file: PathBuf,
@@ -116,13 +117,13 @@ impl Cli {
     Document::create_file(&doing_file, &config.current_section)?;
     let document = taskpaper::io::read_file(&doing_file)?;
 
-    let ctx = AppContext {
+    let mut ctx = AppContext {
       config,
       document,
       doing_file,
     };
 
-    self.command.as_ref().unwrap_or(&Command::Recent).call(&ctx)
+    self.command.as_ref().unwrap_or(&Command::Recent).call(&mut ctx)
   }
 
   fn include_notes(&self) -> bool {
@@ -205,7 +206,8 @@ enum Command {
   /// Add or display notes on the last entry
   Note,
   /// Add a new entry
-  Now,
+  #[command(visible_alias = "next")]
+  Now(commands::now::Command),
   /// Show entries from a specific date
   On,
   /// Open the doing file in an editor
@@ -253,8 +255,11 @@ enum Command {
 }
 
 impl Command {
-  fn call(&self, _ctx: &AppContext) -> Result<()> {
-    todo!()
+  fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    match self {
+      Self::Now(cmd) => cmd.call(ctx),
+      _ => todo!(),
+    }
   }
 }
 

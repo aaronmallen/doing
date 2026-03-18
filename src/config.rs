@@ -1,3 +1,5 @@
+pub mod env;
+
 use std::{
   collections::HashMap,
   fmt::{self, Display, Formatter},

@@ -22,6 +22,7 @@ dependencies = [
  "pretty_assertions",
  "serde",
  "thiserror",
+ "typed-env",
 ]
 
 [[package]]
@@ -111,6 +112,15 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "typed-env"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4e4787fbaceb1ff8d00d4d346c02b03ab542cd96017eec432c002c57205bf6f6"
+dependencies = [
+ "thiserror",
 ]
 
 [[package]]

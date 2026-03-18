@@ -203,7 +203,7 @@ enum Command {
   /// Show the last entry
   Last,
   /// Add an entry while finishing the last
-  Meanwhile,
+  Meanwhile(commands::meanwhile::Command),
   /// Add or display notes on the last entry
   Note,
   /// Add a new entry
@@ -259,6 +259,7 @@ impl Command {
   fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match self {
       Self::Done(cmd) => cmd.call(ctx),
+      Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
       _ => todo!(),
     }

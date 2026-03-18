@@ -141,6 +141,11 @@ impl Document {
     &self.sections
   }
 
+  /// Return a mutable reference to all sections.
+  pub fn sections_mut(&mut self) -> &mut Vec<Section> {
+    &mut self.sections
+  }
+
   /// Serialize the document into the doing file format string.
   ///
   /// Deduplicates entries by ID, sorts entries within each section according

@@ -62,7 +62,7 @@ pub fn write_with_backup(doc: &Document, path: &Path, config: &Config) -> Result
 }
 
 /// List backups for `source` in `backup_dir`, sorted newest-first.
-fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
+pub fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
   let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
 
   let prefix = format!("{stem}_");

@@ -12,6 +12,7 @@ pub mod meanwhile;
 pub mod note;
 pub mod now;
 pub mod on;
+pub mod open;
 pub mod recent;
 pub mod reset;
 pub mod rotate;

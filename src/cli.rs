@@ -219,7 +219,7 @@ enum Command {
   /// Show entries from a specific date
   On(commands::on::Command),
   /// Open the doing file in an editor
-  Open,
+  Open(commands::open::Command),
   /// List installed plugins
   Plugins,
   /// Show recent entries
@@ -280,6 +280,7 @@ impl Command {
       Self::Note(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
       Self::On(cmd) => cmd.call(ctx),
+      Self::Open(cmd) => cmd.call(ctx),
       Self::Recent(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),
       Self::Rotate(cmd) => cmd.call(ctx),

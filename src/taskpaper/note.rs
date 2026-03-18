@@ -1,0 +1,263 @@
+use std::fmt::{Display, Formatter, Result as FmtResult};
+
+/// A multi-line note attached to a TaskPaper entry.
+///
+/// Internally stores lines as a `Vec<String>`. Supports conversion to/from
+/// single-line format and whitespace compression.
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+pub struct Note {
+  lines: Vec<String>,
+}
+
+impl Note {
+  /// Create a note from a list of lines.
+  pub fn from_lines(lines: impl IntoIterator<Item = impl Into<String>>) -> Self {
+    Self {
+      lines: lines.into_iter().map(Into::into).collect(),
+    }
+  }
+
+  /// Parse a single-line note back into multi-line form using the given separator.
+  pub fn from_single_line(text: &str, separator: &str) -> Self {
+    Self {
+      lines: text.split(separator).map(String::from).collect(),
+    }
+  }
+
+  /// Create a note by splitting a single string on newlines.
+  pub fn from_str(text: &str) -> Self {
+    Self {
+      lines: text.lines().map(String::from).collect(),
+    }
+  }
+
+  /// Create a new empty note.
+  pub fn new() -> Self {
+    Self::default()
+  }
+
+  /// Append lines to the note.
+  pub fn add(&mut self, text: impl Into<String>) {
+    let text = text.into();
+    for line in text.lines() {
+      self.lines.push(line.to_string());
+    }
+  }
+
+  /// Compress whitespace: collapse consecutive blank lines into one, remove
+  /// leading and trailing blank lines, and trim trailing whitespace from each
+  /// line.
+  pub fn compress(&mut self) {
+    // Trim trailing whitespace from each line
+    for line in &mut self.lines {
+      let trimmed = line.trim_end().to_string();
+      *line = trimmed;
+    }
+
+    // Collapse consecutive blank lines into one
+    let mut compressed = Vec::new();
+    let mut prev_blank = false;
+    for line in &self.lines {
+      let is_blank = line.trim().is_empty();
+      if is_blank {
+        if !prev_blank {
+          compressed.push(String::new());
+        }
+        prev_blank = true;
+      } else {
+        compressed.push(line.clone());
+        prev_blank = false;
+      }
+    }
+    self.lines = compressed;
+
+    // Remove leading and trailing blank lines
+    while self.lines.first().is_some_and(|l| l.trim().is_empty()) {
+      self.lines.remove(0);
+    }
+    while self.lines.last().is_some_and(|l| l.trim().is_empty()) {
+      self.lines.pop();
+    }
+  }
+
+  /// Return whether the note has no content.
+  pub fn is_empty(&self) -> bool {
+    self.lines.is_empty() || self.lines.iter().all(|l| l.trim().is_empty())
+  }
+
+  /// Return the number of lines.
+  pub fn len(&self) -> usize {
+    self.lines.len()
+  }
+
+  /// Return the lines as a slice.
+  pub fn lines(&self) -> &[String] {
+    &self.lines
+  }
+
+  /// Replace all lines with new content.
+  pub fn replace(&mut self, text: impl Into<String>) {
+    self.lines.clear();
+    self.add(text);
+  }
+
+  /// Convert to a single-line string with the given separator between lines.
+  pub fn to_line(&self, separator: &str) -> String {
+    let mut note = self.clone();
+    note.compress();
+    note.lines.join(separator)
+  }
+}
+
+impl Display for Note {
+  /// Format as multi-line text with each line prefixed by two tabs (TaskPaper note format).
+  fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    let mut note = self.clone();
+    note.compress();
+    for (i, line) in note.lines.iter().enumerate() {
+      if i > 0 {
+        writeln!(f)?;
+      }
+      write!(f, "\t\t{line}")?;
+    }
+    Ok(())
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  mod compress {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_collapses_consecutive_blank_lines() {
+      let mut note = Note::from_lines(vec!["first", "", "", "", "second"]);
+
+      note.compress();
+
+      assert_eq!(note.lines(), &["first", "", "second"]);
+    }
+
+    #[test]
+    fn it_removes_leading_blank_lines() {
+      let mut note = Note::from_lines(vec!["", "", "content"]);
+
+      note.compress();
+
+      assert_eq!(note.lines(), &["content"]);
+    }
+
+    #[test]
+    fn it_removes_trailing_blank_lines() {
+      let mut note = Note::from_lines(vec!["content", "", ""]);
+
+      note.compress();
+
+      assert_eq!(note.lines(), &["content"]);
+    }
+
+    #[test]
+    fn it_trims_trailing_whitespace_from_lines() {
+      let mut note = Note::from_lines(vec!["hello   ", "world  "]);
+
+      note.compress();
+
+      assert_eq!(note.lines(), &["hello", "world"]);
+    }
+  }
+
+  mod display {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_formats_with_tab_prefix() {
+      let note = Note::from_lines(vec!["line one", "line two"]);
+
+      assert_eq!(note.to_string(), "\t\tline one\n\t\tline two");
+    }
+  }
+
+  mod from_single_line {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_splits_on_separator() {
+      let note = Note::from_single_line("one|two|three", "|");
+
+      assert_eq!(note.lines(), &["one", "two", "three"]);
+    }
+
+    #[test]
+    fn it_splits_on_newline_escape() {
+      let note = Note::from_single_line("first\\nsecond", "\\n");
+
+      assert_eq!(note.lines(), &["first", "second"]);
+    }
+  }
+
+  mod from_str {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_splits_on_newlines() {
+      let note = Note::from_str("line one\nline two\nline three");
+
+      assert_eq!(note.lines(), &["line one", "line two", "line three"]);
+    }
+  }
+
+  mod is_empty {
+    use super::*;
+
+    #[test]
+    fn it_returns_true_for_empty_note() {
+      let note = Note::new();
+
+      assert!(note.is_empty());
+    }
+
+    #[test]
+    fn it_returns_true_for_blank_lines_only() {
+      let note = Note::from_lines(vec!["", "  ", "\t"]);
+
+      assert!(note.is_empty());
+    }
+
+    #[test]
+    fn it_returns_false_for_content() {
+      let note = Note::from_lines(vec!["hello"]);
+
+      assert!(!note.is_empty());
+    }
+  }
+
+  mod to_line {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_joins_with_separator() {
+      let note = Note::from_lines(vec!["one", "two", "three"]);
+
+      assert_eq!(note.to_line(" "), "one two three");
+    }
+
+    #[test]
+    fn it_compresses_before_joining() {
+      let note = Note::from_lines(vec!["", "one", "", "", "two", ""]);
+
+      assert_eq!(note.to_line("|"), "one||two");
+    }
+  }
+}

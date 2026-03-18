@@ -168,7 +168,7 @@ enum Command {
   /// Move entries to the Archive section
   Archive,
   /// Mark the last entry as cancelled
-  Cancel,
+  Cancel(commands::cancel::Command),
   /// Show changes to the doing file
   Changes,
   /// Fuzzy select an entry to act on
@@ -260,6 +260,7 @@ impl Command {
   fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match self {
       Self::Again(cmd) => cmd.call(ctx),
+      Self::Cancel(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),

@@ -215,7 +215,7 @@ enum Command {
   #[command(visible_alias = "next")]
   Now(commands::now::Command),
   /// Show entries from a specific date
-  On,
+  On(commands::on::Command),
   /// Open the doing file in an editor
   Open,
   /// List installed plugins
@@ -236,7 +236,7 @@ enum Command {
   /// Show entries from a section
   Show(commands::show::Command),
   /// Show entries since a given date
-  Since,
+  Since(commands::since::Command),
   /// Add or remove tags from entries
   Tag(commands::tag::Command),
   /// Set the default tags directory
@@ -274,9 +274,11 @@ impl Command {
       Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Note(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
+      Self::On(cmd) => cmd.call(ctx),
       Self::Recent(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),
       Self::Show(cmd) => cmd.call(ctx),
+      Self::Since(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
       Self::Today(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),

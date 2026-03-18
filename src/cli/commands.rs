@@ -16,4 +16,5 @@ pub mod show;
 pub mod since;
 pub mod tag;
 pub mod today;
+pub mod view;
 pub mod yesterday;

@@ -255,7 +255,7 @@ enum Command {
   #[command(hide = true)]
   Update,
   /// Display a custom view
-  View,
+  View(commands::view::Command),
   /// List available views
   Views,
   /// Show entries from yesterday
@@ -283,7 +283,16 @@ impl Command {
       Self::Since(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
       Self::Today(cmd) => cmd.call(ctx),
+      Self::View(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),
+      Self::External(args) => {
+        let name = args.first().and_then(|s| s.to_str()).unwrap_or("");
+        if ctx.config.views.contains_key(name) {
+          commands::view::Command::call_external(name, ctx)
+        } else {
+          Err(crate::errors::Error::Config(format!("unknown command: {name}")))
+        }
+      }
       _ => todo!(),
     }
   }

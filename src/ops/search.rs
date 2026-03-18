@@ -1,4 +1,5 @@
 use regex::Regex;
+use sublime_fuzzy::best_match;
 
 use crate::config::SearchConfig;
 
@@ -26,7 +27,7 @@ pub enum SearchMode {
   /// Exact literal substring match (triggered by `'` prefix).
   Exact(String),
   /// Fuzzy character-order match with a maximum gap distance.
-  Fuzzy(String),
+  Fuzzy(String, u32),
   /// Space-separated tokens with `+require`, `-exclude`, and `"quoted phrase"` support.
   Pattern(Vec<PatternToken>),
   /// Full regular expression (triggered by `/pattern/` syntax).
@@ -37,7 +38,7 @@ pub enum SearchMode {
 pub fn matches(text: &str, mode: &SearchMode, case: CaseSensitivity) -> bool {
   match mode {
     SearchMode::Exact(literal) => matches_exact(text, literal, case),
-    SearchMode::Fuzzy(pattern) => matches_fuzzy(text, pattern, case),
+    SearchMode::Fuzzy(pattern, distance) => matches_fuzzy(text, pattern, *distance, case),
     SearchMode::Pattern(tokens) => matches_pattern(text, tokens, case),
     SearchMode::Regex(rx) => rx.is_match(text),
   }
@@ -93,7 +94,7 @@ fn detect_mode(query: &str, config: &SearchConfig) -> SearchMode {
   }
 
   if config.matching == "fuzzy" {
-    return SearchMode::Fuzzy(query.to_string());
+    return SearchMode::Fuzzy(query.to_string(), config.distance);
   }
 
   SearchMode::Pattern(parse_pattern_tokens(query))
@@ -107,29 +108,31 @@ fn matches_exact(text: &str, literal: &str, case: CaseSensitivity) -> bool {
   }
 }
 
-/// Check whether `text` matches a fuzzy pattern.
+/// Check whether `text` matches a fuzzy pattern using `sublime_fuzzy`.
 ///
 /// Characters in `pattern` must appear in `text` in order, but gaps are allowed.
-fn matches_fuzzy(text: &str, pattern: &str, case: CaseSensitivity) -> bool {
+/// The `distance` parameter sets the maximum allowed gap between consecutive
+/// matched characters. A distance of 0 disables the gap check.
+fn matches_fuzzy(text: &str, pattern: &str, distance: u32, case: CaseSensitivity) -> bool {
   let (haystack, needle) = match case {
     CaseSensitivity::Sensitive => (text.to_string(), pattern.to_string()),
     CaseSensitivity::Ignore => (text.to_lowercase(), pattern.to_lowercase()),
   };
 
-  let mut haystack_chars = haystack.chars();
-  for needle_char in needle.chars() {
-    if needle_char.is_whitespace() {
-      continue;
-    }
-    loop {
-      match haystack_chars.next() {
-        Some(h) if h == needle_char => break,
-        Some(_) => continue,
-        None => return false,
-      }
-    }
+  let result = match best_match(&needle, &haystack) {
+    Some(m) => m,
+    None => return false,
+  };
+
+  if distance == 0 {
+    return true;
   }
-  true
+
+  let positions: Vec<usize> = result
+    .continuous_matches()
+    .flat_map(|cm| cm.start()..cm.start() + cm.len())
+    .collect();
+  positions.windows(2).all(|w| (w[1] - w[0] - 1) as u32 <= distance)
 }
 
 /// Check whether `text` matches all pattern tokens.
@@ -295,7 +298,7 @@ mod test {
     fn it_detects_fuzzy_mode_from_config() {
       let mode = super::super::detect_mode("some query", &fuzzy_config());
 
-      assert!(matches!(mode, SearchMode::Fuzzy(s) if s == "some query"));
+      assert!(matches!(mode, SearchMode::Fuzzy(s, 3) if s == "some query"));
     }
 
     #[test]
@@ -352,20 +355,42 @@ mod test {
       assert!(super::super::matches_fuzzy(
         "Working on project",
         "wop",
+        0,
         CaseSensitivity::Ignore
       ));
     }
 
     #[test]
     fn it_rejects_characters_out_of_order() {
-      assert!(!super::super::matches_fuzzy("abc", "cab", CaseSensitivity::Sensitive));
+      assert!(!super::super::matches_fuzzy(
+        "abc",
+        "cab",
+        0,
+        CaseSensitivity::Sensitive
+      ));
     }
 
     #[test]
-    fn it_skips_whitespace_in_pattern() {
+    fn it_rejects_when_gap_exceeds_distance() {
+      assert!(!super::super::matches_fuzzy(
+        "a____b",
+        "ab",
+        2,
+        CaseSensitivity::Sensitive
+      ));
+    }
+
+    #[test]
+    fn it_matches_when_gap_within_distance() {
+      assert!(super::super::matches_fuzzy("a__b", "ab", 3, CaseSensitivity::Sensitive));
+    }
+
+    #[test]
+    fn it_skips_distance_check_when_zero() {
       assert!(super::super::matches_fuzzy(
-        "abcdef",
-        "a d f",
+        "a______________b",
+        "ab",
+        0,
         CaseSensitivity::Sensitive
       ));
     }

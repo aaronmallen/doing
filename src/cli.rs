@@ -242,7 +242,7 @@ enum Command {
   Tag(commands::tag::Command),
   /// Set the default tags directory
   #[command(name = "tag_dir")]
-  TagDir,
+  TagDir(commands::tag_dir::Command),
   /// List all tags in the doing file
   Tags(commands::tags::Command),
   /// Show or edit entry templates
@@ -283,6 +283,7 @@ impl Command {
       Self::Show(cmd) => cmd.call(ctx),
       Self::Since(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
+      Self::TagDir(cmd) => cmd.call(ctx),
       Self::Tags(cmd) => cmd.call(ctx),
       Self::Today(cmd) => cmd.call(ctx),
       Self::View(cmd) => cmd.call(ctx),

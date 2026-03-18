@@ -16,6 +16,7 @@ pub mod sections;
 pub mod show;
 pub mod since;
 pub mod tag;
+pub mod tag_dir;
 pub mod tags;
 pub mod today;
 pub mod view;

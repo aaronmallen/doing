@@ -51,6 +51,11 @@ impl Entry {
     self.date
   }
 
+  /// Return whether the entry has a `@done` tag.
+  pub fn finished(&self) -> bool {
+    self.tags.has("done")
+  }
+
   /// Return the 32-character hex ID.
   pub fn id(&self) -> &str {
     &self.id
@@ -71,6 +76,22 @@ impl Entry {
     &self.section
   }
 
+  /// Check whether the entry should receive a `@done` tag.
+  ///
+  /// Returns `false` if any pattern in `never_finish` matches this entry's
+  /// tags (patterns starting with `@`) or section name.
+  pub fn should_finish(&self, never_finish: &[String]) -> bool {
+    should(never_finish, &self.tags, &self.section)
+  }
+
+  /// Check whether the entry should receive a date on the `@done` tag.
+  ///
+  /// Returns `false` if any pattern in `never_time` matches this entry's
+  /// tags (patterns starting with `@`) or section name.
+  pub fn should_time(&self, never_time: &[String]) -> bool {
+    should(never_time, &self.tags, &self.section)
+  }
+
   /// Return the tags.
   pub fn tags(&self) -> &Tags {
     &self.tags
@@ -84,6 +105,11 @@ impl Entry {
   /// Return the tag-free title.
   pub fn title(&self) -> &str {
     &self.title
+  }
+
+  /// Return whether the entry does not have a `@done` tag.
+  pub fn unfinished(&self) -> bool {
+    !self.finished()
   }
 }
 
@@ -102,6 +128,24 @@ impl Display for Entry {
 fn gen_id(date: &DateTime<Local>, title: &str, section: &str) -> String {
   let content = format!("{}{}{}", date.format("%Y-%m-%d %H:%M"), title, section);
   format!("{:x}", md5::compute(content.as_bytes()))
+}
+
+/// Check whether an entry should receive a particular treatment based on config patterns.
+///
+/// Each pattern is either `@tagname` (matches if the entry has that tag) or a
+/// section name (matches if the entry belongs to that section). If any pattern
+/// matches, returns `false`.
+fn should(patterns: &[String], tags: &Tags, section: &str) -> bool {
+  for pattern in patterns {
+    if let Some(tag_name) = pattern.strip_prefix('@') {
+      if tags.has(tag_name) {
+        return false;
+      }
+    } else if section.eq_ignore_ascii_case(pattern) {
+      return false;
+    }
+  }
+  true
 }
 
 #[cfg(test)]
@@ -161,6 +205,31 @@ mod test {
 
       assert!(result.starts_with("Just a title "));
       assert_eq!(result.len(), "Just a title ".len() + 32);
+    }
+  }
+
+  mod finished {
+    use super::*;
+
+    #[test]
+    fn it_returns_true_when_done_tag_present() {
+      let entry = sample_entry();
+
+      assert!(entry.finished());
+    }
+
+    #[test]
+    fn it_returns_false_when_no_done_tag() {
+      let entry = Entry::new(
+        sample_date(),
+        "test",
+        Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert!(!entry.finished());
     }
   }
 
@@ -226,6 +295,81 @@ mod test {
       );
 
       assert_eq!(entry.id(), "abcdef01234567890abcdef012345678");
+    }
+  }
+
+  mod should_finish {
+    use super::*;
+
+    #[test]
+    fn it_returns_true_when_no_patterns_match() {
+      let entry = sample_entry();
+
+      assert!(entry.should_finish(&[]));
+    }
+
+    #[test]
+    fn it_returns_false_when_tag_pattern_matches() {
+      let entry = sample_entry();
+
+      assert!(!entry.should_finish(&["@coding".to_string()]));
+    }
+
+    #[test]
+    fn it_returns_false_when_section_pattern_matches() {
+      let entry = sample_entry();
+
+      assert!(!entry.should_finish(&["Currently".to_string()]));
+    }
+
+    #[test]
+    fn it_matches_section_case_insensitively() {
+      let entry = sample_entry();
+
+      assert!(!entry.should_finish(&["currently".to_string()]));
+    }
+  }
+
+  mod should_time {
+    use super::*;
+
+    #[test]
+    fn it_returns_true_when_no_patterns_match() {
+      let entry = sample_entry();
+
+      assert!(entry.should_time(&[]));
+    }
+
+    #[test]
+    fn it_returns_false_when_tag_pattern_matches() {
+      let entry = sample_entry();
+
+      assert!(!entry.should_time(&["@coding".to_string()]));
+    }
+  }
+
+  mod unfinished {
+    use super::*;
+
+    #[test]
+    fn it_returns_true_when_no_done_tag() {
+      let entry = Entry::new(
+        sample_date(),
+        "test",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert!(entry.unfinished());
+    }
+
+    #[test]
+    fn it_returns_false_when_done_tag_present() {
+      let entry = sample_entry();
+
+      assert!(!entry.unfinished());
     }
   }
 }

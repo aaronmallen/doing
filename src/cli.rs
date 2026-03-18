@@ -208,7 +208,7 @@ enum Command {
   /// Add an entry while finishing the last
   Meanwhile(commands::meanwhile::Command),
   /// Add or display notes on the last entry
-  Note,
+  Note(commands::note::Command),
   /// Add a new entry
   #[command(visible_alias = "next")]
   Now(commands::now::Command),
@@ -267,6 +267,7 @@ impl Command {
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),
+      Self::Note(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
       _ => todo!(),

@@ -165,6 +165,8 @@ enum Command {
   /// Repeat the last entry
   #[command(visible_alias = "resume")]
   Again(commands::again::Command),
+  /// Apply autotagging rules to existing entries
+  Autotag(commands::autotag::Command),
   /// Move entries to the Archive section
   Archive,
   /// Mark the last entry as cancelled
@@ -260,6 +262,7 @@ impl Command {
   fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match self {
       Self::Again(cmd) => cmd.call(ctx),
+      Self::Autotag(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),

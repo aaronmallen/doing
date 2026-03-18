@@ -163,7 +163,8 @@ impl Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
   /// Repeat the last entry
-  Again,
+  #[command(visible_alias = "resume")]
+  Again(commands::again::Command),
   /// Move entries to the Archive section
   Archive,
   /// Mark the last entry as cancelled
@@ -258,6 +259,7 @@ enum Command {
 impl Command {
   fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match self {
+      Self::Again(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),

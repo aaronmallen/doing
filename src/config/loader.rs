@@ -110,6 +110,18 @@ pub fn discover_global_config() -> Option<PathBuf> {
   None
 }
 
+/// Return the path to the global config file for editing.
+///
+/// Uses the same discovery order as [`discover_global_config`], but falls back to
+/// the XDG config path when no existing file is found.
+pub fn resolve_global_config_path() -> PathBuf {
+  discover_global_config().unwrap_or_else(|| {
+    dir_spec::config_home()
+      .expect("failed to resolve config directory")
+      .join("doing/config.yml")
+  })
+}
+
 /// Discover local `.doingrc` files by walking from `start_dir` upward.
 ///
 /// Returns paths ordered root-to-leaf (outermost ancestor first) so they

@@ -1,4 +1,5 @@
 pub mod args;
+pub mod editor;
 
 use std::{ffi::OsString, path::PathBuf};
 

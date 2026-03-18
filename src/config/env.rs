@@ -17,3 +17,9 @@ pub static DOING_LOG_LEVEL: Envar<String> = Envar::on_demand("DOING_LOG_LEVEL", 
 
 /// Suppress output.
 pub static DOING_QUIET: Envar<bool> = Envar::on_demand("DOING_QUIET", || EnvarDef::Default(false));
+
+/// Standard `$EDITOR` environment variable.
+pub static EDITOR: Envar<String> = Envar::on_demand("EDITOR", || EnvarDef::Unset);
+
+/// Standard `$VISUAL` environment variable.
+pub static VISUAL: Envar<String> = Envar::on_demand("VISUAL", || EnvarDef::Unset);

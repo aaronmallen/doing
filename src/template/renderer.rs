@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use super::parser::{self, Indent, IndentChar, Token, TokenKind};
+use super::{
+  parser::{self, Indent, IndentChar, Token, TokenKind},
+  wrap,
+};
 use crate::{
   config::{Config, SortOrder, TemplateConfig},
   taskpaper::Entry,
@@ -60,7 +63,15 @@ pub fn render(entry: &Entry, options: &RenderOptions, config: &Config) -> String
         width,
       } => {
         let raw = values.get(kind).cloned().unwrap_or_default();
-        let formatted = format_value(&raw, *kind, *width, marker.as_ref(), indent.as_ref(), prefix.as_deref());
+        let formatted = format_value(
+          &raw,
+          *kind,
+          *width,
+          marker.as_ref(),
+          indent.as_ref(),
+          prefix.as_deref(),
+          options.wrap_width,
+        );
         output.push_str(&formatted);
       }
     }
@@ -156,10 +167,17 @@ fn build_values(entry: &Entry, options: &RenderOptions, config: &Config) -> Hash
   values
 }
 
-fn format_note(raw: &str, marker: Option<&char>, indent: Option<&Indent>, prefix: Option<&str>) -> String {
+fn format_note(
+  raw: &str,
+  marker: Option<&char>,
+  indent: Option<&Indent>,
+  prefix: Option<&str>,
+  wrap_width: u32,
+) -> String {
   let indent_str = indent.map(build_indent).unwrap_or_default();
   let prefix_str = prefix.unwrap_or("");
   let marker_str = marker.map(|c| c.to_string()).unwrap_or_default();
+  let continuation_len = marker_str.len() + indent_str.len() + prefix_str.len();
 
   let mut result = String::from("\n");
 
@@ -170,7 +188,9 @@ fn format_note(raw: &str, marker: Option<&char>, indent: Option<&Indent>, prefix
     result.push_str(&marker_str);
     result.push_str(&indent_str);
     result.push_str(prefix_str);
-    result.push_str(line);
+
+    let wrapped = wrap::wrap_with_indent(line, wrap_width as usize, continuation_len);
+    result.push_str(&wrapped);
   }
 
   result
@@ -183,11 +203,12 @@ fn format_value(
   marker: Option<&char>,
   indent: Option<&Indent>,
   prefix: Option<&str>,
+  wrap_width: u32,
 ) -> String {
   let is_note = matches!(kind, TokenKind::Note | TokenKind::Odnote | TokenKind::Idnote);
 
   if is_note && !raw.is_empty() {
-    return format_note(raw, marker, indent, prefix);
+    return format_note(raw, marker, indent, prefix, wrap_width);
   }
 
   if matches!(
@@ -197,7 +218,11 @@ fn format_value(
     return raw.to_string();
   }
 
-  apply_width(raw, width)
+  let sized = apply_width(raw, width);
+  if matches!(kind, TokenKind::Title) && wrap_width > 0 {
+    return wrap::wrap(raw, wrap_width as usize);
+  }
+  sized
 }
 
 #[cfg(test)]

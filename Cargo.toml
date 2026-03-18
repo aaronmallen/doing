@@ -5,3 +5,9 @@ license = "MIT"
 name = "doing"
 repository = "https://github.com/aaronmallen/doing"
 version = "0.1.0"
+
+[dependencies]
+thiserror = "2"
+
+[dev-dependencies]
+pretty_assertions = "1"

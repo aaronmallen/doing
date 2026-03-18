@@ -1,3 +1,4 @@
+mod config;
 mod errors;
 
 fn main() {

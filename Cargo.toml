@@ -7,6 +7,7 @@ repository = "https://github.com/aaronmallen/doing"
 version = "0.1.0"
 
 [dependencies]
+serde = { features = ["derive"], version = "1" }
 thiserror = "2"
 
 [dev-dependencies]

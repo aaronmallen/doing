@@ -1,3 +1,5 @@
+pub mod args;
+
 use std::{ffi::OsString, path::PathBuf};
 
 use clap::{ArgAction, Parser, Subcommand};

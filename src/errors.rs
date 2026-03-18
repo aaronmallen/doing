@@ -10,6 +10,10 @@ pub enum Error {
   #[error("configuration error: {0}")]
   Config(String),
 
+  /// The requested undo/redo operation exceeds available history.
+  #[error("{0}")]
+  HistoryLimit(String),
+
   /// An invalid or unrecognized time expression was provided.
   #[error("invalid time expression: {0}")]
   InvalidTimeExpression(String),

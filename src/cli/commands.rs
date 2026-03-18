@@ -2,6 +2,7 @@ pub mod again;
 pub mod archive;
 pub mod autotag;
 pub mod cancel;
+pub mod config;
 pub mod done;
 pub mod finish;
 pub mod grep;

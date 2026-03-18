@@ -186,8 +186,8 @@ enum Command {
   CommandsAccepting,
   /// Generate shell completions
   Completion,
-  /// Edit the configuration file
-  Config,
+  /// View, edit, and manage configuration
+  Config(commands::config::Command),
   /// Add a completed entry
   #[command(visible_alias = "did")]
   Done(commands::done::Command),
@@ -270,6 +270,7 @@ impl Command {
       Self::Archive(cmd) => cmd.call(ctx),
       Self::Autotag(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
+      Self::Config(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
       Self::Grep(cmd) => cmd.call(ctx),

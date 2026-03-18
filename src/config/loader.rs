@@ -118,7 +118,7 @@ pub fn resolve_global_config_path() -> PathBuf {
   discover_global_config().unwrap_or_else(|| {
     dir_spec::config_home()
       .expect("failed to resolve config directory")
-      .join("doing/config.yml")
+      .join("doing/config.toml")
   })
 }
 

@@ -244,7 +244,7 @@ enum Command {
   #[command(name = "tag_dir")]
   TagDir,
   /// List all tags in the doing file
-  Tags,
+  Tags(commands::tags::Command),
   /// Show or edit entry templates
   Template,
   /// Show entries from today
@@ -283,6 +283,7 @@ impl Command {
       Self::Show(cmd) => cmd.call(ctx),
       Self::Since(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
+      Self::Tags(cmd) => cmd.call(ctx),
       Self::Today(cmd) => cmd.call(ctx),
       Self::View(cmd) => cmd.call(ctx),
       Self::Views(cmd) => cmd.call(ctx),

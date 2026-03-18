@@ -3,6 +3,7 @@ mod entries;
 mod note;
 mod parser;
 mod section;
+pub mod serializer;
 mod tags;
 
 #[allow(unused_imports)]

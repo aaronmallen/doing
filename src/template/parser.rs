@@ -31,7 +31,7 @@ pub enum Token {
 }
 
 /// The type of placeholder token in a template string.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum TokenKind {
   Chompnote,
   Date,

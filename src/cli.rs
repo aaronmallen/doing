@@ -191,7 +191,7 @@ enum Command {
   #[command(external_subcommand)]
   External(Vec<OsString>),
   /// Mark the last entry as finished
-  Finish,
+  Finish(commands::finish::Command),
   /// Flag the last entry
   Flag,
   /// Search for entries matching a pattern
@@ -261,6 +261,7 @@ impl Command {
     match self {
       Self::Again(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
+      Self::Finish(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
       _ => todo!(),

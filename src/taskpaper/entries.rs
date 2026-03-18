@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 
 use super::{Note, Tags};
 
@@ -51,6 +51,27 @@ impl Entry {
     self.date
   }
 
+  /// Return the parsed `@done` tag timestamp, if present and valid.
+  pub fn done_date(&self) -> Option<DateTime<Local>> {
+    let value = self.tag_value("done")?;
+    parse_tag_date(&value)
+  }
+
+  /// Return elapsed time since the start date.
+  ///
+  /// For finished entries this returns `None` — use [`interval`](Self::interval) instead.
+  pub fn duration(&self) -> Option<Duration> {
+    if self.finished() {
+      return None;
+    }
+    Some(Local::now().signed_duration_since(self.date))
+  }
+
+  /// Return the end date: the `@done` tag timestamp if present, otherwise `None`.
+  pub fn end_date(&self) -> Option<DateTime<Local>> {
+    self.done_date()
+  }
+
   /// Return whether the entry has a `@done` tag.
   pub fn finished(&self) -> bool {
     self.tags.has("done")
@@ -61,6 +82,14 @@ impl Entry {
     &self.id
   }
 
+  /// Return the time between the start date and the `@done` date.
+  ///
+  /// Returns `None` if the entry is not finished or the done date cannot be parsed.
+  pub fn interval(&self) -> Option<Duration> {
+    let done = self.done_date()?;
+    Some(done.signed_duration_since(self.date))
+  }
+
   /// Return the note.
   pub fn note(&self) -> &Note {
     &self.note
@@ -69,6 +98,19 @@ impl Entry {
   /// Return a mutable reference to the note.
   pub fn note_mut(&mut self) -> &mut Note {
     &mut self.note
+  }
+
+  /// Check whether this entry's time range overlaps with another entry's.
+  ///
+  /// Uses each entry's start date and end date (from `@done` tag). If either
+  /// entry lacks an end date, the current time is used.
+  pub fn overlapping_time(&self, other: &Entry) -> bool {
+    let now = Local::now();
+    let start_a = self.date;
+    let end_a = self.end_date().unwrap_or(now);
+    let start_b = other.date;
+    let end_b = other.end_date().unwrap_or(now);
+    start_a < end_b && start_b < end_a
   }
 
   /// Return the section name.
@@ -111,6 +153,15 @@ impl Entry {
   pub fn unfinished(&self) -> bool {
     !self.finished()
   }
+
+  /// Return the value of a tag by name, if present.
+  fn tag_value(&self, name: &str) -> Option<String> {
+    self
+      .tags
+      .iter()
+      .find(|t| t.name().eq_ignore_ascii_case(name))
+      .and_then(|t| t.value().map(String::from))
+  }
 }
 
 impl Display for Entry {
@@ -128,6 +179,12 @@ impl Display for Entry {
 fn gen_id(date: &DateTime<Local>, title: &str, section: &str) -> String {
   let content = format!("{}{}{}", date.format("%Y-%m-%d %H:%M"), title, section);
   format!("{:x}", md5::compute(content.as_bytes()))
+}
+
+/// Parse a date string from a tag value in `YYYY-MM-DD HH:MM` format.
+fn parse_tag_date(value: &str) -> Option<DateTime<Local>> {
+  let naive = NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M").ok()?;
+  Local.from_local_datetime(&naive).single()
 }
 
 /// Check whether an entry should receive a particular treatment based on config patterns.
@@ -172,6 +229,49 @@ mod test {
     )
   }
 
+  mod done_date {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_returns_parsed_done_date() {
+      let entry = sample_entry();
+
+      let done = entry.done_date().unwrap();
+
+      assert_eq!(done, Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap());
+    }
+
+    #[test]
+    fn it_returns_none_when_no_done_tag() {
+      let entry = Entry::new(
+        sample_date(),
+        "test",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert!(entry.done_date().is_none());
+    }
+
+    #[test]
+    fn it_returns_none_when_done_tag_has_no_value() {
+      let entry = Entry::new(
+        sample_date(),
+        "test",
+        Tags::from_iter(vec![Tag::new("done", None::<String>)]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert!(entry.done_date().is_none());
+    }
+  }
+
   mod display {
     use pretty_assertions::assert_eq;
 
@@ -205,6 +305,33 @@ mod test {
 
       assert!(result.starts_with("Just a title "));
       assert_eq!(result.len(), "Just a title ".len() + 32);
+    }
+  }
+
+  mod duration {
+    use super::*;
+
+    #[test]
+    fn it_returns_none_for_finished_entry() {
+      let entry = sample_entry();
+
+      assert!(entry.duration().is_none());
+    }
+
+    #[test]
+    fn it_returns_some_for_unfinished_entry() {
+      let entry = Entry::new(
+        Local::now() - Duration::hours(2),
+        "test",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      let dur = entry.duration().unwrap();
+
+      assert!(dur.num_minutes() >= 119);
     }
   }
 
@@ -263,6 +390,35 @@ mod test {
     }
   }
 
+  mod interval {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_returns_duration_between_start_and_done() {
+      let entry = sample_entry();
+
+      let iv = entry.interval().unwrap();
+
+      assert_eq!(iv.num_minutes(), 30);
+    }
+
+    #[test]
+    fn it_returns_none_when_not_finished() {
+      let entry = Entry::new(
+        sample_date(),
+        "test",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert!(entry.interval().is_none());
+    }
+  }
+
   mod new {
     use pretty_assertions::assert_eq;
 
@@ -295,6 +451,55 @@ mod test {
       );
 
       assert_eq!(entry.id(), "abcdef01234567890abcdef012345678");
+    }
+  }
+
+  mod overlapping_time {
+    use super::*;
+
+    #[test]
+    fn it_detects_overlapping_entries() {
+      let a = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+        "task a",
+        Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let b = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "task b",
+        Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:30"))]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert!(a.overlapping_time(&b));
+      assert!(b.overlapping_time(&a));
+    }
+
+    #[test]
+    fn it_returns_false_for_non_overlapping_entries() {
+      let a = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+        "task a",
+        Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let b = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+        "task b",
+        Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 16:00"))]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert!(!a.overlapping_time(&b));
     }
   }
 

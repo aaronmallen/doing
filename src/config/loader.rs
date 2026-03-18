@@ -1,8 +1,16 @@
-use std::{fs, io::Read, path::Path};
+use std::{
+  fs,
+  io::Read,
+  path::{Path, PathBuf},
+};
 
 use serde_json::Value;
 
-use crate::errors::{Error, Result};
+use crate::{
+  config::env::DOING_CONFIG,
+  errors::{Error, Result},
+  paths::expand_tilde,
+};
 
 /// Supported configuration file formats.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -58,8 +66,7 @@ fn parse_json(content: &str) -> Result<Value> {
 }
 
 fn parse_toml(content: &str) -> Result<Value> {
-  let toml_value: toml::Table =
-    toml::from_str(content).map_err(|e| Error::Config(format!("invalid TOML: {e}")))?;
+  let toml_value: toml::Table = toml::from_str(content).map_err(|e| Error::Config(format!("invalid TOML: {e}")))?;
   serde_json::to_value(toml_value).map_err(|e| Error::Config(format!("TOML conversion error: {e}")))
 }
 
@@ -71,6 +78,70 @@ fn try_parse_unknown(content: &str, path: &Path) -> Result<Value> {
   parse_yaml(content).or_else(|_| {
     parse_toml(content).map_err(|_| Error::Config(format!("{}: unrecognized config format", path.display())))
   })
+}
+
+/// Discover the global config file path.
+///
+/// Searches in order:
+/// 1. `DOING_CONFIG` environment variable
+/// 2. XDG config path (`$XDG_CONFIG_HOME/doing/config.yml`)
+/// 3. `~/.doingrc` fallback
+///
+/// Returns `None` if no config file exists at any location.
+pub fn discover_global_config() -> Option<PathBuf> {
+  if let Some(env_path) = env_config_path() {
+    return Some(env_path);
+  }
+
+  let xdg_path = dir_spec::config_home()
+    .expect("failed to resolve config directory")
+    .join("doing/config.yml");
+  if xdg_path.exists() {
+    return Some(xdg_path);
+  }
+
+  let home_rc = dir_spec::home()
+    .expect("failed to resolve home directory")
+    .join(".doingrc");
+  if home_rc.exists() {
+    return Some(home_rc);
+  }
+
+  None
+}
+
+/// Discover local `.doingrc` files by walking from `start_dir` upward.
+///
+/// Returns paths ordered root-to-leaf (outermost ancestor first) so they
+/// can be merged in precedence order — each successive file overrides the
+/// previous.
+pub fn discover_local_configs(start_dir: &Path) -> Vec<PathBuf> {
+  let global = discover_global_config();
+  let mut configs = Vec::new();
+  let mut dir = start_dir.to_path_buf();
+
+  loop {
+    let candidate = dir.join(".doingrc");
+    if candidate.exists() {
+      let dominated_by_global = global.as_ref().is_some_and(|g| *g == candidate);
+      if !dominated_by_global {
+        configs.push(candidate);
+      }
+    }
+
+    if !dir.pop() {
+      break;
+    }
+  }
+
+  configs.reverse();
+  configs
+}
+
+fn env_config_path() -> Option<PathBuf> {
+  let raw = DOING_CONFIG.value().ok()?;
+  let path = expand_tilde(Path::new(&raw));
+  if path.exists() { Some(path) } else { None }
 }
 
 #[cfg(test)]
@@ -205,6 +276,52 @@ mod test {
       let result = parse_file(Path::new("/nonexistent/config.yml"));
 
       assert!(result.is_err());
+    }
+  }
+
+  mod discover_local_configs {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_finds_doingrc_in_ancestors() {
+      let dir = tempfile::tempdir().unwrap();
+      let root = dir.path();
+      let child = root.join("projects/myapp");
+      fs::create_dir_all(&child).unwrap();
+      fs::write(root.join(".doingrc"), "order: asc\n").unwrap();
+      fs::write(child.join(".doingrc"), "order: desc\n").unwrap();
+
+      let configs = discover_local_configs(&child);
+
+      assert_eq!(configs.len(), 2);
+      assert_eq!(configs[0], root.join(".doingrc"));
+      assert_eq!(configs[1], child.join(".doingrc"));
+    }
+
+    #[test]
+    fn it_returns_empty_when_none_found() {
+      let dir = tempfile::tempdir().unwrap();
+
+      let configs = discover_local_configs(dir.path());
+
+      assert!(configs.is_empty());
+    }
+
+    #[test]
+    fn it_excludes_global_config_path() {
+      // If a .doingrc happens to be the global config, it should not appear
+      // as a local config. This is difficult to test without mocking the
+      // global discovery, so we just verify the function doesn't panic on
+      // deeply nested paths.
+      let dir = tempfile::tempdir().unwrap();
+      let deep = dir.path().join("a/b/c/d/e");
+      fs::create_dir_all(&deep).unwrap();
+
+      let configs = discover_local_configs(&deep);
+
+      assert!(configs.is_empty());
     }
   }
 

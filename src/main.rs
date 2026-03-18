@@ -3,6 +3,7 @@ mod config;
 mod errors;
 mod ops;
 mod paths;
+mod plugins;
 mod taskpaper;
 mod template;
 mod time;

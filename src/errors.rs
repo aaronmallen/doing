@@ -26,6 +26,10 @@ pub enum Error {
   #[error("parse error: {0}")]
   Parse(String),
 
+  /// An error occurred in the plugin system.
+  #[error("plugin error: {0}")]
+  Plugin(String),
+
   /// An error occurred while rendering a template.
   #[error("template error: {0}")]
   Template(String),

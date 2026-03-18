@@ -184,7 +184,8 @@ enum Command {
   /// Edit the configuration file
   Config,
   /// Add a completed entry
-  Done,
+  #[command(visible_alias = "did")]
+  Done(commands::done::Command),
   /// Catch-all for unknown subcommands (checked against custom views)
   #[command(external_subcommand)]
   External(Vec<OsString>),
@@ -257,6 +258,7 @@ enum Command {
 impl Command {
   fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match self {
+      Self::Done(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
       _ => todo!(),
     }

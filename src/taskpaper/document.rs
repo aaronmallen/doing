@@ -1,9 +1,11 @@
 use std::{
   collections::HashSet,
   fmt::{Display, Formatter, Result as FmtResult},
+  path::Path,
 };
 
 use super::{Entry, Section};
+use crate::{config::SortOrder, errors};
 
 /// A complete TaskPaper doing file represented as an ordered list of sections.
 ///
@@ -17,6 +19,14 @@ pub struct Document {
 }
 
 impl Document {
+  /// Create a new doing file at `path` with a single default section.
+  ///
+  /// If the file already exists and is non-empty, this is a no-op.
+  /// Creates parent directories as needed.
+  pub fn create_file(path: &Path, default_section: &str) -> errors::Result<()> {
+    super::io::create_file(path, default_section)
+  }
+
   /// Create a new empty document.
   pub fn new() -> Self {
     Self {
@@ -29,6 +39,11 @@ impl Document {
   /// Parse a doing file string into a structured `Document`.
   pub fn parse(content: &str) -> Self {
     super::parser::parse(content)
+  }
+
+  /// Read and parse a doing file from `path` into a `Document`.
+  pub fn read_file(path: &Path) -> errors::Result<Self> {
+    super::io::read_file(path)
   }
 
   /// Add a section to the document. Does nothing if a section with the same name
@@ -124,6 +139,21 @@ impl Document {
   /// Return a slice of all sections.
   pub fn sections(&self) -> &[Section] {
     &self.sections
+  }
+
+  /// Serialize the document into the doing file format string.
+  ///
+  /// Deduplicates entries by ID, sorts entries within each section according
+  /// to `sort_order`, and strips ANSI color codes.
+  pub fn serialize(&self, sort_order: SortOrder) -> String {
+    super::serializer::serialize(self, sort_order)
+  }
+
+  /// Serialize and atomically write the document to `path`.
+  ///
+  /// Writes to a temporary file first, then renames into place.
+  pub fn write_file(&self, path: &Path, sort_order: SortOrder) -> errors::Result<()> {
+    super::io::write_file(self, path, sort_order)
   }
 }
 

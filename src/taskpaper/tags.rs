@@ -148,6 +148,31 @@ impl Tags {
     before - self.inner.len()
   }
 
+  /// Remove all tags whose names match a regex pattern (case-insensitive).
+  /// Returns the number of tags removed.
+  pub fn remove_by_regex(&mut self, pattern: &str) -> usize {
+    let ci_pattern = format!("(?i){pattern}");
+    let Ok(rx) = Regex::new(&ci_pattern) else {
+      return 0;
+    };
+    let before = self.inner.len();
+    self.inner.retain(|t| !rx.is_match(&t.name));
+    before - self.inner.len()
+  }
+
+  /// Remove all tags whose names match a wildcard pattern. Returns the number
+  /// of tags removed.
+  pub fn remove_by_wildcard(&mut self, pattern: &str) -> usize {
+    let pattern = pattern.strip_prefix('@').unwrap_or(pattern);
+    let rx_str = wildcard_to_regex(pattern);
+    let Ok(rx) = Regex::new(&rx_str) else {
+      return 0;
+    };
+    let before = self.inner.len();
+    self.inner.retain(|t| !rx.is_match(&t.name));
+    before - self.inner.len()
+  }
+
   /// Rename all tags matching `old_name` to `new_name`, preserving values.
   /// Returns the number of tags renamed.
   pub fn rename(&mut self, old_name: &str, new_name: &str) -> usize {
@@ -156,6 +181,25 @@ impl Tags {
     let mut count = 0;
     for tag in &mut self.inner {
       if tag.name.eq_ignore_ascii_case(old) {
+        tag.name = new.to_string();
+        count += 1;
+      }
+    }
+    count
+  }
+
+  /// Rename all tags matching a wildcard pattern to `new_name`, preserving
+  /// values. Returns the number of tags renamed.
+  pub fn rename_by_wildcard(&mut self, pattern: &str, new_name: &str) -> usize {
+    let pattern = pattern.strip_prefix('@').unwrap_or(pattern);
+    let new = new_name.strip_prefix('@').unwrap_or(new_name);
+    let rx_str = wildcard_to_regex(pattern);
+    let Ok(rx) = Regex::new(&rx_str) else {
+      return 0;
+    };
+    let mut count = 0;
+    for tag in &mut self.inner {
+      if rx.is_match(&tag.name) {
         tag.name = new.to_string();
         count += 1;
       }
@@ -458,6 +502,88 @@ mod test {
       }
     }
 
+    mod remove_by_regex {
+      use pretty_assertions::assert_eq;
+
+      use super::super::super::*;
+
+      #[test]
+      fn it_removes_tags_matching_regex() {
+        let mut tags = Tags::from_iter(vec![
+          Tag::new("project-123", None::<String>),
+          Tag::new("project-456", None::<String>),
+          Tag::new("coding", None::<String>),
+        ]);
+
+        let removed = tags.remove_by_regex("^project-\\d+$");
+
+        assert_eq!(removed, 2);
+        assert_eq!(tags.len(), 1);
+        assert!(tags.has("coding"));
+      }
+
+      #[test]
+      fn it_matches_case_insensitively() {
+        let mut tags = Tags::from_iter(vec![Tag::new("Coding", None::<String>)]);
+
+        let removed = tags.remove_by_regex("^coding$");
+
+        assert_eq!(removed, 1);
+        assert!(tags.is_empty());
+      }
+
+      #[test]
+      fn it_returns_zero_for_invalid_regex() {
+        let mut tags = Tags::from_iter(vec![Tag::new("coding", None::<String>)]);
+
+        let removed = tags.remove_by_regex("[invalid");
+
+        assert_eq!(removed, 0);
+        assert_eq!(tags.len(), 1);
+      }
+    }
+
+    mod remove_by_wildcard {
+      use pretty_assertions::assert_eq;
+
+      use super::super::super::*;
+
+      #[test]
+      fn it_removes_tags_matching_wildcard() {
+        let mut tags = Tags::from_iter(vec![
+          Tag::new("project-a", None::<String>),
+          Tag::new("project-b", None::<String>),
+          Tag::new("coding", None::<String>),
+        ]);
+
+        let removed = tags.remove_by_wildcard("project-*");
+
+        assert_eq!(removed, 2);
+        assert_eq!(tags.len(), 1);
+        assert!(tags.has("coding"));
+      }
+
+      #[test]
+      fn it_matches_case_insensitively() {
+        let mut tags = Tags::from_iter(vec![Tag::new("Coding", None::<String>)]);
+
+        let removed = tags.remove_by_wildcard("cod*");
+
+        assert_eq!(removed, 1);
+        assert!(tags.is_empty());
+      }
+
+      #[test]
+      fn it_strips_at_prefix_from_pattern() {
+        let mut tags = Tags::from_iter(vec![Tag::new("coding", None::<String>)]);
+
+        let removed = tags.remove_by_wildcard("@coding");
+
+        assert_eq!(removed, 1);
+        assert!(tags.is_empty());
+      }
+    }
+
     mod rename {
       use pretty_assertions::assert_eq;
 
@@ -486,6 +612,48 @@ mod test {
 
         assert_eq!(renamed, 1);
         assert!(tags.has("newtag"));
+      }
+    }
+
+    mod rename_by_wildcard {
+      use pretty_assertions::assert_eq;
+
+      use super::super::super::*;
+
+      #[test]
+      fn it_renames_tags_matching_wildcard() {
+        let mut tags = Tags::from_iter(vec![
+          Tag::new("proj-a", Some("value")),
+          Tag::new("proj-b", None::<String>),
+          Tag::new("coding", None::<String>),
+        ]);
+
+        let renamed = tags.rename_by_wildcard("proj-*", "project");
+
+        assert_eq!(renamed, 2);
+        assert!(tags.has("project"));
+        assert!(!tags.has("proj-a"));
+        assert!(!tags.has("proj-b"));
+      }
+
+      #[test]
+      fn it_preserves_values() {
+        let mut tags = Tags::from_iter(vec![Tag::new("old", Some("val"))]);
+
+        tags.rename_by_wildcard("ol?", "new");
+
+        assert!(tags.has("new"));
+        assert_eq!(tags.iter().next().unwrap().value(), Some("val"));
+      }
+
+      #[test]
+      fn it_returns_zero_for_no_matches() {
+        let mut tags = Tags::from_iter(vec![Tag::new("coding", None::<String>)]);
+
+        let renamed = tags.rename_by_wildcard("proj-*", "project");
+
+        assert_eq!(renamed, 0);
+        assert!(tags.has("coding"));
       }
     }
   }

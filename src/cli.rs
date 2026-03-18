@@ -233,7 +233,7 @@ enum Command {
   /// Show entries since a given date
   Since,
   /// Add or remove tags from entries
-  Tag,
+  Tag(commands::tag::Command),
   /// Set the default tags directory
   #[command(name = "tag_dir")]
   TagDir,
@@ -265,6 +265,7 @@ impl Command {
       Self::Finish(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),
       Self::Now(cmd) => cmd.call(ctx),
+      Self::Tag(cmd) => cmd.call(ctx),
       _ => todo!(),
     }
   }

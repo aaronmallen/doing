@@ -171,7 +171,7 @@ impl Display for Entry {
     if !self.tags.is_empty() {
       write!(f, " {}", self.tags)?;
     }
-    write!(f, " {}", self.id)
+    write!(f, " <{}>", self.id)
   }
 }
 
@@ -283,10 +283,11 @@ mod test {
 
       let result = entry.to_string();
 
-      assert!(result.starts_with("Working on project @coding @done(2024-03-17 15:00) "));
+      assert!(result.starts_with("Working on project @coding @done(2024-03-17 15:00) <"));
+      assert!(result.ends_with(">"));
       assert_eq!(
         result.len(),
-        "Working on project @coding @done(2024-03-17 15:00) ".len() + 32
+        "Working on project @coding @done(2024-03-17 15:00) <".len() + 32 + ">".len()
       );
     }
 
@@ -303,8 +304,9 @@ mod test {
 
       let result = entry.to_string();
 
-      assert!(result.starts_with("Just a title "));
-      assert_eq!(result.len(), "Just a title ".len() + 32);
+      assert!(result.starts_with("Just a title <"));
+      assert!(result.ends_with(">"));
+      assert_eq!(result.len(), "Just a title <".len() + 32 + ">".len());
     }
   }
 

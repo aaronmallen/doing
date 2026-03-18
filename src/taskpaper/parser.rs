@@ -1,0 +1,342 @@
+use chrono::{Local, NaiveDateTime, TimeZone};
+use regex::Regex;
+
+use super::{Document, Entry, Note, Section, Tag, Tags};
+
+/// Parse a doing file string into a structured `Document`.
+///
+/// Recognizes section headers, entries with dates/tags/IDs, and notes.
+/// Non-entry, non-section content is preserved as other content.
+pub fn parse(content: &str) -> Document {
+  let section_rx = Regex::new(r"^(\S[\S ]+):\s*$").unwrap();
+  let entry_rx = Regex::new(r"^\t- (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \| (.*?)(?:\s+<([a-f0-9]{32})>)?\s*$").unwrap();
+
+  let mut doc = Document::new();
+  let mut current_section: Option<Section> = None;
+  let mut current_entry: Option<(Entry, Vec<String>)> = None;
+  let mut found_first_section = false;
+
+  for line in content.lines() {
+    if let Some(caps) = section_rx.captures(line) {
+      flush_entry(&mut current_section, &mut current_entry);
+      flush_section(&mut doc, &mut current_section);
+      found_first_section = true;
+      current_section = Some(Section::new(&caps[1]));
+      continue;
+    }
+
+    if let Some(caps) = entry_rx.captures(line) {
+      flush_entry(&mut current_section, &mut current_entry);
+
+      if !found_first_section {
+        found_first_section = true;
+        current_section = Some(Section::new("Uncategorized"));
+      }
+
+      let date_str = &caps[1];
+      let raw_title = caps[2].trim();
+      let id = caps.get(3).map(|m| m.as_str());
+
+      let section_name = current_section
+        .as_ref()
+        .map(|s| s.title().to_string())
+        .unwrap_or_default();
+
+      if let Ok(naive) = NaiveDateTime::parse_from_str(date_str, "%Y-%m-%d %H:%M")
+        && let Some(date) = Local.from_local_datetime(&naive).single()
+      {
+        let (title, tags) = parse_tags(raw_title);
+        let entry = Entry::new(date, title, tags, Note::new(), &section_name, id);
+        current_entry = Some((entry, Vec::new()));
+      }
+      continue;
+    }
+
+    if line.starts_with("\t\t") && current_entry.is_some() {
+      let note_text = &line[2..];
+      current_entry.as_mut().unwrap().1.push(note_text.to_string());
+      continue;
+    }
+
+    if !found_first_section {
+      doc.other_content_top_mut().push(line.to_string());
+    } else if current_section.is_none() && current_entry.is_none() {
+      doc.other_content_bottom_mut().push(line.to_string());
+    }
+  }
+
+  flush_entry(&mut current_section, &mut current_entry);
+  flush_section(&mut doc, &mut current_section);
+
+  doc
+}
+
+/// Extract tags from a title string, returning the tag-free title and a `Tags` collection.
+fn parse_tags(title: &str) -> (String, Tags) {
+  let tag_rx = Regex::new(r"(?:^| )(@([^\s(]+)(?:\(([^)]+)\))?)").unwrap();
+  let mut tags = Vec::new();
+  let mut clean_title = title.to_string();
+
+  for caps in tag_rx.captures_iter(title) {
+    let full_match = &caps[1];
+    let name = &caps[2];
+    let value = caps.get(3).map(|m| m.as_str().to_string());
+    tags.push(Tag::new(name, value));
+    clean_title = clean_title.replace(full_match, "");
+  }
+
+  let clean_title = clean_title.split_whitespace().collect::<Vec<_>>().join(" ");
+  (clean_title, Tags::from_iter(tags))
+}
+
+/// Flush the current entry (with accumulated note lines) into the current section.
+fn flush_entry(current_section: &mut Option<Section>, current_entry: &mut Option<(Entry, Vec<String>)>) {
+  if let Some((mut entry, note_lines)) = current_entry.take() {
+    if !note_lines.is_empty() {
+      *entry.note_mut() = Note::from_lines(note_lines);
+    }
+    if let Some(section) = current_section.as_mut() {
+      section.add_entry(entry);
+    }
+  }
+}
+
+/// Flush the current section into the document.
+fn flush_section(doc: &mut Document, current_section: &mut Option<Section>) {
+  if let Some(section) = current_section.take() {
+    doc.add_section(section);
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  mod parse {
+    use chrono::TimeZone;
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_handles_entries_without_section() {
+      let content = "\t- 2024-03-17 14:30 | Orphan task";
+      let doc = parse(content);
+
+      assert!(doc.has_section("Uncategorized"));
+      assert_eq!(doc.entries_in_section("Uncategorized").len(), 1);
+    }
+
+    #[test]
+    fn it_parses_empty_content() {
+      let doc = parse("");
+
+      assert!(doc.is_empty());
+    }
+
+    #[test]
+    fn it_parses_empty_sections() {
+      let content = "Currently:\nArchive:";
+      let doc = parse(content);
+
+      assert_eq!(doc.entries_in_section("Currently").len(), 0);
+      assert_eq!(doc.entries_in_section("Archive").len(), 0);
+    }
+
+    #[test]
+    fn it_parses_entries_with_dates_and_titles() {
+      let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature";
+      let doc = parse(content);
+
+      let entries = doc.entries_in_section("Currently");
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Working on feature");
+      assert_eq!(
+        entries[0].date(),
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap()
+      );
+    }
+
+    #[test]
+    fn it_parses_entries_with_ids() {
+      let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature <aaaabbbbccccddddeeeeffffaaaabbbb>";
+      let doc = parse(content);
+
+      let entries = doc.entries_in_section("Currently");
+      assert_eq!(entries[0].id(), "aaaabbbbccccddddeeeeffffaaaabbbb");
+    }
+
+    #[test]
+    fn it_parses_entries_with_tags() {
+      let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature @coding @done(2024-03-17 15:00)";
+      let doc = parse(content);
+
+      let entries = doc.entries_in_section("Currently");
+      assert_eq!(entries[0].title(), "Working on feature");
+      assert!(entries[0].tags().has("coding"));
+      assert!(entries[0].tags().has("done"));
+      assert_eq!(
+        entries[0].tags().iter().find(|t| t.name() == "done").unwrap().value(),
+        Some("2024-03-17 15:00")
+      );
+    }
+
+    #[test]
+    fn it_parses_entry_with_tags_and_id() {
+      let content =
+        "Currently:\n\t- 2024-03-17 14:30 | My task @flag @done(2024-03-17 15:00) <aaaabbbbccccddddeeeeffffaaaabbbb>";
+      let doc = parse(content);
+
+      let entries = doc.entries_in_section("Currently");
+      assert_eq!(entries[0].title(), "My task");
+      assert!(entries[0].tags().has("flag"));
+      assert!(entries[0].tags().has("done"));
+      assert_eq!(entries[0].id(), "aaaabbbbccccddddeeeeffffaaaabbbb");
+    }
+
+    #[test]
+    fn it_parses_multiple_sections_with_entries() {
+      let content = "\
+Currently:
+\t- 2024-03-17 14:30 | Task A @coding
+\t- 2024-03-17 15:00 | Task B
+Archive:
+\t- 2024-03-16 10:00 | Old task @done(2024-03-16 11:00)";
+      let doc = parse(content);
+
+      assert_eq!(doc.len(), 2);
+      assert_eq!(doc.entries_in_section("Currently").len(), 2);
+      assert_eq!(doc.entries_in_section("Archive").len(), 1);
+    }
+
+    #[test]
+    fn it_parses_notes() {
+      let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature\n\t\tA note line\n\t\tAnother note";
+      let doc = parse(content);
+
+      let entries = doc.entries_in_section("Currently");
+      assert_eq!(entries[0].note().len(), 2);
+      assert_eq!(entries[0].note().lines(), &["A note line", "Another note"]);
+    }
+
+    #[test]
+    fn it_parses_section_headers() {
+      let content = "Currently:\nArchive:";
+      let doc = parse(content);
+
+      assert_eq!(doc.len(), 2);
+      assert_eq!(doc.section_names(), vec!["Currently", "Archive"]);
+    }
+
+    #[test]
+    fn it_preserves_other_content_top() {
+      let content = "# My Doing File\n\nCurrently:";
+      let doc = parse(content);
+
+      assert_eq!(doc.other_content_top(), &["# My Doing File", ""]);
+      assert!(doc.has_section("Currently"));
+    }
+
+    #[test]
+    fn it_generates_id_when_none_present() {
+      let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature";
+      let doc = parse(content);
+
+      let entries = doc.entries_in_section("Currently");
+      assert_eq!(entries[0].id().len(), 32);
+      assert!(entries[0].id().chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn it_round_trips_a_document() {
+      let content = "\
+Currently:
+\t- 2024-03-17 14:30 | Working on feature @coding <aaaabbbbccccddddeeeeffffaaaabbbb>
+\t\tA note about the work
+Archive:
+\t- 2024-03-16 10:00 | Old task @done(2024-03-16 11:00) <bbbbccccddddeeeeffffaaaabbbbcccc>";
+      let doc = parse(content);
+      let output = format!("{doc}");
+
+      assert_eq!(output, content);
+    }
+
+    #[test]
+    fn it_round_trips_with_other_content() {
+      let content = "\
+# My Doing File
+Currently:
+\t- 2024-03-17 14:30 | Task A <aaaabbbbccccddddeeeeffffaaaabbbb>";
+      let doc = parse(content);
+
+      assert_eq!(doc.other_content_top(), &["# My Doing File"]);
+
+      let output = format!("{doc}");
+
+      assert_eq!(
+        output,
+        "# My Doing File\n\nCurrently:\n\t- 2024-03-17 14:30 | Task A <aaaabbbbccccddddeeeeffffaaaabbbb>"
+      );
+    }
+
+    #[test]
+    fn it_skips_malformed_lines_gracefully() {
+      let content = "Currently:\n\t- not a valid entry\n\t- 2024-03-17 14:30 | Valid task";
+      let doc = parse(content);
+
+      assert_eq!(doc.entries_in_section("Currently").len(), 1);
+      assert_eq!(doc.entries_in_section("Currently")[0].title(), "Valid task");
+    }
+  }
+
+  mod parse_tags {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_extracts_multiple_tags() {
+      let (title, tags) = parse_tags("My task @coding @important @done(2024-03-17 15:00)");
+
+      assert_eq!(title, "My task");
+      assert_eq!(tags.len(), 3);
+      assert!(tags.has("coding"));
+      assert!(tags.has("important"));
+      assert!(tags.has("done"));
+    }
+
+    #[test]
+    fn it_extracts_simple_tags() {
+      let (title, tags) = parse_tags("Working on feature @coding");
+
+      assert_eq!(title, "Working on feature");
+      assert_eq!(tags.len(), 1);
+      assert!(tags.has("coding"));
+    }
+
+    #[test]
+    fn it_extracts_tags_with_values() {
+      let (title, tags) = parse_tags("Task @done(2024-03-17 15:00)");
+
+      assert_eq!(title, "Task");
+      assert_eq!(tags.len(), 1);
+      assert_eq!(tags.iter().next().unwrap().value(), Some("2024-03-17 15:00"));
+    }
+
+    #[test]
+    fn it_handles_tags_in_middle_of_title() {
+      let (title, tags) = parse_tags("Start @flag end");
+
+      assert_eq!(title, "Start end");
+      assert!(tags.has("flag"));
+    }
+
+    #[test]
+    fn it_returns_empty_tags_for_no_tags() {
+      let (title, tags) = parse_tags("Just a plain title");
+
+      assert_eq!(title, "Just a plain title");
+      assert!(tags.is_empty());
+    }
+  }
+}

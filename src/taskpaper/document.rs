@@ -26,6 +26,11 @@ impl Document {
     }
   }
 
+  /// Parse a doing file string into a structured `Document`.
+  pub fn parse(content: &str) -> Self {
+    super::parser::parse(content)
+  }
+
   /// Add a section to the document. Does nothing if a section with the same name
   /// (case-insensitive) already exists.
   pub fn add_section(&mut self, section: Section) {

@@ -1,6 +1,7 @@
 mod document;
 mod entries;
 mod note;
+mod parser;
 mod section;
 mod tags;
 

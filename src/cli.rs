@@ -178,7 +178,7 @@ enum Command {
   /// Fuzzy select an entry to act on
   Choose,
   /// Show available color template tokens
-  Colors,
+  Colors(commands::colors::Command),
   /// List available commands
   Commands,
   /// List commands accepting a given option
@@ -247,7 +247,7 @@ enum Command {
   /// List all tags in the doing file
   Tags(commands::tags::Command),
   /// Show or edit entry templates
-  Template,
+  Template(commands::template::Command),
   /// Show entries from today
   Today(commands::today::Command),
   /// Undo the last change
@@ -270,6 +270,7 @@ impl Command {
       Self::Archive(cmd) => cmd.call(ctx),
       Self::Autotag(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
+      Self::Colors(cmd) => cmd.call(),
       Self::Config(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
@@ -291,6 +292,7 @@ impl Command {
       Self::Tag(cmd) => cmd.call(ctx),
       Self::TagDir(cmd) => cmd.call(ctx),
       Self::Tags(cmd) => cmd.call(ctx),
+      Self::Template(cmd) => cmd.call(ctx),
       Self::Today(cmd) => cmd.call(ctx),
       Self::Undo(cmd) => cmd.call(ctx),
       Self::View(cmd) => cmd.call(ctx),

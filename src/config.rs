@@ -1,6 +1,7 @@
 use std::{
   collections::HashMap,
   fmt::{self, Display, Formatter},
+  path::PathBuf,
 };
 
 use serde::{Deserialize, Serialize};
@@ -24,6 +25,76 @@ impl Default for BydayPluginConfig {
   fn default() -> Self {
     Self {
       item_width: 60,
+    }
+  }
+}
+
+/// Top-level configuration for the doing application.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(default)]
+pub struct Config {
+  pub autotag: AutotagConfig,
+  pub backup_dir: PathBuf,
+  pub budgets: HashMap<String, String>,
+  pub current_section: String,
+  pub date_tags: Vec<String>,
+  pub default_tags: Vec<String>,
+  pub disabled_commands: Vec<String>,
+  pub doing_file: PathBuf,
+  pub doing_file_sort: SortOrder,
+  pub editors: EditorsConfig,
+  pub export_templates: HashMap<String, Option<TemplateConfig>>,
+  pub history_size: u32,
+  pub include_notes: bool,
+  pub interaction: InteractionConfig,
+  pub interval_format: String,
+  pub marker_color: String,
+  pub marker_tag: String,
+  pub never_finish: Vec<String>,
+  pub never_time: Vec<String>,
+  pub order: SortOrder,
+  pub paginate: bool,
+  pub plugins: PluginsConfig,
+  pub search: SearchConfig,
+  pub shortdate_format: ShortdateFormatConfig,
+  pub tag_sort: String,
+  pub templates: HashMap<String, TemplateConfig>,
+  pub timer_format: String,
+  pub views: HashMap<String, ViewConfig>,
+}
+
+impl Default for Config {
+  fn default() -> Self {
+    let data_dir = dir_spec::data_home().expect("failed to resolve user's data directory");
+    Self {
+      autotag: AutotagConfig::default(),
+      backup_dir: data_dir.join("doing/doing_backup"),
+      budgets: HashMap::new(),
+      current_section: "Currently".into(),
+      date_tags: vec!["done".into(), "defer(?:red)?".into(), "waiting".into()],
+      default_tags: Vec::new(),
+      disabled_commands: Vec::new(),
+      doing_file: data_dir.join("doing/what_was_i_doing.md"),
+      doing_file_sort: SortOrder::Desc,
+      editors: EditorsConfig::default(),
+      export_templates: HashMap::new(),
+      history_size: 15,
+      include_notes: true,
+      interaction: InteractionConfig::default(),
+      interval_format: "text".into(),
+      marker_color: "red".into(),
+      marker_tag: "flagged".into(),
+      never_finish: Vec::new(),
+      never_time: Vec::new(),
+      order: SortOrder::Asc,
+      paginate: false,
+      plugins: PluginsConfig::default(),
+      search: SearchConfig::default(),
+      shortdate_format: ShortdateFormatConfig::default(),
+      tag_sort: "name".into(),
+      templates: HashMap::new(),
+      timer_format: "text".into(),
+      views: HashMap::new(),
     }
   }
 }
@@ -58,16 +129,17 @@ impl Default for InteractionConfig {
 #[serde(default)]
 pub struct PluginsConfig {
   pub byday: BydayPluginConfig,
-  pub command_path: String,
-  pub plugin_path: String,
+  pub command_path: PathBuf,
+  pub plugin_path: PathBuf,
 }
 
 impl Default for PluginsConfig {
   fn default() -> Self {
+    let config_dir = dir_spec::config_home().expect("failed to resolve user's config directory");
     Self {
       byday: BydayPluginConfig::default(),
-      command_path: "~/.config/doing/commands".into(),
-      plugin_path: "~/.config/doing/plugins".into(),
+      command_path: config_dir.join("doing/commands"),
+      plugin_path: config_dir.join("doing/plugins"),
     }
   }
 }

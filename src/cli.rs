@@ -231,7 +231,7 @@ enum Command {
   /// Move entries between sections
   Rotate,
   /// List available sections
-  Sections,
+  Sections(commands::sections::Command),
   /// Interactively select entries to act on
   Select,
   /// Show entries from a section
@@ -279,6 +279,7 @@ impl Command {
       Self::On(cmd) => cmd.call(ctx),
       Self::Recent(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),
+      Self::Sections(cmd) => cmd.call(ctx),
       Self::Show(cmd) => cmd.call(ctx),
       Self::Since(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),

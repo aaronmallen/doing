@@ -12,6 +12,7 @@ pub mod now;
 pub mod on;
 pub mod recent;
 pub mod reset;
+pub mod sections;
 pub mod show;
 pub mod since;
 pub mod tag;

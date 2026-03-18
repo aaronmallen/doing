@@ -1,0 +1,10 @@
+name: Shared Setup
+runs:
+  using: "composite"
+  steps:
+    - uses: jdx/mise-action@v3
+    - uses: Swatinem/rust-cache@v2
+    - shell: bash
+      run: |
+        rustup component add --toolchain nightly-x86_64-unknown-linux-gnu rustfmt
+        rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy

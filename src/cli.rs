@@ -169,7 +169,8 @@ enum Command {
   /// Apply autotagging rules to existing entries
   Autotag(commands::autotag::Command),
   /// Move entries to the Archive section
-  Archive,
+  #[command(visible_alias = "move")]
+  Archive(commands::archive::Command),
   /// Mark the last entry as cancelled
   Cancel(commands::cancel::Command),
   /// Show changes to the doing file
@@ -266,6 +267,7 @@ impl Command {
   fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match self {
       Self::Again(cmd) => cmd.call(ctx),
+      Self::Archive(cmd) => cmd.call(ctx),
       Self::Autotag(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),

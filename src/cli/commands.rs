@@ -1,4 +1,5 @@
 pub mod again;
+pub mod archive;
 pub mod autotag;
 pub mod cancel;
 pub mod done;

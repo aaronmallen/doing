@@ -50,6 +50,7 @@ pub fn render(entry: &Entry, options: &RenderOptions, config: &Config) -> String
 
   for token in &tokens {
     match token {
+      Token::Color(color) => output.push_str(&color.to_ansi()),
       Token::Literal(text) => output.push_str(text),
       Token::Placeholder {
         indent,

@@ -20,6 +20,7 @@ thiserror = "2"
 toml = "1"
 typed-env = "0.3"
 yaml_serde = "0.10"
+yansi = { features = ["detect-env", "detect-tty", "hyperlink"], version = "1" }
 
 [dev-dependencies]
 pretty_assertions = "1"

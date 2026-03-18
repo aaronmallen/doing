@@ -1,5 +1,7 @@
 use regex::Regex;
 
+use super::colors;
+
 const ESCAPE_SENTINEL: &str = "\x01";
 
 /// Indentation specification for wrapped/continuation lines.
@@ -17,9 +19,10 @@ pub enum IndentChar {
   Tab,
 }
 
-/// A parsed template element — either literal text or a placeholder token.
+/// A parsed template element — either literal text, a color token, or a placeholder token.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Token {
+  Color(colors::Color),
   Literal(String),
   Placeholder {
     indent: Option<Indent>,
@@ -54,14 +57,15 @@ pub enum TokenKind {
 ///
 /// Template strings contain literal text interspersed with `%` placeholder tokens.
 /// Recognized tokens include `%date`, `%title`, `%note`, etc., with optional
-/// width, alignment, marker, indent, and prefix modifiers.
+/// width, alignment, marker, indent, and prefix modifiers. Color tokens like
+/// `%cyan`, `%boldwhite`, `%reset`, and `%#FF5500` are also recognized.
 ///
 /// Escaped percent signs (`\%`) become literal `%` in the output. Unrecognized
 /// `%` sequences are preserved as literal text.
 pub fn parse(template: &str) -> Vec<Token> {
   let escaped = template.replace("\\%", ESCAPE_SENTINEL);
 
-  let re = Regex::new(concat!(
+  let placeholder_re = Regex::new(concat!(
     r"%(?P<width>-?\d+)?",
     r"(?:\^(?P<marker>.))?",
     r"(?:(?P<ichar>[ _t]|[^a-zA-Z0-9\s])(?P<icount>\d+))?",
@@ -71,64 +75,112 @@ pub fn parse(template: &str) -> Vec<Token> {
   ))
   .expect("template token regex is valid");
 
+  let color_re = Regex::new(r"%((?:[fb]g?)?#[a-fA-F0-9]{6}|[a-zA-Z_]+)").expect("color token regex is valid");
+
+  // Build a combined list of all matches sorted by position
+  let mut matches: Vec<TokenMatch> = Vec::new();
+
+  for caps in placeholder_re.captures_iter(&escaped) {
+    let m = caps.get(0).unwrap();
+    matches.push(TokenMatch::Placeholder {
+      caps,
+      end: m.end(),
+      start: m.start(),
+    });
+  }
+
+  for caps in color_re.captures_iter(&escaped) {
+    let m = caps.get(0).unwrap();
+    let color_str = caps.get(1).unwrap().as_str();
+    if let Some(valid) = colors::validate_color(color_str) {
+      // Only add if not overlapping with a placeholder match
+      let start = m.start();
+      let end = start + 1 + valid.len(); // +1 for the % prefix
+      let overlaps = matches.iter().any(|tm| {
+        let (ts, te) = tm.span();
+        start < te && end > ts
+      });
+      if !overlaps && let Some(color) = colors::Color::parse(&valid) {
+        matches.push(TokenMatch::Color {
+          color,
+          end,
+          start,
+        });
+      }
+    }
+  }
+
+  matches.sort_by_key(|m| m.span().0);
+
   let mut tokens = Vec::new();
   let mut last_end = 0;
 
-  for caps in re.captures_iter(&escaped) {
-    let m = caps.get(0).unwrap();
+  for tm in &matches {
+    let (start, end) = tm.span();
 
-    if m.start() > last_end {
-      tokens.push(Token::Literal(unescape(&escaped[last_end..m.start()])));
+    if start > last_end {
+      tokens.push(Token::Literal(unescape(&escaped[last_end..start])));
     }
 
-    let width = caps.name("width").map(|m| m.as_str().parse::<i32>().unwrap());
-    let marker = caps.name("marker").and_then(|m| m.as_str().chars().next());
+    match tm {
+      TokenMatch::Color {
+        color, ..
+      } => {
+        tokens.push(Token::Color(color.clone()));
+      }
+      TokenMatch::Placeholder {
+        caps, ..
+      } => {
+        let width = caps.name("width").map(|m| m.as_str().parse::<i32>().unwrap());
+        let marker = caps.name("marker").and_then(|m| m.as_str().chars().next());
 
-    let indent = caps.name("ichar").and_then(|ic| {
-      caps.name("icount").map(|cnt| {
-        let count = cnt.as_str().parse::<u32>().unwrap();
-        let kind = match ic.as_str().chars().next().unwrap() {
-          ' ' | '_' => IndentChar::Space,
-          't' => IndentChar::Tab,
-          c => IndentChar::Custom(c),
+        let indent = caps.name("ichar").and_then(|ic| {
+          caps.name("icount").map(|cnt| {
+            let count = cnt.as_str().parse::<u32>().unwrap();
+            let kind = match ic.as_str().chars().next().unwrap() {
+              ' ' | '_' => IndentChar::Space,
+              't' => IndentChar::Tab,
+              c => IndentChar::Custom(c),
+            };
+            Indent {
+              count,
+              kind,
+            }
+          })
+        });
+
+        let prefix = caps.name("prefix").map(|m| m.as_str().to_string());
+
+        let kind = match caps.name("kind").unwrap().as_str() {
+          "chompnote" => TokenKind::Chompnote,
+          "date" => TokenKind::Date,
+          "duration" => TokenKind::Duration,
+          "hr" => TokenKind::Hr,
+          "hr_under" => TokenKind::HrUnder,
+          "idnote" => TokenKind::Idnote,
+          "interval" => TokenKind::Interval,
+          "n" => TokenKind::Newline,
+          "note" => TokenKind::Note,
+          "odnote" => TokenKind::Odnote,
+          "section" => TokenKind::Section,
+          "shortdate" => TokenKind::Shortdate,
+          "t" => TokenKind::Tab,
+          "tags" => TokenKind::Tags,
+          "title" => TokenKind::Title,
+          _ => unreachable!(),
         };
-        Indent {
-          count,
+
+        tokens.push(Token::Placeholder {
+          indent,
           kind,
-        }
-      })
-    });
+          marker,
+          prefix,
+          width,
+        });
+      }
+    }
 
-    let prefix = caps.name("prefix").map(|m| m.as_str().to_string());
-
-    let kind = match caps.name("kind").unwrap().as_str() {
-      "chompnote" => TokenKind::Chompnote,
-      "date" => TokenKind::Date,
-      "duration" => TokenKind::Duration,
-      "hr" => TokenKind::Hr,
-      "hr_under" => TokenKind::HrUnder,
-      "idnote" => TokenKind::Idnote,
-      "interval" => TokenKind::Interval,
-      "n" => TokenKind::Newline,
-      "note" => TokenKind::Note,
-      "odnote" => TokenKind::Odnote,
-      "section" => TokenKind::Section,
-      "shortdate" => TokenKind::Shortdate,
-      "t" => TokenKind::Tab,
-      "tags" => TokenKind::Tags,
-      "title" => TokenKind::Title,
-      _ => unreachable!(),
-    };
-
-    tokens.push(Token::Placeholder {
-      indent,
-      kind,
-      marker,
-      prefix,
-      width,
-    });
-
-    last_end = m.end();
+    last_end = end;
   }
 
   if last_end < escaped.len() {
@@ -136,6 +188,36 @@ pub fn parse(template: &str) -> Vec<Token> {
   }
 
   tokens
+}
+
+enum TokenMatch<'a> {
+  Color {
+    color: colors::Color,
+    end: usize,
+    start: usize,
+  },
+  Placeholder {
+    caps: regex::Captures<'a>,
+    end: usize,
+    start: usize,
+  },
+}
+
+impl TokenMatch<'_> {
+  fn span(&self) -> (usize, usize) {
+    match self {
+      Self::Color {
+        end,
+        start,
+        ..
+      } => (*start, *end),
+      Self::Placeholder {
+        end,
+        start,
+        ..
+      } => (*start, *end),
+    }
+  }
 }
 
 fn unescape(s: &str) -> String {
@@ -403,16 +485,44 @@ mod test {
     }
 
     #[test]
-    fn it_preserves_unknown_percent_sequences() {
+    fn it_parses_color_tokens() {
       let tokens = parse("%cyan%date%reset");
 
       assert_eq!(
         tokens,
         vec![
-          Token::Literal("%cyan".into()),
+          Token::Color(colors::Color::Named(colors::NamedColor::Cyan)),
           placeholder(TokenKind::Date),
-          Token::Literal("%reset".into()),
+          Token::Color(colors::Color::Named(colors::NamedColor::Reset)),
         ]
+      );
+    }
+
+    #[test]
+    fn it_parses_hex_color_tokens() {
+      let tokens = parse("%#FF5500hello");
+
+      assert_eq!(
+        tokens,
+        vec![
+          Token::Color(colors::Color::Hex {
+            background: false,
+            b: 0x00,
+            g: 0x55,
+            r: 0xFF,
+          }),
+          Token::Literal("hello".into()),
+        ]
+      );
+    }
+
+    #[test]
+    fn it_preserves_unknown_percent_sequences() {
+      let tokens = parse("%xyz%date");
+
+      assert_eq!(
+        tokens,
+        vec![Token::Literal("%xyz".into()), placeholder(TokenKind::Date),]
       );
     }
   }

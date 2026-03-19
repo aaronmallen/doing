@@ -1,6 +1,9 @@
+mod byday;
 mod csv;
 mod doing;
+mod html;
 mod json;
+mod markdown;
 mod taskpaper;
 
 use std::collections::HashMap;
@@ -125,9 +128,12 @@ struct RegisteredPlugin {
 /// Build the default export registry with all built-in export plugins.
 pub fn default_registry() -> ExportRegistry {
   let mut registry = ExportRegistry::new();
+  registry.register(Box::new(byday::BydayExport));
   registry.register(Box::new(csv::CsvExport));
   registry.register(Box::new(doing::DoingExport));
+  registry.register(Box::new(html::HtmlExport));
   registry.register(Box::new(json::JsonExport));
+  registry.register(Box::new(markdown::MarkdownExport));
   registry.register(Box::new(taskpaper::TaskPaperExport));
   registry
 }
@@ -184,7 +190,10 @@ mod test {
     fn it_registers_all_built_in_plugins() {
       let registry = default_registry();
 
-      assert_eq!(registry.available_formats(), vec!["csv", "doing", "json", "taskpaper"]);
+      assert_eq!(
+        registry.available_formats(),
+        vec!["byday", "csv", "doing", "html", "json", "markdown", "taskpaper"]
+      );
     }
   }
 

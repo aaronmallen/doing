@@ -39,7 +39,6 @@ cmd "again" help="Repeat the last entry" {
 
 cmd "archive" help="Move entries to the Archive section" {
   alias "move"
-  flag "-c --count <COUNT>" help="Maximum number of entries to move"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"

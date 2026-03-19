@@ -27,6 +27,7 @@ order = "asc"
 /// Each instance creates its own temp directory with a config file pointing
 /// `doing_file` to that directory, ensuring complete test isolation.
 pub struct DoingCmd {
+  backup_dir: PathBuf,
   config_path: PathBuf,
   doing_file_path: PathBuf,
   _temp_dir: TempDir,
@@ -46,6 +47,7 @@ impl DoingCmd {
 
   fn with_config_content(config_content: &str) -> Self {
     let temp_dir = TempDir::new().expect("failed to create temp dir");
+    let backup_dir = temp_dir.path().join("doing_backup");
     let doing_file_path = temp_dir.path().join("doing.md");
     let config_path = temp_dir.path().join("config.toml");
 
@@ -53,14 +55,21 @@ impl DoingCmd {
 
     Self {
       _temp_dir: temp_dir,
+      backup_dir,
       config_path,
       doing_file_path,
     }
   }
 
+  /// Return the path to the backup directory for this test environment.
+  pub fn backup_dir(&self) -> &std::path::Path {
+    &self.backup_dir
+  }
+
   /// Build an `assert_cmd::Command` for the `doing` binary with isolation env vars set.
   pub fn cmd(&self) -> Command {
     let mut cmd = Command::cargo_bin("doing").expect("failed to find doing binary");
+    cmd.env("DOING_BACKUP_DIR", &self.backup_dir);
     cmd.env("DOING_CONFIG", &self.config_path);
     cmd.arg("-f").arg(&self.doing_file_path);
     cmd.arg("--no-color");

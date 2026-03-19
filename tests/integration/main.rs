@@ -5,6 +5,7 @@ mod cancel;
 mod done;
 mod finish;
 mod helpers;
+mod last;
 mod mark;
 mod meanwhile;
 mod note;

@@ -135,7 +135,7 @@ mod test {
     let mut later = Section::new("Later");
     later.add_entry(Entry::new(
       Local.with_ymd_and_hms(2024, 3, 17, 16, 0, 0).unwrap(),
-      "Plan next sprint",
+      "Plan next ready",
       Tags::new(),
       Note::new(),
       "Later",

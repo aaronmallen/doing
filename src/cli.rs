@@ -234,7 +234,7 @@ enum Command {
   /// List available sections
   Sections(commands::sections::Command),
   /// Interactively select entries to act on
-  Select,
+  Select(commands::select::Command),
   /// Show entries from a section
   Show(commands::show::Command),
   /// Show entries since a given date
@@ -288,6 +288,7 @@ impl Command {
       Self::Reset(cmd) => cmd.call(ctx),
       Self::Rotate(cmd) => cmd.call(ctx),
       Self::Sections(cmd) => cmd.call(ctx),
+      Self::Select(cmd) => cmd.call(ctx),
       Self::Show(cmd) => cmd.call(ctx),
       Self::Since(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),

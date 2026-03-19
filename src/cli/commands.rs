@@ -20,6 +20,7 @@ pub mod redo;
 pub mod reset;
 pub mod rotate;
 pub mod sections;
+pub mod select;
 pub mod show;
 pub mod since;
 pub mod tag;

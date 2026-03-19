@@ -8,6 +8,7 @@ mod finish;
 mod grep;
 mod helpers;
 mod import_doing;
+mod import_timing;
 mod last;
 mod mark;
 mod meanwhile;

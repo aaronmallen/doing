@@ -6,6 +6,7 @@ mod chronify;
 mod config;
 mod done;
 mod finish;
+mod global_flags;
 mod grep;
 mod helpers;
 mod import_doing;

@@ -9,9 +9,10 @@ Format and lint the project, auditing changed Rust files against code style guid
 
 ## Instructions
 
-### 1. Run Formatter
+### 1. Run Formatter & Linter
 
-Run `mise run format` to format code. Fix any **errors** the formatter was unable to address.
+Run `mise run format` to format code.
+Run `mise run lint` Fix any **errors** the formatter was unable to address.
 
 ### 2. Audit Changed Files
 

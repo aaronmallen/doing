@@ -15,6 +15,7 @@ pub mod note;
 pub mod now;
 pub mod on;
 pub mod open;
+pub mod plugins;
 pub mod recent;
 pub mod redo;
 pub mod reset;

@@ -252,7 +252,7 @@ enum Command {
   /// Open the doing file in an editor
   Open(commands::open::Command),
   /// List installed plugins
-  Plugins,
+  Plugins(commands::plugins::Command),
   /// Show recent entries
   Recent(commands::recent::Command),
   /// Redo the last undone change
@@ -314,6 +314,7 @@ impl Command {
       Self::Now(cmd) => cmd.call(ctx),
       Self::On(cmd) => cmd.call(ctx),
       Self::Open(cmd) => cmd.call(ctx),
+      Self::Plugins(cmd) => cmd.call(),
       Self::Recent(cmd) => cmd.call(ctx),
       Self::Redo(cmd) => cmd.call(ctx),
       Self::Reset(cmd) => cmd.call(ctx),

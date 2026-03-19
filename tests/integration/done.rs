@@ -1,44 +1,8 @@
 use chrono::Local;
-use regex::Regex;
 
-use crate::helpers::DoingCmd;
-
-/// Assert two timestamp strings are within `tolerance` minutes of each other.
-fn assert_times_within_tolerance(actual: &str, expected: &str, tolerance_minutes: i64, context: &str) {
-  let fmt = "%Y-%m-%d %H:%M";
-  let actual_dt = chrono::NaiveDateTime::parse_from_str(actual, fmt)
-    .unwrap_or_else(|_| panic!("failed to parse actual time: {actual}"));
-  let expected_dt = chrono::NaiveDateTime::parse_from_str(expected, fmt)
-    .unwrap_or_else(|_| panic!("failed to parse expected time: {expected}"));
-  let diff = (actual_dt - expected_dt).num_minutes().abs();
-  assert!(
-    diff <= tolerance_minutes,
-    "{context}: expected {expected}, got {actual} (diff {diff} minutes, tolerance {tolerance_minutes})"
-  );
-}
-
-/// Extract the @done(timestamp) value from the doing file
-fn extract_done_timestamp(contents: &str) -> String {
-  let re = Regex::new(r"@done\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)").unwrap();
-  let cap = re
-    .captures(contents)
-    .expect("doing file should contain a @done timestamp");
-  cap[1].to_string()
-}
-
-/// Extract the entry start timestamp from the doing file (e.g., `2024-03-17 14:30`)
-fn extract_entry_timestamp(contents: &str) -> String {
-  let re = Regex::new(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \|").unwrap();
-  let cap = re
-    .captures(contents)
-    .expect("doing file should contain an entry timestamp");
-  cap[1].to_string()
-}
-
-/// Format a chrono DateTime to the timestamp format used by doing entries.
-fn fmt_time(dt: chrono::DateTime<Local>) -> String {
-  dt.format("%Y-%m-%d %H:%M").to_string()
-}
+use crate::helpers::{
+  DoingCmd, assert_times_within_tolerance, extract_done_timestamp, extract_entry_timestamp, fmt_time,
+};
 
 #[test]
 fn it_backdates_start_with_back_flag() {

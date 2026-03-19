@@ -1,6 +1,7 @@
 pub mod again;
 pub mod archive;
 pub mod autotag;
+pub mod budget;
 pub mod cancel;
 pub mod choose;
 pub mod colors;

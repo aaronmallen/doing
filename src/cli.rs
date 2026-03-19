@@ -199,6 +199,8 @@ enum Command {
   Again(commands::again::Command),
   /// Apply autotagging rules to existing entries
   Autotag(commands::autotag::Command),
+  /// Manage time budgets for tags
+  Budget(commands::budget::Command),
   /// Move entries to the Archive section
   #[command(visible_alias = "move")]
   Archive(commands::archive::Command),
@@ -297,6 +299,7 @@ impl Command {
       Self::Again(cmd) => cmd.call(ctx),
       Self::Archive(cmd) => cmd.call(ctx),
       Self::Autotag(cmd) => cmd.call(ctx),
+      Self::Budget(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Colors(cmd) => cmd.call(),
       Self::Commands(cmd) => cmd.call(&Cli::command()),

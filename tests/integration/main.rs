@@ -4,6 +4,7 @@ mod cancel;
 mod done;
 mod finish;
 mod helpers;
+mod mark;
 mod meanwhile;
 mod note;
 mod now;

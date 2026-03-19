@@ -54,7 +54,10 @@ impl Command {
       .cloned()
       .collect();
 
-    let mut options = self.filter.clone().into_filter_options(&ctx.config)?;
+    let mut options = self
+      .filter
+      .clone()
+      .into_filter_options(&ctx.config, ctx.include_notes)?;
     options.section = Some(section_name.to_string());
 
     if options.after.is_none() {
@@ -118,8 +121,16 @@ mod test {
 
     AppContext {
       config: crate::config::Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -156,8 +167,16 @@ mod test {
     fn it_handles_empty_document() {
       let mut ctx = AppContext {
         config: crate::config::Config::default(),
+        default_answer: false,
         document: Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = default_cmd("yesterday");
 

@@ -134,7 +134,7 @@ impl Command {
       ..ctx.config.clone()
     };
 
-    let mut options = filter_with_search.into_filter_options(&config_with_overrides)?;
+    let mut options = filter_with_search.into_filter_options(&config_with_overrides, ctx.include_notes)?;
     options.section = Some(section_name.to_string());
     Ok(options)
   }
@@ -209,8 +209,16 @@ mod test {
 
     AppContext {
       config: crate::config::Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 

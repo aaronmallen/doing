@@ -116,7 +116,10 @@ impl Command {
     if has_filters {
       let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
 
-      let mut options = self.filter.clone().into_filter_options(&ctx.config)?;
+      let mut options = self
+        .filter
+        .clone()
+        .into_filter_options(&ctx.config, ctx.include_notes)?;
       options.age = options.age.or(Some(Age::Newest));
 
       let results = filter_entries(all_entries, &options);
@@ -266,8 +269,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -290,8 +301,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -319,8 +338,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -388,8 +415,16 @@ mod test {
       fs::write(&path, "Currently:\n").unwrap();
       let mut ctx = AppContext {
         config: Config::default(),
+        default_answer: false,
         document: Document::parse("Currently:\n"),
         doing_file: path,
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = Command {
         tags: vec!["coding".into()],

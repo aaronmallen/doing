@@ -95,7 +95,10 @@ impl Command {
   }
 
   fn build_filter_options(&self, view: &ViewConfig, ctx: &AppContext) -> Result<FilterOptions> {
-    let mut options = self.filter.clone().into_filter_options(&ctx.config)?;
+    let mut options = self
+      .filter
+      .clone()
+      .into_filter_options(&ctx.config, ctx.include_notes)?;
 
     // Apply view tags if no CLI tags were provided
     if options.tag_filter.is_none() && !view.tags.is_empty() {
@@ -212,8 +215,16 @@ mod test {
 
     AppContext {
       config,
+      default_answer: false,
       document: doc,
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 

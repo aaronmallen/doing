@@ -130,8 +130,16 @@ mod test {
 
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -155,8 +163,16 @@ mod test {
     fn it_handles_empty_document() {
       let ctx = AppContext {
         config: Config::default(),
+        default_answer: false,
         document: Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
 
       let result = super::super::list_sections(&ctx);

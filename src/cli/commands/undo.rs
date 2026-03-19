@@ -81,8 +81,16 @@ mod test {
           backup_dir: backup_dir.clone(),
           ..Config::default()
         },
+        default_answer: false,
         document: Document::new(),
         doing_file: source.clone(),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = Command {
         count: 1,
@@ -110,8 +118,16 @@ mod test {
           backup_dir: backup_dir.clone(),
           ..Config::default()
         },
+        default_answer: false,
         document: Document::new(),
         doing_file: source.clone(),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = Command {
         count: 2,
@@ -136,8 +152,16 @@ mod test {
           backup_dir: backup_dir.clone(),
           ..Config::default()
         },
+        default_answer: false,
         document: Document::new(),
         doing_file: source.clone(),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = Command {
         count: 1,

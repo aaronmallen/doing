@@ -403,7 +403,7 @@ impl Command {
       ..Default::default()
     };
 
-    let mut options = filter_args.into_filter_options(&ctx.config)?;
+    let mut options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
     options.sort = Some(SortOrder::Asc);
 
     Ok(filter_entries(all_entries, &options))
@@ -511,8 +511,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -540,8 +548,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 

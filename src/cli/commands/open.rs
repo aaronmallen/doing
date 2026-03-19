@@ -101,8 +101,16 @@ mod test {
     fn it_uses_app_flag_when_provided() {
       let ctx = AppContext {
         config: Config::default(),
+        default_answer: false,
         document: crate::taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
 
       let editor = super::super::resolve_open_editor(&Some("code".into()), &ctx);
@@ -122,8 +130,16 @@ mod test {
           },
           ..Config::default()
         },
+        default_answer: false,
         document: crate::taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
 
       let editor = super::super::resolve_open_editor(&None, &ctx);
@@ -143,8 +159,16 @@ mod test {
           },
           ..Config::default()
         },
+        default_answer: false,
         document: crate::taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
 
       if crate::config::env::DOING_EDITOR.value().is_err() {

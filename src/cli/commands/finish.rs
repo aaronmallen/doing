@@ -194,7 +194,7 @@ impl Command {
       let options = FilterOptions {
         age: Some(Age::Newest),
         count: Some(self.count),
-        include_notes: ctx.config.include_notes,
+        include_notes: ctx.include_notes,
         search,
         section: Some(section_name.to_string()),
         tag_filter,
@@ -408,8 +408,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: test_config(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -445,8 +453,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: test_config(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -466,8 +482,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: test_config(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -495,8 +519,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: test_config(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -529,8 +561,16 @@ mod test {
       fs::write(&path, "Currently:\n").unwrap();
       let mut ctx = AppContext {
         config: test_config(),
+        default_answer: false,
         document: Document::parse("Currently:\n"),
         doing_file: path,
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = default_cmd();
 

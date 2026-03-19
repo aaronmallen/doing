@@ -304,8 +304,16 @@ mod test {
     fs::write(&path, "Currently:\n").unwrap();
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: Document::parse("Currently:\n"),
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -333,8 +341,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -354,8 +370,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -534,8 +558,16 @@ mod test {
       doc.add_section(section);
       let mut ctx = AppContext {
         config: Config::default(),
+        default_answer: false,
         document: doc,
         doing_file: path,
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = Command {
         remove: true,
@@ -691,8 +723,16 @@ mod test {
       doc.add_section(section);
       let mut ctx = AppContext {
         config: Config::default(),
+        default_answer: false,
         document: doc,
         doing_file: path,
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = default_cmd();
 

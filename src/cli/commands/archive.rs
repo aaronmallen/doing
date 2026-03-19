@@ -82,7 +82,10 @@ impl Command {
       || self.filter.from.is_some();
 
     let mut candidates = if has_filters {
-      let mut options = self.filter.clone().into_filter_options(&ctx.config)?;
+      let mut options = self
+        .filter
+        .clone()
+        .into_filter_options(&ctx.config, ctx.include_notes)?;
       options.section = Some(section_name.to_string());
       options.age = options.age.or(Some(Age::Oldest));
       filter_entries(all_entries, &options)
@@ -183,8 +186,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -228,8 +239,16 @@ mod test {
     doc.add_section(section);
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: doc,
       doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 
@@ -274,8 +293,16 @@ mod test {
       doc.add_section(section);
       let mut ctx = AppContext {
         config: Config::default(),
+        default_answer: false,
         document: doc,
         doing_file: path,
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
       };
       let cmd = default_cmd();
 

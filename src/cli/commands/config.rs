@@ -249,8 +249,16 @@ mod test {
   fn sample_ctx() -> AppContext {
     AppContext {
       config: Config::default(),
+      default_answer: false,
       document: crate::taskpaper::Document::new(),
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
     }
   }
 

@@ -7,6 +7,7 @@ use std::{ffi::OsString, path::PathBuf};
 
 use clap::{ArgAction, Parser, Subcommand};
 use log::debug;
+use yansi::Condition;
 
 use crate::{
   config::{self, Config},
@@ -17,8 +18,16 @@ use crate::{
 /// Shared application context passed to all command handlers.
 pub(crate) struct AppContext {
   pub config: Config,
+  pub default_answer: bool,
   pub document: Document,
   pub doing_file: PathBuf,
+  pub include_notes: bool,
+  pub no: bool,
+  pub noauto: bool,
+  pub stdout: bool,
+  pub use_color: bool,
+  pub use_pager: bool,
+  pub yes: bool,
 }
 
 /// A CLI for a What Was I Doing system.
@@ -117,18 +126,44 @@ impl Cli {
     Document::create_file(&doing_file, &config.current_section)?;
     let document = taskpaper::io::read_file(&doing_file)?;
 
+    let include_notes = if self.notes {
+      true
+    } else if self.no_notes {
+      false
+    } else {
+      config.include_notes
+    };
+
+    let use_color = if self.color {
+      true
+    } else if self.no_color {
+      false
+    } else {
+      Condition::stdouterr_are_tty_live()
+    };
+
+    if use_color {
+      yansi::enable();
+    } else {
+      yansi::disable();
+    }
+
     let mut ctx = AppContext {
       config,
+      default_answer: self.default,
       document,
       doing_file,
+      include_notes,
+      no: self.no,
+      noauto: self.noauto && !self.no_noauto,
+      stdout: self.stdout,
+      use_color,
+      use_pager: self.pager,
+      yes: self.yes,
     };
 
     let default_cmd = Command::Recent(commands::recent::Command::default());
     self.command.as_ref().unwrap_or(&default_cmd).call(&mut ctx)
-  }
-
-  fn include_notes(&self) -> bool {
-    !self.no_notes
   }
 
   fn log_level(&self) -> log::LevelFilter {
@@ -153,10 +188,6 @@ impl Cli {
     } else {
       log::LevelFilter::Info
     }
-  }
-
-  fn use_color(&self) -> bool {
-    !self.no_color
   }
 }
 

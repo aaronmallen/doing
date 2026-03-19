@@ -42,7 +42,7 @@ pub struct Command {
   output: Option<String>,
 
   /// Text search query to filter entries
-  #[arg(short, long)]
+  #[arg(long)]
   query: Option<String>,
 
   /// Save output to a file

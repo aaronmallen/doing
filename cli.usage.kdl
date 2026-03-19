@@ -85,7 +85,7 @@ cmd "choose" help="Fuzzy select an entry to act on" {
     choices "and" "not" "or" "pattern"
   }
   flag "-o --output <FORMAT>" help="Output format"
-  flag "-q --query <QUERY>" help="Text search query to filter entries"
+  flag "--query <QUERY>" help="Text search query to filter entries"
   flag "--save-to <FILE>" help="Save output to a file"
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-S --section <SECTION>" help="Section to choose entries from"

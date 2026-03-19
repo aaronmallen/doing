@@ -1,0 +1,653 @@
+name "doing"
+bin "doing"
+version "0.1.0"
+about "A command line tool for remembering what you were doing and tracking what you've done"
+long_about "Doing uses a TaskPaper-like formatting to keep a plain text record of what you've been doing, complete with tag-based time tracking. The command line tool allows you to add entries, annotate with tags and notes, and view your entries with myriad options, with a focus on a \"natural\" language syntax."
+author "Aaron Allen <@aaronmallen>"
+
+// Global flags
+flag "--color" help="Colored output" global=#true negate="--no-color"
+flag "--debug" help="Enable debug output" global=#true
+flag "--default" help="Answer yes/no menus with default option" global=#true
+flag "-f --doing-file <PATH>" help="Specify a different doing_file" global=#true
+flag "--no" help="Answer all yes/no menus with no" global=#true
+flag "-x --noauto" help="Exclude auto tags and default tags" global=#true negate="--no-noauto"
+flag "--notes" help="Output notes if included in the template" global=#true negate="--no-notes"
+flag "-p --pager" help="Use a pager when output is longer than screen" global=#true
+flag "-q --quiet" help="Silence info messages" global=#true
+flag "--stdout" help="Send results report to STDOUT instead of STDERR" global=#true
+flag "--yes" help="Answer all yes/no menus with yes" global=#true
+
+cmd "again" help="Repeat the last entry" {
+  alias "resume"
+  flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\")"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-e --editor" help="Open an editor to compose the entry title and notes"
+  flag "--in <SECTION>" help="Target section for the new entry"
+  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-n --note <NOTE>" help="Attach a note directly from the command line"
+  flag "--search <SEARCH>" help="Text search query to find the entry to repeat"
+  flag "-s --section <SECTION>" help="Source section to find the entry to repeat"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+}
+
+cmd "archive" help="Move entries to the Archive section" {
+  alias "move"
+  flag "-c --count <COUNT>" help="Maximum number of entries to move"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-k --keep <KEEP>" help="Number of entries to keep in the source section"
+  flag "-l --label" help="Add @from(section) tag to moved entries"
+}
+
+cmd "autotag" help="Apply autotagging rules to existing entries" {
+  flag "-c --count <COUNT>" help="Apply to the last N entries" default="1"
+  flag "-S --section <SECTION>" help="Section to target"
+}
+
+cmd "budget" help="Manage time budgets for tags" {
+  arg "[TAG]" help="Tag name to set or remove a budget for"
+  arg "[AMOUNT]" help="Amount to budget (e.g., 100h, 8h30m, 2d)"
+  flag "-r --remove" help="Remove the budget for the given tag"
+}
+
+cmd "cancel" help="Mark the last entry as cancelled" {
+  flag "-a --archive" help="Move cancelled entries to Archive"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Cancel the last N entries" default="1"
+  flag "--search <SEARCH>" help="Text search query to filter entries"
+  flag "-S --section <SECTION>" help="Section to cancel entries from"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+}
+
+cmd "choose" help="Fuzzy select an entry to act on" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-o --output <FORMAT>" help="Output format"
+  flag "-q --query <QUERY>" help="Text search query to filter entries"
+  flag "--save-to <FILE>" help="Save output to a file"
+  flag "--search <SEARCH>" help="Text search query to filter entries"
+  flag "-S --section <SECTION>" help="Section to choose entries from"
+  flag "--tagged <TAG>" help="Filter by tags (can be repeated)" var=#true
+}
+
+cmd "colors" help="Show available color template tokens"
+
+cmd "commands" help="List available commands"
+
+cmd "commands_accepting" help="List commands accepting a given option" hide=#true {
+  arg "<OPTION>" help="The option name to search for (without leading dashes)"
+}
+
+cmd "completion" help="Generate shell completions" {
+  arg "<SHELL>" help="Shell to generate completions for" {
+    choices "bash" "zsh" "fish"
+  }
+
+  cmd "install" help="Generate and install shell completions" {
+    arg "<SHELL>" help="Shell to install completions for" {
+      choices "bash" "zsh" "fish"
+    }
+  }
+}
+
+cmd "config" help="View, edit, and manage configuration" {
+  cmd "edit" help="Open the config file in the configured editor"
+  cmd "get" help="Get a config value by dot-path (e.g., editors.default)" {
+    arg "<KEY>" help="Dot-separated config key (e.g., editors.default, search.case)"
+  }
+  cmd "list" help="List all detected config files in the config cascade"
+  cmd "set" help="Set a config value by dot-path" {
+    arg "<KEY>" help="Dot-separated config key"
+    arg "<VALUE>" help="Value to set"
+  }
+}
+
+cmd "done" help="Add a completed entry" {
+  alias "did"
+  flag "-a --archive" help="Immediately archive the entry"
+  flag "--at <AT>" help="Specify the completion time"
+  flag "-b --back <DATE>" help="Backdate the start time using natural language (e.g. \"30m ago\")"
+  flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
+  flag "-e --editor" help="Open an editor to compose the entry title and notes"
+  flag "--from <FROM>" help="Set a specific start time"
+  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-n --note <NOTE>" help="Attach a note directly from the command line"
+  flag "-r --remove" help="Remove @done tag from last entry instead of adding"
+  flag "-s --section <SECTION>" help="Add to a different section"
+  flag "--took <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate start time from now"
+  flag "-u --unfinished" help="Finish last entry not already marked @done"
+  arg "[TITLE]..." help="Entry description"
+}
+
+cmd "finish" help="Mark the last entry as finished" {
+  flag "-a --archive" help="Move finished entries to Archive"
+  flag "--at <AT>" help="Specify the exact completion time"
+  flag "--auto" help="Automatically set @done time to the start time of the next entry"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Finish the last N entries" default="1"
+  flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
+  flag "-r --remove" help="Remove @done tag instead of adding"
+  flag "--search <SEARCH>" help="Text search query to filter entries"
+  flag "-S --section <SECTION>" help="Section to finish entries from"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--took <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
+  flag "-u --update" help="Overwrite an existing @done tag with a new timestamp"
+}
+
+cmd "grep" help="Search for entries matching a pattern" {
+  alias "search"
+  arg "<QUERY>" help="Search query"
+  flag "-c --case <CASE>" help="Case sensitivity mode (smart/sensitive/ignore)"
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--exact" help="Use exact (literal substring) matching"
+  flag "--fuzzy" help="Use fuzzy matching"
+  flag "--highlight" help="Highlight matching text in output"
+  flag "-p --pager" help="Use a pager for output"
+  flag "--regex" help="Use regex matching"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "--count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+}
+
+cmd "import" help="Import entries from other sources" {
+  arg "<PATH>" help="Path to the file to import"
+  flag "--autotag" help="Apply autotagging rules to imported entries"
+  flag "--from <FROM>" help="Date range filter for imports (e.g. \"last week\", \"2024-01-01 to 2024-03-01\")"
+  flag "--no-overlap" help="Skip entries whose time range overlaps with existing entries"
+  flag "--prefix <PREFIX>" help="Prepend text to all imported entry titles"
+  flag "--search <SEARCH>" help="Filter which entries to import by search query"
+  flag "-s --section <SECTION>" help="Target section for imported entries (default: current section)"
+  flag "-t --tag <TAG>" help="Apply additional tags to all imported entries" var=#true
+  flag "-t --type <TYPE>" help="Import format type (doing, timing)"
+}
+
+cmd "last" help="Show the last entry" {
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}
+
+cmd "mark" help="Toggle the marker tag on the last entry" {
+  alias "flag"
+  flag "-d --date" help="Include current date as the tag value"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "--force" help="Skip confirmation prompts"
+  flag "-r --remove" help="Remove the marker tag instead of toggling"
+  flag "-v --value <VALUE>" help="Value to set on the marker tag"
+}
+
+cmd "meanwhile" help="Add an entry while finishing the last" {
+  flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\")"
+  flag "-e --editor" help="Open an editor to compose the entry title and notes"
+  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-n --note <NOTE>" help="Attach a note directly from the command line"
+  flag "-s --section <SECTION>" help="Add to a different section"
+  arg "[TITLE]..." help="Entry description"
+}
+
+cmd "note" help="Add or display notes on the last entry" {
+  flag "-e --editor" help="Open an editor to compose the note"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-n --note <NOTE>" help="Note text to append (can be repeated for multiple lines)" var=#true
+  flag "-r --remove" help="Remove all notes from the entry"
+  arg "[TEXT]..." help="Note text to append"
+}
+
+cmd "now" help="Add a new entry" {
+  alias "next"
+  flag "--ask" help="Prompt interactively for the entry title"
+  flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\")"
+  flag "-e --editor" help="Open an editor to compose the entry title and notes"
+  flag "--finish-last" help="Mark the previous entry in the section as @done before adding"
+  flag "--from <FROM>" help="Set a specific start time"
+  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-n --note <NOTE>" help="Attach a note directly from the command line"
+  flag "-s --section <SECTION>" help="Add to a different section"
+  arg "[TITLE]..." help="Entry description"
+}
+
+cmd "on" help="Show entries from a specific date" {
+  arg "<DATE>" help="Date or date range expression (e.g. \"last friday\", \"3/15 to 3/20\")"
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}
+
+cmd "open" help="Open the doing file in an editor" {
+  flag "-a --app <APP>" help="Open with a specific application"
+  flag "-b --backup" help="Open the most recent backup file instead"
+}
+
+cmd "plugins" help="List installed plugins"
+
+cmd "recent" help="Show recent entries" {
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}
+
+cmd "redo" help="Redo the last undone change"
+
+cmd "reset" help="Reset the start date of the last entry" {
+  alias "begin"
+  flag "-b --back <DATE>" help="Set a specific start date (natural language)"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-r --resume" help="Also remove @done tag (re-open the entry)"
+}
+
+cmd "rotate" help="Move entries to a dated archive file" {
+  flag "--before <BEFORE>" help="Upper bound date — move entries before this date"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-k --keep <KEEP>" help="Number of entries to keep in the source section"
+}
+
+cmd "sections" help="List available sections" {
+  cmd "add" help="Add a new section to the doing file" {
+    arg "<NAME>" help="Name of the section to add"
+  }
+  cmd "remove" help="Remove an empty section from the doing file" {
+    arg "<NAME>" help="Name of the section to remove"
+  }
+}
+
+cmd "select" help="Interactively select entries to act on" {
+  flag "-a --archive" help="Archive selected entries"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --cancel" help="Cancel selected entries (mark @done without timestamp)"
+  flag "-d --delete" help="Delete selected entries"
+  flag "-e --editor" help="Open selected entries in an editor for batch editing"
+  flag "-f --finish" help="Finish selected entries (mark @done with timestamp)"
+  flag "--flag" help="Toggle the marker tag on selected entries"
+  flag "-m --move <SECTION>" help="Move selected entries to a section"
+  flag "--no-menu" help="Non-interactive batch mode — apply action to all matching entries"
+  flag "-o --output <FORMAT>" help="Output selected entries in a given format"
+  flag "-q --query <QUERY>" help="Pre-filter the list before presenting the menu"
+  flag "--save-to <FILE>" help="Save selected entries to a file"
+  flag "--search <SEARCH>" help="Text search query to filter entries"
+  flag "-S --section <SECTION>" help="Section to select entries from"
+  flag "-t --tag <TAGS>" help="Add tags to selected entries (comma-separated)"
+  flag "--tagged <TAG>" help="Filter by tags (can be repeated)" var=#true
+}
+
+cmd "show" help="Show entries from a section" {
+  arg "[SECTION]" help="Section to display entries from (default: current section, \"all\" for every section)"
+  arg "[TAGS]..." help="Additional tag filters (e.g. @tag1 @tag2)"
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}
+
+cmd "since" help="Show entries since a given date" {
+  arg "<DATE>" help="Date expression for the starting point (e.g. \"monday\", \"last friday\")"
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}
+
+cmd "tag" help="Add or remove tags from entries" {
+  arg "[TAGS]..." help="Tags to add or remove (comma-separated)"
+  flag "-d --date" help="Include current date as the tag value"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "--force" help="Skip confirmation prompts"
+  flag "--regex" help="Interpret tag patterns as regular expressions"
+  flag "-r --remove" help="Remove specified tags instead of adding"
+  flag "--rename <OLD> <NEW>" help="Rename a tag: --rename OLD NEW"
+  flag "-v --value <VALUE>" help="Value to set on the tag (e.g., --value \"in progress\")"
+}
+
+cmd "tag_dir" help="Set the default tags directory" {
+  arg "<TAGS>..." help="Tags to set as default_tags"
+  flag "--dir <DIR>" help="Directory to create the .doingrc in (defaults to current directory)"
+}
+
+cmd "tags" help="List all tags in the doing file" {
+  flag "-c --counts" help="Show usage counts alongside tag names"
+  flag "-l --line" help="Output tags on a single line (for scripting)"
+  flag "--order <ORDER>" help="Sort order" default="asc" {
+    choices "asc" "desc"
+  }
+  flag "-s --section <SECTION>" help="Count tags only within a specific section"
+  flag "-S --sort <SORT>" help="Sort by name or time (total interval)" default="name" {
+    choices "name" "time"
+  }
+}
+
+cmd "template" help="Show or edit entry templates" {
+  arg "[NAME]" help="Template name to display (e.g., default, today, last, recent)"
+  flag "-l --list" help="List available template names"
+}
+
+cmd "today" help="Show entries from today" {
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}
+
+cmd "undo" help="Undo the last change" {
+  arg "[COUNT]" help="Number of steps to undo (default: 1)" default="1"
+  flag "-i --interactive" help="Interactively select a backup to restore"
+}
+
+cmd "view" help="Display a custom view" {
+  arg "<NAME>" help="View name from configuration"
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}
+
+cmd "views" help="List available views" {
+  cmd "edit" help="Open a view's configuration in your editor" {
+    arg "<NAME>" help="Name of the view to edit"
+  }
+  cmd "remove" help="Remove a view from configuration" {
+    arg "<NAME>" help="Name of the view to remove"
+  }
+}
+
+cmd "yesterday" help="Show entries from yesterday" {
+  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-o --output <OUTPUT>" help="Output format"
+  flag "--save <SAVE>" help="Save the current options as a named view"
+  flag "--sort <SORT>" help="Sort order for results" {
+    choices "asc" "desc"
+  }
+  flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "--times" help="Show time intervals on entries"
+  flag "--totals" help="Show tag time totals"
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "-s --search <SEARCH>" help="Text search query"
+  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
+  flag "-p --pager" help="Use a pager for output"
+}

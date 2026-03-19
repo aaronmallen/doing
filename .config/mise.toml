@@ -24,6 +24,7 @@ editorconfig-checker = "latest"
 "gem:doing" = "latest"
 markdownlint-cli2 = "latest"
 taplo = "latest"
+usage = "latest"
 
 [[tools.rust]]
 components = "clippy"

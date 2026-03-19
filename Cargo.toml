@@ -31,4 +31,3 @@ yansi = { features = ["detect-env", "detect-tty", "hyperlink"], version = "1" }
 assert_cmd = "2"
 predicates = "3"
 pretty_assertions = "1"
-tempfile = "3"

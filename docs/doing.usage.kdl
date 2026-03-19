@@ -96,7 +96,7 @@ cmd "colors" help="Show available color template tokens"
 
 cmd "commands" help="List available commands"
 
-cmd "commands_accepting" help="List commands accepting a given option" hide=#true {
+cmd "commands-accepting" help="List commands accepting a given option" hide=#true {
   arg "<OPTION>" help="The option name to search for (without leading dashes)"
 }
 
@@ -530,7 +530,7 @@ cmd "tag" help="Add or remove tags from entries" {
   flag "-v --value <VALUE>" help="Value to set on the tag (e.g., --value \"in progress\")"
 }
 
-cmd "tag_dir" help="Set the default tags directory" {
+cmd "tag-dir" help="Set the default tags directory" {
   arg "<TAGS>..." help="Tags to set as default_tags"
   flag "--dir <DIR>" help="Directory to create the .doingrc in (defaults to current directory)"
 }

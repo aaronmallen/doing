@@ -218,7 +218,7 @@ enum Command {
   /// List available commands
   Commands(commands::commands::Command),
   /// List commands accepting a given option
-  #[command(name = "commands_accepting", hide = true)]
+  #[command(hide = true)]
   CommandsAccepting(commands::commands_accepting::Command),
   /// Generate shell completions
   Completion,
@@ -275,7 +275,6 @@ enum Command {
   /// Add or remove tags from entries
   Tag(commands::tag::Command),
   /// Set the default tags directory
-  #[command(name = "tag_dir")]
   TagDir(commands::tag_dir::Command),
   /// List all tags in the doing file
   Tags(commands::tags::Command),

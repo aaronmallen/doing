@@ -16,6 +16,7 @@ mod on;
 mod recent;
 mod reset;
 mod rotate;
+mod sections;
 mod show;
 mod show_dates;
 mod show_display;

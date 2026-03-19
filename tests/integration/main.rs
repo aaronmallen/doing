@@ -8,5 +8,6 @@ mod mark;
 mod meanwhile;
 mod note;
 mod now;
+mod reset;
 mod smoke;
 mod tag;

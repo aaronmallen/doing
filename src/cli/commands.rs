@@ -3,6 +3,9 @@ pub mod archive;
 pub mod autotag;
 pub mod cancel;
 pub mod colors;
+#[allow(clippy::module_inception)]
+pub mod commands;
+pub mod commands_accepting;
 pub mod config;
 pub mod done;
 pub mod finish;

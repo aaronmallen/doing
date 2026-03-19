@@ -5,7 +5,7 @@ pub mod pager;
 
 use std::{ffi::OsString, path::PathBuf};
 
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{ArgAction, CommandFactory, Parser, Subcommand};
 use log::debug;
 use yansi::Condition;
 
@@ -211,10 +211,10 @@ enum Command {
   /// Show available color template tokens
   Colors(commands::colors::Command),
   /// List available commands
-  Commands,
+  Commands(commands::commands::Command),
   /// List commands accepting a given option
   #[command(name = "commands_accepting", hide = true)]
-  CommandsAccepting,
+  CommandsAccepting(commands::commands_accepting::Command),
   /// Generate shell completions
   Completion,
   /// View, edit, and manage configuration
@@ -302,6 +302,8 @@ impl Command {
       Self::Autotag(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Colors(cmd) => cmd.call(),
+      Self::Commands(cmd) => cmd.call(&Cli::command()),
+      Self::CommandsAccepting(cmd) => cmd.call(&Cli::command()),
       Self::Config(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),

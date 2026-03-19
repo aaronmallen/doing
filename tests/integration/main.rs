@@ -4,6 +4,7 @@ mod autotag;
 mod cancel;
 mod done;
 mod finish;
+mod grep;
 mod helpers;
 mod last;
 mod mark;

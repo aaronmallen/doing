@@ -1,0 +1,42 @@
+name: ❓ Question
+description: Ask a question about doing
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about using, contributing to, or understanding doing? We're here to help!
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: What would you like to know?
+      placeholder: "I'm trying to understand..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any additional context that might help us answer your question.
+      placeholder: "I'm working on... and I need to..."
+
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: I have...
+      options:
+        - label: Searched existing issues and discussions
+        - label: Read the documentation
+        - label: Checked the FAQ (when available)
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our Code of Conduct
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

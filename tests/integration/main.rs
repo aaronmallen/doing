@@ -2,6 +2,7 @@ mod again;
 mod archive;
 mod autotag;
 mod cancel;
+mod chronify;
 mod config;
 mod done;
 mod finish;

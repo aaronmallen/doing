@@ -34,12 +34,12 @@ use crate::{
 /// doing grep --regex "/foo.*bar/"     # regex search
 /// doing grep --fuzzy "approx"         # fuzzy search
 /// doing grep -s Currently "meeting"   # search only in Currently section
-/// doing grep -c sensitive "CasE"      # force case-sensitive search
+/// doing grep --case sensitive "CasE"   # force case-sensitive search
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Case sensitivity mode (smart/sensitive/ignore)
-  #[arg(short, long)]
+  #[arg(long)]
   case: Option<String>,
 
   #[command(flatten)]

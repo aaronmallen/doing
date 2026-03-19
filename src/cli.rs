@@ -13,6 +13,7 @@ use crate::{
   config::{self, Config},
   errors::Result,
   taskpaper::{self, Document},
+  template,
 };
 
 /// Shared application context passed to all command handlers.
@@ -114,6 +115,7 @@ struct Cli {
 
 impl Cli {
   fn call(&self) -> Result<()> {
+    template::colors::init();
     init_logger(self.log_level());
 
     debug!("CLI parsed successfully");

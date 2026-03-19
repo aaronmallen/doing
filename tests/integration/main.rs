@@ -13,6 +13,7 @@ mod meanwhile;
 mod note;
 mod now;
 mod on;
+mod output;
 mod recent;
 mod reset;
 mod rotate;

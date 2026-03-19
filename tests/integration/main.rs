@@ -24,4 +24,5 @@ mod smoke;
 mod tag;
 mod today;
 mod undo;
+mod view;
 mod yesterday;

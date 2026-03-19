@@ -24,6 +24,7 @@ mod recent;
 mod reset;
 mod rotate;
 mod sections;
+mod select;
 mod show;
 mod show_dates;
 mod show_display;

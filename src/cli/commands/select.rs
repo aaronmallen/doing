@@ -65,7 +65,7 @@ pub struct Command {
   output: Option<String>,
 
   /// Pre-filter the list before presenting the menu
-  #[arg(short, long)]
+  #[arg(long)]
   query: Option<String>,
 
   /// Save selected entries to a file

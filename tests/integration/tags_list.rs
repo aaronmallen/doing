@@ -1,0 +1,78 @@
+use crate::helpers::DoingCmd;
+
+#[test]
+fn it_lists_all_tags_with_counts() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Working on project @coding"]).assert().success();
+  doing.run(["now", "Meeting about design @meeting"]).assert().success();
+  doing.run(["now", "Review code @coding @review"]).assert().success();
+
+  let output = doing.run(["tags", "--counts"]).output().expect("failed to run tags");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(stdout.contains("coding"), "tags should list 'coding'");
+  assert!(stdout.contains("meeting"), "tags should list 'meeting'");
+  assert!(stdout.contains("review"), "tags should list 'review'");
+  assert!(stdout.contains("(2)"), "coding should appear twice");
+}
+
+#[test]
+fn it_sorts_tags_alphabetically() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Task @zebra"]).assert().success();
+  doing.run(["now", "Task @alpha"]).assert().success();
+  doing.run(["now", "Task @middle"]).assert().success();
+
+  let output = doing
+    .run(["tags", "--sort", "name", "--order", "asc"])
+    .output()
+    .expect("failed to run tags");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  let lines: Vec<&str> = stdout.lines().collect();
+
+  assert!(lines[0].contains("alpha"), "first tag in asc sort should be alpha");
+  assert!(
+    lines[lines.len() - 1].contains("zebra"),
+    "last tag in asc sort should be zebra"
+  );
+}
+
+#[test]
+fn it_scopes_tags_to_section() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Current task @coding"]).assert().success();
+  doing
+    .run(["now", "--section", "Archive", "Old task @writing"])
+    .assert()
+    .success();
+
+  let output = doing
+    .run(["tags", "--section", "Currently"])
+    .output()
+    .expect("failed to run tags");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(stdout.contains("coding"), "section-scoped tags should include 'coding'");
+  assert!(
+    !stdout.contains("writing"),
+    "section-scoped tags should not include tags from other sections"
+  );
+}
+
+#[test]
+fn it_shows_tag_names_and_counts() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Task one @project"]).assert().success();
+  doing.run(["now", "Task two @project"]).assert().success();
+  doing.run(["now", "Task three @project"]).assert().success();
+
+  let output = doing.run(["tags", "--counts"]).output().expect("failed to run tags");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(stdout.contains("project"), "output should contain the tag name");
+  assert!(stdout.contains("(3)"), "output should show the count of 3");
+}

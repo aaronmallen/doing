@@ -24,6 +24,7 @@ mod show_search;
 mod since;
 mod smoke;
 mod tag;
+mod tags_list;
 mod today;
 mod undo;
 mod view;

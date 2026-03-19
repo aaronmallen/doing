@@ -202,7 +202,7 @@ cmd "import" help="Import entries from other sources" {
   flag "--prefix <PREFIX>" help="Prepend text to all imported entry titles"
   flag "--search <SEARCH>" help="Filter which entries to import by search query"
   flag "-s --section <SECTION>" help="Target section for imported entries (default: current section)"
-  flag "-t --tag <TAG>" help="Apply additional tags to all imported entries" var=#true
+  flag "--tag <TAG>" help="Apply additional tags to all imported entries" var=#true
   flag "-t --type <TYPE>" help="Import format type (doing, timing)"
 }
 

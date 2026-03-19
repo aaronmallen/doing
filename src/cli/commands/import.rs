@@ -49,7 +49,7 @@ pub struct Command {
   section: Option<String>,
 
   /// Apply additional tags to all imported entries
-  #[arg(short, long, value_delimiter = ',')]
+  #[arg(long, value_delimiter = ',')]
   tag: Vec<String>,
 }
 

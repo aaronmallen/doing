@@ -5,6 +5,7 @@ mod cancel;
 mod chronify;
 mod config;
 mod done;
+mod file_sort;
 mod finish;
 mod global_flags;
 mod grep;

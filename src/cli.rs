@@ -207,7 +207,7 @@ enum Command {
   /// Show changes to the doing file
   Changes,
   /// Fuzzy select an entry to act on
-  Choose,
+  Choose(commands::choose::Command),
   /// Show available color template tokens
   Colors(commands::colors::Command),
   /// List available commands
@@ -232,9 +232,6 @@ enum Command {
   Grep(commands::grep::Command),
   /// Import entries from other sources
   Import(commands::import::Command),
-  /// Install fzf for fuzzy selection
-  #[command(name = "install_fzf", hide = true)]
-  InstallFzf,
   /// Show the last entry
   Last(commands::last::Command),
   /// Toggle the marker tag on the last entry
@@ -342,7 +339,10 @@ impl Command {
           Err(crate::errors::Error::Config(format!("unknown command: {name}")))
         }
       }
-      _ => todo!(),
+      Self::Changes => todo!(),
+      Self::Choose(cmd) => cmd.call(ctx),
+      Self::Completion => todo!(),
+      Self::Update => todo!(),
     }
   }
 }

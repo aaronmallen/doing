@@ -2,6 +2,7 @@ pub mod again;
 pub mod archive;
 pub mod autotag;
 pub mod cancel;
+pub mod choose;
 pub mod colors;
 #[allow(clippy::module_inception)]
 pub mod commands;

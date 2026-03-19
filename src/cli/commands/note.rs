@@ -27,7 +27,7 @@ pub struct Command {
 
   /// Note text to append (can be repeated for multiple lines)
   #[arg(short, long = "note")]
-  notes: Vec<String>,
+  note_text: Vec<String>,
 
   /// Remove all notes from the entry
   #[arg(short, long)]
@@ -138,7 +138,7 @@ impl Command {
     }
 
     let mut lines: Vec<String> = self.text.clone();
-    lines.extend(self.notes.clone());
+    lines.extend(self.note_text.clone());
 
     if lines.is_empty() {
       return Ok(None);
@@ -189,7 +189,7 @@ mod test {
     Command {
       editor: false,
       filter: FilterArgs::default(),
-      notes: vec![],
+      note_text: vec![],
       remove: false,
       text: vec![],
     }
@@ -263,7 +263,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
       let cmd = Command {
-        notes: vec!["Line one".into(), "Line two".into()],
+        note_text: vec!["Line one".into(), "Line two".into()],
         ..default_cmd()
       };
 
@@ -308,7 +308,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
       let cmd = Command {
-        notes: vec!["From flag".into()],
+        note_text: vec!["From flag".into()],
         text: vec!["From arg".into()],
         ..default_cmd()
       };

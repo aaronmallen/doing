@@ -4,5 +4,6 @@ mod done;
 mod finish;
 mod helpers;
 mod meanwhile;
+mod note;
 mod now;
 mod smoke;

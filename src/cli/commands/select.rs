@@ -45,7 +45,7 @@ pub struct Command {
   editor: bool,
 
   /// Finish selected entries (mark @done with timestamp)
-  #[arg(short, long)]
+  #[arg(short = 'F', long)]
   finish: bool,
 
   /// Toggle the marker tag on selected entries

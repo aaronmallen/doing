@@ -52,15 +52,6 @@ impl ImportRegistry {
     names
   }
 
-  /// Build a combined regex matching any registered plugin's trigger pattern.
-  pub fn plugin_regex(&self) -> Option<Regex> {
-    if self.plugins.is_empty() {
-      return None;
-    }
-    let patterns: Vec<&str> = self.plugins.iter().map(|p| p.pattern.as_str()).collect();
-    Regex::new(&format!("(?i)^(?:{})$", patterns.join("|"))).ok()
-  }
-
   /// Register an import plugin.
   ///
   /// The plugin's trigger pattern is compiled into a case-insensitive regex
@@ -77,7 +68,6 @@ impl ImportRegistry {
       .unwrap_or_else(|_| panic!("invalid trigger pattern for plugin \"{name}\": {pattern}"));
     self.plugins.push(RegisteredPlugin {
       name,
-      pattern,
       plugin,
       trigger,
     });
@@ -104,7 +94,6 @@ impl Default for ImportRegistry {
 
 struct RegisteredPlugin {
   name: String,
-  pattern: String,
   plugin: Box<dyn ImportPlugin>,
   trigger: Regex,
 }
@@ -187,30 +176,6 @@ mod test {
       let formats = registry.available_formats();
 
       assert_eq!(formats, vec!["doing", "timing"]);
-    }
-  }
-
-  mod import_registry_plugin_regex {
-    use super::*;
-
-    #[test]
-    fn it_returns_none_for_empty_registry() {
-      let registry = ImportRegistry::new();
-
-      assert!(registry.plugin_regex().is_none());
-    }
-
-    #[test]
-    fn it_returns_combined_regex() {
-      let mut registry = ImportRegistry::new();
-      registry.register(Box::new(MockPlugin::new("doing", "doing")));
-      registry.register(Box::new(MockPlugin::new("timing", "timing")));
-
-      let regex = registry.plugin_regex().unwrap();
-
-      assert!(regex.is_match("doing"));
-      assert!(regex.is_match("TIMING"));
-      assert!(!regex.is_match("csv"));
     }
   }
 

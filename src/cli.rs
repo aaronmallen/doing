@@ -17,6 +17,7 @@ use crate::{
 };
 
 /// Shared application context passed to all command handlers.
+#[allow(dead_code)]
 pub(crate) struct AppContext {
   pub config: Config,
   pub default_answer: bool,
@@ -208,7 +209,7 @@ enum Command {
   Archive(commands::archive::Command),
   /// Mark the last entry as cancelled
   Cancel(commands::cancel::Command),
-  /// Show changes to the doing file
+  /// List recent changes in Doing
   Changes,
   /// Fuzzy select an entry to act on
   Choose(commands::choose::Command),
@@ -308,6 +309,14 @@ impl Command {
       Self::CommandsAccepting(cmd) => cmd.call(&Cli::command()),
       Self::Config(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
+      Self::External(args) => {
+        let name = args.first().and_then(|s| s.to_str()).unwrap_or("");
+        if ctx.config.views.contains_key(name) {
+          commands::view::Command::call_external(name, ctx)
+        } else {
+          Err(crate::errors::Error::Config(format!("unknown command: {name}")))
+        }
+      }
       Self::Finish(cmd) => cmd.call(ctx),
       Self::Grep(cmd) => cmd.call(ctx),
       Self::Import(cmd) => cmd.call(ctx),
@@ -336,14 +345,6 @@ impl Command {
       Self::View(cmd) => cmd.call(ctx),
       Self::Views(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),
-      Self::External(args) => {
-        let name = args.first().and_then(|s| s.to_str()).unwrap_or("");
-        if ctx.config.views.contains_key(name) {
-          commands::view::Command::call_external(name, ctx)
-        } else {
-          Err(crate::errors::Error::Config(format!("unknown command: {name}")))
-        }
-      }
       Self::Changes => todo!(),
       Self::Choose(cmd) => cmd.call(ctx),
       Self::Completion => todo!(),

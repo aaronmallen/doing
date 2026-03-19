@@ -60,7 +60,6 @@ fn strip_ansi(text: &str) -> String {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
-  use pretty_assertions::assert_eq;
 
   use super::*;
   use crate::taskpaper::{Entry, Note, Section, Tag, Tags};

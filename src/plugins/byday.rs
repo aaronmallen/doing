@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{
   config::Config,
   plugins::{ExportPlugin, ExportPluginSettings},
@@ -70,8 +68,6 @@ impl ExportPlugin for BydayExport {
 
   fn settings(&self) -> ExportPluginSettings {
     ExportPluginSettings {
-      config: HashMap::from([("item_width".into(), "60".into())]),
-      templates: Vec::new(),
       trigger: "byday".into(),
     }
   }
@@ -134,7 +130,6 @@ mod test {
   fn sample_options() -> RenderOptions {
     RenderOptions {
       date_format: "%Y-%m-%d %H:%M".into(),
-      order: crate::config::SortOrder::Asc,
       template: String::new(),
       wrap_width: 0,
     }
@@ -304,13 +299,6 @@ mod test {
       let settings = BydayExport.settings();
 
       assert_eq!(settings.trigger, "byday");
-    }
-
-    #[test]
-    fn it_includes_item_width_config() {
-      let settings = BydayExport.settings();
-
-      assert_eq!(settings.config.get("item_width").unwrap(), "60");
     }
   }
 

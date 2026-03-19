@@ -7,8 +7,6 @@ mod json;
 mod markdown;
 mod taskpaper;
 
-use std::collections::HashMap;
-
 use regex::Regex;
 
 use crate::{config::Config, taskpaper::Entry, template::renderer::RenderOptions};
@@ -31,8 +29,6 @@ pub trait ExportPlugin {
 /// Settings declared by an export plugin.
 #[derive(Clone, Debug)]
 pub struct ExportPluginSettings {
-  pub config: HashMap<String, String>,
-  pub templates: Vec<PluginTemplate>,
   pub trigger: String,
 }
 
@@ -60,15 +56,6 @@ impl ExportRegistry {
     names
   }
 
-  /// Build a combined regex matching any registered plugin's trigger pattern.
-  pub fn plugin_regex(&self) -> Option<Regex> {
-    if self.plugins.is_empty() {
-      return None;
-    }
-    let patterns: Vec<&str> = self.plugins.iter().map(|p| p.pattern.as_str()).collect();
-    Regex::new(&format!("(?i)^(?:{})$", patterns.join("|"))).ok()
-  }
-
   /// Register an export plugin.
   ///
   /// The plugin's trigger pattern is compiled into a case-insensitive regex
@@ -85,7 +72,6 @@ impl ExportRegistry {
       .unwrap_or_else(|_| panic!("invalid trigger pattern for plugin \"{name}\": {pattern}"));
     self.plugins.push(RegisteredPlugin {
       name,
-      pattern,
       plugin,
       trigger,
     });
@@ -110,18 +96,8 @@ impl Default for ExportRegistry {
   }
 }
 
-/// A named template provided by an export plugin.
-#[derive(Clone, Debug)]
-pub struct PluginTemplate {
-  pub filename: Option<String>,
-  pub format: Option<String>,
-  pub name: String,
-  pub trigger: String,
-}
-
 struct RegisteredPlugin {
   name: String,
-  pattern: String,
   plugin: Box<dyn ExportPlugin>,
   trigger: Regex,
 }
@@ -146,8 +122,6 @@ fn normalize_trigger(trigger: &str) -> String {
 
 #[cfg(test)]
 mod test {
-  use std::collections::HashMap;
-
   use super::*;
 
   struct MockPlugin {
@@ -175,8 +149,6 @@ mod test {
 
     fn settings(&self) -> ExportPluginSettings {
       ExportPluginSettings {
-        config: HashMap::new(),
-        templates: Vec::new(),
         trigger: self.trigger.clone(),
       }
     }
@@ -220,30 +192,6 @@ mod test {
       let formats = registry.available_formats();
 
       assert_eq!(formats, vec!["csv", "markdown", "taskpaper"]);
-    }
-  }
-
-  mod export_registry_plugin_regex {
-    use super::*;
-
-    #[test]
-    fn it_returns_none_for_empty_registry() {
-      let registry = ExportRegistry::new();
-
-      assert!(registry.plugin_regex().is_none());
-    }
-
-    #[test]
-    fn it_returns_combined_regex() {
-      let mut registry = ExportRegistry::new();
-      registry.register(Box::new(MockPlugin::new("csv", "csv")));
-      registry.register(Box::new(MockPlugin::new("json", "json")));
-
-      let regex = registry.plugin_regex().unwrap();
-
-      assert!(regex.is_match("csv"));
-      assert!(regex.is_match("JSON"));
-      assert!(!regex.is_match("xml"));
     }
   }
 

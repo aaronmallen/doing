@@ -16,6 +16,8 @@ use crate::{
   time::{chronify, parse_range},
 };
 
+type DateRange = (Option<DateTime<Local>>, Option<DateTime<Local>>);
+
 /// Which end of the chronological list to keep.
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum AgeArg {
@@ -215,7 +217,7 @@ impl FilterArgs {
     self.before.as_deref().map(chronify).transpose()
   }
 
-  fn resolve_from(&self) -> Result<(Option<DateTime<Local>>, Option<DateTime<Local>>)> {
+  fn resolve_from(&self) -> Result<DateRange> {
     match self.from.as_deref() {
       Some(expr) => {
         let (start, end) = parse_range(expr)?;

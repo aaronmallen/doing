@@ -191,8 +191,6 @@ mod test {
     use pretty_assertions::assert_eq;
     use serde_json::json;
 
-    use super::*;
-
     #[test]
     fn it_merges_objects_recursively() {
       let base = json!({"search": {"case": "smart", "distance": 3}});

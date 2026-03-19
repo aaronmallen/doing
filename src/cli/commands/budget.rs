@@ -342,8 +342,6 @@ mod test {
   }
 
   mod remove_budget {
-    use super::*;
-
     #[test]
     fn it_removes_budget_from_toml() {
       let dir = tempfile::tempdir().unwrap();

@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use chrono::Local;
 use clap::Args;
@@ -62,7 +62,7 @@ impl Command {
     Ok(())
   }
 
-  fn archive_path(&self, doing_file: &PathBuf) -> PathBuf {
+  fn archive_path(&self, doing_file: &Path) -> PathBuf {
     let stem = doing_file.file_stem().and_then(|s| s.to_str()).unwrap_or("doing");
     let date_suffix = Local::now().format("%Y-%m");
     let archive_name = format!("{stem}_{date_suffix}.md");
@@ -119,7 +119,7 @@ impl Command {
 
   fn write_to_archive(
     &self,
-    archive_path: &PathBuf,
+    archive_path: &Path,
     entries: &[Entry],
     section_name: &str,
     ctx: &AppContext,

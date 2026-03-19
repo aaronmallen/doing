@@ -294,8 +294,6 @@ mod test {
   }
 
   mod list_configs {
-    use super::*;
-
     #[test]
     fn it_runs_without_error() {
       let result = super::super::list_configs();
@@ -306,8 +304,7 @@ mod test {
 
   mod parse_raw_value {
     use pretty_assertions::assert_eq;
-
-    use super::*;
+    use serde_json::Value;
 
     #[test]
     fn it_parses_booleans() {
@@ -329,8 +326,6 @@ mod test {
   mod resolve_dot_path {
     use pretty_assertions::assert_eq;
     use serde_json::json;
-
-    use super::*;
 
     #[test]
     fn it_resolves_nested_paths() {
@@ -354,8 +349,6 @@ mod test {
   mod set_dot_path {
     use pretty_assertions::assert_eq;
     use serde_json::json;
-
-    use super::*;
 
     #[test]
     fn it_sets_nested_values() {
@@ -387,8 +380,6 @@ mod test {
 
   mod set_value_toml {
     use pretty_assertions::assert_eq;
-
-    use super::*;
 
     #[test]
     fn it_creates_new_toml_file() {

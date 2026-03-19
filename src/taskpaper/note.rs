@@ -17,13 +17,6 @@ impl Note {
     }
   }
 
-  /// Parse a single-line note back into multi-line form using the given separator.
-  pub fn from_single_line(text: &str, separator: &str) -> Self {
-    Self {
-      lines: text.split(separator).map(String::from).collect(),
-    }
-  }
-
   /// Create a note by splitting a single string on newlines.
   pub fn from_str(text: &str) -> Self {
     Self {
@@ -86,6 +79,7 @@ impl Note {
   }
 
   /// Return the number of lines.
+  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.lines.len()
   }
@@ -93,12 +87,6 @@ impl Note {
   /// Return the lines as a slice.
   pub fn lines(&self) -> &[String] {
     &self.lines
-  }
-
-  /// Replace all lines with new content.
-  pub fn replace(&mut self, text: impl Into<String>) {
-    self.lines.clear();
-    self.add(text);
   }
 
   /// Convert to a single-line string with the given separator between lines.
@@ -180,26 +168,6 @@ mod test {
       let note = Note::from_lines(vec!["line one", "line two"]);
 
       assert_eq!(note.to_string(), "\t\tline one\n\t\tline two");
-    }
-  }
-
-  mod from_single_line {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn it_splits_on_separator() {
-      let note = Note::from_single_line("one|two|three", "|");
-
-      assert_eq!(note.lines(), &["one", "two", "three"]);
-    }
-
-    #[test]
-    fn it_splits_on_newline_escape() {
-      let note = Note::from_single_line("first\\nsecond", "\\n");
-
-      assert_eq!(note.lines(), &["first", "second"]);
     }
   }
 

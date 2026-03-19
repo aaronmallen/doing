@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::{Entry, Section};
-use crate::{config::SortOrder, errors};
+use crate::errors;
 
 /// A complete TaskPaper doing file represented as an ordered list of sections.
 ///
@@ -39,11 +39,6 @@ impl Document {
   /// Parse a doing file string into a structured `Document`.
   pub fn parse(content: &str) -> Self {
     super::parser::parse(content)
-  }
-
-  /// Read and parse a doing file from `path` into a `Document`.
-  pub fn read_file(path: &Path) -> errors::Result<Self> {
-    super::io::read_file(path)
   }
 
   /// Add a section to the document. Does nothing if a section with the same name
@@ -90,6 +85,7 @@ impl Document {
   }
 
   /// Return the number of sections in the document.
+  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.sections.len()
   }
@@ -131,11 +127,6 @@ impl Document {
     self.sections.iter_mut().find(|s| s.title().eq_ignore_ascii_case(name))
   }
 
-  /// Return the names of all sections in order.
-  pub fn section_names(&self) -> Vec<&str> {
-    self.sections.iter().map(|s| s.title()).collect()
-  }
-
   /// Return a slice of all sections.
   pub fn sections(&self) -> &[Section] {
     &self.sections
@@ -144,21 +135,6 @@ impl Document {
   /// Return a mutable reference to all sections.
   pub fn sections_mut(&mut self) -> &mut Vec<Section> {
     &mut self.sections
-  }
-
-  /// Serialize the document into the doing file format string.
-  ///
-  /// Deduplicates entries by ID, sorts entries within each section according
-  /// to `sort_order`, and strips ANSI color codes.
-  pub fn serialize(&self, sort_order: SortOrder) -> String {
-    super::serializer::serialize(self, sort_order)
-  }
-
-  /// Serialize and atomically write the document to `path`.
-  ///
-  /// Writes to a temporary file first, then renames into place.
-  pub fn write_file(&self, path: &Path, sort_order: SortOrder) -> errors::Result<()> {
-    super::io::write_file(self, path, sort_order)
   }
 }
 
@@ -462,18 +438,19 @@ mod test {
     }
   }
 
-  mod section_names {
+  mod sections {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
-    fn it_returns_names_in_order() {
+    fn it_returns_sections_in_order() {
       let mut doc = Document::new();
       doc.add_section(Section::new("Currently"));
       doc.add_section(Section::new("Archive"));
 
-      assert_eq!(doc.section_names(), vec!["Currently", "Archive"]);
+      let names: Vec<&str> = doc.sections().iter().map(|s| s.title()).collect();
+      assert_eq!(names, vec!["Currently", "Archive"]);
     }
   }
 }

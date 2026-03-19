@@ -183,8 +183,6 @@ mod test {
   }
 
   mod show_css {
-    use super::*;
-
     #[test]
     fn it_runs_without_error() {
       let result = super::super::show_css();

@@ -137,10 +137,6 @@ pub fn wrap_with_indent(text: &str, width: usize, indent: usize) -> String {
 
 #[cfg(test)]
 mod test {
-  use pretty_assertions::assert_eq;
-
-  use super::*;
-
   mod wrap {
     use pretty_assertions::assert_eq;
 

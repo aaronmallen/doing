@@ -1,8 +1,5 @@
 use std::collections::HashMap;
 
-use regex::Regex;
-use yansi::Paint;
-
 use super::{
   colors,
   parser::{self, Indent, IndentChar, Token, TokenKind},
@@ -10,7 +7,7 @@ use super::{
   wrap,
 };
 use crate::{
-  config::{Config, SortOrder, TemplateConfig},
+  config::{Config, TemplateConfig},
   taskpaper::Entry,
   time::{DurationFormat, FormattedDuration, FormattedShortdate},
 };
@@ -19,7 +16,6 @@ use crate::{
 #[derive(Clone, Debug)]
 pub struct RenderOptions {
   pub date_format: String,
-  pub order: SortOrder,
   pub template: String,
   pub wrap_width: u32,
 }
@@ -36,14 +32,13 @@ impl RenderOptions {
       .or_else(|| config.templates.get("default"))
       .cloned()
       .unwrap_or_default();
-    Self::from_template_config(&tc, config)
+    Self::from_template_config(&tc)
   }
 
-  /// Build render options from a `TemplateConfig`, inheriting sort order from the global config.
-  pub fn from_template_config(tc: &TemplateConfig, config: &Config) -> Self {
+  /// Build render options from a `TemplateConfig`.
+  pub fn from_template_config(tc: &TemplateConfig) -> Self {
     Self {
       date_format: tc.date_format.clone(),
-      order: tc.order.unwrap_or(config.order),
       template: tc.template.clone(),
       wrap_width: tc.wrap_width,
     }
@@ -83,42 +78,6 @@ pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config,
   }
 
   output
-}
-
-/// Highlight `@tags` in a string with the given color name.
-pub fn highlight_tags(text: &str, color_name: &str) -> String {
-  if color_name.is_empty() {
-    return text.to_string();
-  }
-  let color = match colors::Color::parse(color_name) {
-    Some(c) => c.to_ansi(),
-    None => return text.to_string(),
-  };
-  if color.is_empty() {
-    return text.to_string();
-  }
-  let reset = colors::Color::parse("reset").map(|c| c.to_ansi()).unwrap_or_default();
-  let re = Regex::new(r"(\s|^)(@\S+)").expect("tag highlight regex is valid");
-  re.replace_all(text, |caps: &regex::Captures| {
-    format!("{}{color}{}{reset}", &caps[1], &caps[2])
-  })
-  .into_owned()
-}
-
-/// Highlight search matches in a string with a yellow background.
-pub fn highlight_search(text: &str, search: &str) -> String {
-  if search.is_empty() {
-    return text.to_string();
-  }
-  let escaped = regex::escape(search);
-  let re = match Regex::new(&format!("(?i){escaped}")) {
-    Ok(re) => re,
-    Err(_) => return text.to_string(),
-  };
-  re.replace_all(text, |caps: &regex::Captures| {
-    format!("{}", caps[0].on_yellow().black())
-  })
-  .into_owned()
 }
 
 /// Render a single entry against a template string, returning the formatted output.
@@ -306,7 +265,10 @@ mod test {
   use chrono::{Duration, Local, TimeZone};
 
   use super::*;
-  use crate::taskpaper::{Note, Tag, Tags};
+  use crate::{
+    config::SortOrder,
+    taskpaper::{Note, Tag, Tags},
+  };
 
   fn sample_config() -> Config {
     Config::default()
@@ -333,7 +295,6 @@ mod test {
   fn sample_options() -> RenderOptions {
     RenderOptions {
       date_format: "%Y-%m-%d %H:%M".into(),
-      order: SortOrder::Asc,
       template: String::new(),
       wrap_width: 0,
     }
@@ -585,23 +546,6 @@ mod test {
     }
 
     #[test]
-    fn it_inherits_global_sort_order() {
-      let mut config = sample_config();
-      config.order = SortOrder::Desc;
-      config.templates.insert(
-        "test".into(),
-        TemplateConfig {
-          order: None,
-          ..TemplateConfig::default()
-        },
-      );
-
-      let options = RenderOptions::from_config("test", &config);
-
-      assert_eq!(options.order, SortOrder::Desc);
-    }
-
-    #[test]
     fn it_resolves_named_template() {
       let mut config = sample_config();
       config.templates.insert(
@@ -619,7 +563,6 @@ mod test {
 
       assert_eq!(options.date_format, "%_I:%M%P");
       assert_eq!(options.template, "%date: %title");
-      assert_eq!(options.order, SortOrder::Asc);
     }
 
     #[test]

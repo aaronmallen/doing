@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-
 use regex::Regex;
 
 use crate::{
   config::Config,
-  plugins::{ExportPlugin, ExportPluginSettings, PluginTemplate},
+  plugins::{ExportPlugin, ExportPluginSettings},
   taskpaper::Entry,
   template::renderer::RenderOptions,
   time::{DurationFormat, FormattedDuration},
@@ -251,21 +249,6 @@ impl ExportPlugin for HtmlExport {
 
   fn settings(&self) -> ExportPluginSettings {
     ExportPluginSettings {
-      config: HashMap::new(),
-      templates: vec![
-        PluginTemplate {
-          filename: Some("html_export.haml".into()),
-          format: Some("haml".into()),
-          name: "html".into(),
-          trigger: "h[ta]ml?|web".into(),
-        },
-        PluginTemplate {
-          filename: Some("html_export.css".into()),
-          format: Some("css".into()),
-          name: "html_style".into(),
-          trigger: "css|styl(?:e|us)".into(),
-        },
-      ],
       trigger: "html?|web(?:page)?".into(),
     }
   }
@@ -309,7 +292,6 @@ mod test {
   fn sample_options() -> RenderOptions {
     RenderOptions {
       date_format: "%Y-%m-%d %H:%M".into(),
-      order: crate::config::SortOrder::Asc,
       template: String::new(),
       wrap_width: 0,
     }
@@ -569,15 +551,6 @@ mod test {
       let settings = HtmlExport.settings();
 
       assert_eq!(settings.trigger, "html?|web(?:page)?");
-    }
-
-    #[test]
-    fn it_provides_html_and_css_templates() {
-      let settings = HtmlExport.settings();
-
-      assert_eq!(settings.templates.len(), 2);
-      assert_eq!(settings.templates[0].name, "html");
-      assert_eq!(settings.templates[1].name, "html_style");
     }
   }
 }

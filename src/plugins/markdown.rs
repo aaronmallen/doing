@@ -1,8 +1,6 @@
-use std::collections::HashMap;
-
 use crate::{
   config::Config,
-  plugins::{ExportPlugin, ExportPluginSettings, PluginTemplate},
+  plugins::{ExportPlugin, ExportPluginSettings},
   taskpaper::Entry,
   template::renderer::RenderOptions,
   time::{DurationFormat, FormattedDuration},
@@ -64,13 +62,6 @@ impl ExportPlugin for MarkdownExport {
 
   fn settings(&self) -> ExportPluginSettings {
     ExportPluginSettings {
-      config: HashMap::new(),
-      templates: vec![PluginTemplate {
-        filename: Some("doing-markdown.erb".into()),
-        format: Some("erb".into()),
-        name: "markdown".into(),
-        trigger: "mk?d|markdown".into(),
-      }],
       trigger: "markdown|mk?d|gfm".into(),
     }
   }
@@ -106,7 +97,6 @@ mod test {
   fn sample_options() -> RenderOptions {
     RenderOptions {
       date_format: "%Y-%m-%d %H:%M".into(),
-      order: crate::config::SortOrder::Asc,
       template: String::new(),
       wrap_width: 0,
     }
@@ -316,14 +306,6 @@ mod test {
       let settings = MarkdownExport.settings();
 
       assert_eq!(settings.trigger, "markdown|mk?d|gfm");
-    }
-
-    #[test]
-    fn it_provides_markdown_template() {
-      let settings = MarkdownExport.settings();
-
-      assert_eq!(settings.templates.len(), 1);
-      assert_eq!(settings.templates[0].name, "markdown");
     }
   }
 }

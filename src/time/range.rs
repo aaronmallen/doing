@@ -46,7 +46,7 @@ mod test {
   use super::*;
 
   mod parse_range {
-    use chrono::{Duration, NaiveDate, NaiveTime, TimeZone};
+    use chrono::{Duration, NaiveDate, NaiveTime};
     use pretty_assertions::assert_eq;
 
     use super::*;

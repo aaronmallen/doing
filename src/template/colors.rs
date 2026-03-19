@@ -51,6 +51,7 @@ impl Display for Color {
 }
 
 /// A named ANSI color attribute.
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum NamedColor {
   Alert,
@@ -185,7 +186,7 @@ impl NamedColor {
   }
 
   /// Return the ANSI escape sequence for this named color.
-  fn to_ansi(&self) -> String {
+  fn to_ansi(self) -> String {
     if !yansi::is_enabled() {
       return String::new();
     }
@@ -201,7 +202,7 @@ impl NamedColor {
   ///
   /// For most colors, this maps directly to yansi's `Color` and `Attribute` types.
   /// Compound themes (e.g. `chalkboard`, `flamingo`) compose multiple style properties.
-  fn to_style(&self) -> Style {
+  fn to_style(self) -> Style {
     match self {
       Self::Alert => Style::new().red().on_yellow().bold(),
       Self::BgBlack => Style::new().on_black(),

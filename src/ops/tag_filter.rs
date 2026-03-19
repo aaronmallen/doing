@@ -380,8 +380,6 @@ mod test {
   mod strip_at {
     use pretty_assertions::assert_eq;
 
-    use super::*;
-
     #[test]
     fn it_strips_at_prefix() {
       assert_eq!(super::super::strip_at("@coding"), "coding");

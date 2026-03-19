@@ -670,8 +670,6 @@ mod test {
   mod try_extract_regex {
     use pretty_assertions::assert_eq;
 
-    use super::*;
-
     #[test]
     fn it_extracts_pattern_from_slashes() {
       let result = super::super::try_extract_regex("/foo.*bar/");

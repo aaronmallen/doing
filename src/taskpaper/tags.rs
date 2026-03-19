@@ -113,17 +113,9 @@ impl Tags {
   }
 
   /// Return the number of tags.
+  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.inner.len()
-  }
-
-  /// Check whether any tag name matches a regex pattern (case-insensitive).
-  pub fn matches_regex(&self, pattern: &str) -> bool {
-    let ci_pattern = format!("(?i){pattern}");
-    let Ok(rx) = Regex::new(&ci_pattern) else {
-      return false;
-    };
-    self.inner.iter().any(|t| rx.is_match(&t.name))
   }
 
   /// Check whether any tag name matches a wildcard pattern.
@@ -414,25 +406,6 @@ mod test {
         tags.add(Tag::new("coding", None::<String>));
 
         assert!(tags.has("@coding"));
-      }
-    }
-
-    mod matches_regex {
-      use super::super::super::*;
-
-      #[test]
-      fn it_matches_regex_pattern() {
-        let tags = Tags::from_iter(vec![Tag::new("coding", None::<String>)]);
-
-        assert!(tags.matches_regex("^cod"));
-        assert!(!tags.matches_regex("^xyz"));
-      }
-
-      #[test]
-      fn it_matches_case_insensitively() {
-        let tags = Tags::from_iter(vec![Tag::new("Coding", None::<String>)]);
-
-        assert!(tags.matches_regex("coding"));
       }
     }
 

@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{
   config::Config,
   plugins::{ExportPlugin, ExportPluginSettings},
@@ -58,8 +56,6 @@ impl ExportPlugin for TaskPaperExport {
 
   fn settings(&self) -> ExportPluginSettings {
     ExportPluginSettings {
-      config: HashMap::new(),
-      templates: Vec::new(),
       trigger: "task(?:paper)?|tp".into(),
     }
   }
@@ -95,7 +91,6 @@ mod test {
   fn sample_options() -> RenderOptions {
     RenderOptions {
       date_format: "%Y-%m-%d %H:%M".into(),
-      order: crate::config::SortOrder::Asc,
       template: String::new(),
       wrap_width: 0,
     }

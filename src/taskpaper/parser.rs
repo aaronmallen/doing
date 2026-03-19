@@ -52,9 +52,10 @@ pub fn parse(content: &str) -> Document {
       continue;
     }
 
-    if line.starts_with("\t\t") && current_entry.is_some() {
-      let note_text = &line[2..];
-      current_entry.as_mut().unwrap().1.push(note_text.to_string());
+    if let Some(note_text) = line.strip_prefix("\t\t") {
+      if let Some(ref mut entry) = current_entry {
+        entry.1.push(note_text.to_string());
+      }
       continue;
     }
 
@@ -225,7 +226,8 @@ Archive:
       let doc = parse(content);
 
       assert_eq!(doc.len(), 2);
-      assert_eq!(doc.section_names(), vec!["Currently", "Archive"]);
+      let names: Vec<&str> = doc.sections().iter().map(|s| s.title()).collect();
+      assert_eq!(names, vec!["Currently", "Archive"]);
     }
 
     #[test]

@@ -7,14 +7,6 @@ use chrono::Local;
 
 use crate::errors::{Error, Result};
 
-/// Remove all redo files for `source` in `backup_dir`.
-pub fn clear_redo(source: &Path, backup_dir: &Path) -> Result<()> {
-  for path in list_redo_files(source, backup_dir)? {
-    fs::remove_file(path)?;
-  }
-  Ok(())
-}
-
 /// Restore the most recent redo file for `source`, reversing the last undo.
 ///
 /// The redo file is deleted after restoration (one-time reversal).
@@ -99,37 +91,6 @@ mod test {
   use std::fs;
 
   use super::*;
-
-  mod clear_redo {
-    use super::*;
-
-    #[test]
-    fn it_removes_all_redo_files() {
-      let dir = tempfile::tempdir().unwrap();
-      let source = dir.path().join("doing.md");
-      let backup_dir = dir.path().join("backups");
-      fs::create_dir_all(&backup_dir).unwrap();
-      fs::write(&source, "current").unwrap();
-
-      fs::write(backup_dir.join("doing.md_20240101_000001.redo"), "r1").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000002.redo"), "r2").unwrap();
-
-      clear_redo(&source, &backup_dir).unwrap();
-
-      let remaining = list_redo_files(&source, &backup_dir).unwrap();
-      assert!(remaining.is_empty());
-    }
-
-    #[test]
-    fn it_does_nothing_when_no_redo_files() {
-      let dir = tempfile::tempdir().unwrap();
-      let source = dir.path().join("doing.md");
-      let backup_dir = dir.path().join("backups");
-      fs::create_dir_all(&backup_dir).unwrap();
-
-      clear_redo(&source, &backup_dir).unwrap();
-    }
-  }
 
   mod redo {
     use pretty_assertions::assert_eq;

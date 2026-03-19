@@ -29,14 +29,6 @@ pub enum Error {
   /// An error occurred in the plugin system.
   #[error("plugin error: {0}")]
   Plugin(String),
-
-  /// An error occurred while rendering a template.
-  #[error("template error: {0}")]
-  Template(String),
-
-  /// An error occurred while processing the TaskPaper format.
-  #[error("taskpaper error: {0}")]
-  TaskPaper(String),
 }
 
 #[cfg(test)]

@@ -34,50 +34,31 @@ impl ConfigFormat {
   }
 }
 
-/// Parse a config file into a generic JSON [`Value`] tree.
+/// Deep-merge two JSON [`Value`] trees.
 ///
-/// The format is detected from the file extension. Files with no recognized
-/// extension are tried as YAML first (the default config format), then TOML.
-pub fn parse_file(path: &Path) -> Result<Value> {
-  let content = fs::read_to_string(path).map_err(|e| Error::Config(format!("{path}: {e}", path = path.display())))?;
-
-  match ConfigFormat::from_extension(path) {
-    Some(format) => parse_str(&content, format),
-    None => try_parse_unknown(&content, path),
+/// - Objects merge recursively: keys from `overlay` are applied on top of `base`.
+/// - Arrays concatenate: `overlay` elements are appended to `base` elements.
+/// - All other types: `overlay` wins.
+pub fn deep_merge(base: &Value, overlay: &Value) -> Value {
+  match (base, overlay) {
+    (Value::Object(base_map), Value::Object(overlay_map)) => {
+      let mut merged = base_map.clone();
+      for (key, overlay_val) in overlay_map {
+        let merged_val = match merged.get(key) {
+          Some(base_val) => deep_merge(base_val, overlay_val),
+          None => overlay_val.clone(),
+        };
+        merged.insert(key.clone(), merged_val);
+      }
+      Value::Object(merged)
+    }
+    (Value::Array(base_arr), Value::Array(overlay_arr)) => {
+      let mut merged = base_arr.clone();
+      merged.extend(overlay_arr.iter().cloned());
+      Value::Array(merged)
+    }
+    (_, overlay) => overlay.clone(),
   }
-}
-
-/// Parse a string in the given format into a [`Value`].
-pub fn parse_str(content: &str, format: ConfigFormat) -> Result<Value> {
-  match format {
-    ConfigFormat::Json => parse_json(content),
-    ConfigFormat::Toml => parse_toml(content),
-    ConfigFormat::Yaml => parse_yaml(content),
-  }
-}
-
-fn parse_json(content: &str) -> Result<Value> {
-  let mut stripped = String::new();
-  json_comments::StripComments::new(content.as_bytes())
-    .read_to_string(&mut stripped)
-    .map_err(|e| Error::Config(format!("failed to strip JSON comments: {e}")))?;
-
-  serde_json::from_str(&stripped).map_err(|e| Error::Config(format!("invalid JSON: {e}")))
-}
-
-fn parse_toml(content: &str) -> Result<Value> {
-  let toml_value: toml::Table = toml::from_str(content).map_err(|e| Error::Config(format!("invalid TOML: {e}")))?;
-  serde_json::to_value(toml_value).map_err(|e| Error::Config(format!("TOML conversion error: {e}")))
-}
-
-fn parse_yaml(content: &str) -> Result<Value> {
-  yaml_serde::from_str(content).map_err(|e| Error::Config(format!("invalid YAML: {e}")))
-}
-
-fn try_parse_unknown(content: &str, path: &Path) -> Result<Value> {
-  parse_yaml(content).or_else(|_| {
-    parse_toml(content).map_err(|_| Error::Config(format!("{}: unrecognized config format", path.display())))
-  })
 }
 
 /// Discover the global config file path.
@@ -110,18 +91,6 @@ pub fn discover_global_config() -> Option<PathBuf> {
   None
 }
 
-/// Return the path to the global config file for editing.
-///
-/// Uses the same discovery order as [`discover_global_config`], but falls back to
-/// the XDG config path when no existing file is found.
-pub fn resolve_global_config_path() -> PathBuf {
-  discover_global_config().unwrap_or_else(|| {
-    dir_spec::config_home()
-      .expect("failed to resolve config directory")
-      .join("doing/config.toml")
-  })
-}
-
 /// Discover local `.doingrc` files by walking from `start_dir` upward.
 ///
 /// Returns paths ordered root-to-leaf (outermost ancestor first) so they
@@ -150,37 +119,68 @@ pub fn discover_local_configs(start_dir: &Path) -> Vec<PathBuf> {
   configs
 }
 
+/// Parse a config file into a generic JSON [`Value`] tree.
+///
+/// The format is detected from the file extension. Files with no recognized
+/// extension are tried as YAML first (the default config format), then TOML.
+pub fn parse_file(path: &Path) -> Result<Value> {
+  let content = fs::read_to_string(path).map_err(|e| Error::Config(format!("{path}: {e}", path = path.display())))?;
+
+  match ConfigFormat::from_extension(path) {
+    Some(format) => parse_str(&content, format),
+    None => try_parse_unknown(&content, path),
+  }
+}
+
+/// Parse a string in the given format into a [`Value`].
+pub fn parse_str(content: &str, format: ConfigFormat) -> Result<Value> {
+  match format {
+    ConfigFormat::Json => parse_json(content),
+    ConfigFormat::Toml => parse_toml(content),
+    ConfigFormat::Yaml => parse_yaml(content),
+  }
+}
+
+/// Return the path to the global config file for editing.
+///
+/// Uses the same discovery order as [`discover_global_config`], but falls back to
+/// the XDG config path when no existing file is found.
+pub fn resolve_global_config_path() -> PathBuf {
+  discover_global_config().unwrap_or_else(|| {
+    dir_spec::config_home()
+      .expect("failed to resolve config directory")
+      .join("doing/config.toml")
+  })
+}
+
 fn env_config_path() -> Option<PathBuf> {
   let raw = DOING_CONFIG.value().ok()?;
   let path = expand_tilde(Path::new(&raw));
   if path.exists() { Some(path) } else { None }
 }
 
-/// Deep-merge two JSON [`Value`] trees.
-///
-/// - Objects merge recursively: keys from `overlay` are applied on top of `base`.
-/// - Arrays concatenate: `overlay` elements are appended to `base` elements.
-/// - All other types: `overlay` wins.
-pub fn deep_merge(base: &Value, overlay: &Value) -> Value {
-  match (base, overlay) {
-    (Value::Object(base_map), Value::Object(overlay_map)) => {
-      let mut merged = base_map.clone();
-      for (key, overlay_val) in overlay_map {
-        let merged_val = match merged.get(key) {
-          Some(base_val) => deep_merge(base_val, overlay_val),
-          None => overlay_val.clone(),
-        };
-        merged.insert(key.clone(), merged_val);
-      }
-      Value::Object(merged)
-    }
-    (Value::Array(base_arr), Value::Array(overlay_arr)) => {
-      let mut merged = base_arr.clone();
-      merged.extend(overlay_arr.iter().cloned());
-      Value::Array(merged)
-    }
-    (_, overlay) => overlay.clone(),
-  }
+fn parse_json(content: &str) -> Result<Value> {
+  let mut stripped = String::new();
+  json_comments::StripComments::new(content.as_bytes())
+    .read_to_string(&mut stripped)
+    .map_err(|e| Error::Config(format!("failed to strip JSON comments: {e}")))?;
+
+  serde_json::from_str(&stripped).map_err(|e| Error::Config(format!("invalid JSON: {e}")))
+}
+
+fn parse_toml(content: &str) -> Result<Value> {
+  let toml_value: toml::Table = toml::from_str(content).map_err(|e| Error::Config(format!("invalid TOML: {e}")))?;
+  serde_json::to_value(toml_value).map_err(|e| Error::Config(format!("TOML conversion error: {e}")))
+}
+
+fn parse_yaml(content: &str) -> Result<Value> {
+  yaml_serde::from_str(content).map_err(|e| Error::Config(format!("invalid YAML: {e}")))
+}
+
+fn try_parse_unknown(content: &str, path: &Path) -> Result<Value> {
+  parse_yaml(content).or_else(|_| {
+    parse_toml(content).map_err(|_| Error::Config(format!("{}: unrecognized config format", path.display())))
+  })
 }
 
 #[cfg(test)]

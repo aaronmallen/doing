@@ -26,6 +26,16 @@ pub struct Command {
   action: Option<Action>,
 }
 
+impl Command {
+  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    match &self.action {
+      None => list_sections(ctx),
+      Some(Action::Add(args)) => add_section(&args.name, ctx),
+      Some(Action::Remove(args)) => remove_section(&args.name, ctx),
+    }
+  }
+}
+
 /// Subcommands for managing sections.
 #[derive(Clone, Debug, Subcommand)]
 enum Action {
@@ -49,16 +59,6 @@ struct RemoveArgs {
   /// Name of the section to remove
   #[arg(index = 1, value_name = "NAME")]
   name: String,
-}
-
-impl Command {
-  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    match &self.action {
-      None => list_sections(ctx),
-      Some(Action::Add(args)) => add_section(&args.name, ctx),
-      Some(Action::Remove(args)) => remove_section(&args.name, ctx),
-    }
-  }
 }
 
 fn add_section(name: &str, ctx: &mut AppContext) -> Result<()> {

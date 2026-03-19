@@ -53,6 +53,36 @@ pub enum TokenKind {
   Title,
 }
 
+enum TokenMatch<'a> {
+  Color {
+    color: colors::Color,
+    end: usize,
+    start: usize,
+  },
+  Placeholder {
+    caps: regex::Captures<'a>,
+    end: usize,
+    start: usize,
+  },
+}
+
+impl TokenMatch<'_> {
+  fn span(&self) -> (usize, usize) {
+    match self {
+      Self::Color {
+        end,
+        start,
+        ..
+      } => (*start, *end),
+      Self::Placeholder {
+        end,
+        start,
+        ..
+      } => (*start, *end),
+    }
+  }
+}
+
 /// Parse a template string into a sequence of tokens.
 ///
 /// Template strings contain literal text interspersed with `%` placeholder tokens.
@@ -188,36 +218,6 @@ pub fn parse(template: &str) -> Vec<Token> {
   }
 
   tokens
-}
-
-enum TokenMatch<'a> {
-  Color {
-    color: colors::Color,
-    end: usize,
-    start: usize,
-  },
-  Placeholder {
-    caps: regex::Captures<'a>,
-    end: usize,
-    start: usize,
-  },
-}
-
-impl TokenMatch<'_> {
-  fn span(&self) -> (usize, usize) {
-    match self {
-      Self::Color {
-        end,
-        start,
-        ..
-      } => (*start, *end),
-      Self::Placeholder {
-        end,
-        start,
-        ..
-      } => (*start, *end),
-    }
-  }
 }
 
 fn unescape(s: &str) -> String {

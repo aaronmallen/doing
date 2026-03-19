@@ -21,13 +21,15 @@ Check if a `.jj` directory exists at the repository root.
 Examine the current changes to understand what will be committed.
 
 **jj:**
-```
+
+```sh
 jj diff
 jj log -r @ --no-graph
 ```
 
 **git:**
-```
+
+```sh
 git status
 git diff
 git diff --staged
@@ -36,12 +38,14 @@ git diff --staged
 Also review recent commit messages to stay consistent with style:
 
 **jj:**
-```
+
+```sh
 jj log -r ..@ -n 10 --no-graph
 ```
 
 **git:**
-```
+
+```sh
 git log --oneline -10
 ```
 
@@ -56,12 +60,14 @@ Do **NOT** include `Co-Authored-By` trailers.
 Present the drafted commit message to the user and wait for approval before committing.
 
 **jj:**
-```
+
+```sh
 jj commit -m "<message>"
 ```
 
 **git:**
-```
+
+```sh
 git add <specific files>
 git commit -m "<message>"
 ```
@@ -73,11 +79,13 @@ When using git, prefer adding specific files by name rather than `git add -A` or
 Confirm the commit was created successfully.
 
 **jj:**
-```
+
+```sh
 jj log -r @- --no-graph
 ```
 
 **git:**
-```
+
+```sh
 git log --oneline -1
 ```

@@ -91,22 +91,6 @@ impl TagQuery {
     if self.negated { !result } else { result }
   }
 
-  fn evaluate(&self, entry: &Entry) -> bool {
-    match &self.property {
-      Property::Date => self.compare_date(entry.date(), &self.value),
-      Property::Duration => self.compare_duration(entry, false),
-      Property::Interval => self.compare_duration(entry, true),
-      Property::Note => self.compare_string(&entry.note().to_line(" "), &self.value),
-      Property::Tag(name) => self.evaluate_tag(entry, name),
-      Property::Text => {
-        let text = format!("{} {}", entry.title(), entry.note().to_line(" "));
-        self.compare_string(&text, &self.value)
-      }
-      Property::Time => self.compare_time(entry),
-      Property::Title => self.compare_string(entry.title(), &self.value),
-    }
-  }
-
   fn compare_date(&self, entry_date: DateTime<Local>, value: &str) -> bool {
     let Ok(target) = chronify(value) else {
       return false;
@@ -160,6 +144,22 @@ impl TagQuery {
     let entry_time = entry.date().time();
     let target_time = target.time();
     compare_ord(entry_time, target_time, self.op)
+  }
+
+  fn evaluate(&self, entry: &Entry) -> bool {
+    match &self.property {
+      Property::Date => self.compare_date(entry.date(), &self.value),
+      Property::Duration => self.compare_duration(entry, false),
+      Property::Interval => self.compare_duration(entry, true),
+      Property::Note => self.compare_string(&entry.note().to_line(" "), &self.value),
+      Property::Tag(name) => self.evaluate_tag(entry, name),
+      Property::Text => {
+        let text = format!("{} {}", entry.title(), entry.note().to_line(" "));
+        self.compare_string(&text, &self.value)
+      }
+      Property::Time => self.compare_time(entry),
+      Property::Title => self.compare_string(entry.title(), &self.value),
+    }
   }
 
   fn evaluate_tag(&self, entry: &Entry, tag_name: &str) -> bool {

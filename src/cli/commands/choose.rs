@@ -338,15 +338,6 @@ impl Command {
     format!("{date} | {}{tags}", entry.title())
   }
 
-  fn present_menu(&self, entries: &[Entry]) -> Result<Option<Entry>> {
-    if has_fzf() {
-      self.present_fzf(entries)
-    } else {
-      warn!("fzf not found on $PATH, falling back to built-in menu");
-      self.present_dialoguer(entries)
-    }
-  }
-
   fn present_dialoguer(&self, entries: &[Entry]) -> Result<Option<Entry>> {
     let items: Vec<String> = entries.iter().map(Self::format_entry).collect();
 
@@ -385,6 +376,15 @@ impl Command {
 
     let index = items.iter().position(|item| *item == chosen);
     Ok(index.map(|i| entries[i].clone()))
+  }
+
+  fn present_menu(&self, entries: &[Entry]) -> Result<Option<Entry>> {
+    if has_fzf() {
+      self.present_fzf(entries)
+    } else {
+      warn!("fzf not found on $PATH, falling back to built-in menu");
+      self.present_dialoguer(entries)
+    }
   }
 
   fn prompt_action(&self) -> Result<String> {

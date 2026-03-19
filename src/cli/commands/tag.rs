@@ -50,6 +50,13 @@ pub struct Command {
   value: Option<String>,
 }
 
+/// Tracks an entry's ID and section for locating it in the document.
+#[derive(Clone, Debug)]
+struct EntryLocation {
+  id: String,
+  section: String,
+}
+
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let entries = self.find_entries(ctx)?;
@@ -218,13 +225,6 @@ impl Command {
       self.value.clone()
     }
   }
-}
-
-/// Tracks an entry's ID and section for locating it in the document.
-#[derive(Clone, Debug)]
-struct EntryLocation {
-  id: String,
-  section: String,
 }
 
 #[cfg(test)]

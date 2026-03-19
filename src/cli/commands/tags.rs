@@ -42,15 +42,6 @@ pub struct Command {
   sort: SortArg,
 }
 
-/// Sort field for the tags command.
-#[derive(Clone, Debug, ValueEnum)]
-enum SortArg {
-  /// Sort alphabetically by tag name
-  Name,
-  /// Sort by total time interval
-  Time,
-}
-
 /// Sort direction for the tags command.
 #[derive(Clone, Debug, ValueEnum)]
 enum OrderArg {
@@ -58,6 +49,15 @@ enum OrderArg {
   Asc,
   /// Descending order
   Desc,
+}
+
+/// Sort field for the tags command.
+#[derive(Clone, Debug, ValueEnum)]
+enum SortArg {
+  /// Sort alphabetically by tag name
+  Name,
+  /// Sort by total time interval
+  Time,
 }
 
 impl Command {

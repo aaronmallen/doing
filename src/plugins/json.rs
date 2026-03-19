@@ -34,12 +34,6 @@ impl ExportPlugin for JsonExport {
   }
 }
 
-/// Top-level JSON output structure.
-#[derive(Serialize)]
-struct JsonOutput {
-  entries: Vec<JsonEntry>,
-}
-
 /// A single entry serialized as JSON.
 #[derive(Serialize)]
 struct JsonEntry {
@@ -52,14 +46,6 @@ struct JsonEntry {
   section: String,
   tags: Vec<JsonTag>,
   title: String,
-}
-
-/// A tag with its optional value.
-#[derive(Serialize)]
-struct JsonTag {
-  name: String,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  value: Option<String>,
 }
 
 impl JsonEntry {
@@ -99,6 +85,20 @@ impl JsonEntry {
       title: entry.title().to_string(),
     }
   }
+}
+
+/// Top-level JSON output structure.
+#[derive(Serialize)]
+struct JsonOutput {
+  entries: Vec<JsonEntry>,
+}
+
+/// A tag with its optional value.
+#[derive(Serialize)]
+struct JsonTag {
+  name: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  value: Option<String>,
 }
 
 #[cfg(test)]

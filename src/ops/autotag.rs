@@ -113,6 +113,27 @@ fn apply_transforms(entry: &mut Entry, transforms: &[String]) {
   }
 }
 
+fn apply_whitelist(entry: &mut Entry, whitelist: &[String]) {
+  let title_lower = entry.title().to_lowercase();
+  let words: Vec<&str> = title_lower.split_whitespace().collect();
+
+  for whitelist_entry in whitelist {
+    if entry.tags().has(whitelist_entry) {
+      continue;
+    }
+
+    let target = whitelist_entry.to_lowercase();
+    if words.iter().any(|w| *w == target) {
+      let tag_name = if whitelist_entry.chars().any(|c| c.is_uppercase()) {
+        whitelist_entry.clone()
+      } else {
+        target
+      };
+      entry.tags_mut().add(Tag::new(tag_name, None::<String>));
+    }
+  }
+}
+
 fn parse_transform_flags(replacement: &str) -> (String, bool) {
   if let Some(pos) = replacement.rfind("/r")
     && pos + 2 == replacement.len()
@@ -152,27 +173,6 @@ fn wildcard_to_word_regex(pattern: &str) -> String {
   }
   rx.push('$');
   rx
-}
-
-fn apply_whitelist(entry: &mut Entry, whitelist: &[String]) {
-  let title_lower = entry.title().to_lowercase();
-  let words: Vec<&str> = title_lower.split_whitespace().collect();
-
-  for whitelist_entry in whitelist {
-    if entry.tags().has(whitelist_entry) {
-      continue;
-    }
-
-    let target = whitelist_entry.to_lowercase();
-    if words.iter().any(|w| *w == target) {
-      let tag_name = if whitelist_entry.chars().any(|c| c.is_uppercase()) {
-        whitelist_entry.clone()
-      } else {
-        target
-      };
-      entry.tags_mut().add(Tag::new(tag_name, None::<String>));
-    }
-  }
 }
 
 #[cfg(test)]

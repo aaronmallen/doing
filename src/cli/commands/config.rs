@@ -217,6 +217,14 @@ fn set_value_toml(path: &Path, key: &str, raw_value: &str) -> Result<()> {
   Ok(())
 }
 
+fn resolve_config_path_for_write() -> std::path::PathBuf {
+  loader::discover_global_config().unwrap_or_else(|| {
+    dir_spec::config_home()
+      .expect("failed to resolve config directory")
+      .join("doing/config.toml")
+  })
+}
+
 fn toml_value(raw: &str) -> toml_edit::Item {
   if raw == "true" {
     return toml_edit::value(true);
@@ -231,14 +239,6 @@ fn toml_value(raw: &str) -> toml_edit::Item {
     return toml_edit::value(f);
   }
   toml_edit::value(raw)
-}
-
-fn resolve_config_path_for_write() -> std::path::PathBuf {
-  loader::discover_global_config().unwrap_or_else(|| {
-    dir_spec::config_home()
-      .expect("failed to resolve config directory")
-      .join("doing/config.toml")
-  })
 }
 
 #[cfg(test)]

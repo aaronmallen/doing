@@ -44,9 +44,9 @@ impl DurationFormat {
 #[derive(Clone, Debug)]
 pub struct FormattedDuration {
   days: i64,
+  format: DurationFormat,
   hours: i64,
   minutes: i64,
-  format: DurationFormat,
 }
 
 impl FormattedDuration {
@@ -168,14 +168,6 @@ pub fn format_tag_total(duration: chrono::Duration) -> String {
   format!("{days:02}:{hours:02}:{minutes:02}")
 }
 
-fn pluralize(count: i64, word: &str) -> String {
-  if count == 1 {
-    format!("{count} {word}")
-  } else {
-    format!("{count} {word}s")
-  }
-}
-
 fn natural_duration(total_minutes: i64) -> String {
   if total_minutes == 0 {
     return "0 minutes".into();
@@ -240,6 +232,14 @@ fn natural_duration(total_minutes: i64) -> String {
     "about 45 minutes".into()
   } else {
     "about an hour".into()
+  }
+}
+
+fn pluralize(count: i64, word: &str) -> String {
+  if count == 1 {
+    format!("{count} {word}")
+  } else {
+    format!("{count} {word}s")
   }
 }
 

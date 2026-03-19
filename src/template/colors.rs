@@ -7,7 +7,7 @@ const ESCAPE_REGEX: &str = r"\x1b\[[0-9;]*m";
 /// A named ANSI color or modifier that can appear as a `%color` token in templates.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Color {
-  Hex { background: bool, b: u8, g: u8, r: u8 },
+  Hex { b: u8, background: bool, g: u8, r: u8 },
   Named(NamedColor),
 }
 

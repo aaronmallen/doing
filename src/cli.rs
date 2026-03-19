@@ -200,13 +200,13 @@ enum Command {
   /// Repeat the last entry
   #[command(visible_alias = "resume")]
   Again(commands::again::Command),
+  /// Move entries to the Archive section
+  #[command(visible_alias = "move")]
+  Archive(commands::archive::Command),
   /// Apply autotagging rules to existing entries
   Autotag(commands::autotag::Command),
   /// Manage time budgets for tags
   Budget(commands::budget::Command),
-  /// Move entries to the Archive section
-  #[command(visible_alias = "move")]
-  Archive(commands::archive::Command),
   /// Mark the last entry as cancelled
   Cancel(commands::cancel::Command),
   /// List recent changes in Doing

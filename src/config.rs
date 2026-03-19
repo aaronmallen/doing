@@ -153,29 +153,6 @@ impl Config {
   }
 }
 
-/// Apply environment variable overrides to a config value tree.
-fn apply_env_overrides(mut value: Value) -> Value {
-  let obj = match value.as_object_mut() {
-    Some(obj) => obj,
-    None => return value,
-  };
-
-  if let Ok(backup_dir) = env::DOING_BACKUP_DIR.value() {
-    obj.insert("backup_dir".into(), Value::String(backup_dir));
-  }
-
-  if let Ok(editor) = env::DOING_EDITOR.value() {
-    let editors = obj
-      .entry("editors")
-      .or_insert_with(|| Value::Object(serde_json::Map::new()));
-    if let Some(editors_obj) = editors.as_object_mut() {
-      editors_obj.insert("default".into(), Value::String(editor));
-    }
-  }
-
-  value
-}
-
 /// Editor configuration for various contexts.
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(default)]
@@ -331,6 +308,29 @@ impl Default for ViewConfig {
       wrap_width: 0,
     }
   }
+}
+
+/// Apply environment variable overrides to a config value tree.
+fn apply_env_overrides(mut value: Value) -> Value {
+  let obj = match value.as_object_mut() {
+    Some(obj) => obj,
+    None => return value,
+  };
+
+  if let Ok(backup_dir) = env::DOING_BACKUP_DIR.value() {
+    obj.insert("backup_dir".into(), Value::String(backup_dir));
+  }
+
+  if let Ok(editor) = env::DOING_EDITOR.value() {
+    let editors = obj
+      .entry("editors")
+      .or_insert_with(|| Value::Object(serde_json::Map::new()));
+    if let Some(editors_obj) = editors.as_object_mut() {
+      editors_obj.insert("default".into(), Value::String(editor));
+    }
+  }
+
+  value
 }
 
 #[cfg(test)]

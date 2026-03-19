@@ -9,7 +9,6 @@ use crate::{
   config::SortOrder,
   errors::Result,
   ops::filter::{FilterOptions, filter_entries},
-  template::renderer::{RenderOptions, format_items},
 };
 
 /// Display entries from a section with full filtering, custom templates, and
@@ -66,9 +65,7 @@ impl Command {
 
     let filtered = filter_entries(all_entries, &filter_options);
 
-    let template_name = self.display.template.as_deref().unwrap_or("default");
-    let render_options = RenderOptions::from_config(template_name, &ctx.config);
-    let output = format_items(&filtered, &render_options, &ctx.config, self.display.totals);
+    let output = self.display.render_entries(&filtered, &ctx.config, "default");
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager)?;

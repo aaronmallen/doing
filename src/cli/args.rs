@@ -10,6 +10,9 @@ use crate::{
     tag_filter::{BooleanMode, TagFilter},
     tag_query::TagQuery,
   },
+  plugins::default_registry,
+  taskpaper::Entry,
+  template::renderer::{RenderOptions, format_items},
   time::{chronify, parse_range},
 };
 
@@ -85,6 +88,26 @@ pub struct DisplayArgs {
   /// Show tag time totals
   #[arg(long)]
   pub totals: bool,
+}
+
+impl DisplayArgs {
+  /// Render entries using either an export plugin or the template pipeline.
+  ///
+  /// If `--output` matches a registered export plugin trigger, the plugin renders
+  /// the entries directly. Otherwise, the standard template rendering is used.
+  pub fn render_entries(&self, entries: &[Entry], config: &Config, default_template: &str) -> String {
+    let template_name = self.template.as_deref().unwrap_or(default_template);
+    let render_options = RenderOptions::from_config(template_name, config);
+
+    if let Some(ref format) = self.output {
+      let registry = default_registry();
+      if let Some(plugin) = registry.resolve(format) {
+        return plugin.render(entries, &render_options, config);
+      }
+    }
+
+    format_items(entries, &render_options, config, self.totals)
+  }
 }
 
 /// Shared filter arguments reused across commands.

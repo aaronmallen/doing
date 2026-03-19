@@ -12,6 +12,7 @@ use crate::{
   config::SortOrder,
   errors::Result,
   ops::{backup::write_with_backup, filter::filter_entries},
+  plugins::default_registry,
   taskpaper::{Entry, Section, Tag},
   template::renderer::{RenderOptions, format_items},
 };
@@ -307,9 +308,17 @@ impl Command {
   }
 
   fn action_output(&self, ctx: &AppContext, selected: &[Entry]) -> Result<()> {
-    let template_name = self.output.as_deref().unwrap_or("default");
-    let render_options = RenderOptions::from_config(template_name, &ctx.config);
-    let output = format_items(selected, &render_options, &ctx.config, false);
+    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let output = if let Some(ref format) = self.output {
+      let registry = default_registry();
+      if let Some(plugin) = registry.resolve(format) {
+        plugin.render(selected, &render_options, &ctx.config)
+      } else {
+        format_items(selected, &render_options, &ctx.config, false)
+      }
+    } else {
+      format_items(selected, &render_options, &ctx.config, false)
+    };
 
     if let Some(ref path) = self.save_to {
       fs::write(path, &output)?;

@@ -10,7 +10,6 @@ use crate::{
   config::SortOrder,
   errors::Result,
   ops::filter::filter_entries,
-  template::renderer::{RenderOptions, format_items},
 };
 
 /// Show entries from today.
@@ -65,9 +64,7 @@ impl Command {
 
     let filtered = filter_entries(all_entries, &options);
 
-    let template_name = self.display.template.as_deref().unwrap_or("today");
-    let render_options = RenderOptions::from_config(template_name, &ctx.config);
-    let output = format_items(&filtered, &render_options, &ctx.config, self.display.totals);
+    let output = self.display.render_entries(&filtered, &ctx.config, "today");
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager)?;

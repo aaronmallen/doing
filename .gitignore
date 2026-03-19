@@ -1,3 +1,17 @@
+.agents/*
+!.agents/agents/
+.agents/agents/*
+!.agents/agents/code-reviewer/
+!.agents/agents/doc-writer/
+!.agents/agents/profiler/
+!.agents/agents/test-runner/
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/commit/
+!.agents/skills/format/
+.claude/*
+!.claude/agents
+!.claude/skills
 coverage
 target
 tmp

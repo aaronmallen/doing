@@ -82,6 +82,11 @@ impl DoingCmd {
     cmd.args(args);
     cmd
   }
+
+  /// Return the path to the temporary directory backing this test environment.
+  pub fn temp_dir_path(&self) -> &std::path::Path {
+    self._temp_dir.path()
+  }
 }
 
 /// Assert two timestamp strings are within `tolerance` minutes of each other.

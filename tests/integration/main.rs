@@ -10,5 +10,6 @@ mod meanwhile;
 mod note;
 mod now;
 mod reset;
+mod rotate;
 mod smoke;
 mod tag;

@@ -22,7 +22,7 @@ sublime_fuzzy = "0.7"
 tempfile = "3"
 thiserror = "2"
 toml = "1"
-toml_edit = "0.23"
+toml_edit = "0.25"
 typed-env = "0.3"
 yaml_serde = "0.10"
 yansi = { features = ["detect-env", "detect-tty", "hyperlink"], version = "1" }

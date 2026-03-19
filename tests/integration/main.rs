@@ -12,6 +12,7 @@ mod now;
 mod reset;
 mod rotate;
 mod show;
+mod show_dates;
 mod smoke;
 mod tag;
 mod undo;

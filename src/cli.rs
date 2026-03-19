@@ -313,6 +313,9 @@ impl Command {
         let name = args.first().and_then(|s| s.to_str()).unwrap_or("");
         if ctx.config.views.contains_key(name) {
           commands::view::Command::call_external(name, ctx)
+        } else if args.len() > 1 {
+          let title: Vec<String> = args.iter().filter_map(|s| s.to_str().map(String::from)).collect();
+          commands::now::Command::call_external(title, ctx)
         } else {
           Err(crate::errors::Error::Config(format!("unknown command: {name}")))
         }

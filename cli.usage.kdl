@@ -18,6 +18,10 @@ flag "-q --quiet" help="Silence info messages" global=#true
 flag "--stdout" help="Send results report to STDOUT instead of STDERR" global=#true
 flag "--yes" help="Answer all yes/no menus with yes" global=#true
 
+// Bare text fallback: multiple words without a subcommand create a new entry via `now`
+// e.g. `doing working on @doing` is equivalent to `doing now working on @doing`
+arg "[TITLE]..." help="Create a new entry without using the 'now' subcommand (requires multiple words)"
+
 cmd "again" help="Repeat the last entry" {
   alias "resume"
   flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\")"

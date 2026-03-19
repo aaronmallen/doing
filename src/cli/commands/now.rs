@@ -56,6 +56,23 @@ pub struct Command {
 }
 
 impl Command {
+  /// Called when bare text is passed without a subcommand (e.g. `doing working on @doing`).
+  /// Creates an entry using all args as the title with default options.
+  pub fn call_external(title: Vec<String>, ctx: &mut AppContext) -> Result<()> {
+    let cmd = Self {
+      ask: false,
+      back: None,
+      editor: false,
+      finish_last: false,
+      from: None,
+      noauto: false,
+      note: None,
+      section: None,
+      title,
+    };
+    cmd.call(ctx)
+  }
+
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let section_name = self.section.as_deref().unwrap_or(&ctx.config.current_section);
     let date = self.resolve_date()?;

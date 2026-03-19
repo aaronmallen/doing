@@ -40,7 +40,7 @@ pub struct Command {
 
   /// Section to display entries from (default: current section, "all" for every section)
   #[arg(index = 1, value_name = "SECTION")]
-  section: Option<String>,
+  section_name: Option<String>,
 
   /// Additional tag filters (e.g. @tag1 @tag2)
   #[arg(index = 2, trailing_var_arg = true)]
@@ -49,7 +49,7 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self.section.as_deref().unwrap_or(&ctx.config.current_section);
+    let section_name = self.section_name.as_deref().unwrap_or(&ctx.config.current_section);
 
     let all_entries: Vec<_> = ctx
       .document
@@ -106,7 +106,7 @@ mod test {
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
       pager: false,
-      section: None,
+      section_name: None,
       tags: vec![],
     }
   }
@@ -221,7 +221,7 @@ mod test {
     fn it_displays_named_section() {
       let mut ctx = sample_ctx();
       let cmd = Command {
-        section: Some("Later".into()),
+        section_name: Some("Later".into()),
         ..default_cmd()
       };
 
@@ -234,7 +234,7 @@ mod test {
     fn it_displays_all_sections() {
       let mut ctx = sample_ctx();
       let cmd = Command {
-        section: Some("all".into()),
+        section_name: Some("all".into()),
         ..default_cmd()
       };
 
@@ -260,7 +260,7 @@ mod test {
     fn it_handles_empty_section() {
       let mut ctx = sample_ctx();
       let cmd = Command {
-        section: Some("Nonexistent".into()),
+        section_name: Some("Nonexistent".into()),
         ..default_cmd()
       };
 

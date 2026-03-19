@@ -11,6 +11,7 @@ mod note;
 mod now;
 mod reset;
 mod rotate;
+mod show;
 mod smoke;
 mod tag;
 mod undo;

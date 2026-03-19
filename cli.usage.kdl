@@ -395,7 +395,6 @@ cmd "reset" help="Reset the start date of the last entry" {
 }
 
 cmd "rotate" help="Move entries to a dated archive file" {
-  flag "--before <BEFORE>" help="Upper bound date — move entries before this date"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"

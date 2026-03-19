@@ -18,10 +18,6 @@ use crate::{
 /// `{doing_file_stem}_{YYYY-MM}.md`.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
-  /// Upper bound date — move entries before this date
-  #[arg(long)]
-  before: Option<String>,
-
   #[command(flatten)]
   filter: FilterArgs,
 
@@ -85,7 +81,7 @@ impl Command {
       return Ok(Vec::new());
     }
 
-    let mut candidates = if let Some(ref before_str) = self.before {
+    let mut candidates = if let Some(ref before_str) = self.filter.before {
       let before_date = crate::time::chronify(before_str)?;
       all_entries.into_iter().filter(|e| e.date() < before_date).collect()
     } else {
@@ -160,7 +156,6 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
-      before: None,
       filter: FilterArgs::default(),
       keep: None,
     }
@@ -331,7 +326,10 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple_done(dir.path());
       let cmd = Command {
-        before: Some("2024-03-17 11:00".into()),
+        filter: FilterArgs {
+          before: Some("2024-03-17 11:00".into()),
+          ..FilterArgs::default()
+        },
         ..default_cmd()
       };
 

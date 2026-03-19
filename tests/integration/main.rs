@@ -13,6 +13,7 @@ mod reset;
 mod rotate;
 mod show;
 mod show_dates;
+mod show_display;
 mod show_search;
 mod smoke;
 mod tag;

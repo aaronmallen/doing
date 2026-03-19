@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+#MISE description="Run unit tests"
+
+set -e
+
+cargo llvm-cov nextest --bin doing --summary-only --all-features --no-tests pass
+cargo llvm-cov report --html --output-dir coverage
+cargo llvm-cov report --cobertura --output-path coverage/cobertura.xml

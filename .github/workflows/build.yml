@@ -29,13 +29,21 @@ jobs:
       - name: Check
         run: mise run check
 
-  test:
+  test-unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
       - name: Test
-        run: mise run test
+        run: mise run test:unit
+
+  test-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+      - name: Integration Test
+        run: mise run test:integration
 
   package:
     runs-on: ubuntu-latest

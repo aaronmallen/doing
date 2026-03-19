@@ -1,4 +1,5 @@
 mod again;
+mod archive;
 mod autotag;
 mod cancel;
 mod done;

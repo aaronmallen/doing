@@ -7,6 +7,7 @@ pub mod config;
 pub mod done;
 pub mod finish;
 pub mod grep;
+pub mod import;
 pub mod last;
 pub mod mark;
 pub mod meanwhile;

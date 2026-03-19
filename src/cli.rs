@@ -200,7 +200,7 @@ enum Command {
   #[command(visible_alias = "search")]
   Grep(commands::grep::Command),
   /// Import entries from other sources
-  Import,
+  Import(commands::import::Command),
   /// Install fzf for fuzzy selection
   #[command(name = "install_fzf", hide = true)]
   InstallFzf,
@@ -275,6 +275,7 @@ impl Command {
       Self::Done(cmd) => cmd.call(ctx),
       Self::Finish(cmd) => cmd.call(ctx),
       Self::Grep(cmd) => cmd.call(ctx),
+      Self::Import(cmd) => cmd.call(ctx),
       Self::Last(cmd) => cmd.call(ctx),
       Self::Mark(cmd) => cmd.call(ctx),
       Self::Meanwhile(cmd) => cmd.call(ctx),

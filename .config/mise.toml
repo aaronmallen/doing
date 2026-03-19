@@ -15,13 +15,13 @@ alias = ["l"]
 depends = ["lint:**"]
 
 [tools]
+actionlint = "latest"
 "cargo:cargo-audit" = "latest"
 "cargo:cargo-llvm-cov" = "latest"
 "cargo:cargo-nextest" = "latest"
 "cargo:cargo-outdated" = "latest"
 "cargo:cargo-sort" = "latest"
 editorconfig-checker = "latest"
-"gem:doing" = "latest"
 markdownlint-cli2 = "latest"
 taplo = "latest"
 usage = "latest"

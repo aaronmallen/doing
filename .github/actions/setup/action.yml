@@ -1,4 +1,5 @@
 name: Shared Setup
+description: Install mise, Rust toolchain, and development dependencies
 runs:
   using: "composite"
   steps:

@@ -104,7 +104,6 @@ fn it_outputs_html() {
 }
 
 #[test]
-#[ignore = "invalid output format does not produce error (see #17)"]
 fn it_errors_on_invalid_output_format() {
   let doing = DoingCmd::new();
 

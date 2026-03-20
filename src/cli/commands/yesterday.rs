@@ -72,7 +72,7 @@ impl Command {
     let output = self.display.render_entries(&filtered, &ctx.config, "yesterday")?;
 
     if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager)?;
+      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
     }
 
     Ok(())

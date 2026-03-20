@@ -233,7 +233,7 @@ impl Command {
       fs::write(path, &output)?;
       info!("Saved 1 entry to {}", path.display());
     } else {
-      pager::output(&output, &ctx.config, false)?;
+      pager::output(&output, &ctx.config, ctx.use_pager)?;
     }
 
     Ok(())

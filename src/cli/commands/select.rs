@@ -324,7 +324,7 @@ impl Command {
       fs::write(path, &output)?;
       info!("Saved {} entries to {}", selected.len(), path.display());
     } else {
-      pager::output(&output, &ctx.config, false)?;
+      pager::output(&output, &ctx.config, ctx.use_pager)?;
     }
 
     Ok(())

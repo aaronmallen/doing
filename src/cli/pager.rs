@@ -7,10 +7,9 @@ use crate::config::Config;
 
 /// Write output, using the pager when pagination is enabled.
 ///
-/// Paginates when `force_pager` is `true` or when config `paginate` is `true`.
-/// Otherwise writes directly to stdout.
-pub fn output(content: &str, config: &Config, force_pager: bool) -> io::Result<()> {
-  if force_pager || config.paginate {
+/// Paginates when `use_pager` is `true`. Otherwise writes directly to stdout.
+pub fn output(content: &str, config: &Config, use_pager: bool) -> io::Result<()> {
+  if use_pager {
     paginate(content, config)
   } else {
     io::stdout().write_all(content.as_bytes())
@@ -65,10 +64,7 @@ mod test {
 
     #[test]
     fn it_does_not_paginate_when_disabled() {
-      let config = Config {
-        paginate: false,
-        ..Config::default()
-      };
+      let config = Config::default();
 
       let result = super::super::output("", &config, false);
 

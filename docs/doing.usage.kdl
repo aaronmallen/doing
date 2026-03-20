@@ -13,7 +13,7 @@ flag "-f --doing-file <PATH>" help="Specify a different doing_file [env: DOING_F
 flag "--no" help="Answer all yes/no menus with no" global=#true
 flag "-x --noauto" help="Exclude auto tags and default tags" global=#true negate="--no-noauto"
 flag "--notes" help="Output notes if included in the template" global=#true negate="--no-notes"
-flag "-p --pager" help="Use a pager when output is longer than screen" global=#true
+flag "-p --pager" help="Use a pager when output is longer than screen" global=#true negate="--no-pager"
 flag "-q --quiet" help="Silence info messages" global=#true
 flag "--stdout" help="Send results report to STDOUT instead of STDERR" global=#true
 flag "--yes" help="Answer all yes/no menus with yes" global=#true

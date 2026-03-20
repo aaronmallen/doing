@@ -13,6 +13,8 @@ and this project adheres to [Break Versioning].
   time expression is used (e.g. `--back 24h`)
 - [#27] `DOING_FILE` environment variable to specify the doing file path; `-f`/`--doing-file` takes precedence when both
   are set
+- [#28] `--no-pager` global flag to explicitly disable pager output when `paginate` is enabled in config; `--pager` and
+  `--no-pager` now override config defaults
 
 ### Fixed
 
@@ -78,6 +80,7 @@ Initial alpha release
 [#66]: https://github.com/aaronmallen/doing/issues/66
 [#25]: https://github.com/aaronmallen/doing/issues/25
 [#27]: https://github.com/aaronmallen/doing/issues/27
+[#28]: https://github.com/aaronmallen/doing/issues/28
 [#68]: https://github.com/aaronmallen/doing/issues/68
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main

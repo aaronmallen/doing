@@ -89,6 +89,15 @@ struct Cli {
   )]
   no_notes: bool,
 
+  #[arg(
+    long = "no-pager",
+    action = ArgAction::SetTrue,
+    hide = true,
+    overrides_with = "pager",
+    global = true
+  )]
+  no_pager: bool,
+
   /// Exclude auto tags and default tags
   #[arg(short = 'x', long, action = ArgAction::SetTrue, overrides_with = "no_noauto", global = true)]
   noauto: bool,
@@ -98,7 +107,7 @@ struct Cli {
   notes: bool,
 
   /// Use a pager when output is longer than screen
-  #[arg(short = 'p', long, global = true)]
+  #[arg(short = 'p', long, action = ArgAction::SetTrue, overrides_with = "no_pager", global = true)]
   pager: bool,
 
   /// Silence info messages
@@ -151,6 +160,14 @@ impl Cli {
       yansi::disable();
     }
 
+    let use_pager = if self.pager {
+      true
+    } else if self.no_pager {
+      false
+    } else {
+      config.paginate
+    };
+
     let mut ctx = AppContext {
       config,
       default_answer: self.default,
@@ -161,7 +178,7 @@ impl Cli {
       noauto: self.noauto && !self.no_noauto,
       stdout: self.stdout,
       use_color,
-      use_pager: self.pager,
+      use_pager,
       yes: self.yes,
     };
 

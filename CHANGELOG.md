@@ -33,6 +33,7 @@ and this project adheres to [Break Versioning].
   does not find entries tagged `@code`)
 - [#25] `--bool` flag requires exact lowercase values; `--bool AND` and `--bool Or` are rejected
 - [#36] `archive` command does not add `@from(SectionName)` tag by default; `--label` was opt-in instead of default
+- [#38] `meanwhile` does not remove `@meanwhile` tag from finished entry when a new meanwhile replaces it
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
@@ -89,6 +90,7 @@ Initial alpha release
 [#30]: https://github.com/aaronmallen/doing/issues/30
 [#31]: https://github.com/aaronmallen/doing/issues/31
 [#36]: https://github.com/aaronmallen/doing/issues/36
+[#38]: https://github.com/aaronmallen/doing/issues/38
 [#68]: https://github.com/aaronmallen/doing/issues/68
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main

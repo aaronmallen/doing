@@ -1,5 +1,4 @@
 use chrono::Local;
-use pretty_assertions::assert_eq;
 
 use crate::helpers::{DoingCmd, assert_times_within_tolerance, extract_entry_timestamp, fmt_time};
 
@@ -59,6 +58,10 @@ fn it_finishes_existing_meanwhile_when_starting_new() {
     .find(|l| l.contains("First background"))
     .expect("should have first entry");
   assert!(first_line.contains("@done("), "first meanwhile should be finished");
+  assert!(
+    !first_line.contains("@meanwhile"),
+    "first meanwhile should have @meanwhile tag removed"
+  );
 
   let second_line = lines
     .iter()
@@ -97,7 +100,13 @@ fn it_finishes_meanwhile_without_starting_new_when_no_title() {
   doing.run(["meanwhile"]).assert().success();
 
   let contents = doing.read_doing_file();
-  let lines: Vec<&str> = contents.lines().filter(|l| l.contains("@meanwhile")).collect();
-  assert_eq!(lines.len(), 1, "should only have one meanwhile entry");
-  assert!(lines[0].contains("@done("), "the meanwhile entry should be finished");
+  let line = contents
+    .lines()
+    .find(|l| l.contains("Running task"))
+    .expect("should have the meanwhile entry");
+  assert!(line.contains("@done("), "the meanwhile entry should be finished");
+  assert!(
+    !line.contains("@meanwhile"),
+    "the @meanwhile tag should be removed from the finished entry"
+  );
 }

@@ -135,6 +135,7 @@ fn finish_meanwhile_entries(
       };
 
       entry.tags_mut().add(Tag::new("done", done_value));
+      entry.tags_mut().remove("meanwhile");
     }
   }
 }
@@ -294,7 +295,7 @@ mod test {
       let entries = ctx.document.entries_in_section("Currently");
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished());
-      assert!(entries[0].tags().has("meanwhile"));
+      assert!(!entries[0].tags().has("meanwhile"));
       assert!(!entries[1].finished());
       assert!(entries[1].tags().has("meanwhile"));
       assert_eq!(entries[1].title(), "New background");
@@ -368,6 +369,7 @@ mod test {
 
       let entries = ctx.document.entries_in_section("Currently");
       assert!(entries[0].finished());
+      assert!(!entries[0].tags().has("meanwhile"));
       assert_eq!(
         entries[0].done_date().unwrap(),
         Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap()

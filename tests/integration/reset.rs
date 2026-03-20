@@ -78,7 +78,6 @@ fn it_removes_done_tag_by_default() {
 }
 
 #[test]
-#[ignore = "deviation: Rust --from filters by date range, Ruby --from sets start/done times (needs plan 0076-fix)"]
 fn it_resets_entry_with_from_time_range() {
   let doing = DoingCmd::new();
 

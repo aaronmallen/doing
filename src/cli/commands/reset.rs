@@ -1,4 +1,4 @@
-use chrono::Local;
+use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
 use log::info;
 
@@ -9,8 +9,8 @@ use crate::{
     backup::write_with_backup,
     filter::{Age, filter_entries},
   },
-  taskpaper::Entry,
-  time::chronify,
+  taskpaper::{Entry, Tag},
+  time::{chronify, parse_duration, parse_range},
 };
 
 /// Reset the start date of the last entry to now.
@@ -43,10 +43,10 @@ impl Command {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
     }
 
-    let new_date = self.resolve_date()?;
+    let (new_date, done_date) = self.resolve_dates()?;
 
     for loc in &entries {
-      self.reset_entry(ctx, loc, new_date)?;
+      self.reset_entry(ctx, loc, new_date, done_date)?;
     }
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
@@ -120,22 +120,39 @@ impl Command {
       .ok_or_else(|| crate::errors::Error::Config("entry not found".into()))
   }
 
-  fn reset_entry(&self, ctx: &mut AppContext, loc: &EntryLocation, new_date: chrono::DateTime<Local>) -> Result<()> {
+  fn reset_entry(
+    &self,
+    ctx: &mut AppContext,
+    loc: &EntryLocation,
+    new_date: DateTime<Local>,
+    done_date: Option<DateTime<Local>>,
+  ) -> Result<()> {
     let entry = self.find_entry_mut(ctx, loc)?;
     entry.set_date(new_date);
 
-    if self.resume && !self.no_resume {
+    if let Some(done) = done_date {
+      let done_value = done.format("%Y-%m-%d %H:%M").to_string();
+      entry.tags_mut().remove("done");
+      entry.tags_mut().add(Tag::new("done", Some(done_value)));
+    } else if self.resume && !self.no_resume {
       entry.tags_mut().remove("done");
     }
 
     Ok(())
   }
 
-  fn resolve_date(&self) -> Result<chrono::DateTime<Local>> {
-    match &self.back {
-      Some(expr) => chronify(expr),
-      None => Ok(Local::now()),
+  fn resolve_dates(&self) -> Result<(DateTime<Local>, Option<DateTime<Local>>)> {
+    if let Some(ref from_expr) = self.filter.from {
+      let (start, end) = parse_range_or_durations(from_expr)?;
+      return Ok((start, Some(end)));
     }
+
+    let date = match &self.back {
+      Some(expr) => chronify(expr)?,
+      None => Local::now(),
+    };
+
+    Ok((date, None))
   }
 }
 
@@ -144,6 +161,32 @@ impl Command {
 struct EntryLocation {
   id: String,
   section: String,
+}
+
+/// Parse a range expression, falling back to interpreting each side as a duration meaning "X ago".
+///
+/// This allows `"1h to 30m"` to mean "1 hour ago to 30 minutes ago", matching the Ruby doing
+/// behavior where bare durations in a range are treated as relative to now.
+fn parse_range_or_durations(input: &str) -> Result<(DateTime<Local>, DateTime<Local>)> {
+  if let Ok(result) = parse_range(input) {
+    return Ok(result);
+  }
+
+  let re = regex::Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+")
+    .map_err(|e| crate::errors::Error::InvalidTimeExpression(e.to_string()))?;
+
+  let parts: Vec<&str> = re.splitn(input, 2).collect();
+  if parts.len() != 2 {
+    return Err(crate::errors::Error::InvalidTimeExpression(format!(
+      "no range separator found in: {input:?}"
+    )));
+  }
+
+  let now = Local::now();
+  let start = chronify(parts[0]).or_else(|_| parse_duration(parts[0]).map(|d| now - d))?;
+  let end = chronify(parts[1]).or_else(|_| parse_duration(parts[1]).map(|d| now - d))?;
+
+  Ok((start, end))
 }
 
 #[cfg(test)]
@@ -292,6 +335,27 @@ mod test {
     }
 
     #[test]
+    fn it_from_takes_precedence_over_back() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        back: Some("2024-01-01 12:00".into()),
+        filter: FilterArgs {
+          from: Some("2024-06-15 08:00 to 2024-06-15 10:00".into()),
+          ..Default::default()
+        },
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 8, 0, 0).unwrap();
+      assert_eq!(entries[0].date(), expected_start);
+      assert!(entries[0].finished());
+    }
+
+    #[test]
     fn it_keeps_done_tag_with_no_resume() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
@@ -371,6 +435,28 @@ mod test {
       let entries = ctx.document.entries_in_section("Currently");
       let expected = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected);
+    }
+
+    #[test]
+    fn it_resets_with_from_range() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        filter: FilterArgs {
+          from: Some("2024-06-15 08:00 to 2024-06-15 10:00".into()),
+          ..Default::default()
+        },
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 8, 0, 0).unwrap();
+      assert_eq!(entries[0].date(), expected_start);
+      assert!(entries[0].finished());
+      let expected_done = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
+      assert_eq!(entries[0].done_date(), Some(expected_done));
     }
   }
 

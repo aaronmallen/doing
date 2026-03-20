@@ -384,7 +384,7 @@ cmd "reset" help="Reset the start date of the last entry" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
-  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--from <FROM>" help="Set start and done times from a range (e.g. \"8am to 10am\", \"1h to 30m\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"

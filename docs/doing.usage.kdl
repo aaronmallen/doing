@@ -315,7 +315,7 @@ cmd "now" help="Add a new entry" {
 }
 
 cmd "on" help="Show entries from a specific date" {
-  arg "<DATE>" help="Date or date range expression (e.g. \"last friday\", \"3/15 to 3/20\")"
+  arg "<DATE>" help="Date or date range expression (e.g. \"friday\", \"last friday\", \"3/15 to 3/20\")"
   flag "--duration <DURATION>" help="Duration format for time display"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"

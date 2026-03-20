@@ -457,6 +457,22 @@ mod test {
     }
 
     #[test]
+    fn it_parses_bare_full_day_name() {
+      let result = chronify("friday").unwrap();
+
+      assert_eq!(result.weekday(), Weekday::Fri);
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+    }
+
+    #[test]
+    fn it_parses_bare_abbreviated_day_name() {
+      let result = chronify("fri").unwrap();
+
+      assert_eq!(result.weekday(), Weekday::Fri);
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+    }
+
+    #[test]
     fn it_rejects_empty_input() {
       let err = chronify("").unwrap_err();
 
@@ -531,6 +547,76 @@ mod test {
       let now = Local::now();
 
       assert!(parse_ago("not valid", now).is_none());
+    }
+  }
+
+  mod parse_day_of_week {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_parses_full_day_names() {
+      for name in &[
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+      ] {
+        let result = parse_day_of_week(name);
+        assert!(result.is_some(), "parse_day_of_week should parse full name: {name}");
+      }
+    }
+
+    #[test]
+    fn it_parses_abbreviations() {
+      for abbr in &["mon", "tue", "wed", "thu", "fri", "sat", "sun"] {
+        let result = parse_day_of_week(abbr);
+        assert!(result.is_some(), "parse_day_of_week should parse abbreviation: {abbr}");
+      }
+    }
+
+    #[test]
+    fn it_parses_alternate_abbreviations() {
+      for abbr in &["tues", "weds", "thur", "thurs"] {
+        let result = parse_day_of_week(abbr);
+        assert!(
+          result.is_some(),
+          "parse_day_of_week should parse alternate abbreviation: {abbr}"
+        );
+      }
+    }
+
+    #[test]
+    fn it_parses_full_names_with_direction() {
+      let result = parse_day_of_week("last friday");
+      assert!(result.is_some(), "parse_day_of_week should parse 'last friday'");
+
+      let result = parse_day_of_week("next monday");
+      assert!(result.is_some(), "parse_day_of_week should parse 'next monday'");
+    }
+
+    #[test]
+    fn it_resolves_bare_day_to_most_recent_past() {
+      let result = parse_day_of_week("friday").unwrap();
+      let now = Local::now();
+
+      // Result should be in the past (or at most today at midnight)
+      assert!(result <= now, "bare day name should resolve to a past date");
+
+      // Result should be within the last 7 days (use 8-day window to account for
+      // same-weekday resolving to 7 days ago at midnight)
+      let cutoff = now - Duration::days(8);
+      assert!(
+        result > cutoff,
+        "bare day name should resolve to within the last 7 days"
+      );
+
+      // Result should be a Friday
+      assert_eq!(result.weekday(), Weekday::Fri);
     }
   }
 

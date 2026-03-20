@@ -22,10 +22,11 @@ use crate::{
 /// # Examples
 ///
 /// ```text
+/// doing on friday                 # entries from most recent friday
 /// doing on "last friday"          # entries from last friday
 /// doing on "3/15 to 3/20"        # entries within a date range
 /// doing on "2024-01-15"           # entries from a specific date
-/// doing on "monday"               # entries from last monday
+/// doing on monday                 # entries from most recent monday
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {

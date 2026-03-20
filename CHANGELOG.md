@@ -49,6 +49,8 @@ and this project adheres to [Break Versioning].
   `--bool pattern`
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 - [#70] `--noauto` short flag is lowercase `-x` instead of uppercase `-X`; conflicts with `-x` for `--exact`
+- [#71] `on` command fails to parse bare day-of-week names; `doing on friday` and `doing on fri` now correctly resolve
+  to the most recent past occurrence of that weekday
 - [#72] `-t` short flag maps to `--tag` instead of `--times` on display commands; `-t` now maps to `--times` and
   `--tag` has no short flag on `show`, `grep`, `today`, `yesterday`, `recent`, `since`, and `on`
 
@@ -114,6 +116,7 @@ Initial alpha release
 [#52]: https://github.com/aaronmallen/doing/issues/52
 [#68]: https://github.com/aaronmallen/doing/issues/68
 [#70]: https://github.com/aaronmallen/doing/issues/70
+[#71]: https://github.com/aaronmallen/doing/issues/71
 [#72]: https://github.com/aaronmallen/doing/issues/72
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main

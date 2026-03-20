@@ -7,6 +7,8 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.0.1-alpha.3] - 2026-03-20
+
 ### Added
 
 - [#14] Shorthand duration expressions (`24h`, `48h`, `30m`, `2h`, `1d2h`) are now accepted anywhere a natural language
@@ -122,5 +124,6 @@ Initial alpha release
 [#72]: https://github.com/aaronmallen/doing/issues/72
 [#79]: https://github.com/aaronmallen/doing/issues/79
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
+[v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3

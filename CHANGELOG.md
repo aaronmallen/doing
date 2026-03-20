@@ -13,6 +13,7 @@ and this project adheres to [Break Versioning].
   config
 - Default template now includes colors (`%boldwhite`, `%boldcyan`, `%cyan`) matching the Ruby doing gem style
 - [#18] `archive` and `rotate` commands only process `@done` entries instead of all entries
+- [#19] `again` command selects last `@done` entry instead of last unfinished entry
 - [#24] `reset` command crashes with `--search`, `--back`, or `--from` flags when search config is not explicitly set
 
 ## 0.0.1-alpha.1 - 2026-03-19
@@ -23,6 +24,7 @@ Initial alpha release
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 
 [#18]: https://github.com/aaronmallen/doing/issues/18
+[#19]: https://github.com/aaronmallen/doing/issues/19
 [#24]: https://github.com/aaronmallen/doing/issues/24
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...main

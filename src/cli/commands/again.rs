@@ -12,15 +12,15 @@ use crate::{
     filter::{Age, FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},
   },
-  taskpaper::{Entry, Note, Section, Tags},
+  taskpaper::{Entry, Note, Section, Tag, Tags},
   time::chronify,
 };
 
 /// Repeat the last entry.
 ///
-/// Duplicates the most recent @done entry as a new entry without @done,
-/// starting now (or backdated with --back). Use filters to select which
-/// entry to repeat.
+/// Marks the most recent unfinished entry as @done and re-adds it as a
+/// new active entry starting now (or backdated with --back). Use filters
+/// to select which entry to repeat.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Backdate the entry using natural language (e.g. "30m ago")
@@ -64,12 +64,14 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let date = self.resolve_date()?;
     let source = self.find_source_entry(ctx)?;
-    let target_section = self.in_section.as_deref().unwrap_or_else(|| source.section());
+    let source_id = source.id().to_string();
+    let source_section = source.section().to_string();
+    let target_section = self.in_section.as_deref().unwrap_or(&source_section).to_string();
 
     let title = self.resolve_title(&source, &ctx.config)?;
     let note = self.resolve_note(&source);
 
-    let mut entry = Entry::new(date, &title, Tags::new(), note, target_section, None::<String>);
+    let mut entry = Entry::new(date, &title, Tags::new(), note, &target_section, None::<String>);
 
     // Copy non-done tags from the source entry
     for tag in source.tags().iter() {
@@ -82,12 +84,22 @@ impl Command {
       autotag(&mut entry, &ctx.config.autotag, &ctx.config.default_tags);
     }
 
-    if !ctx.document.has_section(target_section) {
-      ctx.document.add_section(Section::new(target_section));
+    // Mark the source entry as @done
+    let done_value = Some(date.format("%Y-%m-%d %H:%M").to_string());
+    let section = ctx
+      .document
+      .section_by_name_mut(&source_section)
+      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{source_section}\" not found")))?;
+    if let Some(src) = section.entries_mut().iter_mut().find(|e| e.id() == source_id) {
+      src.tags_mut().add(Tag::new("done", done_value));
+    }
+
+    if !ctx.document.has_section(&target_section) {
+      ctx.document.add_section(Section::new(&target_section));
     }
     ctx
       .document
-      .section_by_name_mut(target_section)
+      .section_by_name_mut(&target_section)
       .unwrap()
       .add_entry(entry);
 
@@ -124,9 +136,9 @@ impl Command {
 
     let mut results = filter_entries(all_entries, &options);
 
-    // If no filters specified, find the most recent @done entry
+    // If no filters specified, find the most recent unfinished entry
     if self.tag.is_empty() && self.search.is_none() && self.section.is_none() {
-      results.retain(|e| e.finished());
+      results.retain(|e| e.unfinished());
       results.sort_by_key(|e| e.date());
       if let Some(last) = results.pop() {
         return Ok(last);
@@ -189,15 +201,44 @@ mod test {
     }
   }
 
-  fn sample_ctx_with_done_entry(dir: &std::path::Path) -> AppContext {
+  fn sample_ctx_no_active(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");
     fs::write(&path, "Currently:\n").unwrap();
     let mut doc = Document::new();
     let mut section = Section::new("Currently");
     section.add_entry(Entry::new(
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Completed task",
+      "Done task",
       Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+    AppContext {
+      config: Config::default(),
+      default_answer: false,
+      document: doc,
+      doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
+  fn sample_ctx_with_active_entry(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Active task",
+      Tags::new(),
       Note::from_str("some notes"),
       "Currently",
       None::<String>,
@@ -226,10 +267,7 @@ mod test {
     section.add_entry(Entry::new(
       Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
       "First task",
-      Tags::from_iter(vec![
-        Tag::new("project", None::<String>),
-        Tag::new("done", Some("2024-03-17 14:00")),
-      ]),
+      Tags::from_iter(vec![Tag::new("project", None::<String>)]),
       Note::new(),
       "Currently",
       None::<String>,
@@ -237,39 +275,7 @@ mod test {
     section.add_entry(Entry::new(
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
       "Second task",
-      Tags::from_iter(vec![
-        Tag::new("meeting", None::<String>),
-        Tag::new("done", Some("2024-03-17 15:00")),
-      ]),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    doc.add_section(section);
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: path,
-      include_notes: true,
-      no: false,
-      noauto: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
-  }
-
-  fn sample_ctx_no_done(dir: &std::path::Path) -> AppContext {
-    let path = dir.join("doing.md");
-    fs::write(&path, "Currently:\n").unwrap();
-    let mut doc = Document::new();
-    let mut section = Section::new("Currently");
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Active task",
-      Tags::new(),
+      Tags::from_iter(vec![Tag::new("meeting", None::<String>)]),
       Note::new(),
       "Currently",
       None::<String>,
@@ -298,7 +304,7 @@ mod test {
     #[test]
     fn it_applies_autotagging() {
       let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let mut ctx = sample_ctx_with_active_entry(dir.path());
       ctx.config.default_tags = vec!["tracked".into()];
       let cmd = Command {
         noauto: false,
@@ -326,23 +332,9 @@ mod test {
     }
 
     #[test]
-    fn it_duplicates_last_done_entry() {
+    fn it_errors_when_no_active_entries() {
       let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done_entry(dir.path());
-      let cmd = default_cmd();
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 2);
-      assert_eq!(entries[1].title(), "Completed task");
-      assert!(!entries[1].finished());
-    }
-
-    #[test]
-    fn it_errors_when_no_done_entries() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_no_done(dir.path());
+      let mut ctx = sample_ctx_no_active(dir.path());
       let cmd = default_cmd();
 
       assert!(cmd.call(&mut ctx).is_err());
@@ -367,9 +359,22 @@ mod test {
     }
 
     #[test]
+    fn it_marks_source_entry_as_done() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_active_entry(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 2);
+      assert!(entries[0].finished());
+    }
+
+    #[test]
     fn it_places_entry_in_target_section() {
       let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let mut ctx = sample_ctx_with_active_entry(dir.path());
       let cmd = Command {
         in_section: Some("Later".into()),
         ..default_cmd()
@@ -380,13 +385,13 @@ mod test {
       assert!(ctx.document.has_section("Later"));
       let entries = ctx.document.entries_in_section("Later");
       assert_eq!(entries.len(), 1);
-      assert_eq!(entries[0].title(), "Completed task");
+      assert_eq!(entries[0].title(), "Active task");
     }
 
     #[test]
     fn it_preserves_notes_from_source() {
       let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let mut ctx = sample_ctx_with_active_entry(dir.path());
       let cmd = default_cmd();
 
       cmd.call(&mut ctx).unwrap();
@@ -398,7 +403,7 @@ mod test {
     #[test]
     fn it_replaces_note_when_specified() {
       let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let mut ctx = sample_ctx_with_active_entry(dir.path());
       let cmd = Command {
         note: Some("New note".into()),
         ..default_cmd()
@@ -408,6 +413,20 @@ mod test {
 
       let entries = ctx.document.entries_in_section("Currently");
       assert!(!entries[1].note().is_empty());
+    }
+
+    #[test]
+    fn it_repeats_last_unfinished_entry() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_active_entry(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 2);
+      assert_eq!(entries[1].title(), "Active task");
+      assert!(!entries[1].finished());
     }
   }
 
@@ -419,21 +438,10 @@ mod test {
     #[test]
     fn it_errors_when_no_matching_entry() {
       let dir = tempfile::tempdir().unwrap();
-      let ctx = sample_ctx_no_done(dir.path());
+      let ctx = sample_ctx_no_active(dir.path());
       let cmd = default_cmd();
 
       assert!(cmd.find_source_entry(&ctx).is_err());
-    }
-
-    #[test]
-    fn it_finds_most_recent_done_entry() {
-      let dir = tempfile::tempdir().unwrap();
-      let ctx = sample_ctx_with_tagged_entries(dir.path());
-      let cmd = default_cmd();
-
-      let entry = cmd.find_source_entry(&ctx).unwrap();
-
-      assert_eq!(entry.title(), "Second task");
     }
 
     #[test]
@@ -448,6 +456,17 @@ mod test {
       let entry = cmd.find_source_entry(&ctx).unwrap();
 
       assert_eq!(entry.title(), "First task");
+    }
+
+    #[test]
+    fn it_finds_most_recent_unfinished_entry() {
+      let dir = tempfile::tempdir().unwrap();
+      let ctx = sample_ctx_with_tagged_entries(dir.path());
+      let cmd = default_cmd();
+
+      let entry = cmd.find_source_entry(&ctx).unwrap();
+
+      assert_eq!(entry.title(), "Second task");
     }
   }
 }

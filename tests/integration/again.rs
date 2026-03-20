@@ -1,42 +1,13 @@
-use regex::Regex;
-
 use crate::helpers::DoingCmd;
 
 #[test]
-fn it_creates_new_entry_duplicating_last_done_entry() {
-  let doing = DoingCmd::new();
-
-  doing
-    .run(["now", "--back", "10m ago", "Test resume entry"])
-    .assert()
-    .success();
-  doing.run(["finish"]).assert().success();
-  doing.run(["again"]).assert().success();
-
-  let contents = doing.read_doing_file();
-  let entry_lines: Vec<&str> = contents.lines().filter(|l| l.contains("Test resume entry")).collect();
-
-  assert_eq!(entry_lines.len(), 2, "should have two entries with the same title");
-
-  let new_entry = entry_lines
-    .iter()
-    .find(|l| !l.contains("@done"))
-    .expect("should have an active entry without @done");
-  assert!(
-    !Regex::new(r"@done").unwrap().is_match(new_entry),
-    "resumed entry should not have @done tag"
-  );
-}
-
-#[test]
-fn it_finishes_original_and_creates_active_copy() {
+fn it_marks_source_as_done_and_creates_active_copy() {
   let doing = DoingCmd::new();
 
   doing
     .run(["now", "--back", "5m ago", "Entry 4 @tag4"])
     .assert()
     .success();
-  doing.run(["finish"]).assert().success();
   doing.run(["again"]).assert().success();
 
   let contents = doing.read_doing_file();
@@ -64,19 +35,41 @@ fn it_finishes_original_and_creates_active_copy() {
 }
 
 #[test]
+fn it_repeats_last_unfinished_entry() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["now", "--back", "10m ago", "Test resume entry"])
+    .assert()
+    .success();
+  doing.run(["again"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let entry_lines: Vec<&str> = contents.lines().filter(|l| l.contains("Test resume entry")).collect();
+
+  assert_eq!(entry_lines.len(), 2, "should have two entries with the same title");
+
+  let new_entry = entry_lines
+    .iter()
+    .find(|l| !l.contains("@done"))
+    .expect("should have an active entry without @done");
+  assert!(!new_entry.contains("@done"), "resumed entry should not have @done tag");
+}
+
+#[test]
 fn it_resumes_entry_matching_tag() {
   let doing = DoingCmd::new();
 
   doing
-    .run(["done", "--back", "5m ago", "Entry 1 @tag1"])
+    .run(["now", "--back", "5m ago", "Entry 1 @tag1"])
     .assert()
     .success();
   doing
-    .run(["done", "--back", "4m ago", "Entry 2 @tag2"])
+    .run(["now", "--back", "4m ago", "Entry 2 @tag2"])
     .assert()
     .success();
   doing
-    .run(["done", "--back", "3m ago", "Entry 3 @tag3"])
+    .run(["now", "--back", "3m ago", "Entry 3 @tag3"])
     .assert()
     .success();
 

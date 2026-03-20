@@ -33,6 +33,10 @@ pub struct Command {
   #[arg(long)]
   auto: bool,
 
+  /// Backdate the completion time using natural language (e.g. "30m ago")
+  #[arg(short, long, visible_aliases = ["started", "since"])]
+  back: Option<String>,
+
   /// Boolean operator for combining tag filters
   #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
@@ -348,8 +352,18 @@ impl Command {
   fn resolve_finish_date(&self) -> Result<DateTime<Local>> {
     let now = Local::now();
 
+    if self.at.is_some() && self.back.is_some() {
+      return Err(crate::errors::Error::Config(
+        "--at and --back are mutually exclusive".into(),
+      ));
+    }
+
     if let Some(ref at_str) = self.at {
       return chronify(at_str);
+    }
+
+    if let Some(ref back_str) = self.back {
+      return chronify(back_str);
     }
 
     if let Some(ref took_str) = self.took {
@@ -401,6 +415,7 @@ mod test {
       archive: false,
       at: None,
       auto: false,
+      back: None,
       bool_op: None,
       count: 1,
       date: true,
@@ -828,6 +843,29 @@ mod test {
       let date = cmd.resolve_finish_date().unwrap();
 
       assert_eq!(date, Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap());
+    }
+
+    #[test]
+    fn it_errors_when_at_and_back_both_set() {
+      let cmd = Command {
+        at: Some("2024-03-17 15:00".into()),
+        back: Some("2024-03-17 14:00".into()),
+        ..default_cmd()
+      };
+
+      assert!(cmd.resolve_finish_date().is_err());
+    }
+
+    #[test]
+    fn it_uses_back_time() {
+      let cmd = Command {
+        back: Some("2024-03-17 14:00".into()),
+        ..default_cmd()
+      };
+
+      let date = cmd.resolve_finish_date().unwrap();
+
+      assert_eq!(date, Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap());
     }
   }
 }

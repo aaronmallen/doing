@@ -149,6 +149,7 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "-a --archive" help="Move finished entries to Archive"
   flag "--at --finished <AT>" help="Specify the exact completion time"
   flag "--auto" help="Automatically set @done time to the start time of the next entry"
+  flag "-b --back --started --since <DATE>" help="Backdate the completion time using natural language (e.g. \"30m ago\", \"24h\")"
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
@@ -551,32 +552,15 @@ cmd "tag-dir" help="Set the default tags directory" {
 }
 
 cmd "tags" help="List all tags in the doing file" {
-  arg "[MAX_COUNT]" help="Maximum number of tags to display"
-  flag "--counts" help="Show usage counts alongside tag names"
+  flag "-c --counts" help="Show usage counts alongside tag names"
   flag "-l --line" help="Output tags on a single line (for scripting)"
   flag "--order <ORDER>" help="Sort order" default="asc" {
     choices "asc" "desc"
   }
-  flag "-S --sort <SORT>" help="Sort by name, count, or time (total interval)" default="name" {
-    choices "count" "name" "time"
+  flag "-s --section <SECTION>" help="Count tags only within a specific section"
+  flag "-S --sort <SORT>" help="Sort by name or time (total interval)" default="name" {
+    choices "name" "time"
   }
-  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
-  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
-    choices "newest" "oldest"
-  }
-  flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
-    choices "and" "not" "or" "pattern"
-  }
-  flag "-c --count <COUNT>" help="Maximum number of entries to return"
-  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
-  flag "--not" help="Negate all filter results"
-  flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "--search <SEARCH>" help="Text search query"
-  flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
-  flag "-u --unfinished" help="Only include unfinished entries (no @done tag)"
-  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 
 cmd "template" help="Show or edit entry templates" {

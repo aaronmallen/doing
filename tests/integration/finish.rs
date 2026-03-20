@@ -7,6 +7,41 @@ use crate::helpers::{
 };
 
 #[test]
+fn it_backdates_done_time_with_back_flag() {
+  let doing = DoingCmd::new();
+  let now = Local::now();
+  let back_time = now - chrono::Duration::minutes(30);
+
+  doing.run(["now", "Test back entry"]).assert().success();
+  doing.run(["finish", "--back", "30m ago"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let done_ts = extract_done_timestamp(&contents);
+
+  assert_times_within_tolerance(&done_ts, &fmt_time(back_time), 1, "done time should be 30 minutes ago");
+}
+
+#[test]
+fn it_backdates_done_time_with_absolute_back_value() {
+  let doing = DoingCmd::new();
+  let back_time = Local::now() - chrono::Duration::hours(3);
+  let back_str = back_time.format("%Y-%m-%d %H:%M").to_string();
+
+  doing.run(["now", "Test absolute back entry"]).assert().success();
+  doing.run(["finish", "--back", &back_str]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let done_ts = extract_done_timestamp(&contents);
+
+  assert_times_within_tolerance(
+    &done_ts,
+    &fmt_time(back_time),
+    1,
+    "done time should match absolute --back time",
+  );
+}
+
+#[test]
 fn it_calculates_done_time_from_took_duration() {
   let doing = DoingCmd::new();
   let now = Local::now();

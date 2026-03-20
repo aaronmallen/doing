@@ -1,0 +1,57 @@
+name: Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - "[0-9]+.*"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          draft: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-assets:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-apple-darwin
+            os: macos-15-intel
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: doing
+          target: ${{ matrix.target }}
+          archive: doing-v$tag-$target
+          checksum: sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-release:
+    needs: upload-assets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit "${{ github.ref_name }}" --draft=false

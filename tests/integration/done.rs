@@ -1,4 +1,5 @@
 use chrono::Local;
+use pretty_assertions::assert_eq;
 
 use crate::helpers::{
   DoingCmd, assert_times_within_tolerance, extract_done_timestamp, extract_entry_timestamp, fmt_time,
@@ -135,6 +136,38 @@ fn it_marks_last_entry_done_with_no_args() {
   let contents = doing.read_doing_file();
 
   assert!(contents.contains("@done("), "entry should have @done timestamp");
+}
+
+#[test]
+fn it_reports_all_entries_done_when_none_unfinished() {
+  let doing = DoingCmd::new();
+
+  // Create and finish two entries
+  doing.run(["now", "Task one"]).assert().success();
+  doing.run(["done"]).assert().success();
+  doing.run(["now", "Task two"]).assert().success();
+  doing.run(["done"]).assert().success();
+
+  // Save doing file state before running done again
+  let before = doing.read_doing_file();
+
+  // Run done with no unfinished entries — should succeed with info message
+  let output = doing.run(["done"]).output().expect("failed to run done");
+  assert!(
+    output.status.success(),
+    "done should exit successfully when all entries are finished"
+  );
+
+  // Check for informational message on stderr
+  let stderr = String::from_utf8_lossy(&output.stderr);
+  assert!(
+    stderr.contains("All entries already @done"),
+    "expected info message about all entries done, got stderr: '{stderr}'"
+  );
+
+  // Verify doing file unchanged
+  let after = doing.read_doing_file();
+  assert_eq!(before, after, "doing file should not be modified");
 }
 
 #[test]

@@ -46,11 +46,19 @@ pub fn matches(text: &str, mode: &SearchMode, case: CaseSensitivity) -> bool {
 
 /// Test whether an entry matches the given search mode and case sensitivity.
 ///
-/// Searches the entry title, and optionally the note lines when `include_notes` is `true`.
-/// Returns `true` if the title or any note line matches.
+/// Searches the entry title, tag names, and optionally the note lines when
+/// `include_notes` is `true`. Returns `true` if any of these match.
 pub fn matches_entry(entry: &Entry, mode: &SearchMode, case: CaseSensitivity, include_notes: bool) -> bool {
   if matches(entry.title(), mode, case) {
     return true;
+  }
+
+  let tag_names: Vec<&str> = entry.tags().iter().map(|t| t.name()).collect();
+  if !tag_names.is_empty() {
+    let tag_text = tag_names.join(" ");
+    if matches(&tag_text, mode, case) {
+      return true;
+    }
   }
 
   if include_notes {
@@ -419,7 +427,7 @@ mod test {
     use chrono::{Local, TimeZone};
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::taskpaper::{Note, Tag, Tags};
 
     fn sample_entry() -> Entry {
       Entry::new(
@@ -430,6 +438,64 @@ mod test {
         "Currently",
         None::<String>,
       )
+    }
+
+    fn tagged_entry() -> Entry {
+      Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "Working on project",
+        Tags::from_iter(vec![
+          Tag::new("coding", None::<String>),
+          Tag::new("rust", None::<String>),
+        ]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      )
+    }
+
+    #[test]
+    fn it_matches_tag_name() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("coding".into())]);
+
+      assert!(super::super::matches_entry(
+        &tagged_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_matches_tag_name_without_at_prefix() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("rust".into())]);
+
+      assert!(super::super::matches_entry(
+        &tagged_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_does_not_duplicate_results_for_title_and_tag_match() {
+      let entry = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "coding session",
+        Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("coding".into())]);
+
+      assert!(super::super::matches_entry(
+        &entry,
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
     }
 
     #[test]

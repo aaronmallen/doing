@@ -42,6 +42,7 @@ and this project adheres to [Break Versioning].
 - [#52] `budget` argument order reversed from Ruby doing; now accepts `doing budget TAG [AMOUNT]` with tag first;
   `doing budget TAG` without an amount shows current usage for that tag
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
+- [#63] Display output missing trailing newline; shell `%` / `⏎` indicator appears after display commands
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
 ## [v0.0.1-alpha.2] - 2026-03-20
@@ -91,6 +92,7 @@ Initial alpha release
 [#44]: https://github.com/aaronmallen/doing/issues/44
 [#46]: https://github.com/aaronmallen/doing/issues/46
 [#58]: https://github.com/aaronmallen/doing/issues/58
+[#63]: https://github.com/aaronmallen/doing/issues/63
 [#66]: https://github.com/aaronmallen/doing/issues/66
 [#25]: https://github.com/aaronmallen/doing/issues/25
 [#27]: https://github.com/aaronmallen/doing/issues/27

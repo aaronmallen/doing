@@ -42,10 +42,7 @@ fn it_errors_for_unconfigured_tag() {
 fn it_lists_all_budgets_with_no_args() {
   let doing = doing_with_budgets();
 
-  doing
-    .run(["now", "working on stuff @dev"])
-    .assert()
-    .success();
+  doing.run(["now", "working on stuff @dev"]).assert().success();
 
   doing
     .run(["budget"])
@@ -59,10 +56,7 @@ fn it_lists_all_budgets_with_no_args() {
 fn it_shows_single_tag_budget() {
   let doing = doing_with_budgets();
 
-  doing
-    .run(["now", "working on stuff @dev"])
-    .assert()
-    .success();
+  doing.run(["now", "working on stuff @dev"]).assert().success();
 
   doing
     .run(["budget", "dev"])

@@ -3,6 +3,21 @@ use pretty_assertions::assert_eq;
 use crate::helpers::{self, DoingCmd};
 
 #[test]
+fn it_ends_output_with_trailing_newline() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Trailing newline test"]).assert().success();
+
+  let output = doing.run(["show"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.ends_with('\n'),
+    "display output should end with a trailing newline"
+  );
+}
+
+#[test]
 fn it_filters_entries_with_only_timed() {
   let doing = DoingCmd::new();
 

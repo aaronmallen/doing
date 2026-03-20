@@ -9,8 +9,14 @@ use crate::config::Config;
 ///
 /// Paginates when `use_pager` is `true`. Otherwise writes directly to stdout.
 pub fn output(content: &str, config: &Config, use_pager: bool) -> io::Result<()> {
+  let content = if content.ends_with('\n') {
+    content.to_string()
+  } else {
+    format!("{content}\n")
+  };
+
   if use_pager {
-    paginate(content, config)
+    paginate(&content, config)
   } else {
     io::stdout().write_all(content.as_bytes())
   }

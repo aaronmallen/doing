@@ -63,7 +63,12 @@ impl Command {
     tags.sort();
 
     for tag in tags {
-      print_budget_line(tag, &ctx.config.budgets[tag], tracked.get(tag.as_str()).copied(), format)?;
+      print_budget_line(
+        tag,
+        &ctx.config.budgets[tag],
+        tracked.get(tag.as_str()).copied(),
+        format,
+      )?;
     }
 
     Ok(())

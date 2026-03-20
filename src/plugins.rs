@@ -1,7 +1,7 @@
 mod byday;
 mod csv;
 mod doing;
-mod html;
+pub mod html;
 pub mod import;
 mod json;
 mod markdown;

@@ -8,7 +8,7 @@ use crate::{
   time::{DurationFormat, FormattedDuration},
 };
 
-const DEFAULT_CSS: &str = r#"body {
+pub const DEFAULT_CSS: &str = r#"body {
   background: #fff;
   color: #333;
   font-family: Helvetica,arial,freesans,clean,sans-serif;
@@ -182,9 +182,7 @@ impl ExportPlugin for HtmlExport {
         });
 
         let time_html = match &interval {
-          Some(t) if t != "00:00:00" => {
-            format!(r#"<span class="time">{}</span>"#, escape_html(t))
-          }
+          Some(t) if t != "00:00:00" => format!(r#"<span class="time">{}</span>"#, escape_html(t)),
           _ => String::new(),
         };
 

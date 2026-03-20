@@ -39,14 +39,16 @@ fn it_lists_available_commands() {
 }
 
 #[test]
-fn it_shows_template_information() {
+fn it_lists_export_templates() {
   let doing = DoingCmd::new();
 
   let output = doing.run(["template"]).output().expect("failed to run template");
 
   assert!(output.status.success(), "template should exit 0");
   let stdout = String::from_utf8_lossy(&output.stdout);
-  assert!(stdout.contains("default"), "template should list the default template");
+  assert!(stdout.contains("html"), "template should list the html format");
+  assert!(stdout.contains("json"), "template should list the json format");
+  assert!(stdout.contains("csv"), "template should list the csv format");
 }
 
 #[test]

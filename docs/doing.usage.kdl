@@ -562,9 +562,12 @@ cmd "tags" help="List all tags in the doing file" {
   }
 }
 
-cmd "template" help="Show or edit entry templates" {
-  arg "[NAME]" help="Template name to display (e.g., default, today, last, recent)"
-  flag "-l --list" help="List available template names"
+cmd "template" help="Manage export format templates" {
+  arg "[NAME]" help="Template name to display (e.g., css, html, json)"
+  flag "-c --column" help="Output in a single column (for scripting)"
+  flag "-l --list" help="List available export template names"
+  flag "--path" help="Show the path to the templates directory"
+  flag "-s --save <NAME>" help="Save a custom template with the given name"
 }
 
 cmd "today" help="Show entries from today" {
@@ -600,8 +603,6 @@ cmd "undo" help="Undo the last change" {
   arg "[COUNT]" help="Number of steps to undo (default: 1)" default="1"
   flag "-i --interactive" help="Interactively select a backup to restore"
 }
-
-cmd "update" help="Update doing to the latest version"
 
 cmd "view" help="Display a custom view" {
   arg "<NAME>" help="View name from configuration"

@@ -66,6 +66,7 @@ pub struct Config {
   pub search: SearchConfig,
   pub shortdate_format: ShortdateFormatConfig,
   pub tag_sort: String,
+  pub template_path: PathBuf,
   pub templates: HashMap<String, TemplateConfig>,
   pub timer_format: String,
   pub views: HashMap<String, ViewConfig>,
@@ -73,6 +74,7 @@ pub struct Config {
 
 impl Default for Config {
   fn default() -> Self {
+    let config_dir = dir_spec::config_home().expect("failed to resolve user's config directory");
     let data_dir = dir_spec::data_home().expect("failed to resolve user's data directory");
     Self {
       autotag: AutotagConfig::default(),
@@ -100,6 +102,7 @@ impl Default for Config {
       search: SearchConfig::default(),
       shortdate_format: ShortdateFormatConfig::default(),
       tag_sort: "name".into(),
+      template_path: config_dir.join("doing/templates"),
       templates: HashMap::new(),
       timer_format: "text".into(),
       views: HashMap::new(),
@@ -150,6 +153,7 @@ impl Config {
     self.doing_file = expand_tilde(&self.doing_file);
     self.plugins.command_path = expand_tilde(&self.plugins.command_path);
     self.plugins.plugin_path = expand_tilde(&self.plugins.plugin_path);
+    self.template_path = expand_tilde(&self.template_path);
   }
 }
 

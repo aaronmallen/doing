@@ -3,6 +3,21 @@ use pretty_assertions::assert_eq;
 use crate::helpers::{DoingCmd, count_entries};
 
 #[test]
+fn it_adds_from_tag_by_default() {
+  let doing = DoingCmd::new();
+
+  doing.run(["done", "Finished entry"]).assert().success();
+
+  doing.run(["archive"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  assert!(
+    contents.contains("@from(Currently)"),
+    "archived entry should have @from(Currently) tag"
+  );
+}
+
+#[test]
 fn it_archives_all_entries() {
   let doing = DoingCmd::new();
 
@@ -188,6 +203,21 @@ fn it_archives_to_specific_destination() {
   let output = doing.run(["show", "Testing"]).output().expect("failed to run show");
   let stdout = String::from_utf8_lossy(&output.stdout);
   assert_eq!(count_entries(&stdout), 1, "destination section should contain 1 entry");
+}
+
+#[test]
+fn it_archives_without_from_tag_when_no_label() {
+  let doing = DoingCmd::new();
+
+  doing.run(["done", "Finished entry"]).assert().success();
+
+  doing.run(["archive", "--no-label"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  assert!(
+    !contents.contains("@from("),
+    "archived entry should not have @from tag with --no-label"
+  );
 }
 
 #[test]

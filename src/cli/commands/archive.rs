@@ -26,8 +26,12 @@ pub struct Command {
   keep: Option<usize>,
 
   /// Add @from(section) tag to moved entries
-  #[arg(short, long)]
+  #[arg(short, long, action = clap::ArgAction::SetTrue, overrides_with = "no_label", default_value_t = true)]
   label: bool,
+
+  /// Do not add @from(section) tag to moved entries
+  #[arg(long = "no-label", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "label")]
+  no_label: bool,
 }
 
 impl Command {
@@ -118,7 +122,7 @@ impl Command {
 
     // Add entries to Archive with optional @from tag
     for (i, mut entry) in entries.into_iter().enumerate() {
-      if self.label {
+      if self.label && !self.no_label {
         entry.tags_mut().add(Tag::new("from", Some(sections[i].clone())));
       }
       ctx.document.section_by_name_mut("Archive").unwrap().add_entry(entry);
@@ -152,7 +156,8 @@ mod test {
     Command {
       filter: FilterArgs::default(),
       keep: None,
-      label: false,
+      label: true,
+      no_label: false,
     }
   }
 
@@ -252,13 +257,10 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_adds_from_tag_when_label_is_set() {
+    fn it_adds_from_tag_by_default() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = Command {
-        label: true,
-        ..default_cmd()
-      };
+      let cmd = default_cmd();
 
       cmd.call(&mut ctx).unwrap();
 
@@ -268,6 +270,24 @@ mod test {
         assert!(entry.tags().has("from"));
         let from_tag = entry.tags().iter().find(|t| t.name() == "from").unwrap();
         assert_eq!(from_tag.value(), Some("Currently"));
+      }
+    }
+
+    #[test]
+    fn it_does_not_add_from_tag_when_no_label() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let cmd = Command {
+        no_label: true,
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(archive.len(), 2);
+      for entry in archive {
+        assert!(!entry.tags().has("from"));
       }
     }
 

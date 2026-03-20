@@ -56,7 +56,8 @@ cmd "archive" help="Move entries to the Archive section" {
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-k --keep <KEEP>" help="Number of entries to keep in the source section"
-  flag "-l --label" help="Add @from(section) tag to moved entries"
+  flag "-l --label" help="Add @from(section) tag to moved entries (default)"
+  flag "--no-label" help="Do not add @from(section) tag to moved entries"
 }
 
 cmd "autotag" help="Apply autotagging rules to existing entries" {

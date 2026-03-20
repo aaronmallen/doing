@@ -10,7 +10,7 @@ use crate::errors::{Error, Result};
 /// (`3pm`, `15:00`, `noon`, `midnight`), absolute dates (`2024-01-15`,
 /// `01/15/24`), and combined forms (`yesterday 3pm`, `monday 9:30am`).
 ///
-/// Ambiguous times default to the past, not the future.
+/// Bare times always resolve to today's date.
 pub fn chronify(input: &str) -> Result<DateTime<Local>> {
   let input = input.trim().to_lowercase();
 
@@ -196,21 +196,6 @@ fn parse_number(s: &str) -> Option<i64> {
   }
 }
 
-/// Parse a time-only expression into today's date with the given time.
-/// Supports `noon`, `midnight`, `3pm`, `3:30pm`, `15:00`.
-/// If the resulting time is in the future, defaults to yesterday (past bias).
-fn parse_time_only(input: &str) -> Option<DateTime<Local>> {
-  let time = resolve_time_expression(input)?;
-  let now = Local::now();
-  let result = apply_time_to_date(now, time);
-
-  if result > now {
-    Some(apply_time_to_date(now - Duration::days(1), time))
-  } else {
-    Some(result)
-  }
-}
-
 /// Parse relative date expressions: `now`, `today`, `yesterday`, `tomorrow`,
 /// and offset expressions like `2 hours ago`, `30m ago`, `3 days ago`.
 fn parse_relative(input: &str) -> Option<DateTime<Local>> {
@@ -225,6 +210,15 @@ fn parse_relative(input: &str) -> Option<DateTime<Local>> {
   }
 
   parse_ago(input, now)
+}
+
+/// Parse a time-only expression into today's date with the given time.
+/// Supports `noon`, `midnight`, `3pm`, `3:30pm`, `15:00`.
+/// Bare times always resolve to today, matching the original Ruby behavior.
+fn parse_time_only(input: &str) -> Option<DateTime<Local>> {
+  let time = resolve_time_expression(input)?;
+  let now = Local::now();
+  Some(apply_time_to_date(now, time))
 }
 
 /// Convert a weekday abbreviation to a `chrono::Weekday`.
@@ -364,21 +358,21 @@ mod test {
     }
 
     #[test]
-    fn it_parses_combined_with_at_keyword() {
-      let result = chronify("yesterday at noon").unwrap();
-      let expected_date = (Local::now() - Duration::days(1)).date_naive();
-
-      assert_eq!(result.date_naive(), expected_date);
-      assert_eq!(result.time(), NaiveTime::from_hms_opt(12, 0, 0).unwrap());
-    }
-
-    #[test]
     fn it_parses_combined_with_24h_time() {
       let result = chronify("tomorrow 15:00").unwrap();
       let expected_date = (Local::now() + Duration::days(1)).date_naive();
 
       assert_eq!(result.date_naive(), expected_date);
       assert_eq!(result.time(), NaiveTime::from_hms_opt(15, 0, 0).unwrap());
+    }
+
+    #[test]
+    fn it_parses_combined_with_at_keyword() {
+      let result = chronify("yesterday at noon").unwrap();
+      let expected_date = (Local::now() - Duration::days(1)).date_naive();
+
+      assert_eq!(result.date_naive(), expected_date);
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(12, 0, 0).unwrap());
     }
 
     #[test]
@@ -521,6 +515,28 @@ mod test {
     }
   }
 
+  mod parse_time_only {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_resolves_bare_time_to_today() {
+      let result = parse_time_only("3pm").unwrap();
+
+      assert_eq!(result.date_naive(), Local::now().date_naive());
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(15, 0, 0).unwrap());
+    }
+
+    #[test]
+    fn it_resolves_future_time_to_today() {
+      let result = parse_time_only("11:59pm").unwrap();
+
+      assert_eq!(result.date_naive(), Local::now().date_naive());
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(23, 59, 0).unwrap());
+    }
+  }
+
   mod parse_weekday {
     use pretty_assertions::assert_eq;
 
@@ -614,6 +630,14 @@ mod test {
     use super::*;
 
     #[test]
+    fn it_defaults_bare_weekday_to_past() {
+      let now = Local.with_ymd_and_hms(2026, 3, 17, 12, 0, 0).unwrap(); // Tuesday
+      let result = resolve_weekday(now, Weekday::Mon, None);
+
+      assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 16).unwrap());
+    }
+
+    #[test]
     fn it_resolves_last_to_past() {
       let now = Local.with_ymd_and_hms(2026, 3, 17, 12, 0, 0).unwrap(); // Tuesday
       let result = resolve_weekday(now, Weekday::Mon, Some("last"));
@@ -643,14 +667,6 @@ mod test {
       let result = resolve_weekday(now, Weekday::Tue, Some("next"));
 
       assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 24).unwrap());
-    }
-
-    #[test]
-    fn it_defaults_bare_weekday_to_past() {
-      let now = Local.with_ymd_and_hms(2026, 3, 17, 12, 0, 0).unwrap(); // Tuesday
-      let result = resolve_weekday(now, Weekday::Mon, None);
-
-      assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 16).unwrap());
     }
   }
 }

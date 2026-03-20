@@ -7,6 +7,10 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+### Fixed
+
+- [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
+
 ## [v0.0.1-alpha.2] - 2026-03-20
 
 ### Fixed
@@ -45,6 +49,7 @@ Initial alpha release
 [#33]: https://github.com/aaronmallen/doing/issues/33
 [#44]: https://github.com/aaronmallen/doing/issues/44
 [#58]: https://github.com/aaronmallen/doing/issues/58
+[#66]: https://github.com/aaronmallen/doing/issues/66
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

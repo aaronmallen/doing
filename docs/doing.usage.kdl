@@ -24,7 +24,7 @@ arg "[TITLE]..." help="Create a new entry without using the 'now' subcommand (re
 
 cmd "again" help="Repeat the last entry" {
   alias "resume"
-  flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
+  flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
@@ -131,8 +131,8 @@ cmd "config" help="View, edit, and manage configuration" {
 cmd "done" help="Add a completed entry" {
   alias "did"
   flag "-a --archive" help="Immediately archive the entry"
-  flag "--at <AT>" help="Specify the completion time"
-  flag "-b --back <DATE>" help="Backdate the start time using natural language (e.g. \"30m ago\", \"24h\")"
+  flag "--at --finished <AT>" help="Specify the completion time"
+  flag "-b --back --started --since <DATE>" help="Backdate the start time using natural language (e.g. \"30m ago\", \"24h\")"
   flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "--from <FROM>" help="Set a specific start time"
@@ -140,14 +140,14 @@ cmd "done" help="Add a completed entry" {
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
   flag "-r --remove" help="Remove @done tag from last entry instead of adding"
   flag "-s --section <SECTION>" help="Add to a different section"
-  flag "--took <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate start time from now"
+  flag "--took --for <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate start time from now"
   flag "-u --unfinished" help="Finish last entry not already marked @done"
   arg "[TITLE]..." help="Entry description"
 }
 
 cmd "finish" help="Mark the last entry as finished" {
   flag "-a --archive" help="Move finished entries to Archive"
-  flag "--at <AT>" help="Specify the exact completion time"
+  flag "--at --finished <AT>" help="Specify the exact completion time"
   flag "--auto" help="Automatically set @done time to the start time of the next entry"
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
@@ -159,7 +159,7 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to finish entries from"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
-  flag "--took <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
+  flag "--took --for <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
   flag "--unfinished" help="Only finish unfinished entries (no @done tag)"
   flag "-u --update" help="Overwrite an existing @done tag with a new timestamp"
 }
@@ -269,7 +269,7 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
 }
 
 cmd "meanwhile" help="Add an entry while finishing the last" {
-  flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
+  flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "-X --noauto" help="Skip autotagging and default tags"
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
@@ -304,7 +304,7 @@ cmd "note" help="Add or display notes on the last entry" {
 cmd "now" help="Add a new entry" {
   alias "next"
   flag "--ask" help="Prompt interactively for the entry title"
-  flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
+  flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "--finish-last" help="Mark the previous entry in the section as @done before adding"
   flag "--from <FROM>" help="Set a specific start time"
@@ -385,7 +385,7 @@ cmd "redo" help="Redo the last undone change"
 
 cmd "reset" help="Reset the start date of the last entry" {
   alias "begin"
-  flag "-b --back <DATE>" help="Set a specific start date (natural language)"
+  flag "-b --back --started --since <DATE>" help="Set a specific start date (natural language)"
   flag "-i --interactive" help="Interactively select entries to reset"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {

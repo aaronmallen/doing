@@ -23,7 +23,7 @@ use crate::{
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Backdate the entry using natural language (e.g. "30m ago")
-  #[arg(short, long)]
+  #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
 
   /// Boolean operator for combining tag filters

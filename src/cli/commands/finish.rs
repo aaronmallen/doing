@@ -26,7 +26,7 @@ pub struct Command {
   archive: bool,
 
   /// Specify the exact completion time
-  #[arg(long)]
+  #[arg(long, visible_alias = "finished")]
   at: Option<String>,
 
   /// Automatically set @done time to the start time of the next entry
@@ -69,7 +69,7 @@ pub struct Command {
   tag: Vec<String>,
 
   /// Specify duration (e.g. "1h30m") to calculate completion time
-  #[arg(long)]
+  #[arg(long, visible_alias = "for")]
   took: Option<String>,
 
   /// Only finish unfinished entries (no @done tag)

@@ -20,7 +20,7 @@ use crate::{
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Set a specific start date (natural language)
-  #[arg(short, long)]
+  #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
 
   #[command(flatten)]

@@ -25,11 +25,11 @@ pub struct Command {
   archive: bool,
 
   /// Specify the completion time
-  #[arg(long)]
+  #[arg(long, visible_alias = "finished")]
   at: Option<String>,
 
   /// Backdate the start time using natural language (e.g. "30m ago")
-  #[arg(short, long)]
+  #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
 
   /// Include date in @done tag
@@ -68,7 +68,7 @@ pub struct Command {
   title: Vec<String>,
 
   /// Specify duration (e.g. "1h30m") to calculate start time from now
-  #[arg(long)]
+  #[arg(long, visible_alias = "for")]
   took: Option<String>,
 
   /// Finish last entry not already marked @done

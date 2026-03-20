@@ -53,6 +53,8 @@ and this project adheres to [Break Versioning].
   to the most recent past occurrence of that weekday
 - [#72] `-t` short flag maps to `--tag` instead of `--times` on display commands; `-t` now maps to `--times` and
   `--tag` has no short flag on `show`, `grep`, `today`, `yesterday`, `recent`, `since`, and `on`
+- [#79] `--back` missing `--started`/`--since` aliases, `--at` missing `--finished` alias, and `--took` missing
+  `--for` alias; all aliases now available on commands where these flags exist
 
 ## [v0.0.1-alpha.2] - 2026-03-20
 
@@ -118,6 +120,7 @@ Initial alpha release
 [#70]: https://github.com/aaronmallen/doing/issues/70
 [#71]: https://github.com/aaronmallen/doing/issues/71
 [#72]: https://github.com/aaronmallen/doing/issues/72
+[#79]: https://github.com/aaronmallen/doing/issues/79
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

@@ -13,7 +13,7 @@ use crate::{
 
 /// Move entries to the Archive section.
 ///
-/// By default, moves @done entries from the current section to the Archive
+/// By default, moves all entries from the current section to the Archive
 /// section. Use filter options to select specific entries to archive.
 /// The `move` command is an alias for `archive`.
 #[derive(Args, Clone, Debug)]
@@ -86,8 +86,7 @@ impl Command {
       options.age = options.age.or(Some(Age::Oldest));
       filter_entries(all_entries, &options)
     } else {
-      // Default: only @done entries
-      all_entries.into_iter().filter(|e| e.finished()).collect()
+      all_entries
     };
 
     // Sort oldest-first for keep/count logic
@@ -264,14 +263,110 @@ mod test {
       cmd.call(&mut ctx).unwrap();
 
       let archive = ctx.document.entries_in_section("Archive");
-      assert_eq!(archive.len(), 1);
-      assert!(archive[0].tags().has("from"));
-      let from_tag = archive[0].tags().iter().find(|t| t.name() == "from").unwrap();
-      assert_eq!(from_tag.value(), Some("Currently"));
+      assert_eq!(archive.len(), 2);
+      for entry in archive {
+        assert!(entry.tags().has("from"));
+        let from_tag = entry.tags().iter().find(|t| t.name() == "from").unwrap();
+        assert_eq!(from_tag.value(), Some("Currently"));
+      }
     }
 
     #[test]
-    fn it_does_nothing_when_no_done_entries() {
+    fn it_does_nothing_when_section_is_empty() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("doing.md");
+      fs::write(&path, "Currently:\n").unwrap();
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+      let mut ctx = AppContext {
+        config: Config::default(),
+        default_answer: false,
+        document: doc,
+        doing_file: path,
+        include_notes: true,
+        no: false,
+        noauto: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
+      };
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      assert!(!ctx.document.has_section("Archive"));
+    }
+
+    #[test]
+    fn it_keeps_entries_in_source_section() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_multiple_done(dir.path());
+      let cmd = Command {
+        keep: Some(1),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let currently = ctx.document.entries_in_section("Currently");
+      assert_eq!(currently.len(), 1);
+      assert_eq!(currently[0].title(), "Active task");
+      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(archive.len(), 3);
+    }
+
+    #[test]
+    fn it_limits_entries_with_count() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_multiple_done(dir.path());
+      let cmd = Command {
+        filter: FilterArgs {
+          count: Some(1),
+          ..FilterArgs::default()
+        },
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").len(), 3);
+      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(archive.len(), 1);
+      assert_eq!(archive[0].title(), "First done");
+    }
+
+    #[test]
+    fn it_moves_all_entries_to_archive() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      assert!(ctx.document.entries_in_section("Currently").is_empty());
+
+      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(archive.len(), 2);
+    }
+
+    #[test]
+    fn it_moves_nothing_when_keep_exceeds_candidates() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let cmd = Command {
+        keep: Some(10),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
+      assert!(!ctx.document.has_section("Archive"));
+    }
+
+    #[test]
+    fn it_moves_unfinished_entries_to_archive() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
       fs::write(&path, "Currently:\n").unwrap();
@@ -303,78 +398,10 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
-      assert!(!ctx.document.has_section("Archive"));
-    }
-
-    #[test]
-    fn it_limits_entries_with_count() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_multiple_done(dir.path());
-      let cmd = Command {
-        filter: FilterArgs {
-          count: Some(1),
-          ..FilterArgs::default()
-        },
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 3);
+      assert!(ctx.document.entries_in_section("Currently").is_empty());
       let archive = ctx.document.entries_in_section("Archive");
       assert_eq!(archive.len(), 1);
-      assert_eq!(archive[0].title(), "First done");
-    }
-
-    #[test]
-    fn it_keeps_entries_in_source_section() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_multiple_done(dir.path());
-      let cmd = Command {
-        keep: Some(1),
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let currently = ctx.document.entries_in_section("Currently");
-      assert_eq!(currently.len(), 2);
-      let archive = ctx.document.entries_in_section("Archive");
-      assert_eq!(archive.len(), 2);
-      assert_eq!(archive[0].title(), "First done");
-      assert_eq!(archive[1].title(), "Second done");
-    }
-
-    #[test]
-    fn it_moves_done_entries_to_archive() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = default_cmd();
-
-      cmd.call(&mut ctx).unwrap();
-
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
-      assert_eq!(ctx.document.entries_in_section("Currently")[0].title(), "Active task");
-
-      let archive = ctx.document.entries_in_section("Archive");
-      assert_eq!(archive.len(), 1);
-      assert_eq!(archive[0].title(), "Done task");
-    }
-
-    #[test]
-    fn it_moves_nothing_when_keep_exceeds_candidates() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = Command {
-        keep: Some(10),
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
-      assert!(!ctx.document.has_section("Archive"));
+      assert_eq!(archive[0].title(), "Active task");
     }
   }
 }

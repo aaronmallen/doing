@@ -3,7 +3,7 @@ use pretty_assertions::assert_eq;
 use crate::helpers::{DoingCmd, count_entries};
 
 #[test]
-fn it_archives_done_entries() {
+fn it_archives_all_entries() {
   let doing = DoingCmd::new();
 
   doing.run(["now", "Active entry"]).assert().success();
@@ -13,15 +13,15 @@ fn it_archives_done_entries() {
 
   let output = doing.run(["show"]).output().expect("failed to run show");
   let stdout = String::from_utf8_lossy(&output.stdout);
-  assert_eq!(count_entries(&stdout), 1, "current section should have 1 entry");
-  assert!(
-    stdout.contains("Active entry"),
-    "active entry should remain in current section"
-  );
+  assert_eq!(count_entries(&stdout), 0, "current section should be empty");
 
   let output = doing.run(["show", "Archive"]).output().expect("failed to run show");
   let stdout = String::from_utf8_lossy(&output.stdout);
-  assert_eq!(count_entries(&stdout), 1, "archive should contain 1 entry");
+  assert_eq!(count_entries(&stdout), 2, "archive should contain all entries");
+  assert!(
+    stdout.contains("Active entry"),
+    "archive should contain the active entry"
+  );
   assert!(
     stdout.contains("Finished entry"),
     "archive should contain the done entry"
@@ -218,13 +218,13 @@ fn it_keeps_n_most_recent_entries() {
   let stdout = String::from_utf8_lossy(&output.stdout);
   assert_eq!(
     count_entries(&stdout),
-    3,
-    "current section should keep 2 done + 1 active entry"
+    2,
+    "current section should keep 2 most recent entries"
   );
 
   let output = doing.run(["show", "Archive"]).output().expect("failed to run show");
   let stdout = String::from_utf8_lossy(&output.stdout);
-  assert_eq!(count_entries(&stdout), 2, "archive should contain 2 entries");
+  assert_eq!(count_entries(&stdout), 3, "archive should contain 3 entries");
 }
 
 #[test]

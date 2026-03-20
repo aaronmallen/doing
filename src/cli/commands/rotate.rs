@@ -85,8 +85,7 @@ impl Command {
       let before_date = crate::time::chronify(before_str)?;
       all_entries.into_iter().filter(|e| e.date() < before_date).collect()
     } else {
-      // Default: all finished entries
-      all_entries.into_iter().filter(|e| e.finished()).collect::<Vec<_>>()
+      all_entries
     };
 
     // Sort oldest-first for keep logic
@@ -243,6 +242,25 @@ mod test {
     }
   }
 
+  mod archive_path {
+    use super::*;
+
+    #[test]
+    fn it_generates_dated_archive_filename() {
+      let cmd = default_cmd();
+      let doing_file = PathBuf::from("/tmp/doing.md");
+
+      let path = cmd.archive_path(&doing_file);
+
+      let expected_suffix = Local::now().format("%Y-%m").to_string();
+      let name = path.file_name().unwrap().to_str().unwrap();
+      assert!(name.starts_with("doing_"));
+      assert!(name.contains(&expected_suffix));
+      assert!(name.ends_with(".md"));
+      assert_eq!(path.parent().unwrap().to_str().unwrap(), "/tmp");
+    }
+  }
+
   mod call {
     use pretty_assertions::assert_eq;
 
@@ -260,26 +278,16 @@ mod test {
       assert!(archive_path.exists());
       let archive_doc = taskpaper_io::read_file(&archive_path).unwrap();
       let entries = archive_doc.entries_in_section("Currently");
-      assert_eq!(entries.len(), 1);
-      assert_eq!(entries[0].title(), "Done task");
+      assert_eq!(entries.len(), 2);
     }
 
     #[test]
-    fn it_does_nothing_when_no_done_entries() {
+    fn it_does_nothing_when_section_is_empty() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
       fs::write(&path, "Currently:\n").unwrap();
       let mut doc = Document::new();
-      let mut section = Section::new("Currently");
-      section.add_entry(Entry::new(
-        Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-        "Active task",
-        Tags::new(),
-        Note::new(),
-        "Currently",
-        None::<String>,
-      ));
-      doc.add_section(section);
+      doc.add_section(Section::new("Currently"));
       let mut ctx = AppContext {
         config: Config::default(),
         default_answer: false,
@@ -297,7 +305,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
+      assert!(ctx.document.entries_in_section("Currently").is_empty());
     }
 
     #[test]
@@ -312,13 +320,13 @@ mod test {
       cmd.call(&mut ctx).unwrap();
 
       let currently = ctx.document.entries_in_section("Currently");
-      assert_eq!(currently.len(), 2);
+      assert_eq!(currently.len(), 1);
+      assert_eq!(currently[0].title(), "Active task");
 
       let archive_path = cmd.archive_path(&ctx.doing_file);
       let archive_doc = taskpaper_io::read_file(&archive_path).unwrap();
       let archived = archive_doc.entries_in_section("Currently");
-      assert_eq!(archived.len(), 1);
-      assert_eq!(archived[0].title(), "First done");
+      assert_eq!(archived.len(), 2);
     }
 
     #[test]
@@ -352,28 +360,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let currently = ctx.document.entries_in_section("Currently");
-      assert_eq!(currently.len(), 1);
-      assert_eq!(currently[0].title(), "Active task");
-    }
-  }
-
-  mod archive_path {
-    use super::*;
-
-    #[test]
-    fn it_generates_dated_archive_filename() {
-      let cmd = default_cmd();
-      let doing_file = PathBuf::from("/tmp/doing.md");
-
-      let path = cmd.archive_path(&doing_file);
-
-      let expected_suffix = Local::now().format("%Y-%m").to_string();
-      let name = path.file_name().unwrap().to_str().unwrap();
-      assert!(name.starts_with("doing_"));
-      assert!(name.contains(&expected_suffix));
-      assert!(name.ends_with(".md"));
-      assert_eq!(path.parent().unwrap().to_str().unwrap(), "/tmp");
+      assert!(ctx.document.entries_in_section("Currently").is_empty());
     }
   }
 }

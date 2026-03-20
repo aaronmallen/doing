@@ -58,10 +58,9 @@ fn it_keeps_n_recent_entries_and_rotates_the_rest() {
   let stdout = String::from_utf8_lossy(&output.stdout);
   assert_eq!(
     count_entries(&stdout),
-    3,
-    "current section should keep 2 done + 1 active entry"
+    2,
+    "current section should keep 2 most recent entries"
   );
-  assert!(stdout.contains("Fourth done"), "4th done entry should remain");
   assert!(stdout.contains("Fifth done"), "5th done entry should remain");
   assert!(stdout.contains("Active task"), "active entry should remain");
 }
@@ -89,8 +88,8 @@ fn it_removes_rotated_entries_from_doing_file() {
     "rotated entry should be removed from doing file"
   );
   assert!(
-    contents.contains("Active task"),
-    "active entry should remain in doing file"
+    !contents.contains("Active task"),
+    "active entry should be rotated from doing file"
   );
 }
 

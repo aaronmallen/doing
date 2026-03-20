@@ -5,7 +5,6 @@ use pretty_assertions::assert_eq;
 use crate::helpers::{DoingCmd, count_entries};
 
 #[test]
-#[ignore = "deviation: archive filename uses monthly (YYYY-MM) instead of daily (YYYY-MM-DD) suffix (plan 0111)"]
 fn it_creates_dated_archive_file() {
   let doing = DoingCmd::new();
 
@@ -18,7 +17,7 @@ fn it_creates_dated_archive_file() {
   assert!(archive.is_some(), "a dated archive file should be created");
 
   let name = archive.as_ref().unwrap().file_name().unwrap().to_str().unwrap();
-  let date_suffix = chrono::Local::now().format("%Y-%m").to_string();
+  let date_suffix = chrono::Local::now().format("%Y-%m-%d").to_string();
   assert!(
     name.contains(&date_suffix),
     "archive file name should contain current year-month"

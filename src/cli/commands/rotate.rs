@@ -15,7 +15,7 @@ use crate::{
 ///
 /// Moves entries from the specified section to a dated archive file stored
 /// alongside the main doing file. The archive file is named using the pattern
-/// `{doing_file_stem}_{YYYY-MM}.md`.
+/// `{doing_file_stem}_{YYYY-MM-DD}.md`.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   #[command(flatten)]
@@ -60,7 +60,7 @@ impl Command {
 
   fn archive_path(&self, doing_file: &Path) -> PathBuf {
     let stem = doing_file.file_stem().and_then(|s| s.to_str()).unwrap_or("doing");
-    let date_suffix = Local::now().format("%Y-%m");
+    let date_suffix = Local::now().format("%Y-%m-%d");
     let archive_name = format!("{stem}_{date_suffix}.md");
 
     doing_file
@@ -252,7 +252,7 @@ mod test {
 
       let path = cmd.archive_path(&doing_file);
 
-      let expected_suffix = Local::now().format("%Y-%m").to_string();
+      let expected_suffix = Local::now().format("%Y-%m-%d").to_string();
       let name = path.file_name().unwrap().to_str().unwrap();
       assert!(name.starts_with("doing_"));
       assert!(name.contains(&expected_suffix));

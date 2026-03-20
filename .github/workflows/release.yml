@@ -9,7 +9,27 @@ on:
       - "[0-9]+.*"
 
 jobs:
+  wait-for-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Build workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sha="${{ github.sha }}"
+          echo "Waiting for Build workflow to complete on $sha..."
+          while true; do
+            result=$(gh api "repos/${{ github.repository }}/actions/workflows/build.yml/runs" \
+              --jq ".workflow_runs[] | select(.head_sha == \"$sha\") | .conclusion" | head -1)
+            case "$result" in
+              success) echo "Build passed"; exit 0 ;;
+              failure|cancelled|timed_out) echo "Build $result"; exit 1 ;;
+              *) echo "Build still running..."; sleep 30 ;;
+            esac
+          done
+
   create-release:
+    needs: wait-for-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

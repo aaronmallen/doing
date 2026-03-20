@@ -7,6 +7,8 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.0.1-alpha.2] - 2026-03-20
+
 ### Fixed
 
 - Default template was empty, causing `show` and other display commands to produce no output without explicit template
@@ -44,4 +46,5 @@ Initial alpha release
 [#44]: https://github.com/aaronmallen/doing/issues/44
 [#58]: https://github.com/aaronmallen/doing/issues/58
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main
+[v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

@@ -270,7 +270,7 @@ checksum = "dbe111bdda79626e929d51c9b229c8127d024abc2a99efeb48f16a0a76f7d54d"
 
 [[package]]
 name = "doing"
-version = "0.0.1-alpha.1"
+version = "0.0.1-alpha.2"
 dependencies = [
  "assert_cmd",
  "chrono",

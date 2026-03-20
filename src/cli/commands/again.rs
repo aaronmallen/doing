@@ -157,9 +157,8 @@ impl Command {
 
     let mut results = filter_entries(all_entries, &options);
 
-    // If no filters specified, find the most recent unfinished entry
+    // If no filters specified, find the most recent entry regardless of done status
     if self.tag.is_empty() && self.search.is_none() && self.section.is_none() {
-      results.retain(|e| e.unfinished());
       results.sort_by_key(|e| e.date());
       if let Some(last) = results.pop() {
         return Ok(last);
@@ -357,12 +356,17 @@ mod test {
     }
 
     #[test]
-    fn it_errors_when_no_active_entries() {
+    fn it_repeats_done_entry_when_no_active_entries() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_no_active(dir.path());
       let cmd = default_cmd();
 
-      assert!(cmd.call(&mut ctx).is_err());
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 2);
+      assert_eq!(entries[1].title(), "Done task");
+      assert!(!entries[1].finished());
     }
 
     #[test]
@@ -461,12 +465,40 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_errors_when_no_matching_entry() {
+    fn it_errors_when_no_entries_exist() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("doing.md");
+      std::fs::write(&path, "Currently:\n").unwrap();
+      let mut doc = crate::taskpaper::Document::new();
+      doc.add_section(Section::new("Currently"));
+      let ctx = AppContext {
+        config: Config::default(),
+        default_answer: false,
+        document: doc,
+        doing_file: path,
+        include_notes: true,
+        no: false,
+        noauto: false,
+        quiet: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
+      };
+      let cmd = default_cmd();
+
+      assert!(cmd.find_source_entry(&ctx).is_err());
+    }
+
+    #[test]
+    fn it_finds_done_entry_when_no_active_entries() {
       let dir = tempfile::tempdir().unwrap();
       let ctx = sample_ctx_no_active(dir.path());
       let cmd = default_cmd();
 
-      assert!(cmd.find_source_entry(&ctx).is_err());
+      let entry = cmd.find_source_entry(&ctx).unwrap();
+
+      assert_eq!(entry.title(), "Done task");
     }
 
     #[test]

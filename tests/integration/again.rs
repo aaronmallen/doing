@@ -1,6 +1,29 @@
 use crate::helpers::DoingCmd;
 
 #[test]
+fn it_considers_done_entries_when_no_filters() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "--back", "5m ago", "Only entry"]).assert().success();
+  doing.run(["finish"]).assert().success();
+  doing.run(["again"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let entry_lines: Vec<&str> = contents.lines().filter(|l| l.contains("Only entry")).collect();
+
+  assert_eq!(entry_lines.len(), 2, "should have two entries");
+
+  let active = entry_lines
+    .iter()
+    .find(|l| !l.contains("@done"))
+    .expect("should have an active entry without @done");
+  assert!(
+    active.contains("Only entry"),
+    "resumed entry should have the same title"
+  );
+}
+
+#[test]
 fn it_marks_source_as_done_and_creates_active_copy() {
   let doing = DoingCmd::new();
 

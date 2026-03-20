@@ -1,3 +1,5 @@
+use std::fs;
+
 use crate::helpers::DoingCmd;
 
 #[test]
@@ -73,6 +75,42 @@ fn it_persists_config_changes_across_commands() {
     stdout.contains("Working"),
     "config change should persist and be reflected in subsequent commands"
   );
+}
+
+#[test]
+fn it_handles_empty_doingrc_file() {
+  let doing = DoingCmd::new();
+  let temp = doing.temp_dir_path();
+
+  // Create an empty .doingrc in the temp directory
+  fs::write(temp.join(".doingrc"), "").expect("failed to write empty .doingrc");
+
+  // Run commands with CWD set to the temp directory so .doingrc is discovered
+  let mut cmd = doing.run(["now", "Test entry"]);
+  cmd.current_dir(temp);
+  cmd.assert().success();
+
+  let mut cmd = doing.run(["show"]);
+  cmd.current_dir(temp);
+  let output = cmd.output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(
+    stdout.contains("Test entry"),
+    "show should display entry with empty .doingrc"
+  );
+}
+
+#[test]
+fn it_handles_whitespace_only_doingrc_file() {
+  let doing = DoingCmd::new();
+  let temp = doing.temp_dir_path();
+
+  // Create a whitespace-only .doingrc
+  fs::write(temp.join(".doingrc"), "   \n\n  \n").expect("failed to write .doingrc");
+
+  let mut cmd = doing.run(["now", "Test entry"]);
+  cmd.current_dir(temp);
+  cmd.assert().success();
 }
 
 #[test]

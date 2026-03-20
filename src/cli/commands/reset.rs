@@ -17,11 +17,19 @@ use crate::{
 /// By default, sets the start date of the last entry to the current time and
 /// removes the @done tag, effectively resuming the task. Use --no-resume to
 /// keep the @done tag. Use --back to set a specific start date.
+///
+/// A positional date argument can be used as a shorthand for --back:
+///   doing reset 3pm
+///   doing reset "1 hour ago"
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Set a specific start date (natural language)
   #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
+
+  /// Date expression to reset the start time to (alternative to --back)
+  #[arg(index = 1, value_name = "DATE_STRING")]
+  date_string: Option<String>,
 
   #[command(flatten)]
   filter: FilterArgs,
@@ -36,6 +44,10 @@ pub struct Command {
   /// Remove @done tag to re-open the entry
   #[arg(short, long, action = ArgAction::SetTrue, overrides_with = "no_resume", default_value_t = true)]
   resume: bool,
+
+  /// Specify duration (e.g. "1h30m") to set completion time relative to new start
+  #[arg(long, visible_alias = "for")]
+  took: Option<String>,
 }
 
 impl Command {
@@ -179,12 +191,21 @@ impl Command {
       return Ok((start, Some(end)));
     }
 
-    let date = match &self.back {
-      Some(expr) => chronify(expr)?,
-      None => Local::now(),
+    let date = match (&self.back, &self.date_string) {
+      (Some(expr), _) => chronify(expr)?,
+      (None, Some(expr)) => chronify(expr)?,
+      (None, None) => Local::now(),
     };
 
-    Ok((date, None))
+    let done_date = match &self.took {
+      Some(took_str) => {
+        let duration = parse_duration(took_str)?;
+        Some(date + duration)
+      }
+      None => None,
+    };
+
+    Ok((date, done_date))
   }
 }
 
@@ -237,10 +258,12 @@ mod test {
   fn default_cmd() -> Command {
     Command {
       back: None,
+      date_string: None,
       filter: FilterArgs::default(),
       interactive: false,
       no_resume: false,
       resume: true,
+      took: None,
     }
   }
 
@@ -393,6 +416,23 @@ mod test {
     }
 
     #[test]
+    fn it_back_takes_precedence_over_date_string() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        back: Some("2024-06-15 10:00".into()),
+        date_string: Some("2024-01-01 12:00".into()),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
+      assert_eq!(entries[0].date(), expected);
+    }
+
+    #[test]
     fn it_keeps_done_tag_with_no_resume() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
@@ -440,6 +480,22 @@ mod test {
         let elapsed = Local::now().signed_duration_since(entry.date());
         assert!(elapsed.num_seconds() < 5);
       }
+    }
+
+    #[test]
+    fn it_resets_with_date_string() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        date_string: Some("2024-06-15 15:00".into()),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected = Local.with_ymd_and_hms(2024, 6, 15, 15, 0, 0).unwrap();
+      assert_eq!(entries[0].date(), expected);
     }
 
     #[test]
@@ -493,6 +549,46 @@ mod test {
       assert_eq!(entries[0].date(), expected_start);
       assert!(entries[0].finished());
       let expected_done = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
+      assert_eq!(entries[0].done_date(), Some(expected_done));
+    }
+
+    #[test]
+    fn it_sets_done_date_with_took() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        back: Some("2024-06-15 10:00".into()),
+        took: Some("1h30m".into()),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
+      let expected_done = Local.with_ymd_and_hms(2024, 6, 15, 11, 30, 0).unwrap();
+      assert_eq!(entries[0].date(), expected_start);
+      assert!(entries[0].finished());
+      assert_eq!(entries[0].done_date(), Some(expected_done));
+    }
+
+    #[test]
+    fn it_sets_done_date_with_took_and_date_string() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        date_string: Some("2024-06-15 10:00".into()),
+        took: Some("2h".into()),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
+      let expected_done = Local.with_ymd_and_hms(2024, 6, 15, 12, 0, 0).unwrap();
+      assert_eq!(entries[0].date(), expected_start);
+      assert!(entries[0].finished());
       assert_eq!(entries[0].done_date(), Some(expected_done));
     }
   }

@@ -32,6 +32,30 @@ fn it_changes_last_entry_start_date_to_now() {
 }
 
 #[test]
+fn it_changes_start_date_with_positional_date_string() {
+  let doing = DoingCmd::new();
+  let now = Local::now();
+  let expected = now - Duration::hours(2);
+
+  doing
+    .run(["now", "--back", "30m ago", "Test positional reset"])
+    .assert()
+    .success();
+
+  doing.run(["reset", "2 hours ago"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let ts = extract_entry_timestamp(&contents);
+
+  assert_times_within_tolerance(
+    &ts,
+    &fmt_time(expected),
+    1,
+    "entry should have start date from positional date string",
+  );
+}
+
+#[test]
 fn it_keeps_done_tag_with_no_resume_flag() {
   let doing = DoingCmd::new();
 
@@ -98,6 +122,62 @@ fn it_resets_entry_with_from_time_range() {
   assert!(
     contents.contains("@done("),
     "entry should have @done tag from end of range"
+  );
+}
+
+#[test]
+fn it_sets_done_date_with_took_flag() {
+  let doing = DoingCmd::new();
+  let now = Local::now();
+  let expected_start = now - Duration::hours(2);
+
+  doing
+    .run(["now", "--back", "30m ago", "Test took reset"])
+    .assert()
+    .success();
+
+  doing
+    .run(["reset", "--back", "2 hours ago", "--took", "1h30m"])
+    .assert()
+    .success();
+
+  let contents = doing.read_doing_file();
+  let ts = extract_entry_timestamp(&contents);
+
+  assert_times_within_tolerance(
+    &ts,
+    &fmt_time(expected_start),
+    1,
+    "entry should have start date 2 hours ago",
+  );
+  assert!(contents.contains("@done("), "entry should have @done tag from --took",);
+}
+
+#[test]
+fn it_sets_done_date_with_took_and_positional_date() {
+  let doing = DoingCmd::new();
+  let now = Local::now();
+  let expected_start = now - Duration::hours(3);
+
+  doing
+    .run(["now", "--back", "30m ago", "Test took positional reset"])
+    .assert()
+    .success();
+
+  doing.run(["reset", "3 hours ago", "--took", "2h"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let ts = extract_entry_timestamp(&contents);
+
+  assert_times_within_tolerance(
+    &ts,
+    &fmt_time(expected_start),
+    1,
+    "entry should have start date 3 hours ago",
+  );
+  assert!(
+    contents.contains("@done("),
+    "entry should have @done tag from --took with positional date",
   );
 }
 

@@ -25,7 +25,7 @@ arg "[TITLE]..." help="Create a new entry without using the 'now' subcommand (re
 cmd "again" help="Repeat the last entry" {
   alias "resume"
   flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
@@ -45,7 +45,7 @@ cmd "archive" help="Move entries to the Archive section" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
@@ -73,7 +73,7 @@ cmd "budget" help="Manage time budgets for tags" {
 
 cmd "cancel" help="Mark the last entry as cancelled" {
   flag "-a --archive" help="Move cancelled entries to Archive"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Cancel the last N entries" default="1"
@@ -85,7 +85,7 @@ cmd "cancel" help="Mark the last entry as cancelled" {
 }
 
 cmd "choose" help="Fuzzy select an entry to act on" {
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-o --output <FORMAT>" help="Output format"
@@ -149,7 +149,7 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "-a --archive" help="Move finished entries to Archive"
   flag "--at <AT>" help="Specify the exact completion time"
   flag "--auto" help="Automatically set @done time to the start time of the next entry"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Finish the last N entries" default="1"
@@ -187,7 +187,7 @@ cmd "grep" help="Search for entries matching a pattern" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -226,7 +226,7 @@ cmd "last" help="Show the last entry" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -249,7 +249,7 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -283,7 +283,7 @@ cmd "note" help="Add or display notes on the last entry" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -327,7 +327,7 @@ cmd "on" help="Show entries from a specific date" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -363,7 +363,7 @@ cmd "recent" help="Show recent entries" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -388,7 +388,7 @@ cmd "reset" help="Reset the start date of the last entry" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -407,7 +407,7 @@ cmd "rotate" help="Move entries to a dated archive file" {
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"
   }
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -432,7 +432,7 @@ cmd "sections" help="List available sections" {
 
 cmd "select" help="Interactively select entries to act on" {
   flag "-a --archive" help="Archive selected entries"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --cancel" help="Cancel selected entries (mark @done without timestamp)"
@@ -468,7 +468,7 @@ cmd "show" help="Show entries from a section" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -497,7 +497,7 @@ cmd "since" help="Show entries since a given date" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -520,7 +520,7 @@ cmd "tag" help="Add or remove tags from entries" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -575,7 +575,7 @@ cmd "today" help="Show entries from today" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -609,7 +609,7 @@ cmd "view" help="Display a custom view" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
@@ -646,7 +646,7 @@ cmd "yesterday" help="Show entries from yesterday" {
     choices "newest" "oldest"
   }
   flag "--before <BEFORE>" help="Upper bound for entry date"
-  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" {
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Maximum number of entries to return"

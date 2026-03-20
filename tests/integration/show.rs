@@ -3,6 +3,66 @@ use pretty_assertions::assert_eq;
 use crate::helpers::{self, DoingCmd};
 
 #[test]
+fn it_accepts_bool_flag_case_insensitively() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Entry with tag1 @tag1"]).assert().success();
+  doing.run(["now", "Entry with tag2 @tag2"]).assert().success();
+  doing.run(["now", "Entry with both @tag1 @tag2"]).assert().success();
+
+  let uppercase = doing
+    .run(["show", "--tag", "tag1", "--tag", "tag2", "--bool", "AND"])
+    .output()
+    .expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&uppercase.stdout);
+
+  assert_eq!(
+    helpers::count_entries(&stdout),
+    1,
+    "show --bool AND (uppercase) should display 1 entry"
+  );
+
+  let mixed = doing
+    .run(["show", "--tag", "tag2", "--bool", "Not"])
+    .output()
+    .expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&mixed.stdout);
+
+  assert_eq!(
+    helpers::count_entries(&stdout),
+    1,
+    "show --bool Not (mixed case) should display 1 entry"
+  );
+}
+
+#[test]
+fn it_defaults_bool_to_pattern_mode() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Has foo @foo"]).assert().success();
+  doing.run(["now", "Has bar @bar"]).assert().success();
+  doing.run(["now", "Has both @foo @bar"]).assert().success();
+
+  // Without --bool, +foo,-bar should use pattern mode by default:
+  // include entries with @foo, exclude entries with @bar
+  let output = doing
+    .run(["show", "--tag", "+foo", "--tag=-bar"])
+    .output()
+    .expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert_eq!(
+    helpers::count_entries(&stdout),
+    1,
+    "default pattern mode should match 1 entry with @foo but without @bar"
+  );
+  assert!(
+    stdout.contains("Has foo"),
+    "output should contain the entry with only @foo"
+  );
+}
+
+#[test]
 fn it_displays_entries_from_default_section() {
   let doing = DoingCmd::new();
 
@@ -71,39 +131,6 @@ fn it_filters_entries_by_multiple_tags_with_bool_and() {
   assert!(
     stdout.contains("Entry with both"),
     "output should contain the entry with both tags"
-  );
-}
-
-#[test]
-fn it_accepts_bool_flag_case_insensitively() {
-  let doing = DoingCmd::new();
-
-  doing.run(["now", "Entry with tag1 @tag1"]).assert().success();
-  doing.run(["now", "Entry with tag2 @tag2"]).assert().success();
-  doing.run(["now", "Entry with both @tag1 @tag2"]).assert().success();
-
-  let uppercase = doing
-    .run(["show", "--tag", "tag1", "--tag", "tag2", "--bool", "AND"])
-    .output()
-    .expect("failed to run show");
-  let stdout = String::from_utf8_lossy(&uppercase.stdout);
-
-  assert_eq!(
-    helpers::count_entries(&stdout),
-    1,
-    "show --bool AND (uppercase) should display 1 entry"
-  );
-
-  let mixed = doing
-    .run(["show", "--tag", "tag2", "--bool", "Not"])
-    .output()
-    .expect("failed to run show");
-  let stdout = String::from_utf8_lossy(&mixed.stdout);
-
-  assert_eq!(
-    helpers::count_entries(&stdout),
-    1,
-    "show --bool Not (mixed case) should display 1 entry"
   );
 }
 

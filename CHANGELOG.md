@@ -41,10 +41,12 @@ and this project adheres to [Break Versioning].
   status messages are now printed directly to stderr as clean text, independent of the logging system
 - [#52] `budget` argument order reversed from Ruby doing; now accepts `doing budget TAG [AMOUNT]` with tag first;
   `doing budget TAG` without an amount shows current usage for that tag
+- [#63] Display output missing trailing newline; shell `%` / `⏎` indicator appears after display commands
 - [#64] `again` with no filters only considers unfinished entries; now selects the most recent entry regardless of
   `@done` status so previously completed tasks can be resumed
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
-- [#63] Display output missing trailing newline; shell `%` / `⏎` indicator appears after display commands
+- [#67] `--bool` flag defaults to `or` instead of `pattern`; `+`/`-` tag prefixes now work correctly without explicit
+  `--bool pattern`
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
 ## [v0.0.1-alpha.2] - 2026-03-20
@@ -97,6 +99,7 @@ Initial alpha release
 [#63]: https://github.com/aaronmallen/doing/issues/63
 [#64]: https://github.com/aaronmallen/doing/issues/64
 [#66]: https://github.com/aaronmallen/doing/issues/66
+[#67]: https://github.com/aaronmallen/doing/issues/67
 [#25]: https://github.com/aaronmallen/doing/issues/25
 [#27]: https://github.com/aaronmallen/doing/issues/27
 [#28]: https://github.com/aaronmallen/doing/issues/28

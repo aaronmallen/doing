@@ -43,9 +43,9 @@ pub enum BoolArg {
   And,
   /// None of the specified tags may be present.
   Not,
-  /// At least one specified tag must be present (default).
+  /// At least one specified tag must be present.
   Or,
-  /// Each tag carries its own +/- prefix.
+  /// Each tag carries its own +/- prefix (default).
   Pattern,
 }
 

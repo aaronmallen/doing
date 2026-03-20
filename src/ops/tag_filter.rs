@@ -8,9 +8,9 @@ pub enum BooleanMode {
   /// None of the specified tags may be present.
   Not,
   /// At least one specified tag must be present.
-  #[default]
   Or,
   /// Each tag carries its own `+`/`-` prefix: `+` requires, `-` excludes.
+  #[default]
   Pattern,
 }
 

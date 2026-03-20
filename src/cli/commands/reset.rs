@@ -1,5 +1,5 @@
 use chrono::Local;
-use clap::Args;
+use clap::{ArgAction, Args};
 use log::info;
 
 use crate::{
@@ -15,9 +15,9 @@ use crate::{
 
 /// Reset the start date of the last entry to now.
 ///
-/// By default, sets the start date of the last entry to the current time.
-/// Use --back to set a specific start date. Use --resume to also remove the
-/// @done tag, effectively re-opening a finished entry.
+/// By default, sets the start date of the last entry to the current time and
+/// removes the @done tag, effectively resuming the task. Use --no-resume to
+/// keep the @done tag. Use --back to set a specific start date.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Set a specific start date (natural language)
@@ -27,8 +27,11 @@ pub struct Command {
   #[command(flatten)]
   filter: FilterArgs,
 
-  /// Also remove @done tag (re-open the entry)
-  #[arg(short, long)]
+  #[arg(long = "no-resume", action = ArgAction::SetTrue, hide = true, overrides_with = "resume")]
+  no_resume: bool,
+
+  /// Remove @done tag to re-open the entry
+  #[arg(short, long, action = ArgAction::SetTrue, overrides_with = "no_resume", default_value_t = true)]
   resume: bool,
 }
 
@@ -121,7 +124,7 @@ impl Command {
     let entry = self.find_entry_mut(ctx, loc)?;
     entry.set_date(new_date);
 
-    if self.resume {
+    if self.resume && !self.no_resume {
       entry.tags_mut().remove("done");
     }
 
@@ -160,7 +163,8 @@ mod test {
     Command {
       back: None,
       filter: FilterArgs::default(),
-      resume: false,
+      no_resume: false,
+      resume: true,
     }
   }
 
@@ -288,10 +292,14 @@ mod test {
     }
 
     #[test]
-    fn it_keeps_done_tag_without_resume() {
+    fn it_keeps_done_tag_with_no_resume() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = default_cmd();
+      let cmd = Command {
+        no_resume: true,
+        resume: false,
+        ..default_cmd()
+      };
 
       cmd.call(&mut ctx).unwrap();
 
@@ -300,13 +308,10 @@ mod test {
     }
 
     #[test]
-    fn it_removes_done_tag_with_resume() {
+    fn it_removes_done_tag_by_default() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = Command {
-        resume: true,
-        ..default_cmd()
-      };
+      let cmd = default_cmd();
 
       cmd.call(&mut ctx).unwrap();
 

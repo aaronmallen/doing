@@ -32,7 +32,30 @@ fn it_changes_last_entry_start_date_to_now() {
 }
 
 #[test]
-fn it_removes_done_tag_with_resume_flag() {
+fn it_keeps_done_tag_with_no_resume_flag() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["done", "--back", "10m ago", "Test no-resume entry"])
+    .assert()
+    .success();
+
+  let contents = doing.read_doing_file();
+
+  assert!(contents.contains("@done("), "entry should be marked done before reset");
+
+  doing.run(["reset", "--no-resume"]).assert().success();
+
+  let contents = doing.read_doing_file();
+
+  assert!(
+    contents.contains("@done("),
+    "entry should keep @done tag after reset --no-resume"
+  );
+}
+
+#[test]
+fn it_removes_done_tag_by_default() {
   let doing = DoingCmd::new();
 
   doing
@@ -44,13 +67,38 @@ fn it_removes_done_tag_with_resume_flag() {
 
   assert!(contents.contains("@done("), "entry should be marked done before reset");
 
-  doing.run(["reset", "--resume"]).assert().success();
+  doing.run(["reset"]).assert().success();
 
   let contents = doing.read_doing_file();
 
   assert!(
     !contents.contains("@done("),
-    "entry should not have @done tag after reset --resume"
+    "entry should not have @done tag after reset"
+  );
+}
+
+#[test]
+#[ignore = "deviation: Rust --from filters by date range, Ruby --from sets start/done times (needs plan 0076-fix)"]
+fn it_resets_entry_with_from_time_range() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Test entry"]).assert().success();
+  doing.run(["reset", "--from", "1h to 30m"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let now = Local::now();
+  let expected_start = now - Duration::hours(1);
+  let entry_ts = extract_entry_timestamp(&contents);
+
+  assert_times_within_tolerance(
+    &entry_ts,
+    &fmt_time(expected_start),
+    1,
+    "entry should have start time of 1 hour ago",
+  );
+  assert!(
+    contents.contains("@done("),
+    "entry should have @done tag from end of range"
   );
 }
 
@@ -88,30 +136,5 @@ fn it_resets_tagged_entry_with_back_override() {
     &fmt_time(expected),
     1,
     "tagged entry should be reset to 30 minutes ago",
-  );
-}
-
-#[test]
-#[ignore = "deviation: Rust --from filters by date range, Ruby --from sets start/done times (needs plan 0076-fix)"]
-fn it_resets_entry_with_from_time_range() {
-  let doing = DoingCmd::new();
-
-  doing.run(["now", "Test entry"]).assert().success();
-  doing.run(["reset", "--from", "1h to 30m"]).assert().success();
-
-  let contents = doing.read_doing_file();
-  let now = Local::now();
-  let expected_start = now - Duration::hours(1);
-  let entry_ts = extract_entry_timestamp(&contents);
-
-  assert_times_within_tolerance(
-    &entry_ts,
-    &fmt_time(expected_start),
-    1,
-    "entry should have start time of 1 hour ago",
-  );
-  assert!(
-    contents.contains("@done("),
-    "entry should have @done tag from end of range"
   );
 }

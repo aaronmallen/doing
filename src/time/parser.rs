@@ -1,6 +1,7 @@
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
 use regex::Regex;
 
+use super::duration::parse_duration;
 use crate::errors::{Error, Result};
 
 /// Parse a natural language date/time expression into a `DateTime<Local>`.
@@ -35,6 +36,10 @@ pub fn chronify(input: &str) -> Result<DateTime<Local>> {
   }
 
   if let Some(dt) = parse_combined(&input) {
+    return Ok(dt);
+  }
+
+  if let Some(dt) = parse_shorthand_duration(&input) {
     return Ok(dt);
   }
 
@@ -212,6 +217,13 @@ fn parse_relative(input: &str) -> Option<DateTime<Local>> {
   parse_ago(input, now)
 }
 
+/// Parse a bare duration shorthand (e.g. `24h`, `30m`, `1d2h`) as an offset
+/// into the past from now.
+fn parse_shorthand_duration(input: &str) -> Option<DateTime<Local>> {
+  let duration = parse_duration(input).ok()?;
+  Some(Local::now() - duration)
+}
+
 /// Parse a time-only expression into today's date with the given time.
 /// Supports `noon`, `midnight`, `3pm`, `3:30pm`, `15:00`.
 /// Bare times always resolve to today, matching the original Ruby behavior.
@@ -385,6 +397,42 @@ mod test {
     }
 
     #[test]
+    fn it_parses_shorthand_duration_hours() {
+      let before = Local::now();
+      let result = chronify("24h").unwrap();
+      let after = Local::now();
+
+      let expected_before = before - Duration::hours(24);
+      let expected_after = after - Duration::hours(24);
+
+      assert!(result >= expected_before && result <= expected_after);
+    }
+
+    #[test]
+    fn it_parses_shorthand_duration_minutes() {
+      let before = Local::now();
+      let result = chronify("30m").unwrap();
+      let after = Local::now();
+
+      let expected_before = before - Duration::minutes(30);
+      let expected_after = after - Duration::minutes(30);
+
+      assert!(result >= expected_before && result <= expected_after);
+    }
+
+    #[test]
+    fn it_parses_shorthand_duration_multi_unit() {
+      let before = Local::now();
+      let result = chronify("1d2h").unwrap();
+      let after = Local::now();
+
+      let expected_before = before - Duration::hours(26);
+      let expected_after = after - Duration::hours(26);
+
+      assert!(result >= expected_before && result <= expected_after);
+    }
+
+    #[test]
     fn it_parses_today() {
       let result = chronify("today").unwrap();
 
@@ -512,6 +560,39 @@ mod test {
     #[test]
     fn it_returns_none_for_invalid_input() {
       assert!(parse_number("foo").is_none());
+    }
+  }
+
+  mod parse_shorthand_duration {
+    use super::*;
+
+    #[test]
+    fn it_parses_hours() {
+      let before = Local::now();
+      let result = parse_shorthand_duration("48h").unwrap();
+      let after = Local::now();
+
+      let expected_before = before - Duration::hours(48);
+      let expected_after = after - Duration::hours(48);
+
+      assert!(result >= expected_before && result <= expected_after);
+    }
+
+    #[test]
+    fn it_parses_minutes() {
+      let before = Local::now();
+      let result = parse_shorthand_duration("15m").unwrap();
+      let after = Local::now();
+
+      let expected_before = before - Duration::minutes(15);
+      let expected_after = after - Duration::minutes(15);
+
+      assert!(result >= expected_before && result <= expected_after);
+    }
+
+    #[test]
+    fn it_returns_none_for_invalid_input() {
+      assert!(parse_shorthand_duration("not valid").is_none());
     }
   }
 

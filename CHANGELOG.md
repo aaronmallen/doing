@@ -7,6 +7,11 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+### Added
+
+- [#14] Shorthand duration expressions (`24h`, `48h`, `30m`, `2h`, `1d2h`) are now accepted anywhere a natural language
+  time expression is used (e.g. `--back 24h`)
+
 ### Fixed
 
 - [#3] `show --times` flag was not wired into rendering; finished entries now display time intervals
@@ -51,6 +56,7 @@ Initial alpha release
 [#5]: https://github.com/aaronmallen/doing/issues/5
 [#6]: https://github.com/aaronmallen/doing/issues/6
 [#7]: https://github.com/aaronmallen/doing/issues/7
+[#14]: https://github.com/aaronmallen/doing/issues/14
 [#18]: https://github.com/aaronmallen/doing/issues/18
 [#19]: https://github.com/aaronmallen/doing/issues/19
 [#20]: https://github.com/aaronmallen/doing/issues/20

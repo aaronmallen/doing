@@ -1,5 +1,6 @@
 use std::fs;
 
+use assert_cmd::Command;
 use pretty_assertions::assert_eq;
 
 use crate::helpers::{DoingCmd, count_entries};
@@ -28,6 +29,54 @@ fn it_creates_backup_files_in_backup_directory() {
   assert!(
     !backups.is_empty(),
     "backup files should exist after modifying the doing file"
+  );
+}
+
+#[test]
+fn it_isolates_undo_history_by_file_path() {
+  let doing = DoingCmd::new();
+  let temp = doing.temp_dir_path();
+  let file_a = temp.join("file_a.md");
+  let file_b = temp.join("file_b.md");
+  let config_path = temp.join("config.toml");
+
+  let run = |file: &std::path::Path, args: &[&str]| {
+    let mut cmd = Command::cargo_bin("doing").unwrap();
+    cmd.env("DOING_CONFIG", &config_path);
+    cmd.env("DOING_BACKUP_DIR", doing.backup_dir());
+    cmd.args(["-f", file.to_str().unwrap(), "--no-color"]);
+    cmd.args(args);
+    cmd
+  };
+
+  // Create entries in file A
+  run(&file_a, &["now", "Entry A1"]).assert().success();
+  run(&file_a, &["now", "Entry A2"]).assert().success();
+
+  // Create entry in file B
+  run(&file_b, &["now", "Entry B1"]).assert().success();
+
+  // Undo last action in file A
+  run(&file_a, &["undo"]).assert().success();
+
+  // File A should not contain Entry A2
+  let content_a = fs::read_to_string(&file_a).expect("failed to read file A");
+  assert!(!content_a.contains("Entry A2"), "undo should have removed Entry A2");
+  assert!(content_a.contains("Entry A1"), "Entry A1 should remain");
+
+  // File B should be unaffected
+  let content_b = fs::read_to_string(&file_b).expect("failed to read file B");
+  assert!(
+    content_b.contains("Entry B1"),
+    "file B should be unaffected by file A undo"
+  );
+
+  // Undo in file B should work independently
+  run(&file_b, &["undo"]).assert().success();
+  let content_b = fs::read_to_string(&file_b).expect("failed to read file B after undo");
+  assert!(
+    !content_b.contains("Entry B1"),
+    "undo should have removed Entry B1 from file B"
   );
 }
 

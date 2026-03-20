@@ -23,7 +23,6 @@ fn it_excludes_entries_from_today() {
 }
 
 #[test]
-#[ignore] // requires shorthand duration support (https://github.com/aaronmallen/doing/issues/14)
 fn it_excludes_entries_from_two_days_ago() {
   let doing = DoingCmd::new();
 

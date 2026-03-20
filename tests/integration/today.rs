@@ -3,7 +3,6 @@ use pretty_assertions::assert_eq;
 use crate::helpers::{self, DoingCmd};
 
 #[test]
-#[ignore] // requires shorthand duration support (https://github.com/aaronmallen/doing/issues/14)
 fn it_excludes_entries_from_yesterday() {
   let doing = DoingCmd::new();
 

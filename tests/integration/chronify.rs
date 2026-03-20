@@ -10,7 +10,6 @@ fn it_rejects_empty_back_argument() {
 }
 
 #[test]
-#[ignore = "shorthand duration '20m' not supported in time parser (see #14)"]
 fn it_accepts_shorthand_interval_format() {
   let doing = DoingCmd::new();
   let expected = Local::now() - Duration::minutes(20);

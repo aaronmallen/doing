@@ -190,7 +190,7 @@ impl Command {
 
     let content: Vec<String> = selected
       .iter()
-      .map(|e| format_items(std::slice::from_ref(e), &render_options, &ctx.config, false))
+      .map(|e| format_items(std::slice::from_ref(e), &render_options, &ctx.config, false, false))
       .collect();
     let initial = content.join(&format!("\n{divider}\n"));
 
@@ -314,10 +314,10 @@ impl Command {
       if let Some(plugin) = registry.resolve(format) {
         plugin.render(selected, &render_options, &ctx.config)
       } else {
-        format_items(selected, &render_options, &ctx.config, false)
+        format_items(selected, &render_options, &ctx.config, false, false)
       }
     } else {
-      format_items(selected, &render_options, &ctx.config, false)
+      format_items(selected, &render_options, &ctx.config, false, false)
     };
 
     if let Some(ref path) = self.save_to {

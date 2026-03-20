@@ -108,7 +108,7 @@ impl DisplayArgs {
       }
     }
 
-    format_items(entries, &render_options, config, self.totals)
+    format_items(entries, &render_options, config, self.times, self.totals)
   }
 }
 

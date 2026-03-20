@@ -47,11 +47,23 @@ impl RenderOptions {
 
 /// Render a collection of entries, applying colors, wrapping, marker highlighting,
 /// and optionally appending tag totals.
-pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config, show_totals: bool) -> String {
+pub fn format_items(
+  entries: &[Entry],
+  options: &RenderOptions,
+  config: &Config,
+  show_times: bool,
+  show_totals: bool,
+) -> String {
   let lines: Vec<String> = entries
     .iter()
     .map(|entry| {
       let mut line = render(entry, options, config);
+
+      if show_times && let Some(interval) = entry.interval() {
+        let fmt = DurationFormat::from_config(&config.interval_format);
+        let formatted = FormattedDuration::new(interval, fmt);
+        line.push_str(&format!(" ({formatted})"));
+      }
 
       // Apply marker color to flagged entries
       if entry.tags().iter().any(|t| t.name() == config.marker_tag)

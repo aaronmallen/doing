@@ -9,6 +9,7 @@ and this project adheres to [Break Versioning].
 
 ### Fixed
 
+- [#3] `show --times` flag was not wired into rendering; finished entries now display time intervals
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
@@ -40,6 +41,7 @@ Initial alpha release
 [Break Versioning]: https://www.taoensso.com/break-versioning
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 
+[#3]: https://github.com/aaronmallen/doing/issues/3
 [#18]: https://github.com/aaronmallen/doing/issues/18
 [#19]: https://github.com/aaronmallen/doing/issues/19
 [#20]: https://github.com/aaronmallen/doing/issues/20

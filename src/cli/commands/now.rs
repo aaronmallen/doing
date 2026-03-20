@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::AppContext,
@@ -108,7 +107,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Added \"{}\" to {}", display_title, section_name);
+    ctx.status(format!("Added \"{}\" to {}", display_title, section_name));
     Ok(())
   }
 
@@ -199,6 +198,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -228,6 +228,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,

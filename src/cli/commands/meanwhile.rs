@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::AppContext,
@@ -58,7 +57,7 @@ impl Command {
     let title = self.resolve_title(&ctx.config)?;
 
     if title.is_empty() {
-      info!("Finished @meanwhile tasks");
+      ctx.status("Finished @meanwhile tasks");
       write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
       return Ok(());
     }
@@ -82,7 +81,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Added @meanwhile \"{}\" to {}", display_title, section_name);
+    ctx.status(format!("Added @meanwhile \"{}\" to {}", display_title, section_name));
     Ok(())
   }
 
@@ -171,6 +170,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -200,6 +200,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,

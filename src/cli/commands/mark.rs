@@ -1,5 +1,4 @@
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::{AppContext, args::FilterArgs},
@@ -76,12 +75,12 @@ impl Command {
     let total = flagged + unflagged;
     if total == 1 {
       if flagged == 1 {
-        info!("Flagged 1 entry");
+        ctx.status("Flagged 1 entry");
       } else {
-        info!("Unflagged 1 entry");
+        ctx.status("Unflagged 1 entry");
       }
     } else {
-      info!("Flagged {flagged}, unflagged {unflagged} entries");
+      ctx.status(format!("Flagged {flagged}, unflagged {unflagged} entries"));
     }
 
     Ok(())
@@ -242,6 +241,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -271,6 +271,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -308,6 +309,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -345,6 +347,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -399,6 +402,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

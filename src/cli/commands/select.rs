@@ -1,7 +1,6 @@
 use std::{fs, path::PathBuf};
 
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::{
@@ -94,7 +93,7 @@ impl Command {
     let entries = self.find_entries(ctx)?;
 
     if entries.is_empty() {
-      info!("No matching entries");
+      ctx.status("No matching entries");
       return Ok(());
     }
 
@@ -105,7 +104,7 @@ impl Command {
     };
 
     if selected.is_empty() {
-      info!("No entries selected");
+      ctx.status("No entries selected");
       return Ok(());
     }
 
@@ -136,9 +135,9 @@ impl Command {
 
     let count = selected.len();
     if count == 1 {
-      info!("Archived 1 entry");
+      ctx.status("Archived 1 entry");
     } else {
-      info!("Archived {count} entries");
+      ctx.status(format!("Archived {count} entries"));
     }
 
     Ok(())
@@ -159,9 +158,9 @@ impl Command {
     }
 
     if count == 1 {
-      info!("Cancelled 1 entry");
+      ctx.status("Cancelled 1 entry");
     } else {
-      info!("Cancelled {count} entries");
+      ctx.status(format!("Cancelled {count} entries"));
     }
 
     Ok(())
@@ -176,9 +175,9 @@ impl Command {
 
     let count = selected.len();
     if count == 1 {
-      info!("Deleted 1 entry");
+      ctx.status("Deleted 1 entry");
     } else {
-      info!("Deleted {count} entries");
+      ctx.status(format!("Deleted {count} entries"));
     }
 
     Ok(())
@@ -207,7 +206,7 @@ impl Command {
       )));
     }
 
-    info!("Edited {} entries", selected.len());
+    ctx.status(format!("Edited {} entries", selected.len()));
     Ok(())
   }
 
@@ -232,9 +231,9 @@ impl Command {
     }
 
     if count == 1 {
-      info!("Marked 1 entry as @done");
+      ctx.status("Marked 1 entry as @done");
     } else {
-      info!("Marked {count} entries as @done");
+      ctx.status(format!("Marked {count} entries as @done"));
     }
 
     Ok(())
@@ -262,12 +261,12 @@ impl Command {
     let total = flagged + unflagged;
     if total == 1 {
       if flagged == 1 {
-        info!("Flagged 1 entry");
+        ctx.status("Flagged 1 entry");
       } else {
-        info!("Unflagged 1 entry");
+        ctx.status("Unflagged 1 entry");
       }
     } else {
-      info!("Flagged {flagged}, unflagged {unflagged} entries");
+      ctx.status(format!("Flagged {flagged}, unflagged {unflagged} entries"));
     }
 
     Ok(())
@@ -299,9 +298,9 @@ impl Command {
 
     let count = selected.len();
     if count == 1 {
-      info!("Moved 1 entry to {target}");
+      ctx.status(format!("Moved 1 entry to {target}"));
     } else {
-      info!("Moved {count} entries to {target}");
+      ctx.status(format!("Moved {count} entries to {target}"));
     }
 
     Ok(())
@@ -322,7 +321,7 @@ impl Command {
 
     if let Some(ref path) = self.save_to {
       fs::write(path, &output)?;
-      info!("Saved {} entries to {}", selected.len(), path.display());
+      ctx.status(format!("Saved {} entries to {}", selected.len(), path.display()));
     } else {
       pager::output(&output, &ctx.config, ctx.use_pager)?;
     }
@@ -350,9 +349,9 @@ impl Command {
 
     let count = selected.len();
     if count == 1 {
-      info!("Tagged 1 entry");
+      ctx.status("Tagged 1 entry");
     } else {
-      info!("Tagged {count} entries");
+      ctx.status(format!("Tagged {count} entries"));
     }
 
     Ok(())
@@ -526,6 +525,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -563,6 +563,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,

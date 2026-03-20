@@ -2,7 +2,6 @@ use std::path::{Path, PathBuf};
 
 use chrono::Local;
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::{AppContext, args::FilterArgs},
@@ -37,7 +36,7 @@ impl Command {
     let entries_to_rotate = self.find_entries(ctx, &section_name)?;
 
     if entries_to_rotate.is_empty() {
-      info!("No entries to rotate");
+      ctx.status("No entries to rotate");
       return Ok(());
     }
 
@@ -50,9 +49,9 @@ impl Command {
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
     if rotated_count == 1 {
-      info!("Rotated 1 entry to {}", archive_path.display());
+      ctx.status(format!("Rotated 1 entry to {}", archive_path.display()));
     } else {
-      info!("Rotated {rotated_count} entries to {}", archive_path.display());
+      ctx.status(format!("Rotated {rotated_count} entries to {}", archive_path.display()));
     }
 
     Ok(())
@@ -190,6 +189,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -235,6 +235,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -296,6 +297,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

@@ -1,5 +1,4 @@
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::{AppContext, args::FilterArgs},
@@ -45,7 +44,7 @@ impl Command {
     let entries_to_move = self.find_entries(ctx, &section_name)?;
 
     if entries_to_move.is_empty() {
-      info!("No entries to archive");
+      ctx.status("No entries to archive");
       return Ok(());
     }
 
@@ -55,9 +54,9 @@ impl Command {
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
     if moved_count == 1 {
-      info!("Archived 1 entry");
+      ctx.status("Archived 1 entry");
     } else {
-      info!("Archived {moved_count} entries");
+      ctx.status(format!("Archived {moved_count} entries"));
     }
 
     Ok(())
@@ -191,6 +190,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -244,6 +244,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -306,6 +307,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -409,6 +411,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

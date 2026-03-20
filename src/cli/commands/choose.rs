@@ -6,7 +6,7 @@ use std::{
 };
 
 use clap::Args;
-use log::{info, warn};
+use log::warn;
 
 use crate::{
   cli::{
@@ -67,7 +67,7 @@ impl Command {
     let entries = self.find_entries(ctx)?;
 
     if entries.is_empty() {
-      info!("No matching entries");
+      ctx.status("No matching entries");
       return Ok(());
     }
 
@@ -76,7 +76,7 @@ impl Command {
     let selected = match selected {
       Some(entry) => entry,
       None => {
-        info!("No entry selected");
+        ctx.status("No entry selected");
         return Ok(());
       }
     };
@@ -103,7 +103,7 @@ impl Command {
       section.remove_entry(&id);
     }
 
-    info!("Archived 1 entry");
+    ctx.status("Archived 1 entry");
     Ok(())
   }
 
@@ -114,9 +114,9 @@ impl Command {
       && e.should_finish(&ctx.config.never_finish)
     {
       e.tags_mut().add(Tag::new("done", None::<String>));
-      info!("Cancelled 1 entry");
+      ctx.status("Cancelled 1 entry");
     } else {
-      info!("Entry already finished or excluded by never_finish");
+      ctx.status("Entry already finished or excluded by never_finish");
     }
 
     Ok(())
@@ -127,7 +127,7 @@ impl Command {
       section.remove_entry(entry.id());
     }
 
-    info!("Deleted 1 entry");
+    ctx.status("Deleted 1 entry");
     Ok(())
   }
 
@@ -145,9 +145,9 @@ impl Command {
         None
       };
       e.tags_mut().add(Tag::new("done", done_value));
-      info!("Marked 1 entry as @done");
+      ctx.status("Marked 1 entry as @done");
     } else {
-      info!("Entry already finished or excluded by never_finish");
+      ctx.status("Entry already finished or excluded by never_finish");
     }
 
     Ok(())
@@ -161,10 +161,10 @@ impl Command {
     {
       if e.tags().has(&marker_tag) {
         e.tags_mut().remove(&marker_tag);
-        info!("Unflagged 1 entry");
+        ctx.status("Unflagged 1 entry");
       } else {
         e.tags_mut().add(Tag::new(&marker_tag, None::<String>));
-        info!("Flagged 1 entry");
+        ctx.status("Flagged 1 entry");
       }
     }
 
@@ -211,7 +211,7 @@ impl Command {
       section.remove_entry(&id);
     }
 
-    info!("Moved 1 entry to {target}");
+    ctx.status(format!("Moved 1 entry to {target}"));
     Ok(())
   }
 
@@ -231,7 +231,7 @@ impl Command {
 
     if let Some(ref path) = self.save_to {
       fs::write(path, &output)?;
-      info!("Saved 1 entry to {}", path.display());
+      ctx.status(format!("Saved 1 entry to {}", path.display()));
     } else {
       pager::output(&output, &ctx.config, ctx.use_pager)?;
     }
@@ -259,7 +259,7 @@ impl Command {
       }
     }
 
-    info!("Tagged 1 entry");
+    ctx.status("Tagged 1 entry");
     Ok(())
   }
 
@@ -450,6 +450,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -487,6 +488,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,

@@ -1,5 +1,4 @@
 use clap::Args;
-use log::info;
 
 use crate::{cli::AppContext, errors::Result, ops};
 
@@ -28,7 +27,7 @@ impl Command {
     };
 
     ops::undo::undo(&ctx.doing_file, &ctx.config.backup_dir, count)?;
-    info!("Undid {count} step(s)");
+    ctx.status(format!("Undid {count} step(s)"));
     Ok(())
   }
 
@@ -88,6 +87,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -126,6 +126,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -160,6 +161,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

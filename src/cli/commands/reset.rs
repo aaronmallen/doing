@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
-use log::info;
 
 use crate::{
   cli::{AppContext, args::FilterArgs},
@@ -61,9 +60,9 @@ impl Command {
 
     let count = entries.len();
     if count == 1 {
-      info!("Reset 1 entry");
+      ctx.status("Reset 1 entry");
     } else {
-      info!("Reset {count} entries");
+      ctx.status(format!("Reset {count} entries"));
     }
 
     Ok(())
@@ -267,6 +266,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -296,6 +296,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -333,6 +334,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -358,6 +360,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

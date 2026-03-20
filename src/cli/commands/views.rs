@@ -116,7 +116,7 @@ fn remove_view(name: &str, ctx: &AppContext) -> Result<()> {
 
   fs::write(&config_path, updated).map_err(|e| Error::Config(format!("failed to write config: {e}")))?;
 
-  log::info!("Removed view '{name}'");
+  ctx.status(format!("Removed view '{name}'"));
   Ok(())
 }
 
@@ -226,6 +226,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,

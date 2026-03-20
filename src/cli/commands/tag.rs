@@ -1,5 +1,4 @@
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::{AppContext, args::FilterArgs},
@@ -93,9 +92,9 @@ impl Command {
     };
 
     if count == 1 {
-      info!("{action} 1 entry");
+      ctx.status(format!("{action} 1 entry"));
     } else {
-      info!("{action} {count} entries");
+      ctx.status(format!("{action} {count} entries"));
     }
 
     Ok(())
@@ -318,6 +317,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -350,6 +350,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -387,6 +388,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -424,6 +426,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -501,6 +504,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

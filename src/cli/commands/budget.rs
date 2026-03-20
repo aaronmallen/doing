@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::AppContext,
@@ -42,8 +41,8 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match (&self.tag, &self.amount, self.remove) {
       (None, None, false) => self.list_budgets(ctx),
-      (Some(tag), _, true) => remove_budget(tag),
-      (Some(tag), Some(amount), false) => set_budget(tag, amount),
+      (Some(tag), _, true) => remove_budget(tag, ctx.quiet),
+      (Some(tag), Some(amount), false) => set_budget(tag, amount, ctx.quiet),
       (Some(_), None, false) => Err(Error::Config("amount is required when setting a budget".into())),
       (None, _, true) => Err(Error::Config("tag is required when removing a budget".into())),
       (None, Some(_), false) => Err(Error::Config("tag is required when setting a budget".into())),
@@ -103,7 +102,7 @@ fn compute_tracked_time(ctx: &AppContext) -> HashMap<&str, chrono::Duration> {
   totals
 }
 
-fn remove_budget(tag: &str) -> Result<()> {
+fn remove_budget(tag: &str, quiet: bool) -> Result<()> {
   let config_path = resolve_config_path();
   let content = std::fs::read_to_string(&config_path).unwrap_or_default();
 
@@ -117,7 +116,9 @@ fn remove_budget(tag: &str) -> Result<()> {
 
   std::fs::write(&config_path, doc.to_string()).map_err(|e| Error::Config(format!("failed to write config: {e}")))?;
 
-  info!("Removed budget for @{tag}");
+  if !quiet {
+    eprintln!("Removed budget for @{tag}");
+  }
   Ok(())
 }
 
@@ -129,7 +130,7 @@ fn resolve_config_path() -> std::path::PathBuf {
   })
 }
 
-fn set_budget(tag: &str, amount: &str) -> Result<()> {
+fn set_budget(tag: &str, amount: &str, quiet: bool) -> Result<()> {
   // Validate the amount is a parseable duration
   parse_duration(amount)?;
 
@@ -159,7 +160,9 @@ fn set_budget(tag: &str, amount: &str) -> Result<()> {
 
   std::fs::write(&config_path, doc.to_string()).map_err(|e| Error::Config(format!("failed to write config: {e}")))?;
 
-  info!("Set budget for @{tag} to {amount}");
+  if !quiet {
+    eprintln!("Set budget for @{tag} to {amount}");
+  }
   Ok(())
 }
 
@@ -210,6 +213,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -274,6 +278,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -329,6 +334,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

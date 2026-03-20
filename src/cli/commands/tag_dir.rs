@@ -28,7 +28,7 @@ pub struct Command {
 }
 
 impl Command {
-  pub fn call(&self, _ctx: &mut crate::cli::AppContext) -> Result<()> {
+  pub fn call(&self, ctx: &mut crate::cli::AppContext) -> Result<()> {
     let dir = match &self.dir {
       Some(d) => d.clone(),
       None => env::current_dir().map_err(|e| Error::Config(format!("failed to get current directory: {e}")))?,
@@ -42,7 +42,7 @@ impl Command {
       write_new_rc(&rc_path, &self.tags)?;
     }
 
-    log::info!("Set default tags in {}", rc_path.display());
+    ctx.status(format!("Set default tags in {}", rc_path.display()));
     Ok(())
   }
 }

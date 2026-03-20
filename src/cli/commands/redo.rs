@@ -1,5 +1,4 @@
 use clap::Args;
-use log::info;
 
 use crate::{cli::AppContext, errors::Result, ops};
 
@@ -13,7 +12,7 @@ pub struct Command {}
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     ops::undo::redo(&ctx.doing_file, &ctx.config.backup_dir)?;
-    info!("Restored from redo backup");
+    ctx.status("Restored from redo backup");
     Ok(())
   }
 }

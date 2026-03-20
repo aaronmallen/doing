@@ -69,7 +69,7 @@ fn add_section(name: &str, ctx: &mut AppContext) -> Result<()> {
   ctx.document.add_section(Section::new(name));
   write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-  log::info!("Added section '{name}'");
+  ctx.status(format!("Added section '{name}'"));
   Ok(())
 }
 
@@ -102,7 +102,7 @@ fn remove_section(name: &str, ctx: &mut AppContext) -> Result<()> {
   ctx.document.remove_section(name);
   write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-  log::info!("Removed section '{name}'");
+  ctx.status(format!("Removed section '{name}'"));
   Ok(())
 }
 
@@ -136,6 +136,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -169,6 +170,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

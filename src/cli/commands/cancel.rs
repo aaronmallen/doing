@@ -1,5 +1,4 @@
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::{AppContext, args::BoolArg},
@@ -82,9 +81,9 @@ impl Command {
 
     let count = entries.len();
     if count == 1 {
-      info!("Cancelled 1 entry");
+      ctx.status("Cancelled 1 entry");
     } else {
-      info!("Cancelled {} entries", count);
+      ctx.status(format!("Cancelled {} entries", count));
     }
 
     Ok(())
@@ -259,6 +258,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -296,6 +296,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -325,6 +326,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -362,6 +364,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -438,6 +441,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

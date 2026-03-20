@@ -34,7 +34,7 @@ impl Command {
       None | Some(Action::Edit) => editor::edit_config(&ctx.config),
       Some(Action::Get(args)) => get_value(&args.key, ctx),
       Some(Action::List) => list_configs(),
-      Some(Action::Set(args)) => set_value(&args.key, &args.value),
+      Some(Action::Set(args)) => set_value(&args.key, &args.value, ctx.quiet),
     }
   }
 }
@@ -150,20 +150,20 @@ fn set_dot_path(value: &mut Value, path: &str, new_value: Value) -> Result<()> {
   Ok(())
 }
 
-fn set_value(key: &str, raw_value: &str) -> Result<()> {
+fn set_value(key: &str, raw_value: &str, quiet: bool) -> Result<()> {
   let config_path = resolve_config_path_for_write();
 
   if config_path.exists() {
     match ConfigFormat::from_extension(&config_path) {
-      Some(ConfigFormat::Toml) => set_value_toml(&config_path, key, raw_value),
-      _ => set_value_generic(&config_path, key, raw_value),
+      Some(ConfigFormat::Toml) => set_value_toml(&config_path, key, raw_value, quiet),
+      _ => set_value_generic(&config_path, key, raw_value, quiet),
     }
   } else {
-    set_value_toml(&config_path, key, raw_value)
+    set_value_toml(&config_path, key, raw_value, quiet)
   }
 }
 
-fn set_value_generic(path: &Path, key: &str, raw_value: &str) -> Result<()> {
+fn set_value_generic(path: &Path, key: &str, raw_value: &str, quiet: bool) -> Result<()> {
   let mut value = loader::parse_file(path)?;
   let format = ConfigFormat::from_extension(path);
 
@@ -178,11 +178,13 @@ fn set_value_generic(path: &Path, key: &str, raw_value: &str) -> Result<()> {
 
   fs::write(path, output).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
 
-  log::info!("Set {key} = {raw_value}");
+  if !quiet {
+    eprintln!("Set {key} = {raw_value}");
+  }
   Ok(())
 }
 
-fn set_value_toml(path: &Path, key: &str, raw_value: &str) -> Result<()> {
+fn set_value_toml(path: &Path, key: &str, raw_value: &str, quiet: bool) -> Result<()> {
   let content = if path.exists() {
     fs::read_to_string(path)?
   } else {
@@ -213,7 +215,9 @@ fn set_value_toml(path: &Path, key: &str, raw_value: &str) -> Result<()> {
   table.insert(leaf, toml_value(raw_value));
   fs::write(path, doc.to_string()).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
 
-  log::info!("Set {key} = {raw_value}");
+  if !quiet {
+    eprintln!("Set {key} = {raw_value}");
+  }
   Ok(())
 }
 
@@ -255,6 +259,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -386,7 +391,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("config.toml");
 
-      super::super::set_value_toml(&path, "history_size", "30").unwrap();
+      super::super::set_value_toml(&path, "history_size", "30", false).unwrap();
 
       let content = std::fs::read_to_string(&path).unwrap();
       assert!(content.contains("history_size"));
@@ -399,7 +404,7 @@ mod test {
       let path = dir.path().join("config.toml");
       std::fs::write(&path, "order = \"asc\"\n").unwrap();
 
-      super::super::set_value_toml(&path, "history_size", "30").unwrap();
+      super::super::set_value_toml(&path, "history_size", "30", false).unwrap();
 
       let content = std::fs::read_to_string(&path).unwrap();
       assert!(content.contains("order"));
@@ -411,7 +416,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("config.toml");
 
-      super::super::set_value_toml(&path, "editors.default", "nvim").unwrap();
+      super::super::set_value_toml(&path, "editors.default", "nvim", false).unwrap();
 
       let content = std::fs::read_to_string(&path).unwrap();
       let doc: toml_edit::DocumentMut = content.parse().unwrap();
@@ -425,7 +430,7 @@ mod test {
       let path = dir.path().join("config.toml");
       std::fs::write(&path, "# My config\norder = \"asc\"\n").unwrap();
 
-      super::super::set_value_toml(&path, "history_size", "30").unwrap();
+      super::super::set_value_toml(&path, "history_size", "30", false).unwrap();
 
       let content = std::fs::read_to_string(&path).unwrap();
       assert!(content.contains("# My config"));
@@ -443,7 +448,7 @@ mod test {
       let path = dir.path().join(".doingrc");
       std::fs::write(&path, "order: asc\n").unwrap();
 
-      super::super::set_value_generic(&path, "history_size", "30").unwrap();
+      super::super::set_value_generic(&path, "history_size", "30", false).unwrap();
 
       let content: Value = yaml_serde::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
       assert_eq!(content["history_size"], json!(30));
@@ -455,7 +460,7 @@ mod test {
       let path = dir.path().join("config.json");
       std::fs::write(&path, "{\"order\": \"asc\"}").unwrap();
 
-      super::super::set_value_generic(&path, "history_size", "30").unwrap();
+      super::super::set_value_generic(&path, "history_size", "30", false).unwrap();
 
       let content: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
       assert_eq!(content["history_size"], json!(30));

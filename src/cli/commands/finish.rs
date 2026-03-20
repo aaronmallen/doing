@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
-use log::info;
 
 use crate::{
   cli::{AppContext, args::BoolArg},
@@ -148,9 +147,9 @@ impl Command {
 
     let count = entries.len();
     if count == 1 {
-      info!("Marked 1 entry as @done");
+      ctx.status("Marked 1 entry as @done");
     } else {
-      info!("Marked {} entries as @done", count);
+      ctx.status(format!("Marked {} entries as @done", count));
     }
 
     Ok(())
@@ -338,9 +337,9 @@ impl Command {
 
     let count = ids.len();
     if count == 1 {
-      info!("Removed @done from 1 entry");
+      ctx.status("Removed @done from 1 entry");
     } else {
-      info!("Removed @done from {} entries", count);
+      ctx.status(format!("Removed @done from {} entries", count));
     }
 
     Ok(())
@@ -439,6 +438,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -484,6 +484,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -513,6 +514,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -550,6 +552,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -592,6 +595,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

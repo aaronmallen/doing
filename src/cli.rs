@@ -27,10 +27,22 @@ pub(crate) struct AppContext {
   pub include_notes: bool,
   pub no: bool,
   pub noauto: bool,
+  pub quiet: bool,
   pub stdout: bool,
   pub use_color: bool,
   pub use_pager: bool,
   pub yes: bool,
+}
+
+impl AppContext {
+  /// Print a user-facing status message to stderr.
+  ///
+  /// Respects `--quiet` — when quiet mode is active, the message is suppressed.
+  pub fn status(&self, msg: impl std::fmt::Display) {
+    if !self.quiet {
+      eprintln!("{msg}");
+    }
+  }
 }
 
 /// A CLI for a What Was I Doing system.
@@ -111,7 +123,7 @@ struct Cli {
   #[arg(short = 'p', long, action = ArgAction::SetTrue, overrides_with = "no_pager", global = true)]
   pager: bool,
 
-  /// Silence info messages
+  /// Silence status messages
   #[arg(short = 'q', long, global = true)]
   quiet: bool,
 
@@ -169,6 +181,8 @@ impl Cli {
       config.paginate
     };
 
+    let quiet = self.quiet || config::env::DOING_QUIET.value().unwrap_or(false);
+
     let mut ctx = AppContext {
       config,
       default_answer: self.default,
@@ -177,6 +191,7 @@ impl Cli {
       include_notes,
       no: self.no,
       noauto: self.noauto && !self.no_noauto,
+      quiet,
       stdout: self.stdout,
       use_color,
       use_pager,

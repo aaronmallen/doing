@@ -1,5 +1,4 @@
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::AppContext,
@@ -44,9 +43,9 @@ impl Command {
 
     let count = entry_ids.len();
     if count == 1 {
-      info!("Autotagged 1 entry");
+      ctx.status("Autotagged 1 entry");
     } else {
-      info!("Autotagged {count} entries");
+      ctx.status(format!("Autotagged {count} entries"));
     }
 
     Ok(())
@@ -127,6 +126,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -164,6 +164,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -250,6 +251,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -302,6 +304,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

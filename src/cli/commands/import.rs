@@ -1,7 +1,6 @@
 use std::path::PathBuf;
 
 use clap::Args;
-use log::info;
 
 use crate::{
   cli::AppContext,
@@ -65,7 +64,7 @@ impl Command {
     let mut entries = plugin.import(&self.path)?;
 
     if entries.is_empty() {
-      info!("No entries found in {}", self.path.display());
+      ctx.status(format!("No entries found in {}", self.path.display()));
       return Ok(());
     }
 
@@ -97,7 +96,7 @@ impl Command {
     ctx.document.dedup();
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Imported {imported} entries into {section_name}");
+    ctx.status(format!("Imported {imported} entries into {section_name}"));
     Ok(())
   }
 
@@ -191,6 +190,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -342,6 +342,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -460,6 +461,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -502,6 +504,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

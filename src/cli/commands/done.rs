@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
-use log::info;
 
 use crate::{
   cli::AppContext,
@@ -131,7 +130,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Added \"{}\" to {}", display_title, target_section);
+    ctx.status(format!("Added \"{}\" to {}", display_title, target_section));
     Ok(())
   }
 
@@ -151,7 +150,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Removed @done tag from \"{}\"", display_title);
+    ctx.status(format!("Removed @done tag from \"{}\"", display_title));
     Ok(())
   }
 
@@ -229,7 +228,7 @@ impl Command {
         if section.entries().is_empty() {
           return Err(crate::errors::Error::Config("no entries in section".into()));
         }
-        info!("All entries already @done");
+        ctx.status("All entries already @done");
         return Ok(());
       }
     };
@@ -262,7 +261,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Marked \"{}\" as @done", display_title);
+    ctx.status(format!("Marked \"{}\" as @done", display_title));
     Ok(())
   }
 }
@@ -306,6 +305,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -343,6 +343,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -372,6 +373,7 @@ mod test {
       include_notes: true,
       no: false,
       noauto: false,
+      quiet: false,
       stdout: false,
       use_color: false,
       use_pager: false,
@@ -560,6 +562,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,
@@ -725,6 +728,7 @@ mod test {
         include_notes: true,
         no: false,
         noauto: false,
+        quiet: false,
         stdout: false,
         use_color: false,
         use_pager: false,

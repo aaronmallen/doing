@@ -403,6 +403,17 @@ mod test {
     }
 
     #[test]
+    fn it_handles_explicit_null_values_in_config() {
+      let dir = tempfile::tempdir().unwrap();
+      fs::write(dir.path().join(".doingrc"), "search:\ncurrent_section: Working\n").unwrap();
+
+      let config = Config::load_from(dir.path()).unwrap();
+
+      assert_eq!(config.current_section, "Working");
+      assert_eq!(config.search, SearchConfig::default());
+    }
+
+    #[test]
     fn it_preserves_defaults_for_missing_keys() {
       let dir = tempfile::tempdir().unwrap();
       fs::write(dir.path().join(".doingrc"), "history_size: 99\n").unwrap();

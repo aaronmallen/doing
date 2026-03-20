@@ -41,11 +41,13 @@ impl ConfigFormat {
 /// - All other types: `overlay` wins.
 pub fn deep_merge(base: &Value, overlay: &Value) -> Value {
   match (base, overlay) {
+    (_, Value::Null) => base.clone(),
     (Value::Object(base_map), Value::Object(overlay_map)) => {
       let mut merged = base_map.clone();
       for (key, overlay_val) in overlay_map {
         let merged_val = match merged.get(key) {
           Some(base_val) => deep_merge(base_val, overlay_val),
+          None if overlay_val.is_null() => continue,
           None => overlay_val.clone(),
         };
         merged.insert(key.clone(), merged_val);
@@ -242,6 +244,36 @@ mod test {
         result,
         json!({"autotag": {"whitelist": ["work", "play"], "synonyms": {}}})
       );
+    }
+
+    #[test]
+    fn it_ignores_null_overlay_values() {
+      let base = json!({"search": {"case": "smart", "distance": 3}});
+      let overlay = json!({"search": null});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"search": {"case": "smart", "distance": 3}}));
+    }
+
+    #[test]
+    fn it_ignores_null_fields_within_objects() {
+      let base = json!({"search": {"case": "smart", "distance": 3}});
+      let overlay = json!({"search": {"case": null, "distance": 5}});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"search": {"case": "smart", "distance": 5}}));
+    }
+
+    #[test]
+    fn it_skips_null_for_new_keys() {
+      let base = json!({"order": "asc"});
+      let overlay = json!({"search": null});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"order": "asc"}));
     }
 
     #[test]

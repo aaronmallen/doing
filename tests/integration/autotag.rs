@@ -37,7 +37,7 @@ fn it_applies_autotag_retroactively() {
   let doing = doing_with_autotag();
 
   doing
-    .run(["now", "-x", "this should autotag brettterpstra.com"])
+    .run(["now", "-X", "this should autotag brettterpstra.com"])
     .assert()
     .success();
 
@@ -107,7 +107,7 @@ fn it_applies_synonym_matching() {
 fn it_applies_tag_transform_replace() {
   let doing = doing_with_autotag();
 
-  doing.run(["now", "-x", "testing transform"]).assert().success();
+  doing.run(["now", "-X", "testing transform"]).assert().success();
   doing.run(["tag", "flubber"]).assert().success();
 
   doing.run(["autotag"]).assert().success();
@@ -125,7 +125,7 @@ fn it_applies_tag_transform_replace() {
 fn it_applies_tag_transform_with_capture_groups() {
   let doing = doing_with_autotag();
 
-  doing.run(["now", "-x", "testing captures"]).assert().success();
+  doing.run(["now", "-X", "testing captures"]).assert().success();
   doing.run(["tag", "proj-42"]).assert().success();
 
   doing.run(["autotag"]).assert().success();
@@ -161,7 +161,7 @@ fn it_applies_whitelist_autotag_from_title() {
 fn it_skips_autotagging_with_noauto_flag() {
   let doing = doing_with_autotag();
 
-  doing.run(["now", "-x", "Test noauto entry"]).assert().success();
+  doing.run(["now", "-X", "Test noauto entry"]).assert().success();
 
   let contents = doing.read_doing_file();
   assert!(

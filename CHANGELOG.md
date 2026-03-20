@@ -48,6 +48,7 @@ and this project adheres to [Break Versioning].
 - [#67] `--bool` flag defaults to `or` instead of `pattern`; `+`/`-` tag prefixes now work correctly without explicit
   `--bool pattern`
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
+- [#70] `--noauto` short flag is lowercase `-x` instead of uppercase `-X`; conflicts with `-x` for `--exact`
 
 ## [v0.0.1-alpha.2] - 2026-03-20
 
@@ -110,6 +111,7 @@ Initial alpha release
 [#48]: https://github.com/aaronmallen/doing/issues/48
 [#52]: https://github.com/aaronmallen/doing/issues/52
 [#68]: https://github.com/aaronmallen/doing/issues/68
+[#70]: https://github.com/aaronmallen/doing/issues/70
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

@@ -112,7 +112,7 @@ struct Cli {
   no_pager: bool,
 
   /// Exclude auto tags and default tags
-  #[arg(short = 'x', long, action = ArgAction::SetTrue, overrides_with = "no_noauto", global = true)]
+  #[arg(short = 'X', long, action = ArgAction::SetTrue, overrides_with = "no_noauto", global = true)]
   noauto: bool,
 
   /// Output notes if included in the template

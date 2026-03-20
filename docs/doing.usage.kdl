@@ -11,7 +11,7 @@ flag "--debug" help="Enable debug output" global=#true
 flag "--default" help="Answer yes/no menus with default option" global=#true
 flag "-f --doing-file <PATH>" help="Specify a different doing_file [env: DOING_FILE=]" global=#true
 flag "--no" help="Answer all yes/no menus with no" global=#true
-flag "-x --noauto" help="Exclude auto tags and default tags" global=#true negate="--no-noauto"
+flag "-X --noauto" help="Exclude auto tags and default tags" global=#true negate="--no-noauto"
 flag "--notes" help="Output notes if included in the template" global=#true negate="--no-notes"
 flag "-p --pager" help="Use a pager when output is longer than screen" global=#true negate="--no-pager"
 flag "-q --quiet" help="Silence status messages" global=#true
@@ -31,7 +31,7 @@ cmd "again" help="Repeat the last entry" {
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "--in <SECTION>" help="Target section for the new entry"
   flag "-i --interactive" help="Interactively select the entry to repeat"
-  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-X --noauto" help="Skip autotagging and default tags"
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
   flag "--search <SEARCH>" help="Text search query to find the entry to repeat"
   flag "-s --section <SECTION>" help="Source section to find the entry to repeat"
@@ -136,7 +136,7 @@ cmd "done" help="Add a completed entry" {
   flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "--from <FROM>" help="Set a specific start time"
-  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-X --noauto" help="Skip autotagging and default tags"
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
   flag "-r --remove" help="Remove @done tag from last entry instead of adding"
   flag "-s --section <SECTION>" help="Add to a different section"
@@ -269,7 +269,7 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
 cmd "meanwhile" help="Add an entry while finishing the last" {
   flag "-b --back <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
-  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-X --noauto" help="Skip autotagging and default tags"
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
   flag "-s --section <SECTION>" help="Add to a different section"
   arg "[TITLE]..." help="Entry description"
@@ -306,7 +306,7 @@ cmd "now" help="Add a new entry" {
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "--finish-last" help="Mark the previous entry in the section as @done before adding"
   flag "--from <FROM>" help="Set a specific start time"
-  flag "-x --noauto" help="Skip autotagging and default tags"
+  flag "-X --noauto" help="Skip autotagging and default tags"
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
   flag "-s --section <SECTION>" help="Add to a different section"
   arg "[TITLE]..." help="Entry description"

@@ -276,7 +276,8 @@ pub fn init() {
 }
 
 /// Return a sorted list of all supported color names.
-pub fn available_colors() -> Vec<&'static str> {
+#[cfg(test)]
+fn available_colors() -> Vec<&'static str> {
   vec![
     "alert",
     "bgblack",

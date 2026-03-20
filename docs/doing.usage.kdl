@@ -269,6 +269,7 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
 }
 
 cmd "meanwhile" help="Add an entry while finishing the last" {
+  flag "-a --archive" help="Move finished @meanwhile entries to Archive"
   flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "-X --noauto" help="Skip autotagging and default tags"

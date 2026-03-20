@@ -3,6 +3,78 @@ use chrono::Local;
 use crate::helpers::{DoingCmd, assert_times_within_tolerance, extract_entry_timestamp, fmt_time};
 
 #[test]
+fn it_archives_finished_meanwhile_when_replacing() {
+  let doing = DoingCmd::new();
+
+  doing.run(["meanwhile", "First background"]).assert().success();
+  doing
+    .run(["meanwhile", "--archive", "Second background"])
+    .assert()
+    .success();
+
+  let contents = doing.read_doing_file();
+
+  // The new meanwhile should be in the current section
+  let lines: Vec<&str> = contents.lines().collect();
+  let second_line = lines
+    .iter()
+    .find(|l| l.contains("Second background"))
+    .expect("should have second entry");
+  assert!(
+    second_line.contains("@meanwhile"),
+    "second entry should have @meanwhile tag"
+  );
+
+  // The first meanwhile should be in Archive, marked @done
+  let archive_start = lines
+    .iter()
+    .position(|l| l.starts_with("Archive:"))
+    .expect("should have Archive section");
+  let archive_lines: Vec<&&str> = lines[archive_start..].iter().collect();
+  let first_in_archive = archive_lines
+    .iter()
+    .find(|l| l.contains("First background"))
+    .expect("first entry should be in Archive");
+  assert!(
+    first_in_archive.contains("@done("),
+    "archived entry should be marked @done"
+  );
+  assert!(
+    !first_in_archive.contains("@meanwhile"),
+    "archived entry should not have @meanwhile tag"
+  );
+}
+
+#[test]
+fn it_archives_finished_meanwhile_with_no_title() {
+  let doing = DoingCmd::new();
+
+  doing.run(["meanwhile", "Running task"]).assert().success();
+  doing.run(["meanwhile", "--archive"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let lines: Vec<&str> = contents.lines().collect();
+
+  // The current section should have no entries with the task
+  let current_entries: Vec<&&str> = lines.iter().filter(|l| l.contains("Running task")).collect();
+
+  // The entry should exist in Archive
+  let archive_start = lines
+    .iter()
+    .position(|l| l.starts_with("Archive:"))
+    .expect("should have Archive section");
+  let archive_lines: Vec<&&str> = lines[archive_start..].iter().collect();
+  let archived = archive_lines
+    .iter()
+    .find(|l| l.contains("Running task"))
+    .expect("entry should be in Archive");
+  assert!(archived.contains("@done("), "archived entry should be marked @done");
+
+  // Should only appear once (in archive)
+  assert_eq!(current_entries.len(), 1, "entry should only appear once (in archive)");
+}
+
+#[test]
 fn it_backdates_entry_with_back_flag() {
   let doing = DoingCmd::new();
   let now = Local::now();

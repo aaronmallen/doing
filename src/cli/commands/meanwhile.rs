@@ -17,6 +17,10 @@ use crate::{
 /// just finishes running @meanwhile tasks.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Move finished @meanwhile entries to Archive
+  #[arg(short, long)]
+  archive: bool,
+
   /// Backdate the entry using natural language (e.g. "30m ago")
   #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
@@ -47,12 +51,16 @@ impl Command {
     let section_name = self.section.as_deref().unwrap_or(&ctx.config.current_section);
     let date = self.resolve_date()?;
 
-    finish_meanwhile_entries(
+    let finished_ids = finish_meanwhile_entries(
       &mut ctx.document,
       date,
       &ctx.config.never_finish,
       &ctx.config.never_time,
     );
+
+    if self.archive && !finished_ids.is_empty() {
+      archive_entries(&mut ctx.document, &finished_ids);
+    }
 
     let title = self.resolve_title(&ctx.config)?;
 
@@ -110,13 +118,45 @@ impl Command {
   }
 }
 
+/// Move finished entries (by ID) from any section to the Archive section.
+fn archive_entries(document: &mut crate::taskpaper::Document, entry_ids: &[String]) {
+  if !document.has_section("Archive") {
+    document.add_section(Section::new("Archive"));
+  }
+
+  // Collect entries to archive from all sections
+  let mut to_archive = Vec::new();
+  for section in document.sections_mut() {
+    let mut archived = Vec::new();
+    for (i, entry) in section.entries_mut().iter().enumerate() {
+      if entry_ids.contains(&entry.id().to_string()) {
+        archived.push(i);
+        to_archive.push(entry.clone());
+      }
+    }
+    // Remove in reverse order to preserve indices
+    for i in archived.into_iter().rev() {
+      section.entries_mut().remove(i);
+    }
+  }
+
+  let archive = document.section_by_name_mut("Archive").unwrap();
+  for entry in to_archive {
+    archive.add_entry(entry);
+  }
+}
+
 /// Finish all currently running @meanwhile entries across all sections.
+///
+/// Returns the IDs of entries that were finished.
 fn finish_meanwhile_entries(
   document: &mut crate::taskpaper::Document,
   done_date: DateTime<Local>,
   never_finish: &[String],
   never_time: &[String],
-) {
+) -> Vec<String> {
+  let mut finished_ids = Vec::new();
+
   for section in document.sections_mut() {
     for entry in section.entries_mut() {
       if !entry.tags().has("meanwhile") || entry.finished() {
@@ -133,10 +173,13 @@ fn finish_meanwhile_entries(
         None
       };
 
+      finished_ids.push(entry.id().to_string());
       entry.tags_mut().add(Tag::new("done", done_value));
       entry.tags_mut().remove("meanwhile");
     }
   }
+
+  finished_ids
 }
 
 #[cfg(test)]
@@ -150,6 +193,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      archive: false,
       back: None,
       editor: false,
       noauto: true,
@@ -231,6 +275,37 @@ mod test {
     }
 
     #[test]
+    fn it_adds_meanwhile_entry_to_custom_section_with_archive() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      // First, add a meanwhile entry to a custom section
+      let cmd = Command {
+        section: Some("Work".into()),
+        title: vec!["First".into(), "task".into()],
+        ..default_cmd()
+      };
+      cmd.call(&mut ctx).unwrap();
+
+      // Now replace it with --archive
+      let cmd = Command {
+        archive: true,
+        section: Some("Work".into()),
+        title: vec!["Second".into(), "task".into()],
+        ..default_cmd()
+      };
+      cmd.call(&mut ctx).unwrap();
+
+      let work_entries = ctx.document.entries_in_section("Work");
+      assert_eq!(work_entries.len(), 1);
+      assert!(work_entries[0].tags().has("meanwhile"));
+      assert_eq!(work_entries[0].title(), "Second task");
+
+      let archive_entries = ctx.document.entries_in_section("Archive");
+      assert_eq!(archive_entries.len(), 1);
+      assert!(archive_entries[0].finished());
+    }
+
+    #[test]
     fn it_adds_meanwhile_entry_to_custom_section() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -246,6 +321,48 @@ mod test {
       let entries = ctx.document.entries_in_section("Later");
       assert_eq!(entries.len(), 1);
       assert!(entries[0].tags().has("meanwhile"));
+    }
+
+    #[test]
+    fn it_archives_finished_meanwhile_entry() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_meanwhile(dir.path());
+      let cmd = Command {
+        archive: true,
+        title: vec!["New".into(), "background".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 1);
+      assert!(entries[0].tags().has("meanwhile"));
+      assert_eq!(entries[0].title(), "New background");
+
+      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(archive.len(), 1);
+      assert!(archive[0].finished());
+      assert!(!archive[0].tags().has("meanwhile"));
+    }
+
+    #[test]
+    fn it_archives_finished_meanwhile_with_no_title() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_meanwhile(dir.path());
+      let cmd = Command {
+        archive: true,
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 0);
+
+      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(archive.len(), 1);
+      assert!(archive[0].finished());
     }
 
     #[test]
@@ -366,8 +483,9 @@ mod test {
       let mut ctx = sample_ctx_with_meanwhile(dir.path());
       let done_date = Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap();
 
-      super::super::finish_meanwhile_entries(&mut ctx.document, done_date, &[], &[]);
+      let ids = super::super::finish_meanwhile_entries(&mut ctx.document, done_date, &[], &[]);
 
+      assert_eq!(ids.len(), 1);
       let entries = ctx.document.entries_in_section("Currently");
       assert!(entries[0].finished());
       assert!(!entries[0].tags().has("meanwhile"));

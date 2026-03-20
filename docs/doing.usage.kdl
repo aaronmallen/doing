@@ -40,7 +40,6 @@ cmd "again" help="Repeat the last entry" {
 
 cmd "archive" help="Move entries to the Archive section" {
   alias "move"
-  arg "[SECTION_OR_TAG]" help="Section name or @tag to archive (e.g. \"Currently\" or \"@done\")"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"
@@ -552,15 +551,32 @@ cmd "tag-dir" help="Set the default tags directory" {
 }
 
 cmd "tags" help="List all tags in the doing file" {
-  flag "-c --counts" help="Show usage counts alongside tag names"
+  arg "[MAX_COUNT]" help="Maximum number of tags to display"
+  flag "--counts" help="Show usage counts alongside tag names"
   flag "-l --line" help="Output tags on a single line (for scripting)"
   flag "--order <ORDER>" help="Sort order" default="asc" {
     choices "asc" "desc"
   }
-  flag "-s --section <SECTION>" help="Count tags only within a specific section"
-  flag "-S --sort <SORT>" help="Sort by name or time (total interval)" default="name" {
-    choices "name" "time"
+  flag "-S --sort <SORT>" help="Sort by name, count, or time (total interval)" default="name" {
+    choices "count" "name" "time"
   }
+  flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
+  flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
+    choices "newest" "oldest"
+  }
+  flag "--before <BEFORE>" help="Upper bound for entry date"
+  flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
+    choices "and" "not" "or" "pattern"
+  }
+  flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
+  flag "--not" help="Negate all filter results"
+  flag "--only-timed" help="Only include entries with a recorded time interval"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "-u --unfinished" help="Only include unfinished entries (no @done tag)"
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 
 cmd "template" help="Show or edit entry templates" {

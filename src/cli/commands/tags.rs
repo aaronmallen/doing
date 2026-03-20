@@ -2,7 +2,11 @@ use std::collections::HashMap;
 
 use clap::{Args, ValueEnum};
 
-use crate::{cli::AppContext, errors::Result};
+use crate::{
+  cli::{AppContext, args::FilterArgs},
+  errors::Result,
+  ops::filter::filter_entries,
+};
 
 /// List all tags in the doing file with optional counts and sorting.
 ///
@@ -18,28 +22,81 @@ use crate::{cli::AppContext, errors::Result};
 /// doing tags -s Currently           # tags from one section
 /// doing tags --sort name --order asc
 /// doing tags --line                 # single-line output for scripting
+/// doing tags 10                     # limit to top 10 tags
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Show usage counts alongside tag names
-  #[arg(short = 'c', long)]
+  #[arg(long)]
   counts: bool,
+
+  #[command(flatten)]
+  filter: FilterArgs,
 
   /// Output tags on a single line (for scripting)
   #[arg(short = 'l', long)]
   line: bool,
 
+  /// Maximum number of tags to display
+  #[arg(index = 1, value_name = "MAX_COUNT")]
+  max_count: Option<usize>,
+
   /// Sort order
   #[arg(long, default_value = "asc")]
   order: OrderArg,
 
-  /// Count tags only within a specific section
-  #[arg(short = 's', long)]
-  section: Option<String>,
-
-  /// Sort by name or time (total interval)
+  /// Sort by name, count, or time (total interval)
   #[arg(short = 'S', long, default_value = "name")]
   sort: SortArg,
+}
+
+impl Command {
+  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    let section_name = self.filter.section.as_deref().unwrap_or("all");
+
+    let all_entries: Vec<_> = ctx
+      .document
+      .entries_in_section(section_name)
+      .into_iter()
+      .cloned()
+      .collect();
+
+    let filter_options = self.filter.clone().into_filter_options(&ctx.config, false)?;
+    let filtered = filter_entries(all_entries, &filter_options);
+    let entry_refs: Vec<_> = filtered.iter().collect();
+
+    let mut tag_counts = collect_tags(&entry_refs);
+
+    match self.sort {
+      SortArg::Count => sort_by_count(&mut tag_counts, &self.order),
+      SortArg::Name => sort_by_name(&mut tag_counts, &self.order),
+      SortArg::Time => sort_by_time(&mut tag_counts, &entry_refs, &self.order),
+    }
+
+    if let Some(max) = self.max_count {
+      tag_counts.truncate(max);
+    }
+
+    if tag_counts.is_empty() {
+      println!("No tags found.");
+      return Ok(());
+    }
+
+    if self.line {
+      let names: Vec<String> = tag_counts.iter().map(|(name, _)| format!("@{name}")).collect();
+      println!("{}", names.join(" "));
+    } else {
+      for (name, count) in &tag_counts {
+        if self.counts {
+          println!("@{name} ({count})");
+        } else {
+          println!("@{name}");
+        }
+      }
+    }
+
+    Ok(())
+  }
 }
 
 /// Sort direction for the tags command.
@@ -54,46 +111,12 @@ enum OrderArg {
 /// Sort field for the tags command.
 #[derive(Clone, Debug, ValueEnum)]
 enum SortArg {
+  /// Sort by usage count
+  Count,
   /// Sort alphabetically by tag name
   Name,
   /// Sort by total time interval
   Time,
-}
-
-impl Command {
-  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let entries = match &self.section {
-      Some(name) => ctx.document.entries_in_section(name),
-      None => ctx.document.all_entries(),
-    };
-
-    let mut tag_counts = collect_tags(&entries);
-
-    match self.sort {
-      SortArg::Name => sort_by_name(&mut tag_counts, &self.order),
-      SortArg::Time => sort_by_time(&mut tag_counts, &entries, &self.order),
-    }
-
-    if tag_counts.is_empty() {
-      println!("No tags found.");
-      return Ok(());
-    }
-
-    if self.line {
-      let names: Vec<&str> = tag_counts.iter().map(|(name, _)| name.as_str()).collect();
-      println!("{}", names.join(" "));
-    } else {
-      for (name, count) in &tag_counts {
-        if self.counts {
-          println!("{name} ({count})");
-        } else {
-          println!("{name}");
-        }
-      }
-    }
-
-    Ok(())
-  }
 }
 
 fn collect_tags(entries: &[&crate::taskpaper::Entry]) -> Vec<(String, usize)> {
@@ -110,6 +133,18 @@ fn collect_tags(entries: &[&crate::taskpaper::Entry]) -> Vec<(String, usize)> {
   }
 
   counts.into_values().collect()
+}
+
+fn sort_by_count(tag_counts: &mut [(String, usize)], order: &OrderArg) {
+  tag_counts.sort_by(|(a_name, a_count), (b_name, b_count)| {
+    let cmp = a_count
+      .cmp(b_count)
+      .then_with(|| a_name.to_ascii_lowercase().cmp(&b_name.to_ascii_lowercase()));
+    match order {
+      OrderArg::Asc => cmp,
+      OrderArg::Desc => cmp.reverse(),
+    }
+  });
 }
 
 fn sort_by_name(tag_counts: &mut [(String, usize)], order: &OrderArg) {
@@ -210,6 +245,52 @@ mod test {
       let result = collect_tags(&entries);
 
       assert!(result.is_empty());
+    }
+  }
+
+  mod sort_by_count {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_sorts_ascending_by_count() {
+      let mut tags = vec![
+        ("rust".to_string(), 3),
+        ("coding".to_string(), 1),
+        ("review".to_string(), 2),
+      ];
+
+      sort_by_count(&mut tags, &OrderArg::Asc);
+
+      assert_eq!(tags[0].0, "coding");
+      assert_eq!(tags[1].0, "review");
+      assert_eq!(tags[2].0, "rust");
+    }
+
+    #[test]
+    fn it_sorts_descending_by_count() {
+      let mut tags = vec![
+        ("coding".to_string(), 1),
+        ("rust".to_string(), 3),
+        ("review".to_string(), 2),
+      ];
+
+      sort_by_count(&mut tags, &OrderArg::Desc);
+
+      assert_eq!(tags[0].0, "rust");
+      assert_eq!(tags[1].0, "review");
+      assert_eq!(tags[2].0, "coding");
+    }
+
+    #[test]
+    fn it_breaks_ties_by_name() {
+      let mut tags = vec![("zebra".to_string(), 2), ("alpha".to_string(), 2)];
+
+      sort_by_count(&mut tags, &OrderArg::Asc);
+
+      assert_eq!(tags[0].0, "alpha");
+      assert_eq!(tags[1].0, "zebra");
     }
   }
 

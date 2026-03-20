@@ -102,6 +102,7 @@ impl Command {
     let mut locs: Vec<EntryLocation> = entries
       .iter()
       .rev()
+      .filter(|e| e.unfinished())
       .take(count)
       .map(|e| EntryLocation {
         id: e.id().to_string(),
@@ -182,7 +183,7 @@ mod test {
   use crate::{
     cli::args::FilterArgs,
     config::Config,
-    taskpaper::{Document, Section, Tags},
+    taskpaper::{Document, Section, Tag, Tags},
   };
 
   fn default_cmd() -> Command {
@@ -204,6 +205,43 @@ mod test {
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
       "Active task",
       Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+    AppContext {
+      config: Config::default(),
+      default_answer: false,
+      document: doc,
+      doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
+  fn sample_ctx_with_done_entry(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
+      "Active task",
+      Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Done task",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
       Note::new(),
       "Currently",
       None::<String>,
@@ -286,6 +324,22 @@ mod test {
 
       let entries = ctx.document.entries_in_section("Currently");
       assert_eq!(entries[0].note().lines(), &["A new note"]);
+    }
+
+    #[test]
+    fn it_appends_note_to_last_unfinished_entry_skipping_done() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let cmd = Command {
+        text: vec!["A new note".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries[0].note().lines(), &["A new note"]);
+      assert!(entries[1].note().is_empty());
     }
 
     #[test]

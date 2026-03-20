@@ -56,6 +56,7 @@ impl Command {
     options.count = Some(1);
     options.age = Some(Age::Newest);
     options.sort = Some(SortOrder::Desc);
+    options.unfinished = true;
 
     let filtered = filter_entries(all_entries, &options);
 
@@ -120,6 +121,42 @@ mod test {
     }
   }
 
+  fn sample_ctx_with_done_last() -> AppContext {
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Active task",
+      Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Done task",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 16:00"))]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+
+    AppContext {
+      config: crate::config::Config::default(),
+      default_answer: false,
+      document: doc,
+      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
   mod call {
     use super::*;
 
@@ -159,6 +196,16 @@ mod test {
         },
         ..default_cmd()
       };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_skips_done_entries() {
+      let mut ctx = sample_ctx_with_done_last();
+      let cmd = default_cmd();
 
       let result = cmd.call(&mut ctx);
 

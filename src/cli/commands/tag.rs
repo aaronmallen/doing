@@ -146,6 +146,7 @@ impl Command {
     let mut locs: Vec<EntryLocation> = entries
       .iter()
       .rev()
+      .filter(|e| e.unfinished())
       .take(count)
       .map(|e| EntryLocation {
         id: e.id().to_string(),
@@ -314,6 +315,43 @@ mod test {
     }
   }
 
+  fn sample_ctx_with_done_entry(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
+      "Active task",
+      Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Done task",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+    AppContext {
+      config: Config::default(),
+      default_answer: false,
+      document: doc,
+      doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
   fn sample_ctx_with_multiple(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");
     fs::write(&path, "Currently:\n").unwrap();
@@ -441,6 +479,22 @@ mod test {
       let cmd = default_cmd();
 
       assert!(cmd.call(&mut ctx).is_err());
+    }
+
+    #[test]
+    fn it_adds_tags_to_last_unfinished_entry_skipping_done() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let cmd = Command {
+        tags: vec!["important".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(entries[0].tags().has("important"));
+      assert!(!entries[1].tags().has("important"));
     }
 
     #[test]

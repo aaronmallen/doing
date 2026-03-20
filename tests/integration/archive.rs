@@ -18,6 +18,29 @@ fn it_adds_from_tag_by_default() {
 }
 
 #[test]
+fn it_archives_all_entries_from_positional_section() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["now", "--section", "Later", "Later task"])
+    .assert()
+    .success();
+  doing.run(["now", "Current task"]).assert().success();
+
+  doing.run(["archive", "Later"]).assert().success();
+
+  let output = doing.run(["show"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert_eq!(count_entries(&stdout), 1, "current section should still have 1 entry");
+  assert!(stdout.contains("Current task"), "current section should keep its entry");
+
+  let output = doing.run(["show", "Archive"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert_eq!(count_entries(&stdout), 1, "archive should contain 1 entry from Later");
+  assert!(stdout.contains("Later task"), "archive should contain the Later entry");
+}
+
+#[test]
 fn it_archives_all_entries() {
   let doing = DoingCmd::new();
 
@@ -41,6 +64,30 @@ fn it_archives_all_entries() {
     stdout.contains("Finished entry"),
     "archive should contain the done entry"
   );
+}
+
+#[test]
+fn it_archives_entries_by_positional_tag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["done", "Finished task"]).assert().success();
+  doing.run(["now", "Active task"]).assert().success();
+
+  doing.run(["archive", "@done"]).assert().success();
+
+  let output = doing.run(["show"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert_eq!(
+    count_entries(&stdout),
+    1,
+    "current section should keep unfinished entry"
+  );
+  assert!(stdout.contains("Active task"), "active task should remain");
+
+  let output = doing.run(["show", "Archive"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert_eq!(count_entries(&stdout), 1, "archive should contain 1 done entry");
+  assert!(stdout.contains("Finished task"), "done entry should be archived");
 }
 
 #[test]

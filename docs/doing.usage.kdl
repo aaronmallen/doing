@@ -40,6 +40,7 @@ cmd "again" help="Repeat the last entry" {
 
 cmd "archive" help="Move entries to the Archive section" {
   alias "move"
+  arg "[SECTION_OR_TAG]" help="Section name or @tag to archive (e.g. \"Currently\" or \"@done\")"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"
@@ -269,7 +270,6 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
 }
 
 cmd "meanwhile" help="Add an entry while finishing the last" {
-  flag "-a --archive" help="Move finished @meanwhile entries to Archive"
   flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "-X --noauto" help="Skip autotagging and default tags"

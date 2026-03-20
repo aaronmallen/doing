@@ -25,7 +25,7 @@ pub struct Command {
   archive: bool,
 
   /// Boolean operator for combining tag filters
-  #[arg(long = "bool", value_enum)]
+  #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
 
   /// Cancel the last N entries

@@ -23,6 +23,7 @@ and this project adheres to [Break Versioning].
 - [#17] `--output` with an unrecognized format silently falls back to template rendering instead of reporting an error
 - [#22] `grep` only searches entry titles and notes, missing entries that match by tag name (e.g. `doing grep "code"`
   does not find entries tagged `@code`)
+- [#25] `--bool` flag requires exact lowercase values; `--bool AND` and `--bool Or` are rejected
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
@@ -73,6 +74,7 @@ Initial alpha release
 [#44]: https://github.com/aaronmallen/doing/issues/44
 [#58]: https://github.com/aaronmallen/doing/issues/58
 [#66]: https://github.com/aaronmallen/doing/issues/66
+[#25]: https://github.com/aaronmallen/doing/issues/25
 [#68]: https://github.com/aaronmallen/doing/issues/68
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main

@@ -34,7 +34,7 @@ const ACTIONS: &[&str] = &["archive", "cancel", "delete", "finish", "flag", "mov
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Boolean operator for combining tag filters
-  #[arg(long = "bool", value_enum)]
+  #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
 
   /// Output format

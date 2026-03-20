@@ -35,7 +35,7 @@ pub struct Command {
   auto: bool,
 
   /// Boolean operator for combining tag filters
-  #[arg(long = "bool", value_enum)]
+  #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
 
   /// Finish the last N entries

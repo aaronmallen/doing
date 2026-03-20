@@ -28,7 +28,7 @@ pub struct Command {
   back: Option<String>,
 
   /// Boolean operator for combining tag filters
-  #[arg(long = "bool", value_enum)]
+  #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
 
   /// Open an editor to compose the entry title and notes

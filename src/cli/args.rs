@@ -135,7 +135,7 @@ pub struct FilterArgs {
   pub before: Option<String>,
 
   /// Boolean operator for combining tag filters
-  #[arg(long = "bool", value_enum)]
+  #[arg(long = "bool", value_enum, ignore_case = true)]
   pub bool_op: Option<BoolArg>,
 
   /// Maximum number of entries to return

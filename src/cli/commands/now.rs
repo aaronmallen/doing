@@ -99,6 +99,8 @@ impl Command {
       autotag(&mut entry, &ctx.config.autotag, &ctx.config.default_tags);
     }
 
+    let display_title = entry.full_title();
+
     if !ctx.document.has_section(section_name) {
       ctx.document.add_section(Section::new(section_name));
     }
@@ -106,7 +108,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Added \"{}\" to {}", title, section_name);
+    info!("Added \"{}\" to {}", display_title, section_name);
     Ok(())
   }
 

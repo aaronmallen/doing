@@ -169,13 +169,7 @@ impl ExportPlugin for HtmlExport {
     let mut items_html = String::new();
     for (section, items) in &sections {
       for entry in items {
-        let title = escape_html(entry.title());
-        let tags_str = if entry.tags().is_empty() {
-          String::new()
-        } else {
-          format!(" {}", escape_html(&entry.tags().to_string()))
-        };
-        let title_with_tags = format!("{title}{tags_str}");
+        let title_with_tags = escape_html(&entry.full_title());
         let title_styled = tag_re
           .replace_all(&title_with_tags, r#"<span class="tag">$1</span>"#)
           .into_owned();

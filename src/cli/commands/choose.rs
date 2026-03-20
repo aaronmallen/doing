@@ -316,26 +316,7 @@ impl Command {
 
   fn format_entry(entry: &Entry) -> String {
     let date = entry.date().format("%Y-%m-%d %H:%M");
-    let tags = if entry.tags().is_empty() {
-      String::new()
-    } else {
-      format!(
-        " {}",
-        entry
-          .tags()
-          .iter()
-          .map(|t| {
-            if let Some(val) = t.value() {
-              format!("@{}({val})", t.name())
-            } else {
-              format!("@{}", t.name())
-            }
-          })
-          .collect::<Vec<_>>()
-          .join(" ")
-      )
-    };
-    format!("{date} | {}{tags}", entry.title())
+    format!("{date} | {}", entry.full_title())
   }
 
   fn present_dialoguer(&self, entries: &[Entry]) -> Result<Option<Entry>> {

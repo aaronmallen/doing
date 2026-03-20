@@ -153,7 +153,7 @@ fn build_values(entry: &Entry, options: &RenderOptions, config: &Config) -> Hash
   values.insert(TokenKind::Shortdate, shortdate.to_string());
 
   // Title
-  values.insert(TokenKind::Title, entry.title().to_string());
+  values.insert(TokenKind::Title, entry.full_title());
 
   // Section
   values.insert(TokenKind::Section, entry.section().to_string());
@@ -413,7 +413,10 @@ mod test {
 
       let result = render(&entry, &options, &config);
 
-      assert_eq!(result, "Title: Working on project (Currently)");
+      assert_eq!(
+        result,
+        "Title: Working on project @coding @done(2024-03-17 15:00) (Currently)"
+      );
     }
 
     #[test]
@@ -427,7 +430,10 @@ mod test {
 
       let result = render(&entry, &options, &config);
 
-      assert_eq!(result, "Working on project\n\tCurrently");
+      assert_eq!(
+        result,
+        "Working on project @coding @done(2024-03-17 15:00)\n\tCurrently"
+      );
     }
 
     #[test]
@@ -441,7 +447,10 @@ mod test {
 
       let result = render(&entry, &options, &config);
 
-      assert_eq!(result, "Working on project\nSome notes here");
+      assert_eq!(
+        result,
+        "Working on project @coding @done(2024-03-17 15:00)\nSome notes here"
+      );
     }
 
     #[test]
@@ -455,7 +464,10 @@ mod test {
 
       let result = render(&entry, &options, &config);
 
-      assert_eq!(result, "Working on project\n: Some notes here");
+      assert_eq!(
+        result,
+        "Working on project @coding @done(2024-03-17 15:00)\n: Some notes here"
+      );
     }
 
     #[test]
@@ -497,7 +509,7 @@ mod test {
 
       let result = render(&entry, &options, &config);
 
-      assert_eq!(result, "Working on project            |");
+      assert_eq!(result, "Working on project @coding @do|");
     }
 
     #[test]

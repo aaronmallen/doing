@@ -28,11 +28,7 @@ impl ExportPlugin for MarkdownExport {
         let done = if entry.finished() { "x" } else { " " };
         let date = entry.date().format(&options.date_format).to_string();
 
-        let title = if entry.tags().is_empty() {
-          entry.title().to_string()
-        } else {
-          format!("{} {}", entry.title(), entry.tags())
-        };
+        let title = entry.full_title();
 
         let interval = entry.interval().map(|iv| {
           let fmt = DurationFormat::from_config(&config.interval_format);

@@ -84,6 +84,8 @@ impl Command {
       autotag(&mut entry, &ctx.config.autotag, &ctx.config.default_tags);
     }
 
+    let display_title = entry.full_title();
+
     // Mark the source entry as @done
     let done_value = Some(date.format("%Y-%m-%d %H:%M").to_string());
     let section = ctx
@@ -105,7 +107,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Resumed \"{}\" in {}", title, target_section);
+    info!("Resumed \"{}\" in {}", display_title, target_section);
     Ok(())
   }
 

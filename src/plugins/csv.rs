@@ -25,11 +25,7 @@ impl ExportPlugin for CsvExport {
         .map(|d| d.format(&options.date_format).to_string())
         .unwrap_or_default();
 
-      let title = if entry.tags().is_empty() {
-        escape_csv(entry.title())
-      } else {
-        escape_csv(&format!("{} {}", entry.title(), entry.tags()))
-      };
+      let title = escape_csv(&entry.full_title());
 
       let note = if entry.note().is_empty() {
         String::new()

@@ -77,6 +77,15 @@ impl Entry {
     self.tags.has("done")
   }
 
+  /// Return the title with inline tags, matching the original entry format.
+  pub fn full_title(&self) -> String {
+    if self.tags.is_empty() {
+      self.title.clone()
+    } else {
+      format!("{} {}", self.title, self.tags)
+    }
+  }
+
   /// Return the 32-character hex ID.
   pub fn id(&self) -> &str {
     &self.id
@@ -364,6 +373,33 @@ mod test {
       );
 
       assert!(!entry.finished());
+    }
+  }
+
+  mod full_title {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_includes_tags_in_title() {
+      let entry = sample_entry();
+
+      assert_eq!(entry.full_title(), "Working on project @coding @done(2024-03-17 15:00)");
+    }
+
+    #[test]
+    fn it_returns_plain_title_when_no_tags() {
+      let entry = Entry::new(
+        sample_date(),
+        "Just a title",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      assert_eq!(entry.full_title(), "Just a title");
     }
   }
 

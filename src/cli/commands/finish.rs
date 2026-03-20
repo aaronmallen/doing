@@ -111,7 +111,7 @@ impl Command {
         if interval > threshold {
           let prompt = format!(
             "Entry \"{}\" has an interval of {}. Continue?",
-            entry.title(),
+            entry.full_title(),
             format_duration(interval)
           );
           if !dialoguer::Confirm::new()

@@ -118,6 +118,8 @@ impl Command {
       entry.tags_mut().add(Tag::new("done", done_value));
     }
 
+    let display_title = entry.full_title();
+
     if !ctx.document.has_section(target_section) {
       ctx.document.add_section(Section::new(target_section));
     }
@@ -129,7 +131,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Added \"{}\" to {}", title, target_section);
+    info!("Added \"{}\" to {}", display_title, target_section);
     Ok(())
   }
 
@@ -144,12 +146,12 @@ impl Command {
       .last_mut()
       .ok_or_else(|| crate::errors::Error::Config("no entries in section".into()))?;
 
-    let title = last.title().to_string();
+    let display_title = last.full_title();
     last.tags_mut().remove("done");
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Removed @done tag from \"{}\"", title);
+    info!("Removed @done tag from \"{}\"", display_title);
     Ok(())
   }
 
@@ -251,7 +253,7 @@ impl Command {
       last.tags_mut().add(Tag::new("done", done_value));
     }
 
-    let title = last.title().to_string();
+    let display_title = last.full_title();
 
     if self.archive {
       // Move entry to Archive: clone, remove from current section, add to Archive
@@ -266,7 +268,7 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    info!("Marked \"{}\" as @done", title);
+    info!("Marked \"{}\" as @done", display_title);
     Ok(())
   }
 }

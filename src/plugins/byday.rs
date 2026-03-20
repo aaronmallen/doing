@@ -39,7 +39,7 @@ impl ExportPlugin for BydayExport {
         let duration = entry.interval().unwrap_or_else(chrono::Duration::zero);
         day_total += duration;
 
-        let title = truncate_and_pad(strip_done_tag(entry.title()), width);
+        let title = truncate_and_pad(strip_done_tag(&entry.full_title()), width);
         let interval = format_clock(duration);
 
         if i == 0 {

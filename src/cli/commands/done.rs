@@ -221,24 +221,18 @@ impl Command {
       .section_by_name_mut(section_name)
       .ok_or_else(|| crate::errors::Error::Config(format!("section \"{section_name}\" not found")))?;
 
-    let last = if self.unfinished {
-      section.entries_mut().iter_mut().rev().find(|e| e.unfinished())
-    } else {
-      section.entries_mut().last_mut()
+    let last = section.entries_mut().iter_mut().rev().find(|e| e.unfinished());
+
+    let last = match last {
+      Some(entry) => entry,
+      None => {
+        if section.entries().is_empty() {
+          return Err(crate::errors::Error::Config("no entries in section".into()));
+        }
+        info!("All entries already @done");
+        return Ok(());
+      }
     };
-
-    let last = last.ok_or_else(|| {
-      crate::errors::Error::Config(if self.unfinished {
-        "no unfinished entry found".into()
-      } else {
-        "no entries in section".into()
-      })
-    })?;
-
-    if last.finished() && !self.unfinished {
-      info!("Last entry already @done");
-      return Ok(());
-    }
 
     if let Some(ref note_text) = self.note {
       last.note_mut().add(note_text);
@@ -708,7 +702,7 @@ mod test {
     }
 
     #[test]
-    fn it_skips_already_done_entry() {
+    fn it_reports_all_done_when_no_unfinished_entries() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
       fs::write(&path, "Currently:\n").unwrap();
@@ -738,11 +732,26 @@ mod test {
       };
       let cmd = default_cmd();
 
+      // Should succeed without error (logs "All entries already @done")
       cmd.call(&mut ctx).unwrap();
 
       let entries = ctx.document.entries_in_section("Currently");
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].tags().len(), 1);
+    }
+
+    #[test]
+    fn it_finds_unfinished_entry_when_last_is_done() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done_and_undone(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 2);
+      assert!(entries[0].finished());
+      assert!(entries[1].finished());
     }
   }
 }

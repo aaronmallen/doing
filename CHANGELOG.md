@@ -10,6 +10,7 @@ and this project adheres to [Break Versioning].
 ### Fixed
 
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
+- [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
 ## [v0.0.1-alpha.2] - 2026-03-20
 
@@ -50,6 +51,7 @@ Initial alpha release
 [#44]: https://github.com/aaronmallen/doing/issues/44
 [#58]: https://github.com/aaronmallen/doing/issues/58
 [#66]: https://github.com/aaronmallen/doing/issues/66
+[#68]: https://github.com/aaronmallen/doing/issues/68
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

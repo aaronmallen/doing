@@ -11,6 +11,8 @@ and this project adheres to [Break Versioning].
 
 - [#14] Shorthand duration expressions (`24h`, `48h`, `30m`, `2h`, `1d2h`) are now accepted anywhere a natural language
   time expression is used (e.g. `--back 24h`)
+- [#27] `DOING_FILE` environment variable to specify the doing file path; `-f`/`--doing-file` takes precedence when both
+  are set
 
 ### Fixed
 
@@ -75,6 +77,7 @@ Initial alpha release
 [#58]: https://github.com/aaronmallen/doing/issues/58
 [#66]: https://github.com/aaronmallen/doing/issues/66
 [#25]: https://github.com/aaronmallen/doing/issues/25
+[#27]: https://github.com/aaronmallen/doing/issues/27
 [#68]: https://github.com/aaronmallen/doing/issues/68
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main

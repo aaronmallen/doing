@@ -9,6 +9,9 @@ pub static DOING_CONFIG: Envar<String> = Envar::on_demand("DOING_CONFIG", || Env
 /// Enable debug mode.
 pub static DOING_DEBUG: Envar<bool> = Envar::on_demand("DOING_DEBUG", || EnvarDef::Default(false));
 
+/// Override for the doing file path.
+pub static DOING_FILE: Envar<String> = Envar::on_demand("DOING_FILE", || EnvarDef::Unset);
+
 /// Override for the editor used by doing.
 pub static DOING_EDITOR: Envar<String> = Envar::on_demand("DOING_EDITOR", || EnvarDef::Unset);
 

@@ -60,7 +60,7 @@ struct Cli {
   #[arg(long, global = true)]
   default: bool,
 
-  /// Specify a different doing_file
+  /// Specify a different doing_file [env: DOING_FILE=]
   #[arg(short = 'f', long, global = true)]
   doing_file: Option<PathBuf>,
 

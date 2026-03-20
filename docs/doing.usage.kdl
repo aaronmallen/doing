@@ -9,7 +9,7 @@ author "Aaron Allen <@aaronmallen>"
 flag "--color" help="Colored output" global=#true negate="--no-color"
 flag "--debug" help="Enable debug output" global=#true
 flag "--default" help="Answer yes/no menus with default option" global=#true
-flag "-f --doing-file <PATH>" help="Specify a different doing_file" global=#true
+flag "-f --doing-file <PATH>" help="Specify a different doing_file [env: DOING_FILE=]" global=#true
 flag "--no" help="Answer all yes/no menus with no" global=#true
 flag "-x --noauto" help="Exclude auto tags and default tags" global=#true negate="--no-noauto"
 flag "--notes" help="Output notes if included in the template" global=#true negate="--no-notes"

@@ -321,6 +321,10 @@ fn apply_env_overrides(mut value: Value) -> Value {
     obj.insert("backup_dir".into(), Value::String(backup_dir));
   }
 
+  if let Ok(doing_file) = env::DOING_FILE.value() {
+    obj.insert("doing_file".into(), Value::String(doing_file));
+  }
+
   if let Ok(editor) = env::DOING_EDITOR.value() {
     let editors = obj
       .entry("editors")

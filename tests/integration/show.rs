@@ -129,13 +129,16 @@ fn it_shows_entries_from_all_sections() {
     .assert()
     .success();
 
-  let output = doing.run(["show", "all"]).output().expect("failed to run show");
+  let output = doing
+    .run(["show", "--section", "All"])
+    .output()
+    .expect("failed to run show");
   let stdout = String::from_utf8_lossy(&output.stdout);
 
   assert_eq!(
     helpers::count_entries(&stdout),
     2,
-    "show all should display entries from all sections"
+    "show --section All should display entries from all sections"
   );
   assert!(
     stdout.contains("Default section entry"),

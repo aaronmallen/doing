@@ -49,7 +49,11 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self.section_name.as_deref().unwrap_or(&ctx.config.current_section);
+    let section_name = self
+      .section_name
+      .as_deref()
+      .or(self.filter.section.as_deref())
+      .unwrap_or(&ctx.config.current_section);
 
     let all_entries: Vec<_> = ctx
       .document
@@ -235,6 +239,55 @@ mod test {
       let mut ctx = sample_ctx();
       let cmd = Command {
         section_name: Some("all".into()),
+        ..default_cmd()
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_displays_all_sections_via_section_flag() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        filter: FilterArgs {
+          section: Some("All".into()),
+          ..FilterArgs::default()
+        },
+        ..default_cmd()
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_displays_named_section_via_section_flag() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        filter: FilterArgs {
+          section: Some("Later".into()),
+          ..FilterArgs::default()
+        },
+        ..default_cmd()
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_prefers_positional_arg_over_section_flag() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        filter: FilterArgs {
+          section: Some("Later".into()),
+          ..FilterArgs::default()
+        },
+        section_name: Some("Currently".into()),
         ..default_cmd()
       };
 

@@ -72,7 +72,7 @@ impl Command {
 
     let filtered = filter_entries(all_entries, &options);
 
-    let output = self.display.render_entries(&filtered, &ctx.config, "recent");
+    let output = self.display.render_entries(&filtered, &ctx.config, "recent")?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager)?;

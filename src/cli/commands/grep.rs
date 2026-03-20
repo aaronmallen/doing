@@ -91,7 +91,7 @@ impl Command {
 
     let filtered = filter_entries(all_entries, &filter_options);
 
-    let output = self.display.render_entries(&filtered, &ctx.config, "default");
+    let output = self.display.render_entries(&filtered, &ctx.config, "default")?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager)?;

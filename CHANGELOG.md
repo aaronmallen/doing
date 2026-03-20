@@ -20,6 +20,7 @@ and this project adheres to [Break Versioning].
 - [#6] Sequential `doing undo` calls restore the same backup instead of walking backwards through history; undo now
   consumes backups (`.bak` → `.undone`) and redo restores the most recent consumed backup
 - [#7] `reset --from "8am to 10am"` filters by date range instead of setting start/done times to match Ruby doing
+- [#17] `--output` with an unrecognized format silently falls back to template rendering instead of reporting an error
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
@@ -57,6 +58,7 @@ Initial alpha release
 [#6]: https://github.com/aaronmallen/doing/issues/6
 [#7]: https://github.com/aaronmallen/doing/issues/7
 [#14]: https://github.com/aaronmallen/doing/issues/14
+[#17]: https://github.com/aaronmallen/doing/issues/17
 [#18]: https://github.com/aaronmallen/doing/issues/18
 [#19]: https://github.com/aaronmallen/doing/issues/19
 [#20]: https://github.com/aaronmallen/doing/issues/20

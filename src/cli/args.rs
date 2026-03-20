@@ -97,18 +97,25 @@ impl DisplayArgs {
   ///
   /// If `--output` matches a registered export plugin trigger, the plugin renders
   /// the entries directly. Otherwise, the standard template rendering is used.
-  pub fn render_entries(&self, entries: &[Entry], config: &Config, default_template: &str) -> String {
+  ///
+  /// Returns an error if `--output` is specified but does not match any registered
+  /// export plugin.
+  pub fn render_entries(&self, entries: &[Entry], config: &Config, default_template: &str) -> Result<String> {
     let template_name = self.template.as_deref().unwrap_or(default_template);
     let render_options = RenderOptions::from_config(template_name, config);
 
     if let Some(ref format) = self.output {
       let registry = default_registry();
       if let Some(plugin) = registry.resolve(format) {
-        return plugin.render(entries, &render_options, config);
+        return Ok(plugin.render(entries, &render_options, config));
       }
+      let valid = registry.available_formats().join(", ");
+      return Err(crate::errors::Error::Plugin(format!(
+        "\"{format}\" is not a recognized output format. Valid formats: {valid}"
+      )));
     }
 
-    format_items(entries, &render_options, config, self.times, self.totals)
+    Ok(format_items(entries, &render_options, config, self.times, self.totals))
   }
 }
 
@@ -269,6 +276,56 @@ mod test {
       assert_eq!(BooleanMode::from(BoolArg::Not), BooleanMode::Not);
       assert_eq!(BooleanMode::from(BoolArg::Or), BooleanMode::Or);
       assert_eq!(BooleanMode::from(BoolArg::Pattern), BooleanMode::Pattern);
+    }
+  }
+
+  mod display_args {
+    use super::*;
+
+    mod render_entries {
+      use super::*;
+
+      #[test]
+      fn it_renders_with_recognized_output_format() {
+        let args = DisplayArgs {
+          output: Some("json".into()),
+          ..DisplayArgs::default()
+        };
+        let config = Config::default();
+
+        let result = args.render_entries(&[], &config, "default");
+
+        assert!(result.is_ok());
+      }
+
+      #[test]
+      fn it_renders_with_template_when_no_output_specified() {
+        let args = DisplayArgs::default();
+        let config = Config::default();
+
+        let result = args.render_entries(&[], &config, "default");
+
+        assert!(result.is_ok());
+      }
+
+      #[test]
+      fn it_returns_error_for_unrecognized_output_format() {
+        let args = DisplayArgs {
+          output: Some("falafel".into()),
+          ..DisplayArgs::default()
+        };
+        let config = Config::default();
+
+        let result = args.render_entries(&[], &config, "default");
+
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(
+          err.contains("falafel"),
+          "error should mention the invalid format: {err}"
+        );
+        assert!(err.contains("csv"), "error should list valid formats: {err}");
+      }
     }
   }
 

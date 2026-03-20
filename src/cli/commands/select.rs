@@ -77,7 +77,7 @@ pub struct Command {
   search: Option<String>,
 
   /// Section to select entries from
-  #[arg(short = 'S', long)]
+  #[arg(short, long)]
   section: Option<String>,
 
   /// Add tags to selected entries (comma-separated)

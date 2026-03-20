@@ -19,7 +19,7 @@ pub struct Command {
   count: usize,
 
   /// Section to target
-  #[arg(short = 'S', long)]
+  #[arg(short, long)]
   section: Option<String>,
 }
 

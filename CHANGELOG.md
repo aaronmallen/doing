@@ -19,6 +19,8 @@ and this project adheres to [Break Versioning].
 - [#23] Undo history is not isolated per doing file; undoing in one file can restore content from a different file
 - [#24] `reset` command crashes with `--search`, `--back`, or `--from` flags when search config is not explicitly set
 - [#26] Tags are stripped from entry titles in display output and info messages
+- [#33] `-s` short flag maps to `--section` instead of `--search` to match Brett's doing; `--search` no longer has a
+    short flag
 
 ## 0.0.1-alpha.1 - 2026-03-19
 
@@ -34,5 +36,6 @@ Initial alpha release
 [#23]: https://github.com/aaronmallen/doing/issues/23
 [#24]: https://github.com/aaronmallen/doing/issues/24
 [#26]: https://github.com/aaronmallen/doing/issues/26
+[#33]: https://github.com/aaronmallen/doing/issues/33
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...main

@@ -37,7 +37,7 @@ pub struct Command {
   search: Option<String>,
 
   /// Section to cancel entries from
-  #[arg(short = 'S', long)]
+  #[arg(short, long)]
   section: Option<String>,
 
   /// Tags to filter by (can be repeated)

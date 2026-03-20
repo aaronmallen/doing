@@ -50,8 +50,8 @@ cmd "archive" help="Move entries to the Archive section" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-k --keep <KEEP>" help="Number of entries to keep in the source section"
@@ -60,7 +60,7 @@ cmd "archive" help="Move entries to the Archive section" {
 
 cmd "autotag" help="Apply autotagging rules to existing entries" {
   flag "-c --count <COUNT>" help="Apply to the last N entries" default="1"
-  flag "-S --section <SECTION>" help="Section to target"
+  flag "-s --section <SECTION>" help="Section to target"
 }
 
 cmd "budget" help="Manage time budgets for tags" {
@@ -76,7 +76,7 @@ cmd "cancel" help="Mark the last entry as cancelled" {
   }
   flag "-c --count <COUNT>" help="Cancel the last N entries" default="1"
   flag "--search <SEARCH>" help="Text search query to filter entries"
-  flag "-S --section <SECTION>" help="Section to cancel entries from"
+  flag "-s --section <SECTION>" help="Section to cancel entries from"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
 }
 
@@ -88,7 +88,7 @@ cmd "choose" help="Fuzzy select an entry to act on" {
   flag "--query <QUERY>" help="Text search query to filter entries"
   flag "--save-to <FILE>" help="Save output to a file"
   flag "--search <SEARCH>" help="Text search query to filter entries"
-  flag "-S --section <SECTION>" help="Section to choose entries from"
+  flag "-s --section <SECTION>" help="Section to choose entries from"
   flag "--tagged <TAG>" help="Filter by tags (can be repeated)" var=#true
 }
 
@@ -152,7 +152,7 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
   flag "-r --remove" help="Remove @done tag instead of adding"
   flag "--search <SEARCH>" help="Text search query to filter entries"
-  flag "-S --section <SECTION>" help="Section to finish entries from"
+  flag "-s --section <SECTION>" help="Section to finish entries from"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--took <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
   flag "-u --update" help="Overwrite an existing @done tag with a new timestamp"
@@ -188,8 +188,8 @@ cmd "grep" help="Search for entries matching a pattern" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
@@ -228,8 +228,8 @@ cmd "last" help="Show the last entry" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
@@ -250,8 +250,8 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "--force" help="Skip confirmation prompts"
@@ -282,8 +282,8 @@ cmd "note" help="Add or display notes on the last entry" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-n --note <NOTE>" help="Note text to append (can be repeated for multiple lines)" var=#true
@@ -327,8 +327,8 @@ cmd "on" help="Show entries from a specific date" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
@@ -363,8 +363,8 @@ cmd "recent" help="Show recent entries" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
@@ -387,8 +387,8 @@ cmd "reset" help="Reset the start date of the last entry" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-r --resume" help="Also remove @done tag (re-open the entry)"
@@ -406,8 +406,8 @@ cmd "rotate" help="Move entries to a dated archive file" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-k --keep <KEEP>" help="Number of entries to keep in the source section"
@@ -438,7 +438,7 @@ cmd "select" help="Interactively select entries to act on" {
   flag "--query <QUERY>" help="Pre-filter the list before presenting the menu"
   flag "--save-to <FILE>" help="Save selected entries to a file"
   flag "--search <SEARCH>" help="Text search query to filter entries"
-  flag "-S --section <SECTION>" help="Section to select entries from"
+  flag "-s --section <SECTION>" help="Section to select entries from"
   flag "-t --tag <TAGS>" help="Add tags to selected entries (comma-separated)"
   flag "--tagged <TAG>" help="Filter by tags (can be repeated)" var=#true
 }
@@ -467,8 +467,8 @@ cmd "show" help="Show entries from a section" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
@@ -497,8 +497,8 @@ cmd "since" help="Show entries since a given date" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
@@ -519,8 +519,8 @@ cmd "tag" help="Add or remove tags from entries" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "--force" help="Skip confirmation prompts"
@@ -574,8 +574,8 @@ cmd "today" help="Show entries from today" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
@@ -609,8 +609,8 @@ cmd "view" help="Display a custom view" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
@@ -647,8 +647,8 @@ cmd "yesterday" help="Show entries from yesterday" {
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
-  flag "-s --search <SEARCH>" help="Text search query"
-  flag "-S --section <SECTION>" help="Section name to filter by"
+  flag "--search <SEARCH>" help="Text search query"
+  flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"

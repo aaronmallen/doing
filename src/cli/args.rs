@@ -148,11 +148,11 @@ pub struct FilterArgs {
   pub only_timed: bool,
 
   /// Text search query
-  #[arg(short, long)]
+  #[arg(long)]
   pub search: Option<String>,
 
   /// Section name to filter by
-  #[arg(short = 'S', long)]
+  #[arg(short, long)]
   pub section: Option<String>,
 
   /// Tags to filter by (can be repeated)

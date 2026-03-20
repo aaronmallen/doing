@@ -54,7 +54,7 @@ pub struct Command {
   search: Option<String>,
 
   /// Section to choose entries from
-  #[arg(short = 'S', long)]
+  #[arg(short, long)]
   section: Option<String>,
 
   /// Filter by tags (can be repeated)

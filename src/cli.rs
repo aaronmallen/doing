@@ -248,7 +248,7 @@ enum Command {
   Choose(commands::choose::Command),
   /// Show available color template tokens
   Colors(commands::colors::Command),
-  /// List available commands
+  /// Manage optional commands
   Commands(commands::commands::Command),
   /// List commands accepting a given option
   #[command(hide = true)]
@@ -318,7 +318,8 @@ enum Command {
   /// Undo the last change
   Undo(commands::undo::Command),
   /// Update doing to the latest version
-  Update(commands::update::Command),
+  #[command(hide = true)]
+  Update,
   /// Display a custom view
   View(commands::view::Command),
   /// List available views
@@ -336,7 +337,7 @@ impl Command {
       Self::Budget(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Colors(cmd) => cmd.call(),
-      Self::Commands(cmd) => cmd.call(&Cli::command()),
+      Self::Commands(cmd) => cmd.call(ctx, &Cli::command()),
       Self::CommandsAccepting(cmd) => cmd.call(&Cli::command()),
       Self::Config(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
@@ -382,7 +383,7 @@ impl Command {
       Self::Changes => todo!(),
       Self::Choose(cmd) => cmd.call(ctx),
       Self::Completion => todo!(),
-      Self::Update(cmd) => cmd.call(),
+      Self::Update => todo!(),
     }
   }
 }

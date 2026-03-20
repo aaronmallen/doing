@@ -98,7 +98,21 @@ cmd "choose" help="Fuzzy select an entry to act on" {
 
 cmd "colors" help="Show available color template tokens"
 
-cmd "commands" help="List available commands"
+cmd "commands" help="Manage optional commands" {
+  cmd "add" help="Enable an optional command" {
+    arg "<NAME>" help="The command name to enable"
+  }
+  cmd "disable" help="Disable an optional command" {
+    arg "<NAME>" help="The command name to disable"
+  }
+  cmd "enable" help="Enable an optional command" {
+    arg "<NAME>" help="The command name to enable"
+  }
+  cmd "list" help="List optional commands and their enabled/disabled status"
+  cmd "remove" help="Disable an optional command" {
+    arg "<NAME>" help="The command name to disable"
+  }
+}
 
 cmd "commands-accepting" help="List commands accepting a given option" hide=#true {
   arg "<OPTION>" help="The option name to search for (without leading dashes)"
@@ -562,12 +576,9 @@ cmd "tags" help="List all tags in the doing file" {
   }
 }
 
-cmd "template" help="Manage export format templates" {
-  arg "[NAME]" help="Template name to display (e.g., css, html, json)"
-  flag "-c --column" help="Output in a single column (for scripting)"
-  flag "-l --list" help="List available export template names"
-  flag "--path" help="Show the path to the templates directory"
-  flag "-s --save <NAME>" help="Save a custom template with the given name"
+cmd "template" help="Show or edit entry templates" {
+  arg "[NAME]" help="Template name to display (e.g., default, today, last, recent)"
+  flag "-l --list" help="List available template names"
 }
 
 cmd "today" help="Show entries from today" {

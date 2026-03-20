@@ -4,7 +4,7 @@ use crate::{
   cli::AppContext,
   errors::{Error, Result},
   ops::backup::write_with_backup,
-  taskpaper::Section,
+  taskpaper::{Entry, Section},
 };
 
 /// List, add, or remove sections in the doing file.
@@ -31,7 +31,7 @@ impl Command {
     match &self.action {
       None => list_sections(ctx),
       Some(Action::Add(args)) => add_section(&args.name, ctx),
-      Some(Action::Remove(args)) => remove_section(&args.name, ctx),
+      Some(Action::Remove(args)) => remove_section(&args.name, args.archive, ctx),
     }
   }
 }
@@ -56,6 +56,10 @@ struct AddArgs {
 /// Arguments for the `sections remove` subcommand.
 #[derive(Args, Clone, Debug)]
 struct RemoveArgs {
+  /// Archive entries to the Archive section before removing
+  #[arg(short, long)]
+  archive: bool,
+
   /// Name of the section to remove
   #[arg(index = 1, value_name = "NAME")]
   name: String,
@@ -86,23 +90,49 @@ fn list_sections(ctx: &AppContext) -> Result<()> {
   Ok(())
 }
 
-fn remove_section(name: &str, ctx: &mut AppContext) -> Result<()> {
+fn remove_section(name: &str, archive: bool, ctx: &mut AppContext) -> Result<()> {
   let section = ctx
     .document
     .section_by_name(name)
     .ok_or_else(|| Error::Config(format!("section '{name}' not found")))?;
 
-  if !section.is_empty() {
+  if !section.is_empty() && !archive {
     return Err(Error::Config(format!(
       "section '{name}' is not empty ({} entries)",
       section.len()
     )));
   }
 
+  let archived_count = if archive {
+    let section = ctx.document.section_by_name_mut(name).unwrap();
+    let entries: Vec<Entry> = section.entries_mut().drain(..).collect();
+    let count = entries.len();
+
+    if count > 0 {
+      if !ctx.document.has_section("Archive") {
+        ctx.document.add_section(Section::new("Archive"));
+      }
+      let archive_section = ctx.document.section_by_name_mut("Archive").unwrap();
+      for entry in entries {
+        archive_section.add_entry(entry);
+      }
+    }
+
+    count
+  } else {
+    0
+  };
+
   ctx.document.remove_section(name);
   write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-  ctx.status(format!("Removed section '{name}'"));
+  if archived_count > 0 {
+    ctx.status(format!(
+      "Archived {archived_count} entries and removed section '{name}'"
+    ));
+  } else {
+    ctx.status(format!("Removed section '{name}'"));
+  }
   Ok(())
 }
 
@@ -193,13 +223,89 @@ mod test {
   }
 
   mod remove_section {
+    use pretty_assertions::assert_eq;
+
     use super::*;
+
+    #[test]
+    fn it_archives_entries_before_removing_section() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx();
+      ctx.doing_file = dir.path().join("doing.md");
+      let entry_count = ctx.document.entries_in_section("Currently").len();
+
+      let result = super::super::remove_section("Currently", true, &mut ctx);
+
+      assert!(result.is_ok());
+      assert!(!ctx.document.has_section("Currently"));
+      assert_eq!(ctx.document.entries_in_section("Archive").len(), entry_count);
+    }
+
+    #[test]
+    fn it_creates_archive_section_when_missing() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut doc = Document::new();
+      let mut section = Section::new("Ideas");
+      section.add_entry(Entry::new(
+        chrono::Local::now(),
+        "Idea task",
+        Tags::new(),
+        Note::new(),
+        "Ideas",
+        None::<String>,
+      ));
+      doc.add_section(section);
+
+      let mut ctx = AppContext {
+        config: Config::default(),
+        default_answer: false,
+        document: doc,
+        doing_file: dir.path().join("doing.md"),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        quiet: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
+      };
+
+      let result = super::super::remove_section("Ideas", true, &mut ctx);
+
+      assert!(result.is_ok());
+      assert!(!ctx.document.has_section("Ideas"));
+      assert!(ctx.document.has_section("Archive"));
+      assert_eq!(ctx.document.entries_in_section("Archive").len(), 1);
+    }
+
+    #[test]
+    fn it_removes_empty_section() {
+      let mut ctx = sample_ctx();
+
+      let result = super::super::remove_section("Archive", false, &mut ctx);
+
+      assert!(result.is_ok());
+      assert!(!ctx.document.has_section("Archive"));
+    }
+
+    #[test]
+    fn it_removes_empty_section_with_archive_flag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx();
+      ctx.doing_file = dir.path().join("doing.md");
+
+      let result = super::super::remove_section("Archive", true, &mut ctx);
+
+      assert!(result.is_ok());
+      assert!(!ctx.document.has_section("Archive"));
+    }
 
     #[test]
     fn it_returns_error_for_missing_section() {
       let mut ctx = sample_ctx();
 
-      let result = super::super::remove_section("Nonexistent", &mut ctx);
+      let result = super::super::remove_section("Nonexistent", false, &mut ctx);
 
       assert!(result.is_err());
     }
@@ -208,19 +314,9 @@ mod test {
     fn it_returns_error_for_non_empty_section() {
       let mut ctx = sample_ctx();
 
-      let result = super::super::remove_section("Currently", &mut ctx);
+      let result = super::super::remove_section("Currently", false, &mut ctx);
 
       assert!(result.is_err());
-    }
-
-    #[test]
-    fn it_removes_empty_section() {
-      let mut ctx = sample_ctx();
-
-      let result = super::super::remove_section("Archive", &mut ctx);
-
-      assert!(result.is_ok());
-      assert!(!ctx.document.has_section("Archive"));
     }
   }
 }

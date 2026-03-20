@@ -385,10 +385,8 @@ cmd "redo" help="Redo the last undone change"
 
 cmd "reset" help="Reset the start date of the last entry" {
   alias "begin"
-  arg "[DATE_STRING]" help="Date expression to reset the start time to (alternative to --back)"
   flag "-b --back --started --since <DATE>" help="Set a specific start date (natural language)"
   flag "-i --interactive" help="Interactively select entries to reset"
-  flag "--took --for <DURATION>" help="Specify duration (e.g. \"1h30m\") to set completion time relative to new start"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"
@@ -433,6 +431,7 @@ cmd "sections" help="List available sections" {
   }
   cmd "remove" help="Remove an empty section from the doing file" {
     arg "<NAME>" help="Name of the section to remove"
+    flag "-a --archive" help="Archive entries to the Archive section before removing"
   }
 }
 

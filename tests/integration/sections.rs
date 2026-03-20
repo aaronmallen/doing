@@ -74,3 +74,33 @@ fn it_shows_section_in_doing_file_after_creation() {
     "doing file should contain the new section heading"
   );
 }
+
+#[test]
+fn it_rejects_removing_non_empty_section_without_archive() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Test entry"]).assert().success();
+
+  doing.run(["sections", "remove", "Currently"]).assert().failure();
+}
+
+#[test]
+fn it_removes_non_empty_section_with_archive_flag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["sections", "add", "Ideas"]).assert().success();
+  doing.run(["now", "--section", "Ideas", "Idea task"]).assert().success();
+
+  doing
+    .run(["sections", "remove", "--archive", "Ideas"])
+    .assert()
+    .success();
+
+  let output = doing.run(["sections"]).output().expect("failed to run sections");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(!stdout.contains("Ideas"), "Ideas section should be removed");
+  assert!(
+    stdout.contains("Archive"),
+    "Archive section should exist with archived entries"
+  );
+}

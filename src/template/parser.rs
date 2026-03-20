@@ -275,7 +275,9 @@ mod test {
         match &tokens[0] {
           Token::Placeholder {
             kind, ..
-          } => assert_eq!(*kind, expected, "wrong kind for {input}"),
+          } => {
+            assert_eq!(*kind, expected, "wrong kind for {input}")
+          }
           _ => panic!("expected placeholder for {input}"),
         }
       }

@@ -232,3 +232,27 @@ fn it_sorts_entries_descending() {
     "second entry in desc sort should be older"
   );
 }
+
+#[test]
+fn it_uses_s_short_flag_for_section() {
+  let doing = DoingCmd::new();
+
+  // Create entries in the default "Currently" section
+  doing.run(["now", "Current entry"]).assert().success();
+
+  // Create an entry in "Later" section
+  doing
+    .run(["now", "--section", "Later", "Later entry"])
+    .assert()
+    .success();
+
+  // Use -s to filter by section
+  let output = doing.run(["show", "-s", "Later"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(stdout.contains("Later entry"), "expected Later entry in output");
+  assert!(
+    !stdout.contains("Current entry"),
+    "expected Current entry to be filtered out"
+  );
+}

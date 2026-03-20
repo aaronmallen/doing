@@ -195,3 +195,37 @@ fn it_skips_already_finished_entries() {
     "unfinished entry should now be marked @done"
   );
 }
+
+#[test]
+fn it_uses_s_short_flag_in_finish_command() {
+  let doing = DoingCmd::new();
+
+  // Create entries in different sections
+  doing.run(["now", "Current entry"]).assert().success();
+  doing
+    .run(["now", "--section", "Later", "Later entry"])
+    .assert()
+    .success();
+
+  // Finish entries in "Later" section using -s short flag
+  doing.run(["finish", "-s", "Later"]).assert().success();
+
+  let contents = doing.read_doing_file();
+
+  // "Later entry" should be finished
+  let later_line = contents
+    .lines()
+    .find(|l| l.contains("Later entry"))
+    .expect("should have Later entry");
+  assert!(later_line.contains("@done"), "Later entry should be marked @done");
+
+  // "Current entry" should NOT be finished
+  let current_line = contents
+    .lines()
+    .find(|l| l.contains("Current entry"))
+    .expect("should have Current entry");
+  assert!(
+    !current_line.contains("@done"),
+    "Current entry should not be marked @done"
+  );
+}

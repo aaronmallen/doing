@@ -7,6 +7,44 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+### Added
+
+- [#2] `-b`/`--back` flag on `finish` command to backdate `@done` timestamp using natural language
+  (e.g. `--back "30m ago"`, `--back "2024-03-17 14:00"`); `--back` and `--at` are mutually exclusive
+- [#37] `--archive` flag on `meanwhile` command; moves finished @meanwhile entries to the Archive section when replacing
+- [#61] `changes` command displays a formatted changelog of recent doing versions with `--all`, `--lookup`,
+  `--search`, `--only`, `--sort`, `--markdown`, `--changes`, `--prefix`, and `--interactive` flags; `changelog` is a
+  visible alias
+- [#62] `update` command checks for the latest GitHub release and self-updates the binary after confirmation
+- [#76] `-d`/`--delete` and `-e`/`--editor` flags on `grep` command; `--delete` removes all matching entries,
+  `--editor` opens matches in an editor for batch editing; both respect `--interactive` for selective action
+- [#77] `-d`/`--delete` and `-e`/`--editor` flags on `last` command; `--delete` removes the last entry from the doing
+  file and `--editor` opens it in `$EDITOR` for modification
+- [#81] `-e`/`--editor` flag on `open` command to override the default editor
+- [#83] `sections remove --archive` flag to archive entries before removing a section
+
+### Changed
+
+- [#49] `colors` command displays visual color swatches with labels, organized by category (foreground, bold/bright,
+  background, modifiers, themes, reset/default) instead of a flat list
+
+### Fixed
+
+- [#41] `today --totals` does not display tag time totals; totals now render consistently with `show --totals`
+- [#50] `template` command managed display templates instead of export format templates; now lists, displays, and saves
+  export templates (HTML CSS, etc.) matching Ruby doing behavior with `--list`, `--path`, `--save`, and `--column` flags
+- [#51] `commands` command lists all subcommands (help-overview) instead of managing optional commands; now supports
+  `list`, `add`/`enable`, `remove`/`disable` subcommands to control which commands are available via `disabled_commands`
+  config
+- [#53] `-b` short flag on `open` command reassigned from `--backup` to `--bundle_id` to match Ruby doing;
+  `--backup` no longer has a short flag; `--bundle_id` accepts a macOS bundle identifier string
+- [#65] `archive` command missing positional `[SECTION_OR_TAG]` argument; `doing archive Currently` and
+  `doing archive @done` now work without requiring `--section`/`--tag` flags
+- [#74] `tags` command output missing `@` prefix on tag names, `--sort count` not supported, no positional
+  `MAX_COUNT` argument, and missing filtering flags (`--search`, `--tag`, `--bool`, `--val`, `--not`)
+- [#82] `reset` command missing positional `[DATE_STRING]` argument and `--took`/`--for` flag; `doing reset 3pm` and
+  `doing reset "1 hour ago" --took 1h30m` now work as expected
+
 ## [v0.0.1-alpha.3] - 2026-03-20
 
 ### Added
@@ -86,6 +124,7 @@ Initial alpha release
 [Break Versioning]: https://www.taoensso.com/break-versioning
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 
+[#2]: https://github.com/aaronmallen/doing/issues/2
 [#3]: https://github.com/aaronmallen/doing/issues/3
 [#4]: https://github.com/aaronmallen/doing/issues/4
 [#5]: https://github.com/aaronmallen/doing/issues/5
@@ -93,36 +132,51 @@ Initial alpha release
 [#7]: https://github.com/aaronmallen/doing/issues/7
 [#14]: https://github.com/aaronmallen/doing/issues/14
 [#17]: https://github.com/aaronmallen/doing/issues/17
-[#22]: https://github.com/aaronmallen/doing/issues/22
 [#18]: https://github.com/aaronmallen/doing/issues/18
 [#19]: https://github.com/aaronmallen/doing/issues/19
 [#20]: https://github.com/aaronmallen/doing/issues/20
 [#21]: https://github.com/aaronmallen/doing/issues/21
+[#22]: https://github.com/aaronmallen/doing/issues/22
 [#23]: https://github.com/aaronmallen/doing/issues/23
 [#24]: https://github.com/aaronmallen/doing/issues/24
-[#26]: https://github.com/aaronmallen/doing/issues/26
-[#33]: https://github.com/aaronmallen/doing/issues/33
-[#44]: https://github.com/aaronmallen/doing/issues/44
-[#46]: https://github.com/aaronmallen/doing/issues/46
-[#58]: https://github.com/aaronmallen/doing/issues/58
-[#63]: https://github.com/aaronmallen/doing/issues/63
-[#64]: https://github.com/aaronmallen/doing/issues/64
-[#66]: https://github.com/aaronmallen/doing/issues/66
-[#67]: https://github.com/aaronmallen/doing/issues/67
 [#25]: https://github.com/aaronmallen/doing/issues/25
+[#26]: https://github.com/aaronmallen/doing/issues/26
 [#27]: https://github.com/aaronmallen/doing/issues/27
 [#28]: https://github.com/aaronmallen/doing/issues/28
 [#30]: https://github.com/aaronmallen/doing/issues/30
 [#31]: https://github.com/aaronmallen/doing/issues/31
+[#33]: https://github.com/aaronmallen/doing/issues/33
 [#36]: https://github.com/aaronmallen/doing/issues/36
+[#37]: https://github.com/aaronmallen/doing/issues/37
 [#38]: https://github.com/aaronmallen/doing/issues/38
+[#41]: https://github.com/aaronmallen/doing/issues/41
+[#44]: https://github.com/aaronmallen/doing/issues/44
+[#46]: https://github.com/aaronmallen/doing/issues/46
 [#48]: https://github.com/aaronmallen/doing/issues/48
+[#49]: https://github.com/aaronmallen/doing/issues/49
+[#50]: https://github.com/aaronmallen/doing/issues/50
+[#51]: https://github.com/aaronmallen/doing/issues/51
 [#52]: https://github.com/aaronmallen/doing/issues/52
+[#53]: https://github.com/aaronmallen/doing/issues/53
+[#58]: https://github.com/aaronmallen/doing/issues/58
+[#61]: https://github.com/aaronmallen/doing/issues/61
+[#62]: https://github.com/aaronmallen/doing/issues/62
+[#63]: https://github.com/aaronmallen/doing/issues/63
+[#64]: https://github.com/aaronmallen/doing/issues/64
+[#65]: https://github.com/aaronmallen/doing/issues/65
+[#66]: https://github.com/aaronmallen/doing/issues/66
+[#67]: https://github.com/aaronmallen/doing/issues/67
 [#68]: https://github.com/aaronmallen/doing/issues/68
 [#70]: https://github.com/aaronmallen/doing/issues/70
 [#71]: https://github.com/aaronmallen/doing/issues/71
 [#72]: https://github.com/aaronmallen/doing/issues/72
+[#74]: https://github.com/aaronmallen/doing/issues/74
+[#76]: https://github.com/aaronmallen/doing/issues/76
+[#77]: https://github.com/aaronmallen/doing/issues/77
 [#79]: https://github.com/aaronmallen/doing/issues/79
+[#81]: https://github.com/aaronmallen/doing/issues/81
+[#82]: https://github.com/aaronmallen/doing/issues/82
+[#83]: https://github.com/aaronmallen/doing/issues/83
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

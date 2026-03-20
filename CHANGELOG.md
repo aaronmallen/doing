@@ -16,6 +16,7 @@ and this project adheres to [Break Versioning].
 - [#19] `again` command selects last `@done` entry instead of last unfinished entry
 - [#20] `tag`, `note`, `mark`, and `last` commands operate on `@done` entries instead of skipping them
 - [#21] `reset` command does not remove `@done` tag by default, requiring explicit `--resume` flag
+- [#23] Undo history is not isolated per doing file; undoing in one file can restore content from a different file
 - [#24] `reset` command crashes with `--search`, `--back`, or `--from` flags when search config is not explicitly set
 
 ## 0.0.1-alpha.1 - 2026-03-19
@@ -29,6 +30,7 @@ Initial alpha release
 [#19]: https://github.com/aaronmallen/doing/issues/19
 [#20]: https://github.com/aaronmallen/doing/issues/20
 [#21]: https://github.com/aaronmallen/doing/issues/21
+[#23]: https://github.com/aaronmallen/doing/issues/23
 [#24]: https://github.com/aaronmallen/doing/issues/24
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...main

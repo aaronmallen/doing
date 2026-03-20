@@ -1,5 +1,6 @@
 use std::{
   fs,
+  hash::{DefaultHasher, Hash, Hasher},
   path::{Path, PathBuf},
 };
 
@@ -11,6 +12,31 @@ use crate::{
   taskpaper::{Document, io as taskpaper_io},
 };
 
+/// Generate a backup prefix that uniquely identifies a source file by its canonical path.
+///
+/// Format: `{filename}_{path_hash}_` where `path_hash` is 16 hex characters derived from
+/// hashing the full canonical path. This ensures files with the same name at different
+/// locations get isolated backup histories.
+pub(crate) fn backup_prefix(source: &Path) -> String {
+  let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
+  let canonical = source
+    .canonicalize()
+    .or_else(|_| {
+      source
+        .parent()
+        .and_then(|p| p.canonicalize().ok())
+        .map(|p| p.join(source.file_name().unwrap_or_default()))
+        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, ""))
+    })
+    .unwrap_or_else(|_| source.to_path_buf());
+
+  let mut hasher = DefaultHasher::new();
+  canonical.hash(&mut hasher);
+  let hash = hasher.finish();
+
+  format!("{stem}_{hash:016x}_")
+}
+
 /// Create a timestamped backup of `source` in `backup_dir`.
 ///
 /// The backup filename follows the pattern `{stem}_{YYYYMMDD}_{HHMMSS}.bak`.
@@ -18,14 +44,32 @@ use crate::{
 pub fn create_backup(source: &Path, backup_dir: &Path) -> Result<PathBuf> {
   fs::create_dir_all(backup_dir)?;
 
-  let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
-
+  let prefix = backup_prefix(source);
   let timestamp = Local::now().format("%Y%m%d_%H%M%S");
-  let backup_name = format!("{stem}_{timestamp}.bak");
+  let backup_name = format!("{prefix}{timestamp}.bak");
   let backup_path = backup_dir.join(backup_name);
 
   fs::copy(source, &backup_path)?;
   Ok(backup_path)
+}
+
+/// List backups for `source` in `backup_dir`, sorted newest-first.
+pub fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
+  let prefix = backup_prefix(source);
+  let mut backups: Vec<PathBuf> = fs::read_dir(backup_dir)?
+    .filter_map(|entry| entry.ok())
+    .map(|entry| entry.path())
+    .filter(|path| {
+      path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .map(|n| n.starts_with(&prefix) && n.ends_with(".bak"))
+        .unwrap_or(false)
+    })
+    .collect();
+
+  backups.sort_by(|a, b| b.cmp(a));
+  Ok(backups)
 }
 
 /// Remove old backups for `source` that exceed `history_size`.
@@ -59,27 +103,6 @@ pub fn write_with_backup(doc: &Document, path: &Path, config: &Config) -> Result
   }
 
   taskpaper_io::write_file(doc, path, config.doing_file_sort)
-}
-
-/// List backups for `source` in `backup_dir`, sorted newest-first.
-pub fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
-  let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
-
-  let prefix = format!("{stem}_");
-  let mut backups: Vec<PathBuf> = fs::read_dir(backup_dir)?
-    .filter_map(|entry| entry.ok())
-    .map(|entry| entry.path())
-    .filter(|path| {
-      path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .map(|n| n.starts_with(&prefix) && n.ends_with(".bak"))
-        .unwrap_or(false)
-    })
-    .collect();
-
-  backups.sort_by(|a, b| b.cmp(a));
-  Ok(backups)
 }
 
 #[cfg(test)]
@@ -144,9 +167,44 @@ mod test {
 
       let backup = create_backup(&source, &backup_dir).unwrap();
       let name = backup.file_name().unwrap().to_str().unwrap();
+      let prefix = backup_prefix(&source);
 
-      assert!(name.starts_with("doing.md_"));
+      assert!(name.starts_with(&prefix));
       assert!(name.ends_with(".bak"));
+    }
+  }
+
+  mod list_backups {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_isolates_backups_by_source_path() {
+      let dir = tempfile::tempdir().unwrap();
+      let backup_dir = dir.path().join("backups");
+      fs::create_dir_all(&backup_dir).unwrap();
+
+      let dir_a = dir.path().join("a");
+      let dir_b = dir.path().join("b");
+      fs::create_dir_all(&dir_a).unwrap();
+      fs::create_dir_all(&dir_b).unwrap();
+
+      let source_a = dir_a.join("doing.md");
+      let source_b = dir_b.join("doing.md");
+      fs::write(&source_a, "content a").unwrap();
+      fs::write(&source_b, "content b").unwrap();
+
+      create_backup(&source_a, &backup_dir).unwrap();
+      create_backup(&source_b, &backup_dir).unwrap();
+
+      let backups_a = list_backups(&source_a, &backup_dir).unwrap();
+      let backups_b = list_backups(&source_b, &backup_dir).unwrap();
+
+      assert_eq!(backups_a.len(), 1);
+      assert_eq!(backups_b.len(), 1);
+      assert_eq!(fs::read_to_string(&backups_a[0]).unwrap(), "content a");
+      assert_eq!(fs::read_to_string(&backups_b[0]).unwrap(), "content b");
     }
   }
 
@@ -159,9 +217,11 @@ mod test {
       let source = dir.path().join("test.md");
       let backup_dir = dir.path().join("backups");
       fs::create_dir_all(&backup_dir).unwrap();
+      fs::write(&source, "").unwrap();
 
+      let prefix = backup_prefix(&source);
       for i in 1..=5 {
-        let name = format!("test.md_20240101_{:06}.bak", i);
+        let name = format!("{prefix}20240101_{:06}.bak", i);
         fs::write(backup_dir.join(name), "").unwrap();
       }
 
@@ -177,8 +237,10 @@ mod test {
       let source = dir.path().join("test.md");
       let backup_dir = dir.path().join("backups");
       fs::create_dir_all(&backup_dir).unwrap();
+      fs::write(&source, "").unwrap();
 
-      fs::write(backup_dir.join("test.md_20240101_000001.bak"), "").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "").unwrap();
 
       prune_backups(&source, &backup_dir, 5).unwrap();
 

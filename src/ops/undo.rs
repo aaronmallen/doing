@@ -5,7 +5,10 @@ use std::{
 
 use chrono::Local;
 
-use crate::errors::{Error, Result};
+use crate::{
+  errors::{Error, Result},
+  ops::backup::backup_prefix,
+};
 
 /// Restore the most recent redo file for `source`, reversing the last undo.
 ///
@@ -42,9 +45,9 @@ pub fn undo(source: &Path, backup_dir: &Path, count: usize) -> Result<()> {
 fn create_redo(source: &Path, backup_dir: &Path) -> Result<PathBuf> {
   fs::create_dir_all(backup_dir)?;
 
-  let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
+  let prefix = backup_prefix(source);
   let timestamp = Local::now().format("%Y%m%d_%H%M%S");
-  let redo_name = format!("{stem}_{timestamp}.redo");
+  let redo_name = format!("{prefix}{timestamp}.redo");
   let redo_path = backup_dir.join(redo_name);
 
   fs::copy(source, &redo_path)?;
@@ -56,14 +59,13 @@ fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
   list_files_with_ext(source, backup_dir, ".bak")
 }
 
-/// List files matching `{stem}_*.{ext}` in `backup_dir`, sorted newest-first.
+/// List files matching `{prefix}*.{ext}` in `backup_dir`, sorted newest-first.
 fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {
   if !backup_dir.exists() {
     return Ok(Vec::new());
   }
 
-  let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
-  let prefix = format!("{stem}_");
+  let prefix = backup_prefix(source);
 
   let mut files: Vec<PathBuf> = fs::read_dir(backup_dir)?
     .filter_map(|entry| entry.ok())
@@ -98,22 +100,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_restores_from_newest_redo_file() {
-      let dir = tempfile::tempdir().unwrap();
-      let source = dir.path().join("doing.md");
-      let backup_dir = dir.path().join("backups");
-      fs::create_dir_all(&backup_dir).unwrap();
-      fs::write(&source, "current").unwrap();
-
-      fs::write(backup_dir.join("doing.md_20240101_000001.redo"), "older redo").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000002.redo"), "newest redo").unwrap();
-
-      redo(&source, &backup_dir).unwrap();
-
-      assert_eq!(fs::read_to_string(&source).unwrap(), "newest redo");
-    }
-
-    #[test]
     fn it_deletes_redo_file_after_restore() {
       let dir = tempfile::tempdir().unwrap();
       let source = dir.path().join("doing.md");
@@ -121,12 +107,30 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      fs::write(backup_dir.join("doing.md_20240101_000001.redo"), "redo content").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.redo")), "redo content").unwrap();
 
       redo(&source, &backup_dir).unwrap();
 
       let remaining = list_redo_files(&source, &backup_dir).unwrap();
       assert!(remaining.is_empty());
+    }
+
+    #[test]
+    fn it_restores_from_newest_redo_file() {
+      let dir = tempfile::tempdir().unwrap();
+      let source = dir.path().join("doing.md");
+      let backup_dir = dir.path().join("backups");
+      fs::create_dir_all(&backup_dir).unwrap();
+      fs::write(&source, "current").unwrap();
+
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.redo")), "older redo").unwrap();
+      fs::write(backup_dir.join(format!("{prefix}20240101_000002.redo")), "newest redo").unwrap();
+
+      redo(&source, &backup_dir).unwrap();
+
+      assert_eq!(fs::read_to_string(&source).unwrap(), "newest redo");
     }
 
     #[test]
@@ -156,30 +160,14 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current state").unwrap();
 
-      fs::write(backup_dir.join("doing.md_20240101_000001.bak"), "backup1").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup1").unwrap();
 
       undo(&source, &backup_dir, 1).unwrap();
 
       let redo_files = list_redo_files(&source, &backup_dir).unwrap();
       assert_eq!(redo_files.len(), 1);
       assert_eq!(fs::read_to_string(&redo_files[0]).unwrap(), "current state");
-    }
-
-    #[test]
-    fn it_restores_from_nth_backup() {
-      let dir = tempfile::tempdir().unwrap();
-      let source = dir.path().join("doing.md");
-      let backup_dir = dir.path().join("backups");
-      fs::create_dir_all(&backup_dir).unwrap();
-      fs::write(&source, "current").unwrap();
-
-      fs::write(backup_dir.join("doing.md_20240101_000001.bak"), "oldest").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000002.bak"), "middle").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000003.bak"), "newest").unwrap();
-
-      undo(&source, &backup_dir, 2).unwrap();
-
-      assert_eq!(fs::read_to_string(&source).unwrap(), "middle");
     }
 
     #[test]
@@ -190,12 +178,31 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      fs::write(backup_dir.join("doing.md_20240101_000001.bak"), "oldest").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000002.bak"), "newest").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "oldest").unwrap();
+      fs::write(backup_dir.join(format!("{prefix}20240101_000002.bak")), "newest").unwrap();
 
       undo(&source, &backup_dir, 1).unwrap();
 
       assert_eq!(fs::read_to_string(&source).unwrap(), "newest");
+    }
+
+    #[test]
+    fn it_restores_from_nth_backup() {
+      let dir = tempfile::tempdir().unwrap();
+      let source = dir.path().join("doing.md");
+      let backup_dir = dir.path().join("backups");
+      fs::create_dir_all(&backup_dir).unwrap();
+      fs::write(&source, "current").unwrap();
+
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "oldest").unwrap();
+      fs::write(backup_dir.join(format!("{prefix}20240101_000002.bak")), "middle").unwrap();
+      fs::write(backup_dir.join(format!("{prefix}20240101_000003.bak")), "newest").unwrap();
+
+      undo(&source, &backup_dir, 2).unwrap();
+
+      assert_eq!(fs::read_to_string(&source).unwrap(), "middle");
     }
 
     #[test]
@@ -206,7 +213,8 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      fs::write(backup_dir.join("doing.md_20240101_000001.bak"), "backup").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup").unwrap();
 
       let result = undo(&source, &backup_dir, 5);
 
@@ -222,7 +230,8 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      fs::write(backup_dir.join("doing.md_20240101_000001.bak"), "backup").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup").unwrap();
 
       let result = undo(&source, &backup_dir, 0);
 

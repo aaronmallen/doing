@@ -65,7 +65,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::{cli::AppContext, config::Config, taskpaper::Document};
+    use crate::{cli::AppContext, config::Config, ops::backup::backup_prefix, taskpaper::Document};
 
     #[test]
     fn it_restores_from_most_recent_backup() {
@@ -74,7 +74,8 @@ mod test {
       let backup_dir = dir.path().join("backups");
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000001.bak"), "backup1").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup1").unwrap();
 
       let mut ctx = AppContext {
         config: Config {
@@ -109,9 +110,10 @@ mod test {
       let backup_dir = dir.path().join("backups");
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000001.bak"), "oldest").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000002.bak"), "middle").unwrap();
-      fs::write(backup_dir.join("doing.md_20240101_000003.bak"), "newest").unwrap();
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "oldest").unwrap();
+      fs::write(backup_dir.join(format!("{prefix}20240101_000002.bak")), "middle").unwrap();
+      fs::write(backup_dir.join(format!("{prefix}20240101_000003.bak")), "newest").unwrap();
 
       let mut ctx = AppContext {
         config: Config {

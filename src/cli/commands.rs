@@ -3,6 +3,7 @@ pub mod archive;
 pub mod autotag;
 pub mod budget;
 pub mod cancel;
+pub mod changes;
 pub mod choose;
 pub mod colors;
 #[allow(clippy::module_inception)]

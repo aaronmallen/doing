@@ -168,9 +168,7 @@ cmd "grep" help="Search for entries matching a pattern" {
   alias "search"
   arg "<QUERY>" help="Search query"
   flag "--case <CASE>" help="Case sensitivity mode (smart/sensitive/ignore)"
-  flag "-d --delete" help="Delete all matching entries"
   flag "--duration <DURATION>" help="Duration format for time display"
-  flag "-e --editor" help="Open matching entries in an editor for batch editing"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -216,7 +214,9 @@ cmd "import" help="Import entries from other sources" {
 }
 
 cmd "last" help="Show the last entry" {
+  flag "-d --delete" help="Delete the last entry"
   flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-e --editor" help="Open the last entry in an editor for modification"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {

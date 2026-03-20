@@ -4,11 +4,15 @@ use crate::{
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
-    pager,
+    editor, pager,
   },
   config::SortOrder,
   errors::Result,
-  ops::filter::{Age, filter_entries},
+  ops::{
+    backup::write_with_backup,
+    filter::{Age, filter_entries},
+  },
+  template::renderer::{RenderOptions, format_items},
 };
 
 /// Show the single most recent entry.
@@ -26,8 +30,16 @@ use crate::{
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Delete the last entry
+  #[arg(short, long)]
+  delete: bool,
+
   #[command(flatten)]
   display: DisplayArgs,
+
+  /// Open the last entry in an editor for modification
+  #[arg(short, long)]
+  editor: bool,
 
   #[command(flatten)]
   filter: FilterArgs,
@@ -39,6 +51,50 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    let filtered = self.find_last_entry(ctx)?;
+
+    if filtered.is_empty() {
+      ctx.status("No matching entry found");
+      return Ok(());
+    }
+
+    if self.delete {
+      return self.action_delete(ctx, &filtered);
+    }
+
+    if self.editor {
+      return self.action_editor(ctx, &filtered);
+    }
+
+    let output = self.display.render_entries(&filtered, &ctx.config, "last")?;
+
+    if !output.is_empty() {
+      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
+    }
+
+    Ok(())
+  }
+
+  fn action_delete(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
+    let entry = &entries[0];
+    if let Some(section) = ctx.document.section_by_name_mut(entry.section()) {
+      section.remove_entry(entry.id());
+    }
+    write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
+    ctx.status("Deleted last entry");
+    Ok(())
+  }
+
+  fn action_editor(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
+    let entry = &entries[0];
+    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let initial = format_items(std::slice::from_ref(entry), &render_options, &ctx.config, false);
+    let _edited = editor::edit(&initial, &ctx.config)?;
+    ctx.status("Edited last entry");
+    Ok(())
+  }
+
+  fn find_last_entry(&self, ctx: &AppContext) -> Result<Vec<crate::taskpaper::Entry>> {
     let section_name = self.filter.section.as_deref().unwrap_or("all");
 
     let all_entries: Vec<_> = ctx
@@ -58,20 +114,14 @@ impl Command {
     options.sort = Some(SortOrder::Desc);
     options.unfinished = true;
 
-    let filtered = filter_entries(all_entries, &options);
-
-    let output = self.display.render_entries(&filtered, &ctx.config, "last")?;
-
-    if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-    }
-
-    Ok(())
+    Ok(filter_entries(all_entries, &options))
   }
 }
 
 #[cfg(test)]
 mod test {
+  use std::fs;
+
   use chrono::{Local, TimeZone};
 
   use super::*;
@@ -79,7 +129,9 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      delete: false,
       display: DisplayArgs::default(),
+      editor: false,
       filter: FilterArgs::default(),
       pager: false,
     }
@@ -156,6 +208,73 @@ mod test {
       use_color: false,
       use_pager: false,
       yes: false,
+    }
+  }
+
+  fn sample_ctx_with_file(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Working on project",
+      Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Meeting with team",
+      Tags::from_iter(vec![Tag::new("meeting", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+
+    AppContext {
+      config: crate::config::Config::default(),
+      default_answer: false,
+      document: doc,
+      doing_file: path,
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
+  mod action_delete {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_deletes_the_last_entry() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_file(dir.path());
+      let entries: Vec<Entry> = ctx
+        .document
+        .entries_in_section("Currently")
+        .into_iter()
+        .cloned()
+        .collect();
+      let last = vec![entries[1].clone()];
+      let cmd = default_cmd();
+
+      cmd.action_delete(&mut ctx, &last).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
+      assert_eq!(
+        ctx.document.entries_in_section("Currently")[0].title(),
+        "Working on project"
+      );
     }
   }
 

@@ -94,3 +94,23 @@ fn it_skips_done_entries_when_selecting_last() {
   assert!(stdout.contains("Active task"), "expected last to show unfinished entry");
   assert!(!stdout.contains("Finished task"), "expected last to skip @done entry");
 }
+
+#[test]
+fn it_deletes_the_last_entry() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "First entry"]).assert().success();
+  doing.run(["now", "Entry to delete"]).assert().success();
+
+  doing.run(["last", "--delete"]).assert().success();
+
+  let content = doing.read_doing_file();
+  assert!(
+    !content.contains("Entry to delete"),
+    "deleted entry should not be in the doing file"
+  );
+  assert!(
+    content.contains("First entry"),
+    "other entries should remain in the doing file"
+  );
+}

@@ -1,6 +1,7 @@
 mod again;
 mod archive;
 mod autotag;
+mod budget;
 mod cancel;
 mod chronify;
 mod config;

@@ -18,16 +18,13 @@ use crate::{
 ///
 /// ```text
 /// doing budget                      # list all budgets
+/// doing budget dev                  # show budget usage for "dev"
 /// doing budget dev 100h             # set a 100-hour budget for "dev"
 /// doing budget meetings 8h30m       # set an 8h30m budget for "meetings"
 /// doing budget dev --remove         # remove the "dev" budget
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
-  /// Amount to budget (e.g., 100h, 8h30m, 2d)
-  #[arg(value_name = "AMOUNT")]
-  amount: Option<String>,
-
   /// Remove the budget for the given tag
   #[arg(short, long)]
   remove: bool,
@@ -35,6 +32,10 @@ pub struct Command {
   /// Tag name to set or remove a budget for
   #[arg(value_name = "TAG")]
   tag: Option<String>,
+
+  /// Amount to budget (e.g., 100h, 8h30m, 2d)
+  #[arg(value_name = "AMOUNT")]
+  amount: Option<String>,
 }
 
 impl Command {
@@ -43,7 +44,7 @@ impl Command {
       (None, None, false) => self.list_budgets(ctx),
       (Some(tag), _, true) => remove_budget(tag, ctx.quiet),
       (Some(tag), Some(amount), false) => set_budget(tag, amount, ctx.quiet),
-      (Some(_), None, false) => Err(Error::Config("amount is required when setting a budget".into())),
+      (Some(tag), None, false) => self.show_budget(ctx, tag),
       (None, _, true) => Err(Error::Config("tag is required when removing a budget".into())),
       (None, Some(_), false) => Err(Error::Config("tag is required when setting a budget".into())),
     }
@@ -62,25 +63,23 @@ impl Command {
     tags.sort();
 
     for tag in tags {
-      let amount_str = &ctx.config.budgets[tag];
-      let budget_duration = parse_duration(amount_str)?;
-      let tracked_duration = tracked.get(tag.as_str()).copied().unwrap_or(chrono::Duration::zero());
-      let remaining = budget_duration - tracked_duration;
-
-      let budget_fmt = FormattedDuration::new(budget_duration, format);
-      let tracked_fmt = FormattedDuration::new(tracked_duration, format);
-
-      if remaining.num_seconds() >= 0 {
-        let remaining_fmt = FormattedDuration::new(remaining, format);
-        println!("{tag}: {budget_fmt} budgeted, {tracked_fmt} tracked, {remaining_fmt} remaining");
-      } else {
-        let over = chrono::Duration::zero() - remaining;
-        let over_fmt = FormattedDuration::new(over, format);
-        println!("{tag}: {budget_fmt} budgeted, {tracked_fmt} tracked, {over_fmt} over budget");
-      }
+      print_budget_line(tag, &ctx.config.budgets[tag], tracked.get(tag.as_str()).copied(), format)?;
     }
 
     Ok(())
+  }
+
+  fn show_budget(&self, ctx: &AppContext, tag: &str) -> Result<()> {
+    let amount_str = ctx
+      .config
+      .budgets
+      .get(tag)
+      .ok_or_else(|| Error::Config(format!("no budget configured for @{tag}")))?;
+
+    let tracked = compute_tracked_time(ctx);
+    let format = DurationFormat::from_config(&ctx.config.interval_format);
+
+    print_budget_line(tag, amount_str, tracked.get(tag).copied(), format)
   }
 }
 
@@ -100,6 +99,31 @@ fn compute_tracked_time(ctx: &AppContext) -> HashMap<&str, chrono::Duration> {
   }
 
   totals
+}
+
+fn print_budget_line(
+  tag: &str,
+  amount_str: &str,
+  tracked_duration: Option<chrono::Duration>,
+  format: DurationFormat,
+) -> Result<()> {
+  let budget_duration = parse_duration(amount_str)?;
+  let tracked_duration = tracked_duration.unwrap_or(chrono::Duration::zero());
+  let remaining = budget_duration - tracked_duration;
+
+  let budget_fmt = FormattedDuration::new(budget_duration, format);
+  let tracked_fmt = FormattedDuration::new(tracked_duration, format);
+
+  if remaining.num_seconds() >= 0 {
+    let remaining_fmt = FormattedDuration::new(remaining, format);
+    println!("{tag}: {budget_fmt} budgeted, {tracked_fmt} tracked, {remaining_fmt} remaining");
+  } else {
+    let over = chrono::Duration::zero() - remaining;
+    let over_fmt = FormattedDuration::new(over, format);
+    println!("{tag}: {budget_fmt} budgeted, {tracked_fmt} tracked, {over_fmt} over budget");
+  }
+
+  Ok(())
 }
 
 fn remove_budget(tag: &str, quiet: bool) -> Result<()> {
@@ -225,13 +249,13 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_errors_when_amount_missing_for_set() {
+    fn it_errors_when_tag_not_budgeted() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_budgets(dir.path());
       let cmd = Command {
         amount: None,
         remove: false,
-        tag: Some("dev".into()),
+        tag: Some("unknown".into()),
       };
 
       assert!(cmd.call(&mut ctx).is_err());
@@ -288,6 +312,38 @@ mod test {
         amount: None,
         remove: false,
         tag: None,
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+  }
+
+  mod show_budget {
+    use super::*;
+
+    #[test]
+    fn it_errors_for_unconfigured_tag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_budgets(dir.path());
+      let cmd = Command {
+        amount: None,
+        remove: false,
+        tag: Some("nonexistent".into()),
+      };
+
+      assert!(cmd.call(&mut ctx).is_err());
+    }
+
+    #[test]
+    fn it_shows_single_tag_budget() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_budgets(dir.path());
+      let cmd = Command {
+        amount: None,
+        remove: false,
+        tag: Some("dev".into()),
       };
 
       let result = cmd.call(&mut ctx);

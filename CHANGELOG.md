@@ -39,6 +39,8 @@ and this project adheres to [Break Versioning].
   entries, `last` and `yesterday` use simplified template without section/interval, and `--times` flag removed
 - [#48] Status messages use structured log format (`[timestamp INFO module::path]`) instead of user-friendly output;
   status messages are now printed directly to stderr as clean text, independent of the logging system
+- [#52] `budget` argument order reversed from Ruby doing; now accepts `doing budget TAG [AMOUNT]` with tag first;
+  `doing budget TAG` without an amount shows current usage for that tag
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
@@ -98,6 +100,7 @@ Initial alpha release
 [#36]: https://github.com/aaronmallen/doing/issues/36
 [#38]: https://github.com/aaronmallen/doing/issues/38
 [#48]: https://github.com/aaronmallen/doing/issues/48
+[#52]: https://github.com/aaronmallen/doing/issues/52
 [#68]: https://github.com/aaronmallen/doing/issues/68
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main

@@ -73,6 +73,10 @@ pub struct Command {
   #[arg(long)]
   took: Option<String>,
 
+  /// Only finish unfinished entries (no @done tag)
+  #[arg(long)]
+  unfinished: bool,
+
   /// Overwrite an existing @done tag with a new timestamp
   #[arg(short, long)]
   update: bool,
@@ -206,7 +210,7 @@ impl Command {
         search,
         section: Some(section_name.to_string()),
         tag_filter,
-        unfinished: !self.update,
+        unfinished: self.unfinished && !self.update,
         ..Default::default()
       };
 
@@ -214,25 +218,18 @@ impl Command {
       return Ok(results.iter().map(|e| e.id().to_string()).collect());
     }
 
-    // No filters: take the last N unfinished (or all if --update) entries from the section.
+    // No filters: take the last N entries from the section.
+    // When --unfinished (and not --update), restrict to entries without @done.
     // Collect in reverse to find the N most recent, then reverse back to section order.
     let entries = ctx.document.entries_in_section(section_name);
-    let mut ids: Vec<String> = if self.update {
-      entries
-        .iter()
-        .rev()
-        .take(self.count)
-        .map(|e| e.id().to_string())
-        .collect()
-    } else {
-      entries
-        .iter()
-        .rev()
-        .filter(|e| e.unfinished())
-        .take(self.count)
-        .map(|e| e.id().to_string())
-        .collect()
-    };
+    let filter_unfinished = self.unfinished && !self.update;
+    let mut ids: Vec<String> = entries
+      .iter()
+      .rev()
+      .filter(|e| if filter_unfinished { e.unfinished() } else { true })
+      .take(self.count)
+      .map(|e| e.id().to_string())
+      .collect();
     ids.reverse();
 
     Ok(ids)
@@ -281,11 +278,12 @@ impl Command {
   }
 
   fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
+    let filter_unfinished = self.unfinished && !self.update;
     let candidates: Vec<Entry> = ctx
       .document
       .entries_in_section(section_name)
       .into_iter()
-      .filter(|e| if self.update { true } else { e.unfinished() })
+      .filter(|e| if filter_unfinished { e.unfinished() } else { true })
       .cloned()
       .collect();
 
@@ -414,6 +412,7 @@ mod test {
       section: None,
       tag: vec![],
       took: None,
+      unfinished: false,
       update: false,
     }
   }
@@ -732,12 +731,27 @@ mod test {
     }
 
     #[test]
-    fn it_errors_when_all_entries_already_done() {
+    fn it_errors_when_all_entries_already_done_with_unfinished_flag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let cmd = Command {
+        unfinished: true,
+        ..default_cmd()
+      };
+
+      assert!(cmd.call(&mut ctx).is_err());
+    }
+
+    #[test]
+    fn it_skips_already_done_entry_without_error() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
       let cmd = default_cmd();
 
-      assert!(cmd.call(&mut ctx).is_err());
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(entries[0].finished());
     }
 
     #[test]

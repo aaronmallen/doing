@@ -166,6 +166,10 @@ pub struct FilterArgs {
   #[arg(short, long)]
   pub tag: Vec<String>,
 
+  /// Only include unfinished entries (no @done tag)
+  #[arg(short = 'u', long)]
+  pub unfinished: bool,
+
   /// Tag value queries (e.g. "progress > 50")
   #[arg(long)]
   pub val: Vec<String>,
@@ -212,7 +216,7 @@ impl FilterArgs {
       sort: None,
       tag_filter,
       tag_queries,
-      unfinished: false,
+      unfinished: self.unfinished,
     })
   }
 

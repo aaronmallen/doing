@@ -47,6 +47,10 @@ pub struct Command {
   /// Tags to filter by (can be repeated)
   #[arg(short, long)]
   tag: Vec<String>,
+
+  /// Only cancel unfinished entries (no @done tag)
+  #[arg(short = 'u', long)]
+  unfinished: bool,
 }
 
 impl Command {
@@ -166,7 +170,7 @@ impl Command {
         search,
         section: Some(section_name.to_string()),
         tag_filter,
-        unfinished: true,
+        unfinished: self.unfinished,
         ..Default::default()
       };
 
@@ -174,12 +178,13 @@ impl Command {
       return Ok(results.iter().map(|e| e.id().to_string()).collect());
     }
 
-    // No filters: take the last N unfinished entries from the section
+    // No filters: take the last N entries from the section
     let entries = ctx.document.entries_in_section(section_name);
+    let unfinished = self.unfinished;
     let mut ids: Vec<String> = entries
       .iter()
       .rev()
-      .filter(|e| e.unfinished())
+      .filter(|e| if unfinished { e.unfinished() } else { true })
       .take(self.count)
       .map(|e| e.id().to_string())
       .collect();
@@ -189,11 +194,12 @@ impl Command {
   }
 
   fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
+    let unfinished = self.unfinished;
     let candidates: Vec<Entry> = ctx
       .document
       .entries_in_section(section_name)
       .into_iter()
-      .filter(|e| e.unfinished())
+      .filter(|e| if unfinished { e.unfinished() } else { true })
       .cloned()
       .collect();
 
@@ -227,6 +233,7 @@ mod test {
       search: None,
       section: None,
       tag: vec![],
+      unfinished: false,
     }
   }
 
@@ -442,10 +449,13 @@ mod test {
     }
 
     #[test]
-    fn it_errors_when_all_entries_already_done() {
+    fn it_errors_when_all_entries_already_done_with_unfinished_flag() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = default_cmd();
+      let cmd = Command {
+        unfinished: true,
+        ..default_cmd()
+      };
 
       assert!(cmd.call(&mut ctx).is_err());
     }
@@ -479,6 +489,18 @@ mod test {
 
       let entries = ctx.document.entries_in_section("Currently");
       assert!(!entries[0].finished());
+    }
+
+    #[test]
+    fn it_skips_already_done_entry_without_error() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(entries[0].finished());
     }
   }
 }

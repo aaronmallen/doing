@@ -119,10 +119,11 @@ impl Command {
 
     let count = self.filter.count.unwrap_or(1);
     let entries = ctx.document.entries_in_section(&section);
+    let unfinished = self.filter.unfinished;
     let mut locs: Vec<EntryLocation> = entries
       .iter()
       .rev()
-      .filter(|e| e.unfinished())
+      .filter(|e| if unfinished { e.unfinished() } else { true })
       .take(count)
       .map(|e| EntryLocation {
         id: e.id().to_string(),
@@ -154,11 +155,12 @@ impl Command {
       .clone()
       .unwrap_or_else(|| ctx.config.current_section.clone());
 
+    let unfinished = self.filter.unfinished;
     let candidates: Vec<Entry> = ctx
       .document
       .entries_in_section(&section)
       .into_iter()
-      .filter(|e| e.unfinished())
+      .filter(|e| if unfinished { e.unfinished() } else { true })
       .cloned()
       .collect();
 
@@ -373,19 +375,6 @@ mod test {
     }
 
     #[test]
-    fn it_adds_marker_tag_to_last_unfinished_entry_skipping_done() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done_entry(dir.path());
-      let cmd = default_cmd();
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert!(entries[0].tags().has("flagged"));
-      assert!(!entries[1].tags().has("flagged"));
-    }
-
-    #[test]
     fn it_adds_marker_tag_to_unflagged_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -433,6 +422,38 @@ mod test {
 
       let entries = ctx.document.entries_in_section("Currently");
       assert!(!entries[0].tags().has("flagged"));
+    }
+
+    #[test]
+    fn it_marks_last_entry_including_done_without_unfinished_flag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(!entries[0].tags().has("flagged"));
+      assert!(entries[1].tags().has("flagged"));
+    }
+
+    #[test]
+    fn it_marks_last_unfinished_entry_skipping_done_with_unfinished_flag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let cmd = Command {
+        filter: FilterArgs {
+          unfinished: true,
+          ..Default::default()
+        },
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(entries[0].tags().has("flagged"));
+      assert!(!entries[1].tags().has("flagged"));
     }
 
     #[test]

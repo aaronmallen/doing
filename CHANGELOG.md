@@ -17,6 +17,8 @@ and this project adheres to [Break Versioning].
   `--no-pager` now override config defaults
 - [#30] `-i`/`--interactive` flag on `again`, `cancel`, `finish`, `grep`, `mark`, `note`, `recent`, `reset`, `show`, and
   `tag` commands; presents a selection menu (fzf if available, built-in fallback) for choosing entries to act on
+- [#31] `-u`/`--unfinished` flag on `cancel`, `finish`, `mark`, and `tag` commands; when passed, only entries without a
+  `@done` tag are included as candidates
 
 ### Fixed
 
@@ -84,6 +86,7 @@ Initial alpha release
 [#27]: https://github.com/aaronmallen/doing/issues/27
 [#28]: https://github.com/aaronmallen/doing/issues/28
 [#30]: https://github.com/aaronmallen/doing/issues/30
+[#31]: https://github.com/aaronmallen/doing/issues/31
 [#68]: https://github.com/aaronmallen/doing/issues/68
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...main

@@ -87,15 +87,15 @@ fn it_tags_entries_matching_search() {
 }
 
 #[test]
-fn it_tags_last_unfinished_entry() {
+fn it_tags_last_unfinished_entry_with_unfinished_flag() {
   let doing = DoingCmd::new();
 
   doing.run(["now", "Active task"]).assert().success();
   doing.run(["now", "Finished task"]).assert().success();
   doing.run(["done"]).assert().success();
 
-  // Tag should apply to "Active task"
-  doing.run(["tag", "important"]).assert().success();
+  // Tag with --unfinished should apply to "Active task", skipping the done entry
+  doing.run(["tag", "--unfinished", "important"]).assert().success();
 
   let content = doing.read_doing_file();
   let active_line = content

@@ -12,6 +12,33 @@ fn it_adds_flagged_tag_to_last_entry() {
 }
 
 #[test]
+fn it_marks_only_unfinished_entries_with_unfinished_flag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Active entry"]).assert().success();
+  doing.run(["done", "Finished entry"]).assert().success();
+
+  // --unfinished restricts to entries without @done
+  doing.run(["mark", "--unfinished"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let active_line = contents
+    .lines()
+    .find(|l| l.contains("Active entry"))
+    .expect("should have active entry");
+  assert!(active_line.contains("@flagged"), "active entry should have @flagged");
+
+  let done_line = contents
+    .lines()
+    .find(|l| l.contains("Finished entry"))
+    .expect("should have finished entry");
+  assert!(
+    !done_line.contains("@flagged"),
+    "finished entry should not have @flagged"
+  );
+}
+
+#[test]
 fn it_removes_flagged_tag_on_second_mark() {
   let doing = DoingCmd::new();
 

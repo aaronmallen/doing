@@ -80,3 +80,26 @@ fn it_cancels_last_entry_with_done_tag_no_timestamp() {
     "@done should not have a timestamp"
   );
 }
+
+#[test]
+fn it_cancels_only_unfinished_entries_with_unfinished_flag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Active entry"]).assert().success();
+  doing.run(["done", "Finished entry"]).assert().success();
+
+  // Without --unfinished, cancel targets the last entry (already done)
+  // With --unfinished, cancel should target only the active entry
+  doing.run(["cancel", "--unfinished"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let active_line = contents
+    .lines()
+    .find(|l| l.contains("Active entry"))
+    .expect("should have active entry");
+  assert!(active_line.contains("@done"), "active entry should be cancelled");
+  assert!(
+    !Regex::new(r"@done\(\d+").unwrap().is_match(active_line),
+    "cancelled entry @done should not have a timestamp"
+  );
+}

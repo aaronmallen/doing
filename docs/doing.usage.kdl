@@ -80,6 +80,7 @@ cmd "cancel" help="Mark the last entry as cancelled" {
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to cancel entries from"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "-u --unfinished" help="Only cancel unfinished entries (no @done tag)"
 }
 
 cmd "choose" help="Fuzzy select an entry to act on" {
@@ -158,6 +159,7 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "-s --section <SECTION>" help="Section to finish entries from"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--took <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
+  flag "--unfinished" help="Only finish unfinished entries (no @done tag)"
   flag "-u --update" help="Overwrite an existing @done tag with a new timestamp"
 }
 
@@ -258,6 +260,7 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "-u --unfinished" help="Only include unfinished entries (no @done tag)"
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "--force" help="Skip confirmation prompts"
   flag "-r --remove" help="Remove the marker tag instead of toggling"
@@ -532,6 +535,7 @@ cmd "tag" help="Add or remove tags from entries" {
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "-u --unfinished" help="Only include unfinished entries (no @done tag)"
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "--force" help="Skip confirmation prompts"
   flag "--regex" help="Interpret tag patterns as regular expressions"

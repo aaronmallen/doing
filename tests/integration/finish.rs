@@ -182,8 +182,8 @@ fn it_skips_already_finished_entries() {
     .success();
   doing.run(["done", "Already finished entry"]).assert().success();
 
-  // finish should only target the unfinished entry (already-done entries are skipped)
-  doing.run(["finish"]).assert().success();
+  // finish --unfinished should only target the unfinished entry (already-done entries are skipped)
+  doing.run(["finish", "--unfinished"]).assert().success();
 
   let contents = doing.read_doing_file();
   let unfinished_line = contents
@@ -194,6 +194,24 @@ fn it_skips_already_finished_entries() {
     unfinished_line.contains("@done"),
     "unfinished entry should now be marked @done"
   );
+}
+
+#[test]
+fn it_finishes_only_unfinished_entries_with_unfinished_flag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Active entry"]).assert().success();
+  doing.run(["done", "Already done entry"]).assert().success();
+
+  // --unfinished restricts to entries without @done
+  doing.run(["finish", "--unfinished"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let active_line = contents
+    .lines()
+    .find(|l| l.contains("Active entry"))
+    .expect("should have active entry");
+  assert!(active_line.contains("@done"), "active entry should now be marked @done");
 }
 
 #[test]

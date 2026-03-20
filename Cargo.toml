@@ -1,10 +1,31 @@
 [package]
+categories = ["command-line-utilities"]
 description = "A command line tool for remembering what you were doing and tracking what you've done"
 edition = "2024"
+exclude = [
+  ".agents/",
+  ".claude/",
+  ".config/",
+  ".editorconfig",
+  ".github/",
+  ".gitignore",
+  "docs/",
+  "tasks/",
+  "tests/",
+  "tmp/",
+]
+keywords = ["cli", "time-tracking", "productivity", "todo"]
 license = "MIT"
 name = "doing"
+readme = "README.md"
 repository = "https://github.com/aaronmallen/doing"
+rust-version = "1.88.0"
 version = "0.1.0"
+
+[package.metadata.binstall]
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ target }.tar.gz"
 
 [dependencies]
 chrono = { features = ["serde"], version = "0.4" }

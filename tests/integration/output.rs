@@ -12,8 +12,13 @@ fn it_outputs_json_with_entry_data() {
     .output()
     .expect("failed to run show --output json");
   let stdout = String::from_utf8_lossy(&output.stdout);
+  let parsed: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+  let sections = parsed.as_array().unwrap();
 
-  assert!(stdout.contains('{'), "JSON output should contain opening brace");
+  assert!(!sections.is_empty(), "JSON output should have at least one section");
+  assert!(sections[0]["section"].is_string(), "section should have a section key");
+  assert!(sections[0]["items"].is_array(), "section should have an items key");
+
   assert!(stdout.contains("Working on feature"), "JSON should contain entry title");
   assert!(
     stdout.contains("Meeting with team"),

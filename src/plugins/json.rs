@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use serde::Serialize;
 
 use crate::{
@@ -5,10 +7,12 @@ use crate::{
   plugins::{ExportPlugin, ExportPluginSettings},
   taskpaper::Entry,
   template::renderer::RenderOptions,
-  time::{DurationFormat, FormattedDuration},
 };
 
-/// Export plugin that renders entries as a JSON object.
+/// Date format matching Brett's doing: `2026-03-19 16:06:00 -0500`
+const JSON_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
+
+/// Export plugin that renders entries as a JSON array grouped by section.
 pub struct JsonExport;
 
 impl ExportPlugin for JsonExport {
@@ -16,15 +20,24 @@ impl ExportPlugin for JsonExport {
     "json"
   }
 
-  fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
-    let items: Vec<JsonEntry> = entries
-      .iter()
-      .map(|e| JsonEntry::from_entry(e, options, config))
+  fn render(&self, entries: &[Entry], _options: &RenderOptions, _config: &Config) -> String {
+    let mut sections: BTreeMap<String, Vec<JsonItem>> = BTreeMap::new();
+    for entry in entries {
+      sections
+        .entry(entry.section().to_string())
+        .or_default()
+        .push(JsonItem::from_entry(entry));
+    }
+
+    let output: Vec<JsonSection> = sections
+      .into_iter()
+      .map(|(section, items)| JsonSection {
+        items,
+        section,
+      })
       .collect();
-    let output = JsonOutput {
-      entries: items,
-    };
-    serde_json::to_string_pretty(&output).unwrap_or_else(|_| "{}".into())
+
+    serde_json::to_string_pretty(&output).unwrap_or_else(|_| "[]".into())
   }
 
   fn settings(&self) -> ExportPluginSettings {
@@ -34,40 +47,33 @@ impl ExportPlugin for JsonExport {
   }
 }
 
-/// A single entry serialized as JSON.
+/// A single entry serialized as JSON, matching Brett's doing format.
 #[derive(Serialize)]
-struct JsonEntry {
+struct JsonItem {
   date: String,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  duration: Option<String>,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  interval: Option<String>,
+  done: bool,
+  end_date: Option<String>,
+  id: String,
   note: String,
   section: String,
-  tags: Vec<JsonTag>,
+  tags: Vec<String>,
+  timers: Vec<JsonTimer>,
   title: String,
 }
 
-impl JsonEntry {
-  fn from_entry(entry: &Entry, options: &RenderOptions, config: &Config) -> Self {
-    let tags: Vec<JsonTag> = entry
-      .tags()
-      .iter()
-      .map(|t| JsonTag {
-        name: t.name().to_string(),
-        value: t.value().map(String::from),
-      })
-      .collect();
+impl JsonItem {
+  fn from_entry(entry: &Entry) -> Self {
+    let tags: Vec<String> = entry.tags().iter().map(|t| t.name().to_string()).collect();
 
-    let interval = entry.interval().map(|iv| {
-      let fmt = DurationFormat::from_config(&config.interval_format);
-      FormattedDuration::new(iv, fmt).to_string()
-    });
+    let end_date = entry.end_date().map(|d| d.format(JSON_DATE_FORMAT).to_string());
 
-    let duration = entry.duration().map(|d| {
-      let fmt = DurationFormat::from_config(&config.timer_format);
-      FormattedDuration::new(d, fmt).to_string()
-    });
+    let done = entry.finished();
+
+    let timer_end = entry.end_date().map(|d| d.format(JSON_DATE_FORMAT).to_string());
+    let timers = vec![JsonTimer {
+      end: timer_end,
+      start: entry.date().format(JSON_DATE_FORMAT).to_string(),
+    }];
 
     let note = if entry.note().is_empty() {
       String::new()
@@ -76,29 +82,31 @@ impl JsonEntry {
     };
 
     Self {
-      date: entry.date().format(&options.date_format).to_string(),
-      duration,
-      interval,
+      date: entry.date().format(JSON_DATE_FORMAT).to_string(),
+      done,
+      end_date,
+      id: entry.id().to_string(),
       note,
       section: entry.section().to_string(),
       tags,
-      title: entry.title().to_string(),
+      timers,
+      title: entry.full_title(),
     }
   }
 }
 
-/// Top-level JSON output structure.
+/// A section containing its entries, matching Brett's doing format.
 #[derive(Serialize)]
-struct JsonOutput {
-  entries: Vec<JsonEntry>,
+struct JsonSection {
+  items: Vec<JsonItem>,
+  section: String,
 }
 
-/// A tag with its optional value.
+/// A timer with start and optional end timestamps.
 #[derive(Serialize)]
-struct JsonTag {
-  name: String,
-  #[serde(skip_serializing_if = "Option::is_none")]
-  value: Option<String>,
+struct JsonTimer {
+  end: Option<String>,
+  start: String,
 }
 
 #[cfg(test)]
@@ -118,6 +126,10 @@ mod test {
       template: String::new(),
       wrap_width: 0,
     }
+  }
+
+  fn expected_date(hour: u32, minute: u32) -> String {
+    sample_date(hour, minute).format(JSON_DATE_FORMAT).to_string()
   }
 
   mod json_export_name {
@@ -144,7 +156,7 @@ mod test {
       let output = JsonExport.render(&[], &options, &config);
       let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
 
-      assert!(parsed["entries"].as_array().unwrap().is_empty());
+      assert!(parsed.as_array().unwrap().is_empty());
     }
 
     #[test]
@@ -165,25 +177,35 @@ mod test {
 
       let output = JsonExport.render(&[entry], &options, &config);
       let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
-      let entries = parsed["entries"].as_array().unwrap();
+      let sections = parsed.as_array().unwrap();
 
-      assert_eq!(entries.len(), 1);
-      assert_eq!(entries[0]["title"], "Working on project");
-      assert_eq!(entries[0]["date"], "2024-03-17 14:30");
-      assert_eq!(entries[0]["section"], "Currently");
-      assert_eq!(entries[0]["note"], "A note");
-      assert_eq!(entries[0]["interval"], "30 minutes");
+      assert_eq!(sections.len(), 1);
+      assert_eq!(sections[0]["section"], "Currently");
 
-      let tags = entries[0]["tags"].as_array().unwrap();
+      let items = sections[0]["items"].as_array().unwrap();
+      assert_eq!(items.len(), 1);
+      assert_eq!(items[0]["title"], "Working on project @coding @done(2024-03-17 15:00)");
+      assert_eq!(items[0]["date"], expected_date(14, 30));
+      assert_eq!(items[0]["section"], "Currently");
+      assert_eq!(items[0]["note"], "A note");
+      assert_eq!(items[0]["done"], true);
+      assert_eq!(items[0]["end_date"], expected_date(15, 0));
+
+      let tags = items[0]["tags"].as_array().unwrap();
       assert_eq!(tags.len(), 2);
-      assert_eq!(tags[0]["name"], "coding");
-      assert!(tags[0]["value"].is_null());
-      assert_eq!(tags[1]["name"], "done");
-      assert_eq!(tags[1]["value"], "2024-03-17 15:00");
+      assert_eq!(tags[0], "coding");
+      assert_eq!(tags[1], "done");
+
+      let timers = items[0]["timers"].as_array().unwrap();
+      assert_eq!(timers.len(), 1);
+      assert_eq!(timers[0]["start"], expected_date(14, 30));
+      assert_eq!(timers[0]["end"], expected_date(15, 0));
+
+      assert!(items[0]["id"].as_str().unwrap().len() == 32);
     }
 
     #[test]
-    fn it_omits_interval_for_unfinished_entry() {
+    fn it_renders_unfinished_entry() {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
@@ -197,8 +219,53 @@ mod test {
 
       let output = JsonExport.render(&[entry], &options, &config);
       let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
+      let items = &parsed[0]["items"];
 
-      assert!(parsed["entries"][0]["interval"].is_null());
+      assert_eq!(items[0]["done"], false);
+      assert!(items[0]["end_date"].is_null());
+      assert!(items[0]["timers"][0]["end"].is_null());
+    }
+
+    #[test]
+    fn it_groups_entries_by_section() {
+      let config = Config::default();
+      let options = sample_options();
+      let entries = vec![
+        Entry::new(
+          sample_date(14, 0),
+          "Task A",
+          Tags::new(),
+          Note::new(),
+          "Currently",
+          None::<String>,
+        ),
+        Entry::new(
+          sample_date(13, 0),
+          "Task B",
+          Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 14:00"))]),
+          Note::new(),
+          "Archive",
+          None::<String>,
+        ),
+        Entry::new(
+          sample_date(15, 0),
+          "Task C",
+          Tags::new(),
+          Note::new(),
+          "Currently",
+          None::<String>,
+        ),
+      ];
+
+      let output = JsonExport.render(&entries, &options, &config);
+      let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
+      let sections = parsed.as_array().unwrap();
+
+      assert_eq!(sections.len(), 2);
+      assert_eq!(sections[0]["section"], "Archive");
+      assert_eq!(sections[0]["items"].as_array().unwrap().len(), 1);
+      assert_eq!(sections[1]["section"], "Currently");
+      assert_eq!(sections[1]["items"].as_array().unwrap().len(), 2);
     }
 
     #[test]

@@ -20,7 +20,10 @@ and this project adheres to [Break Versioning].
 - [#24] `reset` command crashes with `--search`, `--back`, or `--from` flags when search config is not explicitly set
 - [#26] Tags are stripped from entry titles in display output and info messages
 - [#33] `-s` short flag maps to `--section` instead of `--search` to match Brett's doing; `--search` no longer has a
-    short flag
+  short flag
+- [#44] JSON output schema does not match Brett's doing format; missing `id`, `done`, `end_date`, `timers` fields,
+  wrong top-level structure, date format lacks timezone/seconds, tags serialized as objects instead of strings, and
+  title has tags stripped
 
 ## 0.0.1-alpha.1 - 2026-03-19
 
@@ -37,5 +40,6 @@ Initial alpha release
 [#24]: https://github.com/aaronmallen/doing/issues/24
 [#26]: https://github.com/aaronmallen/doing/issues/26
 [#33]: https://github.com/aaronmallen/doing/issues/33
+[#44]: https://github.com/aaronmallen/doing/issues/44
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...main

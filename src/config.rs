@@ -89,7 +89,7 @@ impl Default for Config {
       history_size: 15,
       include_notes: true,
       interaction: InteractionConfig::default(),
-      interval_format: "text".into(),
+      interval_format: "clock".into(),
       marker_color: "red".into(),
       marker_tag: "flagged".into(),
       never_finish: Vec::new(),

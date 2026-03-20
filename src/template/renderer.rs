@@ -411,7 +411,7 @@ mod test {
 
       let result = render(&entry, &options, &config);
 
-      assert_eq!(result, "30 minutes");
+      assert_eq!(result, "00:30:00");
     }
 
     #[test]

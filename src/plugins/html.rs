@@ -472,7 +472,7 @@ mod test {
       let output = HtmlExport.render(&[entry], &options, &config);
 
       assert!(output.contains(r#"<span class="time">"#));
-      assert!(output.contains("30 minutes"));
+      assert!(output.contains("00:30:00"));
     }
 
     #[test]

@@ -222,7 +222,7 @@ mod test {
 
       let output = MarkdownExport.render(&[entry], &options, &config);
 
-      assert!(output.contains("[**30 minutes**]"));
+      assert!(output.contains("[**00:30:00**]"));
     }
 
     #[test]

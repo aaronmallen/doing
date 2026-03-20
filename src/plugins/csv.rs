@@ -162,7 +162,7 @@ mod test {
       assert_eq!(lines[0], "start,end,title,note,timer,section");
       assert!(lines[1].starts_with("2024-03-17 14:30,2024-03-17 15:00,"));
       assert!(lines[1].contains("Working on project"));
-      assert!(lines[1].contains("30 minutes"));
+      assert!(lines[1].contains("00:30:00"));
     }
 
     #[test]

@@ -9,7 +9,7 @@ use crate::config::ShortdateFormatConfig;
 /// Determines how a `chrono::Duration` is rendered as a human-readable string.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum DurationFormat {
-  /// `01:02:30` — zero-padded `DD:HH:MM` clock format.
+  /// `01:02:30` — zero-padded `HH:MM:SS` clock format.
   Clock,
   /// `1d 2h 30m` — abbreviated with spaces.
   Dhm,
@@ -47,23 +47,27 @@ pub struct FormattedDuration {
   format: DurationFormat,
   hours: i64,
   minutes: i64,
+  seconds: i64,
 }
 
 impl FormattedDuration {
   /// Create a new formatted duration from a `chrono::Duration` and format mode.
   pub fn new(duration: chrono::Duration, format: DurationFormat) -> Self {
-    let total_minutes = duration.num_minutes();
+    let total_seconds = duration.num_seconds();
+    let total_minutes = total_seconds / 60;
     let total_hours = total_minutes / 60;
 
     let days = total_hours / 24;
     let hours = total_hours % 24;
     let minutes = total_minutes % 60;
+    let seconds = total_seconds % 60;
 
     Self {
       days,
+      format,
       hours,
       minutes,
-      format,
+      seconds,
     }
   }
 }
@@ -72,7 +76,8 @@ impl Display for FormattedDuration {
   fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
     match self.format {
       DurationFormat::Clock => {
-        write!(f, "{:02}:{:02}:{:02}", self.days, self.hours, self.minutes)
+        let total_hours = self.days * 24 + self.hours;
+        write!(f, "{:02}:{:02}:{:02}", total_hours, self.minutes, self.seconds)
       }
       DurationFormat::Dhm => {
         let mut parts = Vec::new();
@@ -258,14 +263,21 @@ mod test {
     fn it_formats_clock() {
       let fd = FormattedDuration::new(Duration::seconds(93600), DurationFormat::Clock);
 
-      assert_eq!(fd.to_string(), "01:02:00");
+      assert_eq!(fd.to_string(), "26:00:00");
     }
 
     #[test]
     fn it_formats_clock_with_minutes() {
       let fd = FormattedDuration::new(Duration::seconds(5400), DurationFormat::Clock);
 
-      assert_eq!(fd.to_string(), "00:01:30");
+      assert_eq!(fd.to_string(), "01:30:00");
+    }
+
+    #[test]
+    fn it_formats_clock_with_seconds() {
+      let fd = FormattedDuration::new(Duration::seconds(3661), DurationFormat::Clock);
+
+      assert_eq!(fd.to_string(), "01:01:01");
     }
 
     #[test]

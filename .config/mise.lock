@@ -156,3 +156,7 @@ url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-universal-app
 [tools.usage."platforms.windows-x64"]
 checksum = "sha256:b0a8cb81f4a259f8eaee134d9d427ed8284177141d615669dce2bde184ab06b3"
 url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-x86_64-pc-windows-msvc.zip"
+
+[[tools.yamlfmt]]
+version = "0.21.0"
+backend = "aqua:google/yamlfmt"

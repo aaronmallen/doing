@@ -6,7 +6,6 @@ body:
     attributes:
       value: |
         Got an idea that would make doing even better? We'd love to hear it!
-
   - type: textarea
     id: problem
     attributes:
@@ -15,7 +14,6 @@ body:
       placeholder: "As a user, I'm frustrated when..."
     validations:
       required: true
-
   - type: textarea
     id: solution
     attributes:
@@ -24,14 +22,12 @@ body:
       placeholder: "I would like to see..."
     validations:
       required: true
-
   - type: textarea
     id: alternatives
     attributes:
       label: Alternative solutions
       description: Any alternative solutions or features you've considered?
       placeholder: "I've also considered..."
-
   - type: dropdown
     id: priority
     attributes:
@@ -43,7 +39,6 @@ body:
         - "Critical for adoption"
     validations:
       required: true
-
   - type: checkboxes
     id: terms
     attributes:

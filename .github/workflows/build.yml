@@ -1,9 +1,7 @@
 name: Build
-
 permissions:
   contents: read
   pull-requests: write
-
 on:
   push:
     branches:
@@ -11,7 +9,6 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -20,7 +17,6 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Lint
         run: mise run lint
-
   check:
     runs-on: ubuntu-latest
     steps:
@@ -28,7 +24,6 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Check
         run: mise run check
-
   test-unit:
     runs-on: ubuntu-latest
     steps:
@@ -36,7 +31,6 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Test
         run: mise run test:unit
-
   test-integration:
     runs-on: ubuntu-latest
     steps:
@@ -44,7 +38,6 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Integration Test
         run: mise run test:integration
-
   package:
     runs-on: ubuntu-latest
     steps:

@@ -3,8 +3,6 @@ line-length:
   line_length: 120
   strict: true
   tables: false
-
 no-duplicate-heading: false
-
 single-title:
   front_matter_title: ""

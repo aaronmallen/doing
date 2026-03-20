@@ -6,7 +6,6 @@ body:
     attributes:
       value: |
         Have a question about using, contributing to, or understanding doing? We're here to help!
-
   - type: textarea
     id: question
     attributes:
@@ -15,14 +14,12 @@ body:
       placeholder: "I'm trying to understand..."
     validations:
       required: true
-
   - type: textarea
     id: context
     attributes:
       label: Additional context
       description: Any additional context that might help us answer your question.
       placeholder: "I'm working on... and I need to..."
-
   - type: checkboxes
     id: searched
     attributes:
@@ -31,7 +28,6 @@ body:
         - label: Searched existing issues and discussions
         - label: Read the documentation
         - label: Checked the FAQ (when available)
-
   - type: checkboxes
     id: terms
     attributes:

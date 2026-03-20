@@ -1,13 +1,10 @@
 name: Release
-
 permissions:
   contents: write
-
 on:
   push:
     tags:
       - "[0-9]+.*"
-
 jobs:
   wait-for-build:
     runs-on: ubuntu-latest
@@ -27,7 +24,6 @@ jobs:
               *) echo "Build still running..."; sleep 30 ;;
             esac
           done
-
   create-release:
     needs: wait-for-build
     runs-on: ubuntu-latest
@@ -39,7 +35,6 @@ jobs:
           draft: true
           title: v$tag
           token: ${{ secrets.GITHUB_TOKEN }}
-
   upload-assets:
     needs: create-release
     strategy:
@@ -67,7 +62,6 @@ jobs:
           archive: doing-v$tag-$target
           checksum: sha256
           token: ${{ secrets.GITHUB_TOKEN }}
-
   publish-release:
     needs: upload-assets
     runs-on: ubuntu-latest

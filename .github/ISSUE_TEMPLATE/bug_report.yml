@@ -6,7 +6,6 @@ body:
     attributes:
       value: |
         Thanks for taking the time to report a bug! Your feedback helps make doing better for everyone.
-
   - type: textarea
     id: what-happened
     attributes:
@@ -15,7 +14,6 @@ body:
       placeholder: Tell us what went wrong...
     validations:
       required: true
-
   - type: textarea
     id: reproduction
     attributes:
@@ -28,7 +26,6 @@ body:
         4. See error
     validations:
       required: true
-
   - type: textarea
     id: environment
     attributes:
@@ -40,14 +37,12 @@ body:
         - doing version: [e.g. 0.1.0]
     validations:
       required: true
-
   - type: textarea
     id: logs
     attributes:
       label: Relevant log output
       description: Copy and paste any relevant log output (please use code blocks)
       render: shell
-
   - type: checkboxes
     id: terms
     attributes:

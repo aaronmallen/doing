@@ -243,8 +243,7 @@ enum Command {
   /// Mark the last entry as cancelled
   Cancel(commands::cancel::Command),
   /// List recent changes in Doing
-  #[command(visible_alias = "changelog")]
-  Changes(commands::changes::Command),
+  Changes,
   /// Fuzzy select an entry to act on
   Choose(commands::choose::Command),
   /// Show available color template tokens
@@ -319,8 +318,7 @@ enum Command {
   /// Undo the last change
   Undo(commands::undo::Command),
   /// Update doing to the latest version
-  #[command(hide = true)]
-  Update,
+  Update(commands::update::Command),
   /// Display a custom view
   View(commands::view::Command),
   /// List available views
@@ -381,10 +379,10 @@ impl Command {
       Self::View(cmd) => cmd.call(ctx),
       Self::Views(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),
-      Self::Changes(cmd) => cmd.call(ctx),
+      Self::Changes => todo!(),
       Self::Choose(cmd) => cmd.call(ctx),
       Self::Completion => todo!(),
-      Self::Update => todo!(),
+      Self::Update(cmd) => cmd.call(),
     }
   }
 }

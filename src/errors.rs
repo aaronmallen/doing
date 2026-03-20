@@ -29,6 +29,10 @@ pub enum Error {
   /// An error occurred in the plugin system.
   #[error("plugin error: {0}")]
   Plugin(String),
+
+  /// An error occurred during self-update.
+  #[error("update error: {0}")]
+  Update(String),
 }
 
 #[cfg(test)]

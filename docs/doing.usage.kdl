@@ -84,21 +84,6 @@ cmd "cancel" help="Mark the last entry as cancelled" {
   flag "-u --unfinished" help="Only cancel unfinished entries (no @done tag)"
 }
 
-cmd "changes" help="List recent changes in Doing" {
-  alias "changelog"
-  flag "-a --all" help="Display the full changelog across all versions"
-  flag "-C --changes" help="Output only change lines (no headers or dates)"
-  flag "-i --interactive" help="Open changelog in an interactive viewer (pager)"
-  flag "-l --lookup <VERSION>" help="Look up a specific version (e.g. \"0.0.1-alpha.2\", \"> 0.0.1\")"
-  flag "-m --markdown" help="Output raw Markdown"
-  flag "--only <TYPES>" help="Filter by change type (comma-separated: changed,new,improved,fixed)"
-  flag "--prefix" help="Include change-type prefix on each line" negate="--no-prefix"
-  flag "-s --search <TERM>" help="Search changelog entries for a pattern"
-  flag "--sort <ORDER>" help="Sort order for versions" default="desc" {
-    choices "asc" "desc"
-  }
-}
-
 cmd "choose" help="Fuzzy select an entry to act on" {
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
@@ -615,6 +600,8 @@ cmd "undo" help="Undo the last change" {
   arg "[COUNT]" help="Number of steps to undo (default: 1)" default="1"
   flag "-i --interactive" help="Interactively select a backup to restore"
 }
+
+cmd "update" help="Update doing to the latest version"
 
 cmd "view" help="Display a custom view" {
   arg "<NAME>" help="View name from configuration"

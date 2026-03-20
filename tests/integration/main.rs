@@ -22,6 +22,7 @@ mod meta;
 mod note;
 mod now;
 mod on;
+mod open;
 mod output;
 mod recent;
 mod reset;

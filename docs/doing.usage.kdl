@@ -214,9 +214,7 @@ cmd "import" help="Import entries from other sources" {
 }
 
 cmd "last" help="Show the last entry" {
-  flag "-d --delete" help="Delete the last entry"
   flag "--duration <DURATION>" help="Duration format for time display"
-  flag "-e --editor" help="Open the last entry in an editor for modification"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -348,7 +346,9 @@ cmd "on" help="Show entries from a specific date" {
 
 cmd "open" help="Open the doing file in an editor" {
   flag "-a --app <APP>" help="Open with a specific application"
-  flag "-b --backup" help="Open the most recent backup file instead"
+  flag "--backup" help="Open the most recent backup file instead"
+  flag "-b --bundle_id <BUNDLE_ID>" help="Open with a macOS bundle identifier"
+  flag "-e --editor <EDITOR>" help="Override the default editor"
 }
 
 cmd "plugins" help="List installed plugins"

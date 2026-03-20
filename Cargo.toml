@@ -2,18 +2,7 @@
 categories = ["command-line-utilities"]
 description = "A command line tool for remembering what you were doing and tracking what you've done"
 edition = "2024"
-exclude = [
-  ".agents/",
-  ".claude/",
-  ".config/",
-  ".editorconfig",
-  ".github/",
-  ".gitignore",
-  "docs/",
-  "tasks/",
-  "tests/",
-  "tmp/",
-]
+include = ["/CHANGELOG.md", "/LICENSE", "/README.md", "/src/"]
 keywords = ["cli", "time-tracking", "productivity", "todo"]
 license = "MIT"
 name = "doing"

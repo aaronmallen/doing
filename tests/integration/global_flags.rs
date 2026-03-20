@@ -46,6 +46,38 @@ fn it_disables_color_with_no_color_flag() {
 }
 
 #[test]
+fn it_disables_pager_with_no_pager_flag() {
+  let doing = DoingCmd::new_with_config(
+    r#"
+current_section = "Currently"
+doing_file_sort = "asc"
+include_notes = true
+paginate = true
+
+[templates.default]
+date_format = "%Y-%m-%d %H:%M"
+template = "%date | %title%note"
+wrap_width = 0
+order = "asc"
+"#,
+  );
+
+  // Create an entry
+  doing.run(["now", "Test pager entry"]).assert().success();
+
+  // Run show with --no-pager and verify output reaches stdout
+  let output = doing.run(["--no-pager", "show"]).output().expect("failed to run show");
+
+  assert!(output.status.success());
+
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(
+    stdout.contains("Test pager entry"),
+    "expected entry in stdout when --no-pager is used"
+  );
+}
+
+#[test]
 fn it_skips_autotagging_with_noauto_flag() {
   let config = r#"
 current_section = "Currently"

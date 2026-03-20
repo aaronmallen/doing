@@ -1,3 +1,7 @@
+use std::fs;
+
+use assert_cmd::Command;
+
 use crate::helpers::{self, DoingCmd};
 
 #[test]
@@ -129,6 +133,33 @@ fn it_enables_debug_logging_with_debug_flag() {
 }
 
 #[test]
+fn it_prefers_f_flag_over_doing_file_env_var() {
+  let doing = DoingCmd::new();
+  let temp = doing.temp_dir_path();
+  let env_file = temp.join("env_doing.md");
+  let flag_file = temp.join("flag_doing.md");
+  let config_path = temp.join("config.toml");
+
+  Command::cargo_bin("doing")
+    .unwrap()
+    .env("DOING_FILE", &env_file)
+    .env("DOING_CONFIG", &config_path)
+    .env("DOING_BACKUP_DIR", doing.backup_dir())
+    .args(["-f", flag_file.to_str().unwrap(), "--no-color", "now", "flag entry"])
+    .assert()
+    .success();
+
+  let flag_content = fs::read_to_string(&flag_file).expect("failed to read flag file");
+  assert!(flag_content.contains("flag entry"), "entry should be in the -f file");
+
+  let env_content = fs::read_to_string(&env_file).unwrap_or_default();
+  assert!(
+    !env_content.contains("flag entry"),
+    "entry should not be in the DOING_FILE path"
+  );
+}
+
+#[test]
 fn it_sends_output_to_stdout_with_stdout_flag() {
   let doing = DoingCmd::new();
 
@@ -142,4 +173,41 @@ fn it_sends_output_to_stdout_with_stdout_flag() {
 
   assert!(output.status.success(), "command should succeed with --stdout");
   assert_eq!(helpers::count_entries(&stdout), 1, "stdout should contain the entry");
+}
+
+#[test]
+fn it_uses_doing_file_from_env_var() {
+  let doing = DoingCmd::new();
+  let temp = doing.temp_dir_path();
+  let env_file = temp.join("env_doing.md");
+  let config_path = temp.join("config.toml");
+
+  // Create an entry using DOING_FILE env var (no -f flag)
+  Command::cargo_bin("doing")
+    .unwrap()
+    .env("DOING_FILE", &env_file)
+    .env("DOING_CONFIG", &config_path)
+    .env("DOING_BACKUP_DIR", doing.backup_dir())
+    .args(["--no-color", "now", "env entry"])
+    .assert()
+    .success();
+
+  let content = fs::read_to_string(&env_file).expect("failed to read env file");
+  assert!(content.contains("env entry"), "entry should be in the DOING_FILE path");
+
+  // Verify show also reads from DOING_FILE
+  let output = Command::cargo_bin("doing")
+    .unwrap()
+    .env("DOING_FILE", &env_file)
+    .env("DOING_CONFIG", &config_path)
+    .env("DOING_BACKUP_DIR", doing.backup_dir())
+    .args(["--no-color", "show"])
+    .output()
+    .expect("failed to run show");
+
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(
+    stdout.contains("env entry"),
+    "show should display entry from DOING_FILE"
+  );
 }

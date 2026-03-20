@@ -10,6 +10,33 @@ you've done.
 > This project is under active development and is not yet ready for everyday use. Expect breaking changes, missing
 > features, and rough edges.
 
+## Installation
+
+### Shell (recommended)
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/install.sh | sh
+```
+
+> [!TIP]
+> This installs `doing` to `~/.local/bin`. Make sure it's in your `PATH`:
+>
+>```sh
+>export PATH="$HOME/.local/bin:$PATH"
+>```
+
+Override the install directory or pin a specific version:
+
+```sh
+DOING_INSTALL_PATH=~/.bin DOING_VERSION=0.1.0 curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/install.sh | sh
+```
+
+### Cargo
+
+```sh
+cargo install doing
+```
+
 ## Differences from the original
 
 This is a ground-up rewrite of Brett Terpstra's [doing] CLI. While we aim to be fully compatible, there are a few

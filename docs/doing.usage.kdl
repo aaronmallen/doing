@@ -30,6 +30,7 @@ cmd "again" help="Repeat the last entry" {
   }
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "--in <SECTION>" help="Target section for the new entry"
+  flag "-i --interactive" help="Interactively select the entry to repeat"
   flag "-x --noauto" help="Skip autotagging and default tags"
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
   flag "--search <SEARCH>" help="Text search query to find the entry to repeat"
@@ -75,6 +76,7 @@ cmd "cancel" help="Mark the last entry as cancelled" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --count <COUNT>" help="Cancel the last N entries" default="1"
+  flag "-i --interactive" help="Interactively select entries to cancel"
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to cancel entries from"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
@@ -150,6 +152,7 @@ cmd "finish" help="Mark the last entry as finished" {
   }
   flag "-c --count <COUNT>" help="Finish the last N entries" default="1"
   flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
+  flag "-i --interactive" help="Interactively select entries to finish"
   flag "-r --remove" help="Remove @done tag instead of adding"
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to finish entries from"
@@ -174,6 +177,7 @@ cmd "grep" help="Search for entries matching a pattern" {
   flag "--exact" help="Use exact (literal substring) matching"
   flag "--fuzzy" help="Use fuzzy matching"
   flag "--highlight" help="Highlight matching text in output"
+  flag "-i --interactive" help="Interactively select entries from search results"
   flag "-p --pager" help="Use a pager for output"
   flag "--regex" help="Use regex matching"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
@@ -238,6 +242,7 @@ cmd "last" help="Show the last entry" {
 cmd "mark" help="Toggle the marker tag on the last entry" {
   alias "flag"
   flag "-d --date" help="Include current date as the tag value"
+  flag "-i --interactive" help="Interactively select entries to mark"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"
@@ -270,6 +275,7 @@ cmd "meanwhile" help="Add an entry while finishing the last" {
 
 cmd "note" help="Add or display notes on the last entry" {
   flag "-e --editor" help="Open an editor to compose the note"
+  flag "-i --interactive" help="Interactively select entries to annotate"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"
@@ -343,6 +349,7 @@ cmd "plugins" help="List installed plugins"
 
 cmd "recent" help="Show recent entries" {
   flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-i --interactive" help="Interactively select entries from recent results"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -375,6 +382,7 @@ cmd "redo" help="Redo the last undone change"
 cmd "reset" help="Reset the start date of the last entry" {
   alias "begin"
   flag "-b --back <DATE>" help="Set a specific start date (natural language)"
+  flag "-i --interactive" help="Interactively select entries to reset"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"
@@ -447,6 +455,7 @@ cmd "show" help="Show entries from a section" {
   arg "[SECTION]" help="Section to display entries from (default: current section, \"all\" for every section)"
   arg "[TAGS]..." help="Additional tag filters (e.g. @tag1 @tag2)"
   flag "--duration <DURATION>" help="Duration format for time display"
+  flag "-i --interactive" help="Interactively select entries to display"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -507,6 +516,7 @@ cmd "since" help="Show entries since a given date" {
 cmd "tag" help="Add or remove tags from entries" {
   arg "[TAGS]..." help="Tags to add or remove (comma-separated)"
   flag "-d --date" help="Include current date as the tag value"
+  flag "-i --interactive" help="Interactively select entries to tag"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
     choices "newest" "oldest"

@@ -27,6 +27,10 @@ pub struct Command {
   #[command(flatten)]
   filter: FilterArgs,
 
+  /// Interactively select entries to reset
+  #[arg(short, long)]
+  interactive: bool,
+
   #[arg(long = "no-resume", action = ArgAction::SetTrue, hide = true, overrides_with = "resume")]
   no_resume: bool,
 
@@ -37,7 +41,11 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let entries = self.find_entries(ctx)?;
+    let entries = if self.interactive {
+      self.interactive_select(ctx)?
+    } else {
+      self.find_entries(ctx)?
+    };
 
     if entries.is_empty() {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
@@ -118,6 +126,31 @@ impl Command {
       .iter_mut()
       .find(|e| e.id() == loc.id)
       .ok_or_else(|| crate::errors::Error::Config("entry not found".into()))
+  }
+
+  fn interactive_select(&self, ctx: &AppContext) -> Result<Vec<EntryLocation>> {
+    let section = self
+      .filter
+      .section
+      .clone()
+      .unwrap_or_else(|| ctx.config.current_section.clone());
+
+    let candidates: Vec<Entry> = ctx.document.entries_in_section(&section).into_iter().cloned().collect();
+
+    if candidates.is_empty() {
+      return Ok(vec![]);
+    }
+
+    let selected = crate::cli::interactive::select_entries(&candidates)?;
+    Ok(
+      selected
+        .iter()
+        .map(|e| EntryLocation {
+          id: e.id().to_string(),
+          section: e.section().to_string(),
+        })
+        .collect(),
+    )
   }
 
   fn reset_entry(
@@ -206,6 +239,7 @@ mod test {
     Command {
       back: None,
       filter: FilterArgs::default(),
+      interactive: false,
       no_resume: false,
       resume: true,
     }

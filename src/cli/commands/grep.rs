@@ -60,6 +60,10 @@ pub struct Command {
   #[arg(long)]
   highlight: bool,
 
+  /// Interactively select entries from search results
+  #[arg(short, long)]
+  interactive: bool,
+
   /// Use a pager for output
   #[arg(short, long)]
   pager: bool,
@@ -91,7 +95,13 @@ impl Command {
 
     let filtered = filter_entries(all_entries, &filter_options);
 
-    let output = self.display.render_entries(&filtered, &ctx.config, "default")?;
+    let entries = if self.interactive && !filtered.is_empty() {
+      crate::cli::interactive::select_entries(&filtered)?
+    } else {
+      filtered
+    };
+
+    let output = self.display.render_entries(&entries, &ctx.config, "default")?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
@@ -166,6 +176,7 @@ mod test {
       filter: FilterArgs::default(),
       fuzzy: false,
       highlight: false,
+      interactive: false,
       pager: false,
       query: query.to_string(),
       regex: false,

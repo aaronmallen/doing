@@ -34,6 +34,10 @@ pub struct Command {
   #[command(flatten)]
   filter: FilterArgs,
 
+  /// Interactively select entries to display
+  #[arg(short, long)]
+  interactive: bool,
+
   /// Use a pager for output
   #[arg(short, long)]
   pager: bool,
@@ -69,7 +73,13 @@ impl Command {
 
     let filtered = filter_entries(all_entries, &filter_options);
 
-    let output = self.display.render_entries(&filtered, &ctx.config, "default")?;
+    let entries = if self.interactive && !filtered.is_empty() {
+      crate::cli::interactive::select_entries(&filtered)?
+    } else {
+      filtered
+    };
+
+    let output = self.display.render_entries(&entries, &ctx.config, "default")?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
@@ -109,6 +119,7 @@ mod test {
     Command {
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
+      interactive: false,
       pager: false,
       section_name: None,
       tags: vec![],

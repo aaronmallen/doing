@@ -32,6 +32,10 @@ pub struct Command {
   #[arg(short, long, default_value_t = 1)]
   count: usize,
 
+  /// Interactively select entries to cancel
+  #[arg(short, long)]
+  interactive: bool,
+
   /// Text search query to filter entries
   #[arg(long)]
   search: Option<String>,
@@ -52,7 +56,11 @@ impl Command {
       .clone()
       .unwrap_or_else(|| ctx.config.current_section.clone());
 
-    let entries = self.find_entries(ctx, &section_name)?;
+    let entries = if self.interactive {
+      self.interactive_select(ctx, &section_name)?
+    } else {
+      self.find_entries(ctx, &section_name)?
+    };
 
     if entries.is_empty() {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
@@ -179,6 +187,23 @@ impl Command {
 
     Ok(ids)
   }
+
+  fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
+    let candidates: Vec<Entry> = ctx
+      .document
+      .entries_in_section(section_name)
+      .into_iter()
+      .filter(|e| e.unfinished())
+      .cloned()
+      .collect();
+
+    if candidates.is_empty() {
+      return Ok(vec![]);
+    }
+
+    let selected = crate::cli::interactive::select_entries(&candidates)?;
+    Ok(selected.iter().map(|e| e.id().to_string()).collect())
+  }
 }
 
 #[cfg(test)]
@@ -198,6 +223,7 @@ mod test {
       archive: false,
       bool_op: None,
       count: 1,
+      interactive: false,
       search: None,
       section: None,
       tag: vec![],

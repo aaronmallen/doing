@@ -29,6 +29,10 @@ pub struct Command {
   #[arg(long)]
   force: bool,
 
+  /// Interactively select entries to mark
+  #[arg(short, long)]
+  interactive: bool,
+
   /// Remove the marker tag instead of toggling
   #[arg(short, long)]
   remove: bool,
@@ -40,7 +44,11 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let entries = self.find_entries(ctx)?;
+    let entries = if self.interactive {
+      self.interactive_select(ctx)?
+    } else {
+      self.find_entries(ctx)?
+    };
 
     if entries.is_empty() {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
@@ -139,6 +147,37 @@ impl Command {
       .ok_or_else(|| crate::errors::Error::Config("entry not found".into()))
   }
 
+  fn interactive_select(&self, ctx: &AppContext) -> Result<Vec<EntryLocation>> {
+    let section = self
+      .filter
+      .section
+      .clone()
+      .unwrap_or_else(|| ctx.config.current_section.clone());
+
+    let candidates: Vec<Entry> = ctx
+      .document
+      .entries_in_section(&section)
+      .into_iter()
+      .filter(|e| e.unfinished())
+      .cloned()
+      .collect();
+
+    if candidates.is_empty() {
+      return Ok(vec![]);
+    }
+
+    let selected = crate::cli::interactive::select_entries(&candidates)?;
+    Ok(
+      selected
+        .iter()
+        .map(|e| EntryLocation {
+          id: e.id().to_string(),
+          section: e.section().to_string(),
+        })
+        .collect(),
+    )
+  }
+
   fn resolve_tag_value(&self) -> Option<String> {
     if self.date {
       Some(chrono::Local::now().format("%Y-%m-%d").to_string())
@@ -173,6 +212,7 @@ mod test {
       date: false,
       filter: FilterArgs::default(),
       force: false,
+      interactive: false,
       remove: false,
       value: None,
     }

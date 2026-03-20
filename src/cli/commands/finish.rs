@@ -46,6 +46,10 @@ pub struct Command {
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_date", default_value_t = true)]
   date: bool,
 
+  /// Interactively select entries to finish
+  #[arg(short, long)]
+  interactive: bool,
+
   #[arg(long = "no-date", action = ArgAction::SetTrue, hide = true, overrides_with = "date")]
   no_date: bool,
 
@@ -86,7 +90,11 @@ impl Command {
       return self.remove_done_tags(ctx, &section_name);
     }
 
-    let entries = self.find_entries(ctx, &section_name)?;
+    let entries = if self.interactive {
+      self.interactive_select(ctx, &section_name)?
+    } else {
+      self.find_entries(ctx, &section_name)?
+    };
 
     if entries.is_empty() {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
@@ -272,6 +280,23 @@ impl Command {
     Ok(())
   }
 
+  fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
+    let candidates: Vec<Entry> = ctx
+      .document
+      .entries_in_section(section_name)
+      .into_iter()
+      .filter(|e| if self.update { true } else { e.unfinished() })
+      .cloned()
+      .collect();
+
+    if candidates.is_empty() {
+      return Ok(vec![]);
+    }
+
+    let selected = crate::cli::interactive::select_entries(&candidates)?;
+    Ok(selected.iter().map(|e| e.id().to_string()).collect())
+  }
+
   fn next_entry_start(&self, ctx: &AppContext, section_name: &str, entry_id: &str) -> DateTime<Local> {
     let entries = ctx.document.entries_in_section(section_name);
     let mut found = false;
@@ -382,6 +407,7 @@ mod test {
       bool_op: None,
       count: 1,
       date: true,
+      interactive: false,
       no_date: false,
       remove: false,
       search: None,

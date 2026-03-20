@@ -39,6 +39,10 @@ pub struct Command {
   #[arg(long = "in")]
   in_section: Option<String>,
 
+  /// Interactively select the entry to repeat
+  #[arg(short, long)]
+  interactive: bool,
+
   /// Skip autotagging and default tags
   #[arg(short = 'x', long)]
   noauto: bool,
@@ -63,7 +67,11 @@ pub struct Command {
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let date = self.resolve_date()?;
-    let source = self.find_source_entry(ctx)?;
+    let source = if self.interactive {
+      self.choose_source_entry(ctx)?
+    } else {
+      self.find_source_entry(ctx)?
+    };
     let source_id = source.id().to_string();
     let source_section = source.section().to_string();
     let target_section = self.in_section.as_deref().unwrap_or(&source_section).to_string();
@@ -109,6 +117,18 @@ impl Command {
 
     info!("Resumed \"{}\" in {}", display_title, target_section);
     Ok(())
+  }
+
+  fn choose_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
+    let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
+
+    if all_entries.is_empty() {
+      return Err(crate::errors::Error::Config("no entries found".into()));
+    }
+
+    let selected = crate::cli::interactive::choose_entry(&all_entries)?;
+
+    selected.ok_or_else(|| crate::errors::Error::Config("no entry selected".into()))
   }
 
   fn find_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
@@ -194,6 +214,7 @@ mod test {
       back: None,
       bool_op: None,
       editor: false,
+      interactive: false,
       in_section: None,
       noauto: true,
       note: None,

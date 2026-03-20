@@ -4,6 +4,7 @@ mod autotag;
 mod cancel;
 mod chronify;
 mod config;
+mod default_config;
 mod done;
 mod file_sort;
 mod finish;

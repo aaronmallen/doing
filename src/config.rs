@@ -275,7 +275,7 @@ impl Default for TemplateConfig {
       count: None,
       date_format: "%Y-%m-%d %H:%M".into(),
       order: None,
-      template: String::new(),
+      template: "%boldwhite%date %boldcyan| %boldwhite%title%reset%cyan%note%reset".into(),
       wrap_width: 0,
     }
   }

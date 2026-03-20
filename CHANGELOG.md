@@ -7,6 +7,12 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+### Fixed
+
+- Default template was empty, causing `show` and other display commands to produce no output without explicit template
+  config
+- Default template now includes colors (`%boldwhite`, `%boldcyan`, `%cyan`) matching the Ruby doing gem style
+
 ## 0.0.1-alpha.1 - 2026-03-19
 
 Initial alpha release

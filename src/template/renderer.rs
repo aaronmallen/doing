@@ -12,6 +12,13 @@ use crate::{
   time::{DurationFormat, FormattedDuration, FormattedShortdate},
 };
 
+/// Built-in template: full format with section labels, separator, and interval.
+const BUILTIN_TEMPLATE_FULL: &str =
+  "%boldwhite%-10shortdate %boldcyan║ %boldwhite%title%reset  %interval  %cyan[%10section]%reset%cyan%note%reset";
+
+/// Built-in template: simplified format without section labels or interval.
+const BUILTIN_TEMPLATE_SIMPLE: &str = "%boldwhite%-10shortdate %boldcyan║ %boldwhite%title%reset%cyan%note%reset";
+
 /// Options controlling how an entry is rendered against a template.
 #[derive(Clone, Debug)]
 pub struct RenderOptions {
@@ -31,7 +38,7 @@ impl RenderOptions {
       .get(name)
       .or_else(|| config.templates.get("default"))
       .cloned()
-      .unwrap_or_default();
+      .unwrap_or_else(|| builtin_template(name));
     Self::from_template_config(&tc)
   }
 
@@ -47,23 +54,11 @@ impl RenderOptions {
 
 /// Render a collection of entries, applying colors, wrapping, marker highlighting,
 /// and optionally appending tag totals.
-pub fn format_items(
-  entries: &[Entry],
-  options: &RenderOptions,
-  config: &Config,
-  show_times: bool,
-  show_totals: bool,
-) -> String {
+pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config, show_totals: bool) -> String {
   let lines: Vec<String> = entries
     .iter()
     .map(|entry| {
       let mut line = render(entry, options, config);
-
-      if show_times && let Some(interval) = entry.interval() {
-        let fmt = DurationFormat::from_config(&config.interval_format);
-        let formatted = FormattedDuration::new(interval, fmt);
-        line.push_str(&format!(" ({formatted})"));
-      }
 
       // Apply marker color to flagged entries
       if entry.tags().iter().any(|t| t.name() == config.marker_tag)
@@ -212,6 +207,20 @@ fn build_values(entry: &Entry, options: &RenderOptions, config: &Config) -> Hash
   values.insert(TokenKind::Tab, "\t".to_string());
 
   values
+}
+
+/// Return the built-in template config for a named template.
+fn builtin_template(name: &str) -> TemplateConfig {
+  match name {
+    "last" | "yesterday" => TemplateConfig {
+      template: BUILTIN_TEMPLATE_SIMPLE.into(),
+      ..TemplateConfig::default()
+    },
+    _ => TemplateConfig {
+      template: BUILTIN_TEMPLATE_FULL.into(),
+      ..TemplateConfig::default()
+    },
+  }
 }
 
 fn format_note(
@@ -596,6 +605,62 @@ mod test {
       let options = RenderOptions::from_config("anything", &config);
 
       assert_eq!(options.date_format, "%Y-%m-%d %H:%M");
+    }
+
+    #[test]
+    fn it_uses_full_template_for_default() {
+      let config = sample_config();
+
+      let options = RenderOptions::from_config("default", &config);
+
+      assert!(options.template.contains("║"), "default should use ║ separator");
+      assert!(options.template.contains("interval"), "default should include interval");
+      assert!(options.template.contains("section"), "default should include section");
+    }
+
+    #[test]
+    fn it_uses_full_template_for_today() {
+      let config = sample_config();
+
+      let options = RenderOptions::from_config("today", &config);
+
+      assert!(options.template.contains("║"), "today should use ║ separator");
+      assert!(options.template.contains("interval"), "today should include interval");
+      assert!(options.template.contains("section"), "today should include section");
+    }
+
+    #[test]
+    fn it_uses_simple_template_for_last() {
+      let config = sample_config();
+
+      let options = RenderOptions::from_config("last", &config);
+
+      assert!(options.template.contains("║"), "last should use ║ separator");
+      assert!(
+        !options.template.contains("%interval"),
+        "last should not include interval"
+      );
+      assert!(
+        !options.template.contains("%section"),
+        "last should not include section"
+      );
+    }
+
+    #[test]
+    fn it_uses_simple_template_for_yesterday() {
+      let config = sample_config();
+
+      let options = RenderOptions::from_config("yesterday", &config);
+
+      assert!(options.template.contains("║"), "yesterday should use ║ separator");
+      assert!(
+        !options.template.contains("%interval"),
+        "yesterday should not include interval"
+      );
+      assert!(
+        !options.template.contains("%section"),
+        "yesterday should not include section"
+      );
     }
   }
 }

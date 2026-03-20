@@ -83,10 +83,6 @@ pub struct DisplayArgs {
   #[arg(long)]
   pub template: Option<String>,
 
-  /// Show time intervals on entries
-  #[arg(long)]
-  pub times: bool,
-
   /// Show tag time totals
   #[arg(long)]
   pub totals: bool,
@@ -115,7 +111,7 @@ impl DisplayArgs {
       )));
     }
 
-    Ok(format_items(entries, &render_options, config, self.times, self.totals))
+    Ok(format_items(entries, &render_options, config, self.totals))
   }
 }
 

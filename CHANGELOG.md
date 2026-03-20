@@ -34,6 +34,9 @@ and this project adheres to [Break Versioning].
 - [#25] `--bool` flag requires exact lowercase values; `--bool AND` and `--bool Or` are rejected
 - [#36] `archive` command does not add `@from(SectionName)` tag by default; `--label` was opt-in instead of default
 - [#38] `meanwhile` does not remove `@meanwhile` tag from finished entry when a new meanwhile replaces it
+- [#46] Default display template has multiple formatting deviations from Ruby doing: adds `║` separator, left-aligned
+  section labels in brackets (`[Currently ]`), `HH:MM:SS` clock duration format, interval shown by default on `@done`
+  entries, `last` and `yesterday` use simplified template without section/interval, and `--times` flag removed
 - [#66] `--at` flag resolves bare times ("2pm", "3:30pm") to yesterday instead of today
 - [#68] `done` with no arguments fails to find last unfinished entry when last entry is already `@done`
 
@@ -82,6 +85,7 @@ Initial alpha release
 [#26]: https://github.com/aaronmallen/doing/issues/26
 [#33]: https://github.com/aaronmallen/doing/issues/33
 [#44]: https://github.com/aaronmallen/doing/issues/44
+[#46]: https://github.com/aaronmallen/doing/issues/46
 [#58]: https://github.com/aaronmallen/doing/issues/58
 [#66]: https://github.com/aaronmallen/doing/issues/66
 [#25]: https://github.com/aaronmallen/doing/issues/25

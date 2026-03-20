@@ -223,10 +223,10 @@ impl Command {
       if let Some(plugin) = registry.resolve(format) {
         plugin.render(entries, &render_options, &ctx.config)
       } else {
-        format_items(entries, &render_options, &ctx.config, false, false)
+        format_items(entries, &render_options, &ctx.config, false)
       }
     } else {
-      format_items(entries, &render_options, &ctx.config, false, false)
+      format_items(entries, &render_options, &ctx.config, false)
     };
 
     if let Some(ref path) = self.save_to {

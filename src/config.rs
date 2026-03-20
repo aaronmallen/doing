@@ -275,7 +275,9 @@ impl Default for TemplateConfig {
       count: None,
       date_format: "%Y-%m-%d %H:%M".into(),
       order: None,
-      template: "%boldwhite%date %boldcyan| %boldwhite%title%reset%cyan%note%reset".into(),
+      template:
+        "%boldwhite%-10shortdate %boldcyan║ %boldwhite%title%reset  %interval  %cyan[%10section]%reset%cyan%note%reset"
+          .into(),
       wrap_width: 0,
     }
   }

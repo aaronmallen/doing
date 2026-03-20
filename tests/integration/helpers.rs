@@ -5,8 +5,10 @@ use chrono::Local;
 use regex::Regex;
 use tempfile::TempDir;
 
-/// Entry line pattern: `2024-01-15 14:30 | Some entry text`
+/// Entry line pattern: matches either explicit template (`2024-01-15 14:30 | text`)
+/// or the built-in default template (`  9:01am ║ text`).
 const ENTRY_PATTERN: &str = r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2} \|";
+const BUILTIN_ENTRY_PATTERN: &str = r"^\s*\S+\s+║";
 
 /// Minimal TOML config for isolated tests.
 const TEST_CONFIG: &str = r#"
@@ -112,10 +114,15 @@ pub fn assert_times_within_tolerance(actual: &str, expected: &str, tolerance_min
   );
 }
 
-/// Count the number of entry lines in output matching the standard entry pattern.
+/// Count the number of entry lines in output matching either the explicit template
+/// pattern (`YYYY-MM-DD HH:MM |`) or the built-in default pattern (`time ║`).
 pub fn count_entries(output: &str) -> usize {
   let re = regex::Regex::new(ENTRY_PATTERN).expect("invalid entry regex");
-  output.lines().filter(|line| re.is_match(line)).count()
+  let builtin_re = regex::Regex::new(BUILTIN_ENTRY_PATTERN).expect("invalid builtin entry regex");
+  output
+    .lines()
+    .filter(|line| re.is_match(line) || builtin_re.is_match(line))
+    .count()
 }
 
 /// Extract the @done(timestamp) value from the doing file

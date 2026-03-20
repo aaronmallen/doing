@@ -169,13 +169,13 @@ fn it_shows_tags_in_info_messages() {
 }
 
 #[test]
-fn it_shows_time_intervals_with_times_flag() {
+fn it_shows_time_intervals_by_default() {
   let doing = DoingCmd::new();
 
   doing.run(["now", "--back", "2h ago", "Timed task"]).assert().success();
   doing.run(["finish", "--took", "1h"]).assert().success();
 
-  let output = doing.run(["show", "--times"]).output().expect("failed to run show");
+  let output = doing.run(["show"]).output().expect("failed to run show");
   let stdout = String::from_utf8_lossy(&output.stdout);
   let entry_line = stdout
     .lines()
@@ -183,8 +183,8 @@ fn it_shows_time_intervals_with_times_flag() {
     .expect("should contain the entry");
 
   assert!(
-    entry_line.contains("hour") || entry_line.contains("minute") || entry_line.contains(':'),
-    "entry should include a time interval when --times is used, got: {entry_line}"
+    entry_line.contains(':'),
+    "entry should include a time interval by default, got: {entry_line}"
   );
 }
 

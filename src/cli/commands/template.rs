@@ -40,7 +40,7 @@ impl Command {
 }
 
 fn list_templates(ctx: &AppContext) -> Result<()> {
-  let builtin = ["default", "today", "last", "recent"];
+  let builtin = ["default", "last", "recent", "today", "yesterday"];
 
   for name in &builtin {
     let marker = if ctx.config.templates.contains_key(*name) {

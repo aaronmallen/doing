@@ -85,13 +85,7 @@ impl Command {
 
     let template_name = self.resolve_template(&view);
     let render_options = RenderOptions::from_config(&template_name, &ctx.config);
-    let output = format_items(
-      &filtered,
-      &render_options,
-      &ctx.config,
-      self.display.times,
-      self.display.totals,
-    );
+    let output = format_items(&filtered, &render_options, &ctx.config, self.display.totals);
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;

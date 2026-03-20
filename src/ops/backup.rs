@@ -39,13 +39,13 @@ pub(crate) fn backup_prefix(source: &Path) -> String {
 
 /// Create a timestamped backup of `source` in `backup_dir`.
 ///
-/// The backup filename follows the pattern `{stem}_{YYYYMMDD}_{HHMMSS}.bak`.
+/// The backup filename follows the pattern `{stem}_{YYYYMMDD}_{HHMMSS}_{ffffff}.bak`.
 /// Creates the backup directory if it does not exist.
 pub fn create_backup(source: &Path, backup_dir: &Path) -> Result<PathBuf> {
   fs::create_dir_all(backup_dir)?;
 
   let prefix = backup_prefix(source);
-  let timestamp = Local::now().format("%Y%m%d_%H%M%S");
+  let timestamp = Local::now().format("%Y%m%d_%H%M%S_%6f");
   let backup_name = format!("{prefix}{timestamp}.bak");
   let backup_path = backup_dir.join(backup_name);
 

@@ -79,7 +79,6 @@ fn it_restores_undone_change_with_redo() {
 }
 
 #[test]
-#[ignore = "deviation: sequential undo does not walk backwards through backup history (plan 0112)"]
 fn it_undoes_multiple_steps() {
   let doing = DoingCmd::new();
 

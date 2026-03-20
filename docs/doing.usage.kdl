@@ -175,6 +175,7 @@ cmd "grep" help="Search for entries matching a pattern" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--exact" help="Use exact (literal substring) matching"
   flag "--fuzzy" help="Use fuzzy matching"
@@ -196,7 +197,7 @@ cmd "grep" help="Search for entries matching a pattern" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 
@@ -220,6 +221,7 @@ cmd "last" help="Show the last entry" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -235,7 +237,7 @@ cmd "last" help="Show the last entry" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }
@@ -321,6 +323,7 @@ cmd "on" help="Show entries from a specific date" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -336,7 +339,7 @@ cmd "on" help="Show entries from a specific date" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }
@@ -357,6 +360,7 @@ cmd "recent" help="Show recent entries" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -372,7 +376,7 @@ cmd "recent" help="Show recent entries" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }
@@ -462,6 +466,7 @@ cmd "show" help="Show entries from a section" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -477,7 +482,7 @@ cmd "show" help="Show entries from a section" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }
@@ -491,6 +496,7 @@ cmd "since" help="Show entries since a given date" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -506,7 +512,7 @@ cmd "since" help="Show entries since a given date" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }
@@ -569,6 +575,7 @@ cmd "today" help="Show entries from today" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -584,7 +591,7 @@ cmd "today" help="Show entries from today" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }
@@ -603,6 +610,7 @@ cmd "view" help="Display a custom view" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -618,7 +626,7 @@ cmd "view" help="Display a custom view" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }
@@ -640,6 +648,7 @@ cmd "yesterday" help="Show entries from yesterday" {
     choices "asc" "desc"
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
+  flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {
@@ -655,7 +664,7 @@ cmd "yesterday" help="Show entries from yesterday" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-p --pager" help="Use a pager for output"
 }

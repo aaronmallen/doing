@@ -180,6 +180,33 @@ fn it_limits_entries_with_count_flag() {
 }
 
 #[test]
+fn it_maps_t_short_flag_to_times() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "--back", "2h ago", "Timed task"]).assert().success();
+  doing.run(["finish", "--took", "1h"]).assert().success();
+
+  // -t should map to --times, not --tag
+  let output = doing.run(["show", "-t"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("Timed task"),
+    "-t should not filter by tag; entry should still appear"
+  );
+
+  let entry_line = stdout
+    .lines()
+    .find(|l| l.contains("Timed task"))
+    .expect("should contain the entry");
+
+  assert!(
+    entry_line.contains(':'),
+    "-t (--times) should show time interval, got: {entry_line}"
+  );
+}
+
+#[test]
 fn it_shows_entries_from_all_sections() {
   let doing = DoingCmd::new();
 

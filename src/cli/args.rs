@@ -83,6 +83,10 @@ pub struct DisplayArgs {
   #[arg(long)]
   pub template: Option<String>,
 
+  /// Show time intervals on @done tasks
+  #[arg(short = 't', long)]
+  pub times: bool,
+
   /// Show tag time totals
   #[arg(long)]
   pub totals: bool,
@@ -159,7 +163,7 @@ pub struct FilterArgs {
   pub section: Option<String>,
 
   /// Tags to filter by (can be repeated)
-  #[arg(short, long)]
+  #[arg(long)]
   pub tag: Vec<String>,
 
   /// Only include unfinished entries (no @done tag)

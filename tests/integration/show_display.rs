@@ -123,6 +123,52 @@ fn it_shows_tag_totals_with_totals_flag() {
 }
 
 #[test]
+fn it_shows_tags_in_entry_display() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["now", "Working on feature @coding @project(myapp)"])
+    .assert()
+    .success();
+
+  // Verify tags appear in show output
+  let output = doing.run(["show"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(stdout.contains("@coding"), "expected @coding in show output");
+  assert!(
+    stdout.contains("@project(myapp)"),
+    "expected @project(myapp) in show output"
+  );
+
+  // Verify tags appear in last output
+  let output = doing.run(["last"]).output().expect("failed to run last");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(stdout.contains("@coding"), "expected @coding in last output");
+  assert!(
+    stdout.contains("@project(myapp)"),
+    "expected @project(myapp) in last output"
+  );
+}
+
+#[test]
+fn it_shows_tags_in_info_messages() {
+  let doing = DoingCmd::new();
+
+  // Create entry with tags and check info message (on stderr)
+  let output = doing
+    .run(["now", "Working on feature @coding"])
+    .output()
+    .expect("failed to run now");
+  let stderr = String::from_utf8_lossy(&output.stderr);
+  assert!(stderr.contains("@coding"), "expected @coding in now info message");
+
+  // Finish the entry and check info message (on stderr)
+  let output = doing.run(["done"]).output().expect("failed to run done");
+  let stderr = String::from_utf8_lossy(&output.stderr);
+  assert!(stderr.contains("@coding"), "expected @coding in done info message");
+}
+
+#[test]
 fn it_shows_time_intervals_with_times_flag() {
   let doing = DoingCmd::new();
 

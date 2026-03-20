@@ -3,6 +3,25 @@ use regex::Regex;
 
 use super::{Document, Entry, Note, Section, Tag, Tags};
 
+/// Flush the current entry (with accumulated note lines) into the current section.
+fn flush_entry(current_section: &mut Option<Section>, current_entry: &mut Option<(Entry, Vec<String>)>) {
+  if let Some((mut entry, note_lines)) = current_entry.take() {
+    if !note_lines.is_empty() {
+      *entry.note_mut() = Note::from_lines(note_lines);
+    }
+    if let Some(section) = current_section.as_mut() {
+      section.add_entry(entry);
+    }
+  }
+}
+
+/// Flush the current section into the document.
+fn flush_section(doc: &mut Document, current_section: &mut Option<Section>) {
+  if let Some(section) = current_section.take() {
+    doc.add_section(section);
+  }
+}
+
 /// Parse a doing file string into a structured `Document`.
 ///
 /// Recognizes section headers, entries with dates/tags/IDs, and notes.
@@ -88,25 +107,6 @@ fn parse_tags(title: &str) -> (String, Tags) {
 
   let clean_title = clean_title.split_whitespace().collect::<Vec<_>>().join(" ");
   (clean_title, Tags::from_iter(tags))
-}
-
-/// Flush the current entry (with accumulated note lines) into the current section.
-fn flush_entry(current_section: &mut Option<Section>, current_entry: &mut Option<(Entry, Vec<String>)>) {
-  if let Some((mut entry, note_lines)) = current_entry.take() {
-    if !note_lines.is_empty() {
-      *entry.note_mut() = Note::from_lines(note_lines);
-    }
-    if let Some(section) = current_section.as_mut() {
-      section.add_entry(entry);
-    }
-  }
-}
-
-/// Flush the current section into the document.
-fn flush_section(doc: &mut Document, current_section: &mut Option<Section>) {
-  if let Some(section) = current_section.take() {
-    doc.add_section(section);
-  }
 }
 
 #[cfg(test)]

@@ -254,6 +254,16 @@ mod test {
     use super::*;
 
     #[test]
+    fn it_breaks_ties_by_name() {
+      let mut tags = vec![("zebra".to_string(), 2), ("alpha".to_string(), 2)];
+
+      sort_by_count(&mut tags, &OrderArg::Asc);
+
+      assert_eq!(tags[0].0, "alpha");
+      assert_eq!(tags[1].0, "zebra");
+    }
+
+    #[test]
     fn it_sorts_ascending_by_count() {
       let mut tags = vec![
         ("rust".to_string(), 3),
@@ -281,16 +291,6 @@ mod test {
       assert_eq!(tags[0].0, "rust");
       assert_eq!(tags[1].0, "review");
       assert_eq!(tags[2].0, "coding");
-    }
-
-    #[test]
-    fn it_breaks_ties_by_name() {
-      let mut tags = vec![("zebra".to_string(), 2), ("alpha".to_string(), 2)];
-
-      sort_by_count(&mut tags, &OrderArg::Asc);
-
-      assert_eq!(tags[0].0, "alpha");
-      assert_eq!(tags[1].0, "zebra");
     }
   }
 

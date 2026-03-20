@@ -204,64 +204,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_imports_from_doing_file() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      let source = dir.path().join("source.md");
-      fs::write(
-        &source,
-        "Currently:\n\t- 2024-03-17 14:30 | Imported task <aaaabbbbccccddddeeeeffffaaaabbbb>\n",
-      )
-      .unwrap();
-      let cmd = Command {
-        autotag: false,
-        from: None,
-        import_type: Some("doing".into()),
-        no_overlap: false,
-        path: source,
-        prefix: None,
-        search: None,
-        section: None,
-        tag: vec![],
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 1);
-      assert_eq!(entries[0].title(), "Imported task");
-    }
-
-    #[test]
-    fn it_imports_into_custom_section() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      let source = dir.path().join("source.md");
-      fs::write(
-        &source,
-        "Currently:\n\t- 2024-03-17 14:30 | Task <aaaabbbbccccddddeeeeffffaaaabbbb>\n",
-      )
-      .unwrap();
-      let cmd = Command {
-        autotag: false,
-        from: None,
-        import_type: Some("doing".into()),
-        no_overlap: false,
-        path: source,
-        prefix: None,
-        search: None,
-        section: Some("Archive".into()),
-        tag: vec![],
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      assert!(ctx.document.has_section("Archive"));
-      let entries = ctx.document.entries_in_section("Archive");
-      assert_eq!(entries.len(), 1);
-    }
-
-    #[test]
     fn it_applies_prefix_to_imported_entries() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -319,6 +261,123 @@ mod test {
     }
 
     #[test]
+    fn it_imports_from_doing_file() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let source = dir.path().join("source.md");
+      fs::write(
+        &source,
+        "Currently:\n\t- 2024-03-17 14:30 | Imported task <aaaabbbbccccddddeeeeffffaaaabbbb>\n",
+      )
+      .unwrap();
+      let cmd = Command {
+        autotag: false,
+        from: None,
+        import_type: Some("doing".into()),
+        no_overlap: false,
+        path: source,
+        prefix: None,
+        search: None,
+        section: None,
+        tag: vec![],
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Imported task");
+    }
+
+    #[test]
+    fn it_imports_from_timing_json() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let source = dir.path().join("timing.json");
+      fs::write(
+        &source,
+        r#"[
+          {
+            "activityTitle": "Writing code",
+            "activityType": "Task",
+            "startDate": "2024-03-17 14:00",
+            "endDate": "2024-03-17 15:00",
+            "project": "Work",
+            "notes": null
+          }
+        ]"#,
+      )
+      .unwrap();
+      let cmd = Command {
+        autotag: false,
+        from: None,
+        import_type: Some("timing".into()),
+        no_overlap: false,
+        path: source,
+        prefix: None,
+        search: None,
+        section: None,
+        tag: vec![],
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "[Timing.app] Writing code");
+    }
+
+    #[test]
+    fn it_imports_into_custom_section() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let source = dir.path().join("source.md");
+      fs::write(
+        &source,
+        "Currently:\n\t- 2024-03-17 14:30 | Task <aaaabbbbccccddddeeeeffffaaaabbbb>\n",
+      )
+      .unwrap();
+      let cmd = Command {
+        autotag: false,
+        from: None,
+        import_type: Some("doing".into()),
+        no_overlap: false,
+        path: source,
+        prefix: None,
+        search: None,
+        section: Some("Archive".into()),
+        tag: vec![],
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      assert!(ctx.document.has_section("Archive"));
+      let entries = ctx.document.entries_in_section("Archive");
+      assert_eq!(entries.len(), 1);
+    }
+
+    #[test]
+    fn it_returns_ok_for_empty_source() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let source = dir.path().join("empty.md");
+      fs::write(&source, "").unwrap();
+      let cmd = Command {
+        autotag: false,
+        from: None,
+        import_type: Some("doing".into()),
+        no_overlap: false,
+        path: source,
+        prefix: None,
+        search: None,
+        section: None,
+        tag: vec![],
+      };
+
+      assert!(cmd.call(&mut ctx).is_ok());
+    }
+
+    #[test]
     fn it_skips_overlapping_entries_with_no_overlap() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
@@ -372,65 +431,6 @@ mod test {
       let entries = ctx.document.entries_in_section("Currently");
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Existing task");
-    }
-
-    #[test]
-    fn it_returns_ok_for_empty_source() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      let source = dir.path().join("empty.md");
-      fs::write(&source, "").unwrap();
-      let cmd = Command {
-        autotag: false,
-        from: None,
-        import_type: Some("doing".into()),
-        no_overlap: false,
-        path: source,
-        prefix: None,
-        search: None,
-        section: None,
-        tag: vec![],
-      };
-
-      assert!(cmd.call(&mut ctx).is_ok());
-    }
-
-    #[test]
-    fn it_imports_from_timing_json() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      let source = dir.path().join("timing.json");
-      fs::write(
-        &source,
-        r#"[
-          {
-            "activityTitle": "Writing code",
-            "activityType": "Task",
-            "startDate": "2024-03-17 14:00",
-            "endDate": "2024-03-17 15:00",
-            "project": "Work",
-            "notes": null
-          }
-        ]"#,
-      )
-      .unwrap();
-      let cmd = Command {
-        autotag: false,
-        from: None,
-        import_type: Some("timing".into()),
-        no_overlap: false,
-        path: source,
-        prefix: None,
-        search: None,
-        section: None,
-        tag: vec![],
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 1);
-      assert_eq!(entries[0].title(), "[Timing.app] Writing code");
     }
   }
 
@@ -530,20 +530,20 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_uses_explicit_type() {
+    fn it_defaults_to_doing_format() {
       let cmd = Command {
         autotag: false,
         from: None,
-        import_type: Some("timing".into()),
+        import_type: None,
         no_overlap: false,
-        path: PathBuf::from("file.md"),
+        path: PathBuf::from("other.md"),
         prefix: None,
         search: None,
         section: None,
         tag: vec![],
       };
 
-      assert_eq!(cmd.resolve_format().unwrap(), "timing");
+      assert_eq!(cmd.resolve_format().unwrap(), "doing");
     }
 
     #[test]
@@ -564,20 +564,20 @@ mod test {
     }
 
     #[test]
-    fn it_defaults_to_doing_format() {
+    fn it_uses_explicit_type() {
       let cmd = Command {
         autotag: false,
         from: None,
-        import_type: None,
+        import_type: Some("timing".into()),
         no_overlap: false,
-        path: PathBuf::from("other.md"),
+        path: PathBuf::from("file.md"),
         prefix: None,
         search: None,
         section: None,
         tag: vec![],
       };
 
-      assert_eq!(cmd.resolve_format().unwrap(), "doing");
+      assert_eq!(cmd.resolve_format().unwrap(), "timing");
     }
   }
 }

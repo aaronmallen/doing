@@ -238,31 +238,6 @@ fn wildcard_to_regex(pattern: &str) -> String {
 mod test {
   use super::*;
 
-  mod wildcard_to_regex {
-    use super::*;
-
-    #[test]
-    fn it_converts_star_to_non_whitespace_pattern() {
-      let result = wildcard_to_regex("do*");
-
-      assert!(result.contains(r"\S*"));
-    }
-
-    #[test]
-    fn it_converts_question_mark_to_single_non_whitespace() {
-      let result = wildcard_to_regex("d?ne");
-
-      assert!(result.contains(r"\S"));
-    }
-
-    #[test]
-    fn it_escapes_regex_special_characters() {
-      let result = wildcard_to_regex("tag.name");
-
-      assert!(result.contains(r"\."));
-    }
-  }
-
   mod tag {
     mod display {
       use pretty_assertions::assert_eq;
@@ -628,6 +603,31 @@ mod test {
         assert_eq!(renamed, 0);
         assert!(tags.has("coding"));
       }
+    }
+  }
+
+  mod wildcard_to_regex {
+    use super::*;
+
+    #[test]
+    fn it_converts_star_to_non_whitespace_pattern() {
+      let result = wildcard_to_regex("do*");
+
+      assert!(result.contains(r"\S*"));
+    }
+
+    #[test]
+    fn it_converts_question_mark_to_single_non_whitespace() {
+      let result = wildcard_to_regex("d?ne");
+
+      assert!(result.contains(r"\S"));
+    }
+
+    #[test]
+    fn it_escapes_regex_special_characters() {
+      let result = wildcard_to_regex("tag.name");
+
+      assert!(result.contains(r"\."));
     }
   }
 }

@@ -275,6 +275,24 @@ mod test {
     }
 
     #[test]
+    fn it_adds_meanwhile_entry_to_custom_section() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        section: Some("Later".into()),
+        title: vec!["Future".into(), "task".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      assert!(ctx.document.has_section("Later"));
+      let entries = ctx.document.entries_in_section("Later");
+      assert_eq!(entries.len(), 1);
+      assert!(entries[0].tags().has("meanwhile"));
+    }
+
+    #[test]
     fn it_adds_meanwhile_entry_to_custom_section_with_archive() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -306,20 +324,20 @@ mod test {
     }
 
     #[test]
-    fn it_adds_meanwhile_entry_to_custom_section() {
+    fn it_applies_autotagging() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
+      ctx.config.default_tags = vec!["tracked".into()];
       let cmd = Command {
-        section: Some("Later".into()),
-        title: vec!["Future".into(), "task".into()],
+        noauto: false,
+        title: vec!["Task".into()],
         ..default_cmd()
       };
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.has_section("Later"));
-      let entries = ctx.document.entries_in_section("Later");
-      assert_eq!(entries.len(), 1);
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(entries[0].tags().has("tracked"));
       assert!(entries[0].tags().has("meanwhile"));
     }
 
@@ -363,24 +381,6 @@ mod test {
       let archive = ctx.document.entries_in_section("Archive");
       assert_eq!(archive.len(), 1);
       assert!(archive[0].finished());
-    }
-
-    #[test]
-    fn it_applies_autotagging() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      ctx.config.default_tags = vec!["tracked".into()];
-      let cmd = Command {
-        noauto: false,
-        title: vec!["Task".into()],
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert!(entries[0].tags().has("tracked"));
-      assert!(entries[0].tags().has("meanwhile"));
     }
 
     #[test]

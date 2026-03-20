@@ -254,6 +254,75 @@ mod test {
 
   use super::*;
 
+  mod duration_format {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_parses_clock_from_config() {
+      assert_eq!(DurationFormat::from_config("clock"), DurationFormat::Clock);
+    }
+
+    #[test]
+    fn it_parses_dhm_from_config() {
+      assert_eq!(DurationFormat::from_config("dhm"), DurationFormat::Dhm);
+    }
+
+    #[test]
+    fn it_parses_hm_from_config() {
+      assert_eq!(DurationFormat::from_config("hm"), DurationFormat::Hm);
+    }
+
+    #[test]
+    fn it_parses_m_from_config() {
+      assert_eq!(DurationFormat::from_config("m"), DurationFormat::M);
+    }
+
+    #[test]
+    fn it_parses_natural_from_config() {
+      assert_eq!(DurationFormat::from_config("natural"), DurationFormat::Natural);
+    }
+
+    #[test]
+    fn it_parses_text_from_config() {
+      assert_eq!(DurationFormat::from_config("text"), DurationFormat::Text);
+    }
+
+    #[test]
+    fn it_defaults_unknown_to_text() {
+      assert_eq!(DurationFormat::from_config("unknown"), DurationFormat::Text);
+    }
+
+    #[test]
+    fn it_is_case_insensitive() {
+      assert_eq!(DurationFormat::from_config("CLOCK"), DurationFormat::Clock);
+    }
+  }
+
+  mod format_tag_total {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_formats_zero() {
+      assert_eq!(format_tag_total(Duration::zero()), "00:00:00");
+    }
+
+    #[test]
+    fn it_formats_hours_and_minutes() {
+      assert_eq!(format_tag_total(Duration::seconds(5400)), "00:01:30");
+    }
+
+    #[test]
+    fn it_formats_days_hours_minutes() {
+      let duration = Duration::seconds(93600 + 1800);
+
+      assert_eq!(format_tag_total(duration), "01:02:30");
+    }
+  }
+
   mod formatted_duration {
     use pretty_assertions::assert_eq;
 
@@ -372,52 +441,6 @@ mod test {
     }
   }
 
-  mod duration_format {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn it_parses_clock_from_config() {
-      assert_eq!(DurationFormat::from_config("clock"), DurationFormat::Clock);
-    }
-
-    #[test]
-    fn it_parses_dhm_from_config() {
-      assert_eq!(DurationFormat::from_config("dhm"), DurationFormat::Dhm);
-    }
-
-    #[test]
-    fn it_parses_hm_from_config() {
-      assert_eq!(DurationFormat::from_config("hm"), DurationFormat::Hm);
-    }
-
-    #[test]
-    fn it_parses_m_from_config() {
-      assert_eq!(DurationFormat::from_config("m"), DurationFormat::M);
-    }
-
-    #[test]
-    fn it_parses_natural_from_config() {
-      assert_eq!(DurationFormat::from_config("natural"), DurationFormat::Natural);
-    }
-
-    #[test]
-    fn it_parses_text_from_config() {
-      assert_eq!(DurationFormat::from_config("text"), DurationFormat::Text);
-    }
-
-    #[test]
-    fn it_defaults_unknown_to_text() {
-      assert_eq!(DurationFormat::from_config("unknown"), DurationFormat::Text);
-    }
-
-    #[test]
-    fn it_is_case_insensitive() {
-      assert_eq!(DurationFormat::from_config("CLOCK"), DurationFormat::Clock);
-    }
-  }
-
   mod formatted_shortdate {
     use chrono::TimeZone;
     use pretty_assertions::assert_eq;
@@ -478,29 +501,6 @@ mod test {
       let result = FormattedShortdate::new(datetime, &config());
 
       assert_eq!(result.to_string(), "06/15/20 14:30");
-    }
-  }
-
-  mod format_tag_total {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn it_formats_zero() {
-      assert_eq!(format_tag_total(Duration::zero()), "00:00:00");
-    }
-
-    #[test]
-    fn it_formats_hours_and_minutes() {
-      assert_eq!(format_tag_total(Duration::seconds(5400)), "00:01:30");
-    }
-
-    #[test]
-    fn it_formats_days_hours_minutes() {
-      let duration = Duration::seconds(93600 + 1800);
-
-      assert_eq!(format_tag_total(duration), "01:02:30");
     }
   }
 }

@@ -305,10 +305,6 @@ mod test {
   use super::*;
   use crate::taskpaper::{Note, Tag, Tags};
 
-  fn sample_date() -> DateTime<Local> {
-    Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap()
-  }
-
   fn entry_with_tag(name: &str, value: Option<&str>) -> Entry {
     Entry::new(
       sample_date(),
@@ -329,6 +325,10 @@ mod test {
       "Currently",
       None::<String>,
     )
+  }
+
+  fn sample_date() -> DateTime<Local> {
+    Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap()
   }
 
   mod compare_ord {
@@ -412,14 +412,6 @@ mod test {
       use super::*;
 
       #[test]
-      fn it_returns_false_for_finished_entry() {
-        let entry = finished_entry();
-        let query = TagQuery::parse("duration > 1h").unwrap();
-
-        assert!(!query.matches_entry(&entry));
-      }
-
-      #[test]
       fn it_matches_unfinished_entry_duration() {
         let entry = Entry::new(
           Local::now() - Duration::hours(3),
@@ -432,6 +424,14 @@ mod test {
         let query = TagQuery::parse("duration > 2h").unwrap();
 
         assert!(query.matches_entry(&entry));
+      }
+
+      #[test]
+      fn it_returns_false_for_finished_entry() {
+        let entry = finished_entry();
+        let query = TagQuery::parse("duration > 1h").unwrap();
+
+        assert!(!query.matches_entry(&entry));
       }
     }
 

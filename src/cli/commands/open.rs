@@ -133,6 +133,38 @@ mod test {
     use super::*;
 
     #[test]
+    fn it_falls_back_to_default_editor() {
+      let ctx = AppContext {
+        config: Config {
+          editors: EditorsConfig {
+            config: None,
+            default: Some("default-editor".into()),
+            doing_file: None,
+            pager: None,
+          },
+          ..Config::default()
+        },
+        default_answer: false,
+        document: crate::taskpaper::Document::new(),
+        doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+        include_notes: true,
+        no: false,
+        noauto: false,
+        quiet: false,
+        stdout: false,
+        use_color: false,
+        use_pager: false,
+        yes: false,
+      };
+
+      if crate::config::env::DOING_EDITOR.value().is_err() {
+        let editor = super::super::resolve_open_editor(&None, &None, &ctx);
+
+        assert_eq!(editor, "default-editor");
+      }
+    }
+
+    #[test]
     fn it_uses_app_flag_when_provided() {
       let ctx = AppContext {
         config: Config::default(),
@@ -185,28 +217,6 @@ mod test {
     }
 
     #[test]
-    fn it_uses_editor_flag_when_provided() {
-      let ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: crate::taskpaper::Document::new(),
-        doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
-      };
-
-      let editor = super::super::resolve_open_editor(&None, &Some("vim".into()), &ctx);
-
-      assert_eq!(editor, "vim");
-    }
-
-    #[test]
     fn it_uses_editor_flag_over_config() {
       let ctx = AppContext {
         config: Config {
@@ -237,17 +247,9 @@ mod test {
     }
 
     #[test]
-    fn it_falls_back_to_default_editor() {
+    fn it_uses_editor_flag_when_provided() {
       let ctx = AppContext {
-        config: Config {
-          editors: EditorsConfig {
-            config: None,
-            default: Some("default-editor".into()),
-            doing_file: None,
-            pager: None,
-          },
-          ..Config::default()
-        },
+        config: Config::default(),
         default_answer: false,
         document: crate::taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
@@ -261,11 +263,9 @@ mod test {
         yes: false,
       };
 
-      if crate::config::env::DOING_EDITOR.value().is_err() {
-        let editor = super::super::resolve_open_editor(&None, &None, &ctx);
+      let editor = super::super::resolve_open_editor(&None, &Some("vim".into()), &ctx);
 
-        assert_eq!(editor, "default-editor");
-      }
+      assert_eq!(editor, "vim");
     }
   }
 }

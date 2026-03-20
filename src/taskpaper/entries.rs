@@ -243,6 +243,44 @@ mod test {
     )
   }
 
+  mod display {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_formats_title_with_tags_and_id() {
+      let entry = sample_entry();
+
+      let result = entry.to_string();
+
+      assert!(result.starts_with("Working on project @coding @done(2024-03-17 15:00) <"));
+      assert!(result.ends_with(">"));
+      assert_eq!(
+        result.len(),
+        "Working on project @coding @done(2024-03-17 15:00) <".len() + 32 + ">".len()
+      );
+    }
+
+    #[test]
+    fn it_formats_title_without_tags() {
+      let entry = Entry::new(
+        sample_date(),
+        "Just a title",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      let result = entry.to_string();
+
+      assert!(result.starts_with("Just a title <"));
+      assert!(result.ends_with(">"));
+      assert_eq!(result.len(), "Just a title <".len() + 32 + ">".len());
+    }
+  }
+
   mod done_date {
     use pretty_assertions::assert_eq;
 
@@ -283,44 +321,6 @@ mod test {
       );
 
       assert!(entry.done_date().is_none());
-    }
-  }
-
-  mod display {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn it_formats_title_with_tags_and_id() {
-      let entry = sample_entry();
-
-      let result = entry.to_string();
-
-      assert!(result.starts_with("Working on project @coding @done(2024-03-17 15:00) <"));
-      assert!(result.ends_with(">"));
-      assert_eq!(
-        result.len(),
-        "Working on project @coding @done(2024-03-17 15:00) <".len() + 32 + ">".len()
-      );
-    }
-
-    #[test]
-    fn it_formats_title_without_tags() {
-      let entry = Entry::new(
-        sample_date(),
-        "Just a title",
-        Tags::new(),
-        Note::new(),
-        "Currently",
-        None::<String>,
-      );
-
-      let result = entry.to_string();
-
-      assert!(result.starts_with("Just a title <"));
-      assert!(result.ends_with(">"));
-      assert_eq!(result.len(), "Just a title <".len() + 32 + ">".len());
     }
   }
 

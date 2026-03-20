@@ -387,23 +387,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_adds_done_entry_with_title() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      let cmd = Command {
-        title: vec!["Completed".into(), "task".into()],
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 1);
-      assert_eq!(entries[0].title(), "Completed task");
-      assert!(entries[0].finished());
-    }
-
-    #[test]
     fn it_adds_done_entry_to_archive_when_flag_set() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -419,6 +402,23 @@ mod test {
       let entries = ctx.document.entries_in_section("Archive");
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Archived task");
+      assert!(entries[0].finished());
+    }
+
+    #[test]
+    fn it_adds_done_entry_with_title() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        title: vec!["Completed".into(), "task".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Completed task");
       assert!(entries[0].finished());
     }
 
@@ -705,6 +705,20 @@ mod test {
     }
 
     #[test]
+    fn it_finds_unfinished_entry_when_last_is_done() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done_and_undone(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 2);
+      assert!(entries[0].finished());
+      assert!(entries[1].finished());
+    }
+
+    #[test]
     fn it_reports_all_done_when_no_unfinished_entries() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
@@ -742,20 +756,6 @@ mod test {
       let entries = ctx.document.entries_in_section("Currently");
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].tags().len(), 1);
-    }
-
-    #[test]
-    fn it_finds_unfinished_entry_when_last_is_done() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done_and_undone(dir.path());
-      let cmd = default_cmd();
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 2);
-      assert!(entries[0].finished());
-      assert!(entries[1].finished());
     }
   }
 }

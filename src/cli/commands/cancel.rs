@@ -266,23 +266,15 @@ mod test {
     }
   }
 
-  fn sample_ctx_with_multiple(dir: &std::path::Path) -> AppContext {
+  fn sample_ctx_with_done(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");
     fs::write(&path, "Currently:\n").unwrap();
     let mut doc = Document::new();
     let mut section = Section::new("Currently");
     section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
-      "First task",
-      Tags::new(),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    section.add_entry(Entry::new(
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Second task",
-      Tags::new(),
+      "Already done",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
       Note::new(),
       "Currently",
       None::<String>,
@@ -304,15 +296,23 @@ mod test {
     }
   }
 
-  fn sample_ctx_with_done(dir: &std::path::Path) -> AppContext {
+  fn sample_ctx_with_multiple(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");
     fs::write(&path, "Currently:\n").unwrap();
     let mut doc = Document::new();
     let mut section = Section::new("Currently");
     section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
+      "First task",
+      Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Already done",
-      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+      "Second task",
+      Tags::new(),
       Note::new(),
       "Currently",
       None::<String>,

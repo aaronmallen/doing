@@ -87,32 +87,6 @@ mod test {
     }
   }
 
-  mod escape_csv {
-    use pretty_assertions::assert_eq;
-
-    use super::super::escape_csv;
-
-    #[test]
-    fn it_returns_plain_value_unchanged() {
-      assert_eq!(escape_csv("hello"), "hello");
-    }
-
-    #[test]
-    fn it_wraps_value_with_comma_in_quotes() {
-      assert_eq!(escape_csv("hello, world"), "\"hello, world\"");
-    }
-
-    #[test]
-    fn it_doubles_embedded_quotes() {
-      assert_eq!(escape_csv("say \"hi\""), "\"say \"\"hi\"\"\"");
-    }
-
-    #[test]
-    fn it_wraps_value_with_newline_in_quotes() {
-      assert_eq!(escape_csv("line1\nline2"), "\"line1\nline2\"");
-    }
-  }
-
   mod csv_export_name {
     use pretty_assertions::assert_eq;
 
@@ -214,6 +188,32 @@ mod test {
       let settings = CsvExport.settings();
 
       assert_eq!(settings.trigger, "csv");
+    }
+  }
+
+  mod escape_csv {
+    use pretty_assertions::assert_eq;
+
+    use super::super::escape_csv;
+
+    #[test]
+    fn it_returns_plain_value_unchanged() {
+      assert_eq!(escape_csv("hello"), "hello");
+    }
+
+    #[test]
+    fn it_wraps_value_with_comma_in_quotes() {
+      assert_eq!(escape_csv("hello, world"), "\"hello, world\"");
+    }
+
+    #[test]
+    fn it_doubles_embedded_quotes() {
+      assert_eq!(escape_csv("say \"hi\""), "\"say \"\"hi\"\"\"");
+    }
+
+    #[test]
+    fn it_wraps_value_with_newline_in_quotes() {
+      assert_eq!(escape_csv("line1\nline2"), "\"line1\nline2\"");
     }
   }
 }

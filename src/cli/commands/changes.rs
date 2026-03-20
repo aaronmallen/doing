@@ -10,6 +10,63 @@ use crate::{
 
 const CHANGELOG: &str = include_str!("../../../CHANGELOG.md");
 
+/// Change type categories from Keep a Changelog.
+#[derive(Clone, Debug, PartialEq, ValueEnum)]
+pub enum ChangeType {
+  Added,
+  Changed,
+  Deprecated,
+  Fixed,
+  Improved,
+  New,
+  Removed,
+  Security,
+}
+
+impl ChangeType {
+  fn from_section(section: &str) -> Self {
+    match section.to_lowercase().as_str() {
+      "added" | "new" => Self::New,
+      "changed" | "improved" => Self::Improved,
+      "deprecated" => Self::Deprecated,
+      "fixed" => Self::Fixed,
+      "removed" => Self::Removed,
+      "security" => Self::Security,
+      _ => Self::Changed,
+    }
+  }
+
+  fn prefix(&self) -> &'static str {
+    match self {
+      Self::Added | Self::New => "NEW",
+      Self::Changed => "CHANGED",
+      Self::Deprecated => "DEPRECATED",
+      Self::Fixed => "FIXED",
+      Self::Improved => "IMPROVED",
+      Self::Removed => "REMOVED",
+      Self::Security => "SECURITY",
+    }
+  }
+
+  fn section_name(&self) -> &'static str {
+    match self {
+      Self::Added | Self::New => "New",
+      Self::Changed => "Changed",
+      Self::Deprecated => "Deprecated",
+      Self::Fixed => "Fixed",
+      Self::Improved => "Improved",
+      Self::Removed => "Removed",
+      Self::Security => "Security",
+    }
+  }
+}
+
+impl Display for ChangeType {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.prefix().to_lowercase())
+  }
+}
+
 /// Display the changelog for recent Doing versions.
 ///
 /// Shows what's new, fixed, or improved across releases.  By default only
@@ -180,63 +237,6 @@ impl Command {
     }
 
     output
-  }
-}
-
-/// Change type categories from Keep a Changelog.
-#[derive(Clone, Debug, PartialEq, ValueEnum)]
-pub enum ChangeType {
-  Added,
-  Changed,
-  Deprecated,
-  Fixed,
-  Improved,
-  New,
-  Removed,
-  Security,
-}
-
-impl ChangeType {
-  fn from_section(section: &str) -> Self {
-    match section.to_lowercase().as_str() {
-      "added" | "new" => Self::New,
-      "changed" | "improved" => Self::Improved,
-      "deprecated" => Self::Deprecated,
-      "fixed" => Self::Fixed,
-      "removed" => Self::Removed,
-      "security" => Self::Security,
-      _ => Self::Changed,
-    }
-  }
-
-  fn prefix(&self) -> &'static str {
-    match self {
-      Self::Added | Self::New => "NEW",
-      Self::Changed => "CHANGED",
-      Self::Deprecated => "DEPRECATED",
-      Self::Fixed => "FIXED",
-      Self::Improved => "IMPROVED",
-      Self::Removed => "REMOVED",
-      Self::Security => "SECURITY",
-    }
-  }
-
-  fn section_name(&self) -> &'static str {
-    match self {
-      Self::Added | Self::New => "New",
-      Self::Changed => "Changed",
-      Self::Deprecated => "Deprecated",
-      Self::Fixed => "Fixed",
-      Self::Improved => "Improved",
-      Self::Removed => "Removed",
-      Self::Security => "Security",
-    }
-  }
-}
-
-impl Display for ChangeType {
-  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self.prefix().to_lowercase())
   }
 }
 
@@ -538,49 +538,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_returns_latest_by_default() {
-      let cmd = Command {
-        all: false,
-        changes: false,
-        interactive: false,
-        lookup: None,
-        markdown: false,
-        no_prefix: false,
-        only: vec![],
-        prefix: false,
-        search: None,
-        sort: SortOrder::Desc,
-      };
-      let versions = parse_changelog(TEST_CHANGELOG).unwrap();
-
-      let result = cmd.filter_versions(versions).unwrap();
-
-      assert_eq!(result.len(), 1);
-      assert_eq!(result[0].number, "0.0.2");
-    }
-
-    #[test]
-    fn it_returns_all_when_flag_set() {
-      let cmd = Command {
-        all: true,
-        changes: false,
-        interactive: false,
-        lookup: None,
-        markdown: false,
-        no_prefix: false,
-        only: vec![],
-        prefix: false,
-        search: None,
-        sort: SortOrder::Desc,
-      };
-      let versions = parse_changelog(TEST_CHANGELOG).unwrap();
-
-      let result = cmd.filter_versions(versions).unwrap();
-
-      assert_eq!(result.len(), 2);
-    }
-
-    #[test]
     fn it_filters_by_search() {
       let cmd = Command {
         all: true,
@@ -626,6 +583,49 @@ mod test {
           assert_eq!(e.change_type, ChangeType::Fixed);
         }
       }
+    }
+
+    #[test]
+    fn it_returns_all_when_flag_set() {
+      let cmd = Command {
+        all: true,
+        changes: false,
+        interactive: false,
+        lookup: None,
+        markdown: false,
+        no_prefix: false,
+        only: vec![],
+        prefix: false,
+        search: None,
+        sort: SortOrder::Desc,
+      };
+      let versions = parse_changelog(TEST_CHANGELOG).unwrap();
+
+      let result = cmd.filter_versions(versions).unwrap();
+
+      assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn it_returns_latest_by_default() {
+      let cmd = Command {
+        all: false,
+        changes: false,
+        interactive: false,
+        lookup: None,
+        markdown: false,
+        no_prefix: false,
+        only: vec![],
+        prefix: false,
+        search: None,
+        sort: SortOrder::Desc,
+      };
+      let versions = parse_changelog(TEST_CHANGELOG).unwrap();
+
+      let result = cmd.filter_versions(versions).unwrap();
+
+      assert_eq!(result.len(), 1);
+      assert_eq!(result[0].number, "0.0.2");
     }
   }
 

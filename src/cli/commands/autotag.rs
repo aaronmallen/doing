@@ -191,19 +191,6 @@ mod test {
     }
 
     #[test]
-    fn it_applies_whitelist_rules() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      ctx.config.autotag.whitelist = vec!["design".to_string()];
-      let cmd = default_cmd();
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert!(entries[0].tags().has("design"));
-    }
-
-    #[test]
     fn it_applies_synonym_rules() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -236,6 +223,19 @@ mod test {
       assert_eq!(entries.len(), 2);
       assert!(entries[0].tags().has("tracked"));
       assert!(entries[1].tags().has("tracked"));
+    }
+
+    #[test]
+    fn it_applies_whitelist_rules() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      ctx.config.autotag.whitelist = vec!["design".to_string()];
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(entries[0].tags().has("design"));
     }
 
     #[test]

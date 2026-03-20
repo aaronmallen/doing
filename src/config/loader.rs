@@ -200,13 +200,13 @@ mod test {
     use serde_json::json;
 
     #[test]
-    fn it_merges_objects_recursively() {
-      let base = json!({"search": {"case": "smart", "distance": 3}});
-      let overlay = json!({"search": {"distance": 5}});
+    fn it_adds_new_keys() {
+      let base = json!({"order": "asc"});
+      let overlay = json!({"marker_tag": "flagged"});
 
       let result = super::deep_merge(&base, &overlay);
 
-      assert_eq!(result, json!({"search": {"case": "smart", "distance": 5}}));
+      assert_eq!(result, json!({"order": "asc", "marker_tag": "flagged"}));
     }
 
     #[test]
@@ -217,26 +217,6 @@ mod test {
       let result = super::deep_merge(&base, &overlay);
 
       assert_eq!(result, json!({"tags": ["done", "waiting", "custom"]}));
-    }
-
-    #[test]
-    fn it_overwrites_scalars() {
-      let base = json!({"order": "asc", "paginate": false});
-      let overlay = json!({"order": "desc"});
-
-      let result = super::deep_merge(&base, &overlay);
-
-      assert_eq!(result, json!({"order": "desc", "paginate": false}));
-    }
-
-    #[test]
-    fn it_adds_new_keys() {
-      let base = json!({"order": "asc"});
-      let overlay = json!({"marker_tag": "flagged"});
-
-      let result = super::deep_merge(&base, &overlay);
-
-      assert_eq!(result, json!({"order": "asc", "marker_tag": "flagged"}));
     }
 
     #[test]
@@ -253,6 +233,16 @@ mod test {
     }
 
     #[test]
+    fn it_ignores_null_fields_within_objects() {
+      let base = json!({"search": {"case": "smart", "distance": 3}});
+      let overlay = json!({"search": {"case": null, "distance": 5}});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"search": {"case": "smart", "distance": 5}}));
+    }
+
+    #[test]
     fn it_ignores_null_overlay_values() {
       let base = json!({"search": {"case": "smart", "distance": 3}});
       let overlay = json!({"search": null});
@@ -263,13 +253,33 @@ mod test {
     }
 
     #[test]
-    fn it_ignores_null_fields_within_objects() {
+    fn it_merges_objects_recursively() {
       let base = json!({"search": {"case": "smart", "distance": 3}});
-      let overlay = json!({"search": {"case": null, "distance": 5}});
+      let overlay = json!({"search": {"distance": 5}});
 
       let result = super::deep_merge(&base, &overlay);
 
       assert_eq!(result, json!({"search": {"case": "smart", "distance": 5}}));
+    }
+
+    #[test]
+    fn it_overwrites_scalars() {
+      let base = json!({"order": "asc", "paginate": false});
+      let overlay = json!({"order": "desc"});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"order": "desc", "paginate": false}));
+    }
+
+    #[test]
+    fn it_replaces_scalar_with_object() {
+      let base = json!({"editors": "vim"});
+      let overlay = json!({"editors": {"default": "nvim"}});
+
+      let result = super::deep_merge(&base, &overlay);
+
+      assert_eq!(result, json!({"editors": {"default": "nvim"}}));
     }
 
     #[test]
@@ -281,15 +291,51 @@ mod test {
 
       assert_eq!(result, json!({"order": "asc"}));
     }
+  }
+
+  mod discover_local_configs {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
 
     #[test]
-    fn it_replaces_scalar_with_object() {
-      let base = json!({"editors": "vim"});
-      let overlay = json!({"editors": {"default": "nvim"}});
+    fn it_excludes_global_config_path() {
+      // If a .doingrc happens to be the global config, it should not appear
+      // as a local config. This is difficult to test without mocking the
+      // global discovery, so we just verify the function doesn't panic on
+      // deeply nested paths.
+      let dir = tempfile::tempdir().unwrap();
+      let deep = dir.path().join("a/b/c/d/e");
+      fs::create_dir_all(&deep).unwrap();
 
-      let result = super::deep_merge(&base, &overlay);
+      let configs = discover_local_configs(&deep);
 
-      assert_eq!(result, json!({"editors": {"default": "nvim"}}));
+      assert!(configs.is_empty());
+    }
+
+    #[test]
+    fn it_finds_doingrc_in_ancestors() {
+      let dir = tempfile::tempdir().unwrap();
+      let root = dir.path();
+      let child = root.join("projects/myapp");
+      fs::create_dir_all(&child).unwrap();
+      fs::write(root.join(".doingrc"), "order: asc\n").unwrap();
+      fs::write(child.join(".doingrc"), "order: desc\n").unwrap();
+
+      let configs = discover_local_configs(&child);
+
+      assert_eq!(configs.len(), 2);
+      assert_eq!(configs[0], root.join(".doingrc"));
+      assert_eq!(configs[1], child.join(".doingrc"));
+    }
+
+    #[test]
+    fn it_returns_empty_when_none_found() {
+      let dir = tempfile::tempdir().unwrap();
+
+      let configs = discover_local_configs(dir.path());
+
+      assert!(configs.is_empty());
     }
   }
 
@@ -339,13 +385,13 @@ mod test {
     }
 
     #[test]
-    fn it_returns_none_for_unknown() {
-      assert_eq!(ConfigFormat::from_extension(Path::new("config.txt")), None);
+    fn it_returns_none_for_no_extension() {
+      assert_eq!(ConfigFormat::from_extension(Path::new(".doingrc")), None);
     }
 
     #[test]
-    fn it_returns_none_for_no_extension() {
-      assert_eq!(ConfigFormat::from_extension(Path::new(".doingrc")), None);
+    fn it_returns_none_for_unknown() {
+      assert_eq!(ConfigFormat::from_extension(Path::new("config.txt")), None);
     }
   }
 
@@ -355,10 +401,21 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_parses_yaml_file() {
+    fn it_falls_back_to_yaml_for_unknown_extension() {
       let dir = tempfile::tempdir().unwrap();
-      let path = dir.path().join("config.yml");
-      fs::write(&path, "current_section: Working\nhistory_size: 25\n").unwrap();
+      let path = dir.path().join(".doingrc");
+      fs::write(&path, "current_section: Working\n").unwrap();
+
+      let value = parse_file(&path).unwrap();
+
+      assert_eq!(value["current_section"], "Working");
+    }
+
+    #[test]
+    fn it_parses_json_file() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.json");
+      fs::write(&path, r#"{"current_section": "Working", "history_size": 25}"#).unwrap();
 
       let value = parse_file(&path).unwrap();
 
@@ -379,41 +436,15 @@ mod test {
     }
 
     #[test]
-    fn it_parses_json_file() {
+    fn it_parses_yaml_file() {
       let dir = tempfile::tempdir().unwrap();
-      let path = dir.path().join("config.json");
-      fs::write(&path, r#"{"current_section": "Working", "history_size": 25}"#).unwrap();
+      let path = dir.path().join("config.yml");
+      fs::write(&path, "current_section: Working\nhistory_size: 25\n").unwrap();
 
       let value = parse_file(&path).unwrap();
 
       assert_eq!(value["current_section"], "Working");
       assert_eq!(value["history_size"], 25);
-    }
-
-    #[test]
-    fn it_strips_json_comments() {
-      let dir = tempfile::tempdir().unwrap();
-      let path = dir.path().join("config.jsonc");
-      fs::write(
-        &path,
-        "{\n  // this is a comment\n  \"current_section\": \"Working\"\n}\n",
-      )
-      .unwrap();
-
-      let value = parse_file(&path).unwrap();
-
-      assert_eq!(value["current_section"], "Working");
-    }
-
-    #[test]
-    fn it_falls_back_to_yaml_for_unknown_extension() {
-      let dir = tempfile::tempdir().unwrap();
-      let path = dir.path().join(".doingrc");
-      fs::write(&path, "current_section: Working\n").unwrap();
-
-      let value = parse_file(&path).unwrap();
-
-      assert_eq!(value["current_section"], "Working");
     }
 
     #[test]
@@ -444,51 +475,20 @@ mod test {
 
       assert!(result.is_err());
     }
-  }
-
-  mod discover_local_configs {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
 
     #[test]
-    fn it_finds_doingrc_in_ancestors() {
+    fn it_strips_json_comments() {
       let dir = tempfile::tempdir().unwrap();
-      let root = dir.path();
-      let child = root.join("projects/myapp");
-      fs::create_dir_all(&child).unwrap();
-      fs::write(root.join(".doingrc"), "order: asc\n").unwrap();
-      fs::write(child.join(".doingrc"), "order: desc\n").unwrap();
+      let path = dir.path().join("config.jsonc");
+      fs::write(
+        &path,
+        "{\n  // this is a comment\n  \"current_section\": \"Working\"\n}\n",
+      )
+      .unwrap();
 
-      let configs = discover_local_configs(&child);
+      let value = parse_file(&path).unwrap();
 
-      assert_eq!(configs.len(), 2);
-      assert_eq!(configs[0], root.join(".doingrc"));
-      assert_eq!(configs[1], child.join(".doingrc"));
-    }
-
-    #[test]
-    fn it_returns_empty_when_none_found() {
-      let dir = tempfile::tempdir().unwrap();
-
-      let configs = discover_local_configs(dir.path());
-
-      assert!(configs.is_empty());
-    }
-
-    #[test]
-    fn it_excludes_global_config_path() {
-      // If a .doingrc happens to be the global config, it should not appear
-      // as a local config. This is difficult to test without mocking the
-      // global discovery, so we just verify the function doesn't panic on
-      // deeply nested paths.
-      let dir = tempfile::tempdir().unwrap();
-      let deep = dir.path().join("a/b/c/d/e");
-      fs::create_dir_all(&deep).unwrap();
-
-      let configs = discover_local_configs(&deep);
-
-      assert!(configs.is_empty());
+      assert_eq!(value["current_section"], "Working");
     }
   }
 
@@ -498,10 +498,10 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_roundtrips_yaml() {
-      let yaml = "order: desc\npaginate: true\n";
+    fn it_roundtrips_json() {
+      let json = r#"{"order": "desc", "paginate": true}"#;
 
-      let value = parse_str(yaml, ConfigFormat::Yaml).unwrap();
+      let value = parse_str(json, ConfigFormat::Json).unwrap();
 
       assert_eq!(value["order"], "desc");
       assert_eq!(value["paginate"], true);
@@ -518,10 +518,10 @@ mod test {
     }
 
     #[test]
-    fn it_roundtrips_json() {
-      let json = r#"{"order": "desc", "paginate": true}"#;
+    fn it_roundtrips_yaml() {
+      let yaml = "order: desc\npaginate: true\n";
 
-      let value = parse_str(json, ConfigFormat::Json).unwrap();
+      let value = parse_str(yaml, ConfigFormat::Yaml).unwrap();
 
       assert_eq!(value["order"], "desc");
       assert_eq!(value["paginate"], true);

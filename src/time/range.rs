@@ -60,6 +60,16 @@ mod test {
     }
 
     #[test]
+    fn it_parses_combined_expressions() {
+      let (start, end) = parse_range("yesterday 3pm to today").unwrap();
+      let now = Local::now();
+
+      assert_eq!(start.date_naive(), (now - Duration::days(1)).date_naive());
+      assert_eq!(start.time(), NaiveTime::from_hms_opt(15, 0, 0).unwrap());
+      assert_eq!(end.date_naive(), now.date_naive());
+    }
+
+    #[test]
     fn it_parses_relative_range() {
       let (start, end) = parse_range("yesterday to today").unwrap();
       let now = Local::now();
@@ -67,6 +77,35 @@ mod test {
 
       assert_eq!(start.date_naive(), expected_start);
       assert_eq!(end.date_naive(), now.date_naive());
+    }
+
+    #[test]
+    fn it_rejects_empty_input() {
+      let err = parse_range("").unwrap_err();
+
+      assert!(matches!(err, Error::InvalidTimeExpression(_)));
+    }
+
+    #[test]
+    fn it_rejects_input_without_separator() {
+      let err = parse_range("yesterday").unwrap_err();
+
+      assert!(matches!(err, Error::InvalidTimeExpression(_)));
+    }
+
+    #[test]
+    fn it_rejects_invalid_date_expressions() {
+      let err = parse_range("gibberish to nonsense").unwrap_err();
+
+      assert!(matches!(err, Error::InvalidTimeExpression(_)));
+    }
+
+    #[test]
+    fn it_supports_dash_separator() {
+      let (start, end) = parse_range("2024-01-01 -- 2024-01-31").unwrap();
+
+      assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
     }
 
     #[test]
@@ -91,45 +130,6 @@ mod test {
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
       assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
-    }
-
-    #[test]
-    fn it_supports_dash_separator() {
-      let (start, end) = parse_range("2024-01-01 -- 2024-01-31").unwrap();
-
-      assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
-      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
-    }
-
-    #[test]
-    fn it_parses_combined_expressions() {
-      let (start, end) = parse_range("yesterday 3pm to today").unwrap();
-      let now = Local::now();
-
-      assert_eq!(start.date_naive(), (now - Duration::days(1)).date_naive());
-      assert_eq!(start.time(), NaiveTime::from_hms_opt(15, 0, 0).unwrap());
-      assert_eq!(end.date_naive(), now.date_naive());
-    }
-
-    #[test]
-    fn it_rejects_empty_input() {
-      let err = parse_range("").unwrap_err();
-
-      assert!(matches!(err, Error::InvalidTimeExpression(_)));
-    }
-
-    #[test]
-    fn it_rejects_input_without_separator() {
-      let err = parse_range("yesterday").unwrap_err();
-
-      assert!(matches!(err, Error::InvalidTimeExpression(_)));
-    }
-
-    #[test]
-    fn it_rejects_invalid_date_expressions() {
-      let err = parse_range("gibberish to nonsense").unwrap_err();
-
-      assert!(matches!(err, Error::InvalidTimeExpression(_)));
     }
   }
 }

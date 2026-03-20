@@ -63,6 +63,11 @@ pub struct Command {
 }
 
 impl Command {
+  fn format_entry(entry: &Entry) -> String {
+    let date = entry.date().format("%Y-%m-%d %H:%M");
+    format!("{date} | {}", entry.full_title())
+  }
+
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let entries = self.find_entries(ctx)?;
 
@@ -312,11 +317,6 @@ impl Command {
     options.sort = Some(SortOrder::Asc);
 
     Ok(filter_entries(all_entries, &options))
-  }
-
-  fn format_entry(entry: &Entry) -> String {
-    let date = entry.date().format("%Y-%m-%d %H:%M");
-    format!("{date} | {}", entry.full_title())
   }
 
   fn present_dialoguer(&self, entries: &[Entry]) -> Result<Option<Entry>> {

@@ -98,6 +98,11 @@ pub struct Config {
 }
 ```
 
+**Exception — clap positional arguments:** In structs deriving `clap::Args`, positional arguments (fields without
+`#[arg(long)]` or `#[arg(short)]`) must remain in declaration order because clap uses field order to determine
+positional argument index. Similarly, `overrides_with` pairs (e.g. `--prefix` / `--no-prefix`) should stay adjacent.
+Only reorder flag arguments that are independent of declaration order.
+
 ### Impl Block Ordering
 
 Order functions and methods within `impl` blocks by:

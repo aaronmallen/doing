@@ -27,6 +27,16 @@ pub struct Command {
   action: Option<Action>,
 }
 
+impl Command {
+  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    match &self.action {
+      None => list_views(ctx),
+      Some(Action::Edit(args)) => edit_view(&args.name, ctx),
+      Some(Action::Remove(args)) => remove_view(&args.name, ctx),
+    }
+  }
+}
+
 /// Subcommands for managing views.
 #[derive(Clone, Debug, Subcommand)]
 enum Action {
@@ -50,16 +60,6 @@ struct RemoveArgs {
   /// Name of the view to remove
   #[arg(index = 1, value_name = "NAME")]
   name: String,
-}
-
-impl Command {
-  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    match &self.action {
-      None => list_views(ctx),
-      Some(Action::Edit(args)) => edit_view(&args.name, ctx),
-      Some(Action::Remove(args)) => remove_view(&args.name, ctx),
-    }
-  }
 }
 
 fn edit_view(name: &str, ctx: &AppContext) -> Result<()> {

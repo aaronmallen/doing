@@ -212,6 +212,23 @@ mod test {
     use super::*;
 
     #[test]
+    fn it_does_nothing_when_under_limit() {
+      let dir = tempfile::tempdir().unwrap();
+      let source = dir.path().join("test.md");
+      let backup_dir = dir.path().join("backups");
+      fs::create_dir_all(&backup_dir).unwrap();
+      fs::write(&source, "").unwrap();
+
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "").unwrap();
+
+      prune_backups(&source, &backup_dir, 5).unwrap();
+
+      let remaining = list_backups(&source, &backup_dir).unwrap();
+      assert_eq!(remaining.len(), 1);
+    }
+
+    #[test]
     fn it_keeps_only_history_size_newest_backups() {
       let dir = tempfile::tempdir().unwrap();
       let source = dir.path().join("test.md");
@@ -229,23 +246,6 @@ mod test {
 
       let remaining = list_backups(&source, &backup_dir).unwrap();
       assert_eq!(remaining.len(), 2);
-    }
-
-    #[test]
-    fn it_does_nothing_when_under_limit() {
-      let dir = tempfile::tempdir().unwrap();
-      let source = dir.path().join("test.md");
-      let backup_dir = dir.path().join("backups");
-      fs::create_dir_all(&backup_dir).unwrap();
-      fs::write(&source, "").unwrap();
-
-      let prefix = backup_prefix(&source);
-      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "").unwrap();
-
-      prune_backups(&source, &backup_dir, 5).unwrap();
-
-      let remaining = list_backups(&source, &backup_dir).unwrap();
-      assert_eq!(remaining.len(), 1);
     }
   }
 

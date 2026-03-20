@@ -23,19 +23,19 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_expands_tilde_prefix() {
-      let result = expand_tilde(Path::new("~/Documents/file.txt"));
-
-      assert!(result.is_absolute());
-      assert!(result.ends_with("Documents/file.txt"));
-    }
-
-    #[test]
     fn it_expands_bare_tilde() {
       let result = expand_tilde(Path::new("~"));
 
       assert!(result.is_absolute());
       assert!(!result.to_string_lossy().contains('~'));
+    }
+
+    #[test]
+    fn it_expands_tilde_prefix() {
+      let result = expand_tilde(Path::new("~/Documents/file.txt"));
+
+      assert!(result.is_absolute());
+      assert!(result.ends_with("Documents/file.txt"));
     }
 
     #[test]

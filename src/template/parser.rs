@@ -284,6 +284,20 @@ mod test {
     }
 
     #[test]
+    fn it_parses_color_tokens() {
+      let tokens = parse("%cyan%date%reset");
+
+      assert_eq!(
+        tokens,
+        vec![
+          Token::Color(colors::Color::Named(colors::NamedColor::Cyan)),
+          placeholder(TokenKind::Date),
+          Token::Color(colors::Color::Named(colors::NamedColor::Reset)),
+        ]
+      );
+    }
+
+    #[test]
     fn it_parses_combined_width_indent_and_prefix() {
       let tokens = parse("%80_14┃ note");
 
@@ -325,6 +339,24 @@ mod test {
           prefix: Some(": ".into()),
           width: None,
         }]
+      );
+    }
+
+    #[test]
+    fn it_parses_hex_color_tokens() {
+      let tokens = parse("%#FF5500hello");
+
+      assert_eq!(
+        tokens,
+        vec![
+          Token::Color(colors::Color::Hex {
+            background: false,
+            b: 0x00,
+            g: 0x55,
+            r: 0xFF,
+          }),
+          Token::Literal("hello".into()),
+        ]
       );
     }
 
@@ -483,38 +515,6 @@ mod test {
           prefix: None,
           width: None,
         }]
-      );
-    }
-
-    #[test]
-    fn it_parses_color_tokens() {
-      let tokens = parse("%cyan%date%reset");
-
-      assert_eq!(
-        tokens,
-        vec![
-          Token::Color(colors::Color::Named(colors::NamedColor::Cyan)),
-          placeholder(TokenKind::Date),
-          Token::Color(colors::Color::Named(colors::NamedColor::Reset)),
-        ]
-      );
-    }
-
-    #[test]
-    fn it_parses_hex_color_tokens() {
-      let tokens = parse("%#FF5500hello");
-
-      assert_eq!(
-        tokens,
-        vec![
-          Token::Color(colors::Color::Hex {
-            background: false,
-            b: 0x00,
-            g: 0x55,
-            r: 0xFF,
-          }),
-          Token::Literal("hello".into()),
-        ]
       );
     }
 

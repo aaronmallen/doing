@@ -371,6 +371,23 @@ mod test {
     use super::*;
 
     #[test]
+    fn it_back_takes_precedence_over_date_string() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        back: Some("2024-06-15 10:00".into()),
+        date_string: Some("2024-01-01 12:00".into()),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
+      assert_eq!(entries[0].date(), expected);
+    }
+
+    #[test]
     fn it_errors_on_empty_section() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
@@ -413,23 +430,6 @@ mod test {
       let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 8, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected_start);
       assert!(entries[0].finished());
-    }
-
-    #[test]
-    fn it_back_takes_precedence_over_date_string() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      let cmd = Command {
-        back: Some("2024-06-15 10:00".into()),
-        date_string: Some("2024-01-01 12:00".into()),
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      let expected = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
-      assert_eq!(entries[0].date(), expected);
     }
 
     #[test]
@@ -483,22 +483,6 @@ mod test {
     }
 
     #[test]
-    fn it_resets_with_date_string() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx(dir.path());
-      let cmd = Command {
-        date_string: Some("2024-06-15 15:00".into()),
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      let expected = Local.with_ymd_and_hms(2024, 6, 15, 15, 0, 0).unwrap();
-      assert_eq!(entries[0].date(), expected);
-    }
-
-    #[test]
     fn it_resets_start_date_to_now() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -527,6 +511,22 @@ mod test {
 
       let entries = ctx.document.entries_in_section("Currently");
       let expected = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
+      assert_eq!(entries[0].date(), expected);
+    }
+
+    #[test]
+    fn it_resets_with_date_string() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        date_string: Some("2024-06-15 15:00".into()),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      let expected = Local.with_ymd_and_hms(2024, 6, 15, 15, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected);
     }
 

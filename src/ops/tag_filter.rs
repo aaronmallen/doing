@@ -152,15 +152,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_matches_exact_tag() {
-      let entry = entry_with_tags(&["coding"]);
+    fn it_matches_case_insensitively() {
+      let entry = entry_with_tags(&["Coding"]);
 
       assert!(super::super::has_tag(&entry, "coding"));
     }
 
     #[test]
-    fn it_matches_case_insensitively() {
-      let entry = entry_with_tags(&["Coding"]);
+    fn it_matches_exact_tag() {
+      let entry = entry_with_tags(&["coding"]);
 
       assert!(super::super::has_tag(&entry, "coding"));
     }
@@ -262,14 +262,6 @@ mod test {
       use super::*;
 
       #[test]
-      fn it_requires_included_and_excludes_excluded() {
-        let entry = entry_with_tags(&["coding", "rust"]);
-        let filter = TagFilter::new(&["+coding", "-writing"], BooleanMode::Pattern);
-
-        assert!(filter.matches_entry(&entry));
-      }
-
-      #[test]
       fn it_rejects_when_excluded_tag_present() {
         let entry = entry_with_tags(&["coding", "writing"]);
         let filter = TagFilter::new(&["+coding", "-writing"], BooleanMode::Pattern);
@@ -286,9 +278,9 @@ mod test {
       }
 
       #[test]
-      fn it_treats_bare_terms_as_include() {
-        let entry = entry_with_tags(&["coding"]);
-        let filter = TagFilter::new(&["coding"], BooleanMode::Pattern);
+      fn it_requires_included_and_excludes_excluded() {
+        let entry = entry_with_tags(&["coding", "rust"]);
+        let filter = TagFilter::new(&["+coding", "-writing"], BooleanMode::Pattern);
 
         assert!(filter.matches_entry(&entry));
       }
@@ -300,6 +292,14 @@ mod test {
 
         assert!(filter.matches_entry(&entry));
       }
+
+      #[test]
+      fn it_treats_bare_terms_as_include() {
+        let entry = entry_with_tags(&["coding"]);
+        let filter = TagFilter::new(&["coding"], BooleanMode::Pattern);
+
+        assert!(filter.matches_entry(&entry));
+      }
     }
   }
 
@@ -307,13 +307,6 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-
-    #[test]
-    fn it_strips_at_prefix_from_tags() {
-      let filter = TagFilter::new(&["@coding", "@writing"], BooleanMode::Or);
-
-      assert_eq!(filter.tags, vec!["coding", "writing"]);
-    }
 
     #[test]
     fn it_parses_pattern_terms() {
@@ -328,6 +321,13 @@ mod test {
         ]
       );
     }
+
+    #[test]
+    fn it_strips_at_prefix_from_tags() {
+      let filter = TagFilter::new(&["@coding", "@writing"], BooleanMode::Or);
+
+      assert_eq!(filter.tags, vec!["coding", "writing"]);
+    }
   }
 
   mod parse_pattern_terms {
@@ -336,17 +336,17 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_parses_include_prefix() {
-      let terms = super::super::parse_pattern_terms(&["+coding"]);
-
-      assert_eq!(terms, vec![PatternTerm::Include("coding".into())]);
-    }
-
-    #[test]
     fn it_parses_exclude_prefix() {
       let terms = super::super::parse_pattern_terms(&["-writing"]);
 
       assert_eq!(terms, vec![PatternTerm::Exclude("writing".into())]);
+    }
+
+    #[test]
+    fn it_parses_include_prefix() {
+      let terms = super::super::parse_pattern_terms(&["+coding"]);
+
+      assert_eq!(terms, vec![PatternTerm::Include("coding".into())]);
     }
 
     #[test]
@@ -381,13 +381,13 @@ mod test {
     use pretty_assertions::assert_eq;
 
     #[test]
-    fn it_strips_at_prefix() {
-      assert_eq!(super::super::strip_at("@coding"), "coding");
+    fn it_returns_unchanged_without_prefix() {
+      assert_eq!(super::super::strip_at("coding"), "coding");
     }
 
     #[test]
-    fn it_returns_unchanged_without_prefix() {
-      assert_eq!(super::super::strip_at("coding"), "coding");
+    fn it_strips_at_prefix() {
+      assert_eq!(super::super::strip_at("@coding"), "coding");
     }
   }
 }

@@ -282,16 +282,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_returns_ok() {
-      let mut ctx = sample_ctx();
-      let cmd = default_cmd();
-
-      let result = cmd.call(&mut ctx);
-
-      assert!(result.is_ok());
-    }
-
-    #[test]
     fn it_filters_by_section() {
       let mut ctx = sample_ctx();
       let cmd = Command {
@@ -324,16 +314,6 @@ mod test {
     }
 
     #[test]
-    fn it_skips_done_entries() {
-      let mut ctx = sample_ctx_with_done_last();
-      let cmd = default_cmd();
-
-      let result = cmd.call(&mut ctx);
-
-      assert!(result.is_ok());
-    }
-
-    #[test]
     fn it_handles_empty_document() {
       let mut ctx = AppContext {
         config: crate::config::Config::default(),
@@ -349,6 +329,26 @@ mod test {
         use_pager: false,
         yes: false,
       };
+      let cmd = default_cmd();
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_returns_ok() {
+      let mut ctx = sample_ctx();
+      let cmd = default_cmd();
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_skips_done_entries() {
+      let mut ctx = sample_ctx_with_done_last();
       let cmd = default_cmd();
 
       let result = cmd.call(&mut ctx);

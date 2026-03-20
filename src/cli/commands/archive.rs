@@ -405,21 +405,6 @@ mod test {
     }
 
     #[test]
-    fn it_moves_nothing_when_keep_exceeds_candidates() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = Command {
-        keep: Some(10),
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
-      assert!(!ctx.document.has_section("Archive"));
-    }
-
-    #[test]
     fn it_moves_entries_from_positional_section() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
@@ -490,6 +475,21 @@ mod test {
       let archive = ctx.document.entries_in_section("Archive");
       assert_eq!(archive.len(), 1);
       assert_eq!(archive[0].title(), "Done task");
+    }
+
+    #[test]
+    fn it_moves_nothing_when_keep_exceeds_candidates() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let cmd = Command {
+        keep: Some(10),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
+      assert!(!ctx.document.has_section("Archive"));
     }
 
     #[test]

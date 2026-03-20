@@ -401,15 +401,6 @@ mod test {
     taskpaper::{Document, Note, Section, Tags},
   };
 
-  fn test_config() -> Config {
-    Config {
-      interaction: InteractionConfig {
-        confirm_longer_than: String::new(),
-      },
-      ..Config::default()
-    }
-  }
-
   fn default_cmd() -> Command {
     Command {
       archive: false,
@@ -428,6 +419,15 @@ mod test {
       took: None,
       unfinished: false,
       update: false,
+    }
+  }
+
+  fn test_config() -> Config {
+    Config {
+      interaction: InteractionConfig {
+        confirm_longer_than: String::new(),
+      },
+      ..Config::default()
     }
   }
 
@@ -622,6 +622,35 @@ mod test {
     }
 
     #[test]
+    fn it_errors_when_all_entries_already_done_with_unfinished_flag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let cmd = Command {
+        unfinished: true,
+        ..default_cmd()
+      };
+
+      assert!(cmd.call(&mut ctx).is_err());
+    }
+
+    #[test]
+    fn it_filters_by_tag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_tagged(dir.path());
+      let cmd = Command {
+        tag: vec!["project".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 2);
+      assert!(entries[0].finished()); // project task
+      assert!(!entries[1].finished()); // meeting task
+    }
+
+    #[test]
     fn it_finishes_last_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
@@ -690,23 +719,6 @@ mod test {
     }
 
     #[test]
-    fn it_filters_by_tag() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_tagged(dir.path());
-      let cmd = Command {
-        tag: vec!["project".into()],
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 2);
-      assert!(entries[0].finished()); // project task
-      assert!(!entries[1].finished()); // meeting task
-    }
-
-    #[test]
     fn it_removes_done_tag() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
@@ -747,18 +759,6 @@ mod test {
       let entries = ctx.document.entries_in_section("Currently");
       assert!(entries[0].finished());
       assert!(entries[0].done_date().is_none());
-    }
-
-    #[test]
-    fn it_errors_when_all_entries_already_done_with_unfinished_flag() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = Command {
-        unfinished: true,
-        ..default_cmd()
-      };
-
-      assert!(cmd.call(&mut ctx).is_err());
     }
 
     #[test]

@@ -216,6 +216,23 @@ mod test {
     }
   }
 
+  fn sample_ctx() -> AppContext {
+    AppContext {
+      config: crate::config::Config::default(),
+      default_answer: false,
+      document: crate::taskpaper::Document::new(),
+      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
   mod validate_command_name {
     #[test]
     fn it_accepts_known_command() {
@@ -278,23 +295,6 @@ mod test {
       let doc: toml_edit::DocumentMut = content.parse().unwrap();
       let arr = doc["disabled_commands"].as_array().unwrap();
       assert!(arr.is_empty());
-    }
-  }
-
-  fn sample_ctx() -> AppContext {
-    AppContext {
-      config: crate::config::Config::default(),
-      default_answer: false,
-      document: crate::taskpaper::Document::new(),
-      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
     }
   }
 }

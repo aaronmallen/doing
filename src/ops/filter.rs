@@ -201,20 +201,20 @@ mod test {
     taskpaper::{Note, Tag, Tags},
   };
 
-  fn make_entry(title: &str, section: &str, date: DateTime<Local>, tags: Tags) -> Entry {
-    Entry::new(date, title, tags, Note::new(), section, None::<String>)
-  }
-
-  fn make_entry_with_note(title: &str, section: &str, date: DateTime<Local>, tags: Tags, note: &str) -> Entry {
-    Entry::new(date, title, tags, Note::from_str(note), section, None::<String>)
-  }
-
   fn date(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Local> {
     Local.with_ymd_and_hms(year, month, day, hour, min, 0).unwrap()
   }
 
   fn done_tags(done_date: &str) -> Tags {
     Tags::from_iter(vec![Tag::new("done", Some(done_date))])
+  }
+
+  fn make_entry(title: &str, section: &str, date: DateTime<Local>, tags: Tags) -> Entry {
+    Entry::new(date, title, tags, Note::new(), section, None::<String>)
+  }
+
+  fn make_entry_with_note(title: &str, section: &str, date: DateTime<Local>, tags: Tags, note: &str) -> Entry {
+    Entry::new(date, title, tags, Note::from_str(note), section, None::<String>)
   }
 
   mod apply_sort_and_limit {
@@ -339,15 +339,6 @@ mod test {
     }
 
     #[test]
-    fn it_returns_empty_for_empty_input() {
-      let options = FilterOptions::default();
-
-      let result = super::super::filter_entries(Vec::new(), &options);
-
-      assert!(result.is_empty());
-    }
-
-    #[test]
     fn it_returns_all_with_default_options() {
       let entries = vec![
         make_entry("one", "Currently", date(2024, 1, 1, 10, 0), Tags::new()),
@@ -358,6 +349,15 @@ mod test {
       let result = super::super::filter_entries(entries, &options);
 
       assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn it_returns_empty_for_empty_input() {
+      let options = FilterOptions::default();
+
+      let result = super::super::filter_entries(Vec::new(), &options);
+
+      assert!(result.is_empty());
     }
 
     #[test]
@@ -465,18 +465,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_matches_title_text() {
-      let entry = make_entry("working on rust", "Currently", date(2024, 3, 15, 10, 0), Tags::new());
-      let (mode, case) = search::parse_query("rust", &Default::default()).unwrap();
-      let options = FilterOptions {
-        search: Some((mode, case)),
-        ..Default::default()
-      };
-
-      assert!(super::super::matches_search(&entry, &options));
-    }
-
-    #[test]
     fn it_matches_note_text_when_included() {
       let entry = make_entry_with_note(
         "working",
@@ -488,6 +476,18 @@ mod test {
       let (mode, case) = search::parse_query("rust", &Default::default()).unwrap();
       let options = FilterOptions {
         include_notes: true,
+        search: Some((mode, case)),
+        ..Default::default()
+      };
+
+      assert!(super::super::matches_search(&entry, &options));
+    }
+
+    #[test]
+    fn it_matches_title_text() {
+      let entry = make_entry("working on rust", "Currently", date(2024, 3, 15, 10, 0), Tags::new());
+      let (mode, case) = search::parse_query("rust", &Default::default()).unwrap();
+      let options = FilterOptions {
         search: Some((mode, case)),
         ..Default::default()
       };

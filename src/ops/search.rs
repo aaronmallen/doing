@@ -343,6 +343,130 @@ mod test {
     }
   }
 
+  mod matches_entry {
+    use chrono::{Local, TimeZone};
+
+    use super::*;
+    use crate::taskpaper::{Note, Tag, Tags};
+
+    fn sample_entry() -> Entry {
+      Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "Working on search feature",
+        Tags::new(),
+        Note::from_str("Added fuzzy matching\nFixed regex parsing"),
+        "Currently",
+        None::<String>,
+      )
+    }
+
+    fn tagged_entry() -> Entry {
+      Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "Working on project",
+        Tags::from_iter(vec![
+          Tag::new("coding", None::<String>),
+          Tag::new("rust", None::<String>),
+        ]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      )
+    }
+
+    #[test]
+    fn it_does_not_duplicate_results_for_title_and_tag_match() {
+      let entry = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "coding session",
+        Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("coding".into())]);
+
+      assert!(super::super::matches_entry(
+        &entry,
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_matches_note_when_include_notes_enabled() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
+
+      assert!(super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        true,
+      ));
+    }
+
+    #[test]
+    fn it_matches_tag_name() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("coding".into())]);
+
+      assert!(super::super::matches_entry(
+        &tagged_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_matches_tag_name_without_at_prefix() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("rust".into())]);
+
+      assert!(super::super::matches_entry(
+        &tagged_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_matches_title() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("search".into())]);
+
+      assert!(super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+
+    #[test]
+    fn it_returns_false_when_nothing_matches() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("nonexistent".into())]);
+
+      assert!(!super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        true,
+      ));
+    }
+
+    #[test]
+    fn it_skips_note_when_include_notes_disabled() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
+
+      assert!(!super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        false,
+      ));
+    }
+  }
+
   mod matches_exact {
     use super::*;
 
@@ -388,6 +512,11 @@ mod test {
     }
 
     #[test]
+    fn it_matches_when_gap_within_distance() {
+      assert!(super::super::matches_fuzzy("a__b", "ab", 3, CaseSensitivity::Sensitive));
+    }
+
+    #[test]
     fn it_rejects_characters_out_of_order() {
       assert!(!super::super::matches_fuzzy(
         "abc",
@@ -408,141 +537,12 @@ mod test {
     }
 
     #[test]
-    fn it_matches_when_gap_within_distance() {
-      assert!(super::super::matches_fuzzy("a__b", "ab", 3, CaseSensitivity::Sensitive));
-    }
-
-    #[test]
     fn it_skips_distance_check_when_zero() {
       assert!(super::super::matches_fuzzy(
         "a______________b",
         "ab",
         0,
         CaseSensitivity::Sensitive
-      ));
-    }
-  }
-
-  mod matches_entry {
-    use chrono::{Local, TimeZone};
-
-    use super::*;
-    use crate::taskpaper::{Note, Tag, Tags};
-
-    fn sample_entry() -> Entry {
-      Entry::new(
-        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
-        "Working on search feature",
-        Tags::new(),
-        Note::from_str("Added fuzzy matching\nFixed regex parsing"),
-        "Currently",
-        None::<String>,
-      )
-    }
-
-    fn tagged_entry() -> Entry {
-      Entry::new(
-        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
-        "Working on project",
-        Tags::from_iter(vec![
-          Tag::new("coding", None::<String>),
-          Tag::new("rust", None::<String>),
-        ]),
-        Note::new(),
-        "Currently",
-        None::<String>,
-      )
-    }
-
-    #[test]
-    fn it_matches_tag_name() {
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("coding".into())]);
-
-      assert!(super::super::matches_entry(
-        &tagged_entry(),
-        &mode,
-        CaseSensitivity::Ignore,
-        false,
-      ));
-    }
-
-    #[test]
-    fn it_matches_tag_name_without_at_prefix() {
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("rust".into())]);
-
-      assert!(super::super::matches_entry(
-        &tagged_entry(),
-        &mode,
-        CaseSensitivity::Ignore,
-        false,
-      ));
-    }
-
-    #[test]
-    fn it_does_not_duplicate_results_for_title_and_tag_match() {
-      let entry = Entry::new(
-        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
-        "coding session",
-        Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
-        Note::new(),
-        "Currently",
-        None::<String>,
-      );
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("coding".into())]);
-
-      assert!(super::super::matches_entry(
-        &entry,
-        &mode,
-        CaseSensitivity::Ignore,
-        false,
-      ));
-    }
-
-    #[test]
-    fn it_matches_title() {
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("search".into())]);
-
-      assert!(super::super::matches_entry(
-        &sample_entry(),
-        &mode,
-        CaseSensitivity::Ignore,
-        false,
-      ));
-    }
-
-    #[test]
-    fn it_matches_note_when_include_notes_enabled() {
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
-
-      assert!(super::super::matches_entry(
-        &sample_entry(),
-        &mode,
-        CaseSensitivity::Ignore,
-        true,
-      ));
-    }
-
-    #[test]
-    fn it_skips_note_when_include_notes_disabled() {
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
-
-      assert!(!super::super::matches_entry(
-        &sample_entry(),
-        &mode,
-        CaseSensitivity::Ignore,
-        false,
-      ));
-    }
-
-    #[test]
-    fn it_returns_false_when_nothing_matches() {
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("nonexistent".into())]);
-
-      assert!(!super::super::matches_entry(
-        &sample_entry(),
-        &mode,
-        CaseSensitivity::Ignore,
-        true,
       ));
     }
   }

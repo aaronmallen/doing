@@ -134,6 +134,21 @@ mod test {
     }
 
     #[test]
+    fn it_creates_default_tags_when_missing() {
+      let dir = tempfile::tempdir().unwrap();
+      let rc_path = dir.path().join(".doingrc");
+      fs::write(&rc_path, "order: asc\n").unwrap();
+
+      merge_tags(&rc_path, &["work".into()]).unwrap();
+
+      let content: serde_json::Value = yaml_serde::from_str(&fs::read_to_string(&rc_path).unwrap()).unwrap();
+      let tags = content["default_tags"].as_array().unwrap();
+
+      assert_eq!(tags.len(), 1);
+      assert_eq!(tags[0].as_str().unwrap(), "work");
+    }
+
+    #[test]
     fn it_deduplicates_case_insensitively() {
       let dir = tempfile::tempdir().unwrap();
       let rc_path = dir.path().join(".doingrc");
@@ -160,21 +175,6 @@ mod test {
 
       assert_eq!(tags.len(), 1);
       assert_eq!(tags[0].as_str().unwrap(), "auto");
-    }
-
-    #[test]
-    fn it_creates_default_tags_when_missing() {
-      let dir = tempfile::tempdir().unwrap();
-      let rc_path = dir.path().join(".doingrc");
-      fs::write(&rc_path, "order: asc\n").unwrap();
-
-      merge_tags(&rc_path, &["work".into()]).unwrap();
-
-      let content: serde_json::Value = yaml_serde::from_str(&fs::read_to_string(&rc_path).unwrap()).unwrap();
-      let tags = content["default_tags"].as_array().unwrap();
-
-      assert_eq!(tags.len(), 1);
-      assert_eq!(tags[0].as_str().unwrap(), "work");
     }
   }
 

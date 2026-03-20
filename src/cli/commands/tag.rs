@@ -53,13 +53,6 @@ pub struct Command {
   value: Option<String>,
 }
 
-/// Tracks an entry's ID and section for locating it in the document.
-#[derive(Clone, Debug)]
-struct EntryLocation {
-  id: String,
-  section: String,
-}
-
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let entries = if self.interactive {
@@ -268,6 +261,13 @@ impl Command {
   }
 }
 
+/// Tracks an entry's ID and section for locating it in the document.
+#[derive(Clone, Debug)]
+struct EntryLocation {
+  id: String,
+  section: String,
+}
+
 #[cfg(test)]
 mod test {
   use std::fs;
@@ -440,19 +440,21 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_adds_tags_to_last_entry() {
+    fn it_adds_tag_with_date_value() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
       let cmd = Command {
-        tags: vec!["coding,design".into()],
+        date: true,
+        tags: vec!["started".into()],
         ..default_cmd()
       };
 
       cmd.call(&mut ctx).unwrap();
 
       let entries = ctx.document.entries_in_section("Currently");
-      assert!(entries[0].tags().has("coding"));
-      assert!(entries[0].tags().has("design"));
+      let tag = entries[0].tags().iter().find(|t| t.name() == "started").unwrap();
+      assert!(tag.value().is_some());
+      assert!(tag.value().unwrap().contains('-'));
     }
 
     #[test]
@@ -474,21 +476,19 @@ mod test {
     }
 
     #[test]
-    fn it_adds_tag_with_date_value() {
+    fn it_adds_tags_to_last_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
       let cmd = Command {
-        date: true,
-        tags: vec!["started".into()],
+        tags: vec!["coding,design".into()],
         ..default_cmd()
       };
 
       cmd.call(&mut ctx).unwrap();
 
       let entries = ctx.document.entries_in_section("Currently");
-      let tag = entries[0].tags().iter().find(|t| t.name() == "started").unwrap();
-      assert!(tag.value().is_some());
-      assert!(tag.value().unwrap().contains('-'));
+      assert!(entries[0].tags().has("coding"));
+      assert!(entries[0].tags().has("design"));
     }
 
     #[test]
@@ -545,27 +545,6 @@ mod test {
     }
 
     #[test]
-    fn it_removes_tags_by_wildcard() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_multiple(dir.path());
-      let cmd = Command {
-        filter: FilterArgs {
-          count: Some(2),
-          ..Default::default()
-        },
-        remove: true,
-        tags: vec!["proj-*".into()],
-        ..default_cmd()
-      };
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert!(!entries[0].tags().has("proj-a"));
-      assert!(!entries[1].tags().has("proj-b"));
-    }
-
-    #[test]
     fn it_removes_tags_by_regex() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
@@ -577,6 +556,27 @@ mod test {
         regex: true,
         remove: true,
         tags: vec!["^proj-".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(!entries[0].tags().has("proj-a"));
+      assert!(!entries[1].tags().has("proj-b"));
+    }
+
+    #[test]
+    fn it_removes_tags_by_wildcard() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_multiple(dir.path());
+      let cmd = Command {
+        filter: FilterArgs {
+          count: Some(2),
+          ..Default::default()
+        },
+        remove: true,
+        tags: vec!["proj-*".into()],
         ..default_cmd()
       };
 

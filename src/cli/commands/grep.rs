@@ -1,18 +1,18 @@
 use clap::Args;
 
 use crate::{
-    cli::{
-        AppContext,
-        args::{DisplayArgs, FilterArgs},
-        editor, pager,
-    },
-    config::SortOrder,
-    errors::Result,
-    ops::{
-        backup::write_with_backup,
-        filter::{FilterOptions, filter_entries},
-    },
-    template::renderer::{RenderOptions, format_items},
+  cli::{
+    AppContext,
+    args::{DisplayArgs, FilterArgs},
+    editor, pager,
+  },
+  config::SortOrder,
+  errors::Result,
+  ops::{
+    backup::write_with_backup,
+    filter::{FilterOptions, filter_entries},
+  },
+  template::renderer::{RenderOptions, format_items},
 };
 
 /// Search entries across all sections using flexible text matching.
@@ -42,498 +42,483 @@ use crate::{
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
-    /// Case sensitivity mode (smart/sensitive/ignore)
-    #[arg(long)]
-    case: Option<String>,
+  /// Case sensitivity mode (smart/sensitive/ignore)
+  #[arg(long)]
+  case: Option<String>,
 
-    /// Delete all matching entries
-    #[arg(short, long)]
-    delete: bool,
+  /// Delete all matching entries
+  #[arg(short, long)]
+  delete: bool,
 
-    #[command(flatten)]
-    display: DisplayArgs,
+  #[command(flatten)]
+  display: DisplayArgs,
 
-    /// Open matching entries in an editor for batch editing
-    #[arg(short, long)]
-    editor: bool,
+  /// Open matching entries in an editor for batch editing
+  #[arg(short, long)]
+  editor: bool,
 
-    /// Use exact (literal substring) matching
-    #[arg(long, conflicts_with_all = ["fuzzy", "regex"])]
-    exact: bool,
+  /// Use exact (literal substring) matching
+  #[arg(long, conflicts_with_all = ["fuzzy", "regex"])]
+  exact: bool,
 
-    #[command(flatten)]
-    filter: FilterArgs,
+  #[command(flatten)]
+  filter: FilterArgs,
 
-    /// Use fuzzy matching
-    #[arg(long, conflicts_with_all = ["exact", "regex"])]
-    fuzzy: bool,
+  /// Use fuzzy matching
+  #[arg(long, conflicts_with_all = ["exact", "regex"])]
+  fuzzy: bool,
 
-    /// Highlight matching text in output
-    #[arg(long)]
-    highlight: bool,
+  /// Highlight matching text in output
+  #[arg(long)]
+  highlight: bool,
 
-    /// Interactively select entries from search results
-    #[arg(short, long)]
-    interactive: bool,
+  /// Interactively select entries from search results
+  #[arg(short, long)]
+  interactive: bool,
 
-    /// Use a pager for output
-    #[arg(short, long)]
-    pager: bool,
+  /// Use a pager for output
+  #[arg(short, long)]
+  pager: bool,
 
-    /// Search query
-    #[arg(index = 1, required = true, value_name = "QUERY")]
-    query: String,
+  /// Search query
+  #[arg(index = 1, required = true, value_name = "QUERY")]
+  query: String,
 
-    /// Use regex matching
-    #[arg(long, conflicts_with_all = ["exact", "fuzzy"])]
-    regex: bool,
+  /// Use regex matching
+  #[arg(long, conflicts_with_all = ["exact", "fuzzy"])]
+  regex: bool,
 }
 
 impl Command {
-    pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-        let section_name = self.filter.section.as_deref().unwrap_or("all");
+  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    let section_name = self.filter.section.as_deref().unwrap_or("all");
 
-        let all_entries: Vec<_> = ctx
-            .document
-            .entries_in_section(section_name)
-            .into_iter()
-            .cloned()
-            .collect();
+    let all_entries: Vec<_> = ctx
+      .document
+      .entries_in_section(section_name)
+      .into_iter()
+      .cloned()
+      .collect();
 
-        let mut filter_options = self.build_filter_options(ctx, section_name)?;
+    let mut filter_options = self.build_filter_options(ctx, section_name)?;
 
-        let sort_order = self
-            .display
-            .sort
-            .map(SortOrder::from)
-            .or(Some(ctx.config.order));
-        filter_options.sort = sort_order;
+    let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));
+    filter_options.sort = sort_order;
 
-        let filtered = filter_entries(all_entries, &filter_options);
+    let filtered = filter_entries(all_entries, &filter_options);
 
-        let entries = if self.interactive && !filtered.is_empty() {
-            crate::cli::interactive::select_entries(&filtered)?
-        } else {
-            filtered
-        };
+    let entries = if self.interactive && !filtered.is_empty() {
+      crate::cli::interactive::select_entries(&filtered)?
+    } else {
+      filtered
+    };
 
-        if self.delete {
-            return self.action_delete(ctx, &entries);
-        }
-
-        if self.editor {
-            return self.action_editor(ctx, &entries);
-        }
-
-        let output = self
-            .display
-            .render_entries(&entries, &ctx.config, "default")?;
-
-        if !output.is_empty() {
-            pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-        }
-
-        Ok(())
+    if self.delete {
+      return self.action_delete(ctx, &entries);
     }
 
-    fn action_delete(
-        &self,
-        ctx: &mut AppContext,
-        entries: &[crate::taskpaper::Entry],
-    ) -> Result<()> {
-        for entry in entries {
-            if let Some(section) = ctx.document.section_by_name_mut(entry.section()) {
-                section.remove_entry(entry.id());
-            }
-        }
-
-        let count = entries.len();
-        if count == 1 {
-            ctx.status("Deleted 1 entry");
-        } else {
-            ctx.status(format!("Deleted {count} entries"));
-        }
-
-        write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
-        Ok(())
+    if self.editor {
+      return self.action_editor(ctx, &entries);
     }
 
-    fn action_editor(
-        &self,
-        ctx: &mut AppContext,
-        entries: &[crate::taskpaper::Entry],
-    ) -> Result<()> {
-        let render_options = RenderOptions::from_config("default", &ctx.config);
-        let divider = "---";
+    let output = self.display.render_entries(&entries, &ctx.config, "default")?;
 
-        let content: Vec<String> = entries
-            .iter()
-            .map(|e| format_items(std::slice::from_ref(e), &render_options, &ctx.config, false))
-            .collect();
-        let initial = content.join(&format!("\n{divider}\n"));
-
-        let edited = editor::edit(&initial, &ctx.config)?;
-
-        let parts: Vec<&str> = edited.split(divider).collect();
-
-        if parts.len() != entries.len() {
-            return Err(crate::errors::Error::Config(format!(
-                "expected {} entries separated by '---' dividers, got {}",
-                entries.len(),
-                parts.len()
-            )));
-        }
-
-        ctx.status(format!("Edited {} entries", entries.len()));
-        Ok(())
+    if !output.is_empty() {
+      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
     }
 
-    fn build_filter_options(&self, ctx: &AppContext, section_name: &str) -> Result<FilterOptions> {
-        let search_query = self.build_search_query();
+    Ok(())
+  }
 
-        let filter_with_search = FilterArgs {
-            search: Some(search_query),
-            ..self.filter.clone()
-        };
-
-        let mut search_config = ctx.config.search.clone();
-
-        if let Some(ref case_override) = self.case {
-            search_config.case = case_override.clone();
-        }
-
-        if self.highlight {
-            search_config.highlight = true;
-        }
-
-        if self.exact {
-            search_config.matching = "exact".into();
-        } else if self.fuzzy {
-            search_config.matching = "fuzzy".into();
-        } else if self.regex {
-            search_config.matching = "regex".into();
-        }
-
-        let config_with_overrides = crate::config::Config {
-            search: search_config,
-            ..ctx.config.clone()
-        };
-
-        let mut options =
-            filter_with_search.into_filter_options(&config_with_overrides, ctx.include_notes)?;
-        options.section = Some(section_name.to_string());
-        Ok(options)
+  fn action_delete(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
+    for entry in entries {
+      if let Some(section) = ctx.document.section_by_name_mut(entry.section()) {
+        section.remove_entry(entry.id());
+      }
     }
 
-    fn build_search_query(&self) -> String {
-        if self.exact {
-            format!("'{}", self.query)
-        } else if self.regex {
-            if self.query.starts_with('/') && self.query.ends_with('/') {
-                self.query.clone()
-            } else {
-                format!("/{}/", self.query)
-            }
-        } else {
-            self.query.clone()
-        }
+    let count = entries.len();
+    if count == 1 {
+      ctx.status("Deleted 1 entry");
+    } else {
+      ctx.status(format!("Deleted {count} entries"));
     }
+
+    write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
+    Ok(())
+  }
+
+  fn action_editor(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
+    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let divider = "---";
+
+    let content: Vec<String> = entries
+      .iter()
+      .map(|e| format_items(std::slice::from_ref(e), &render_options, &ctx.config, false))
+      .collect();
+    let initial = content.join(&format!("\n{divider}\n"));
+
+    let edited = editor::edit(&initial, &ctx.config)?;
+
+    let parts: Vec<&str> = edited.split(divider).collect();
+
+    if parts.len() != entries.len() {
+      return Err(crate::errors::Error::Config(format!(
+        "expected {} entries separated by '---' dividers, got {}",
+        entries.len(),
+        parts.len()
+      )));
+    }
+
+    ctx.status(format!("Edited {} entries", entries.len()));
+    Ok(())
+  }
+
+  fn build_filter_options(&self, ctx: &AppContext, section_name: &str) -> Result<FilterOptions> {
+    let search_query = self.build_search_query();
+
+    let filter_with_search = FilterArgs {
+      search: Some(search_query),
+      ..self.filter.clone()
+    };
+
+    let mut search_config = ctx.config.search.clone();
+
+    if let Some(ref case_override) = self.case {
+      search_config.case = case_override.clone();
+    }
+
+    if self.highlight {
+      search_config.highlight = true;
+    }
+
+    if self.exact {
+      search_config.matching = "exact".into();
+    } else if self.fuzzy {
+      search_config.matching = "fuzzy".into();
+    } else if self.regex {
+      search_config.matching = "regex".into();
+    }
+
+    let config_with_overrides = crate::config::Config {
+      search: search_config,
+      ..ctx.config.clone()
+    };
+
+    let mut options = filter_with_search.into_filter_options(&config_with_overrides, ctx.include_notes)?;
+    options.section = Some(section_name.to_string());
+    Ok(options)
+  }
+
+  fn build_search_query(&self) -> String {
+    if self.exact {
+      format!("'{}", self.query)
+    } else if self.regex {
+      if self.query.starts_with('/') && self.query.ends_with('/') {
+        self.query.clone()
+      } else {
+        format!("/{}/", self.query)
+      }
+    } else {
+      self.query.clone()
+    }
+  }
 }
 
 #[cfg(test)]
 mod test {
-    use std::fs;
+  use std::fs;
 
-    use chrono::{Local, TimeZone};
+  use chrono::{Local, TimeZone};
+
+  use super::*;
+  use crate::taskpaper::{Document, Entry, Note, Section, Tag, Tags};
+
+  fn default_cmd(query: &str) -> Command {
+    Command {
+      case: None,
+      delete: false,
+      display: DisplayArgs::default(),
+      editor: false,
+      exact: false,
+      filter: FilterArgs::default(),
+      fuzzy: false,
+      highlight: false,
+      interactive: false,
+      pager: false,
+      query: query.to_string(),
+      regex: false,
+    }
+  }
+
+  fn sample_ctx() -> AppContext {
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Working on project",
+      Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Meeting with team",
+      Tags::from_iter(vec![Tag::new("meeting", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+
+    let mut later = Section::new("Later");
+    later.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 16, 0, 0).unwrap(),
+      "Plan next ready",
+      Tags::new(),
+      Note::new(),
+      "Later",
+      None::<String>,
+    ));
+    doc.add_section(later);
+
+    AppContext {
+      config: crate::config::Config::default(),
+      default_answer: false,
+      document: doc,
+      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
+  fn sample_ctx_with_dir(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut ctx = sample_ctx();
+    ctx.doing_file = path;
+    ctx
+  }
+
+  mod action_delete {
+    use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
-    fn default_cmd(query: &str) -> Command {
-        Command {
-            case: None,
-            delete: false,
-            display: DisplayArgs::default(),
-            editor: false,
-            exact: false,
-            filter: FilterArgs::default(),
-            fuzzy: false,
-            highlight: false,
-            interactive: false,
-            pager: false,
-            query: query.to_string(),
-            regex: false,
-        }
+    #[test]
+    fn it_deletes_all_matching_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_dir(dir.path());
+      let entries: Vec<Entry> = ctx
+        .document
+        .entries_in_section("Currently")
+        .into_iter()
+        .cloned()
+        .collect();
+      let cmd = default_cmd("project");
+
+      cmd.action_delete(&mut ctx, &entries).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").len(), 0);
     }
 
-    fn sample_ctx() -> AppContext {
-        let mut doc = Document::new();
-        let mut section = Section::new("Currently");
-        section.add_entry(Entry::new(
-            Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-            "Working on project",
-            Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
-            Note::new(),
-            "Currently",
-            None::<String>,
-        ));
-        section.add_entry(Entry::new(
-            Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
-            "Meeting with team",
-            Tags::from_iter(vec![Tag::new("meeting", None::<String>)]),
-            Note::new(),
-            "Currently",
-            None::<String>,
-        ));
-        doc.add_section(section);
+    #[test]
+    fn it_deletes_matching_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_dir(dir.path());
+      let entries: Vec<Entry> = ctx
+        .document
+        .entries_in_section("Currently")
+        .into_iter()
+        .cloned()
+        .collect();
+      let cmd = default_cmd("project");
 
-        let mut later = Section::new("Later");
-        later.add_entry(Entry::new(
-            Local.with_ymd_and_hms(2024, 3, 17, 16, 0, 0).unwrap(),
-            "Plan next ready",
-            Tags::new(),
-            Note::new(),
-            "Later",
-            None::<String>,
-        ));
-        doc.add_section(later);
+      cmd.action_delete(&mut ctx, &entries[..1]).unwrap();
 
-        AppContext {
-            config: crate::config::Config::default(),
-            default_answer: false,
-            document: doc,
-            doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-            include_notes: true,
-            no: false,
-            noauto: false,
-            quiet: false,
-            stdout: false,
-            use_color: false,
-            use_pager: false,
-            yes: false,
-        }
+      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
+      assert_eq!(
+        ctx.document.entries_in_section("Currently")[0].title(),
+        "Meeting with team"
+      );
+    }
+  }
+
+  mod build_filter_options {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_defaults_to_all_sections() {
+      let ctx = sample_ctx();
+      let cmd = default_cmd("project");
+
+      let options = cmd.build_filter_options(&ctx, "all").unwrap();
+
+      assert_eq!(options.section.as_deref(), Some("all"));
     }
 
-    fn sample_ctx_with_dir(dir: &std::path::Path) -> AppContext {
-        let path = dir.join("doing.md");
-        fs::write(&path, "Currently:\n").unwrap();
-        let mut ctx = sample_ctx();
-        ctx.doing_file = path;
-        ctx
+    #[test]
+    fn it_overrides_case_sensitivity() {
+      let ctx = sample_ctx();
+      let cmd = Command {
+        case: Some("sensitive".into()),
+        ..default_cmd("project")
+      };
+
+      let options = cmd.build_filter_options(&ctx, "all").unwrap();
+
+      assert!(options.search.is_some());
     }
 
-    mod action_delete {
-        use pretty_assertions::assert_eq;
+    #[test]
+    fn it_populates_search_from_query() {
+      let ctx = sample_ctx();
+      let cmd = default_cmd("project");
 
-        use super::*;
+      let options = cmd.build_filter_options(&ctx, "all").unwrap();
 
-        #[test]
-        fn it_deletes_matching_entries() {
-            let dir = tempfile::tempdir().unwrap();
-            let mut ctx = sample_ctx_with_dir(dir.path());
-            let entries: Vec<Entry> = ctx
-                .document
-                .entries_in_section("Currently")
-                .into_iter()
-                .cloned()
-                .collect();
-            let cmd = default_cmd("project");
-
-            cmd.action_delete(&mut ctx, &entries[..1]).unwrap();
-
-            assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
-            assert_eq!(
-                ctx.document.entries_in_section("Currently")[0].title(),
-                "Meeting with team"
-            );
-        }
-
-        #[test]
-        fn it_deletes_all_matching_entries() {
-            let dir = tempfile::tempdir().unwrap();
-            let mut ctx = sample_ctx_with_dir(dir.path());
-            let entries: Vec<Entry> = ctx
-                .document
-                .entries_in_section("Currently")
-                .into_iter()
-                .cloned()
-                .collect();
-            let cmd = default_cmd("project");
-
-            cmd.action_delete(&mut ctx, &entries).unwrap();
-
-            assert_eq!(ctx.document.entries_in_section("Currently").len(), 0);
-        }
+      assert!(options.search.is_some());
     }
 
-    mod build_filter_options {
-        use pretty_assertions::assert_eq;
+    #[test]
+    fn it_sets_section_from_argument() {
+      let ctx = sample_ctx();
+      let cmd = default_cmd("project");
 
-        use super::*;
+      let options = cmd.build_filter_options(&ctx, "Currently").unwrap();
 
-        #[test]
-        fn it_populates_search_from_query() {
-            let ctx = sample_ctx();
-            let cmd = default_cmd("project");
+      assert_eq!(options.section.as_deref(), Some("Currently"));
+    }
+  }
 
-            let options = cmd.build_filter_options(&ctx, "all").unwrap();
+  mod build_search_query {
+    use pretty_assertions::assert_eq;
 
-            assert!(options.search.is_some());
-        }
+    use super::*;
 
-        #[test]
-        fn it_sets_section_from_argument() {
-            let ctx = sample_ctx();
-            let cmd = default_cmd("project");
+    #[test]
+    fn it_prepends_quote_for_exact_mode() {
+      let cmd = Command {
+        exact: true,
+        ..default_cmd("hello world")
+      };
 
-            let options = cmd.build_filter_options(&ctx, "Currently").unwrap();
-
-            assert_eq!(options.section.as_deref(), Some("Currently"));
-        }
-
-        #[test]
-        fn it_defaults_to_all_sections() {
-            let ctx = sample_ctx();
-            let cmd = default_cmd("project");
-
-            let options = cmd.build_filter_options(&ctx, "all").unwrap();
-
-            assert_eq!(options.section.as_deref(), Some("all"));
-        }
-
-        #[test]
-        fn it_overrides_case_sensitivity() {
-            let ctx = sample_ctx();
-            let cmd = Command {
-                case: Some("sensitive".into()),
-                ..default_cmd("project")
-            };
-
-            let options = cmd.build_filter_options(&ctx, "all").unwrap();
-
-            assert!(options.search.is_some());
-        }
+      assert_eq!(cmd.build_search_query(), "'hello world");
     }
 
-    mod build_search_query {
-        use pretty_assertions::assert_eq;
+    #[test]
+    fn it_returns_query_as_is_for_pattern_mode() {
+      let cmd = default_cmd("hello world");
 
-        use super::*;
-
-        #[test]
-        fn it_prepends_quote_for_exact_mode() {
-            let cmd = Command {
-                exact: true,
-                ..default_cmd("hello world")
-            };
-
-            assert_eq!(cmd.build_search_query(), "'hello world");
-        }
-
-        #[test]
-        fn it_returns_query_as_is_for_pattern_mode() {
-            let cmd = default_cmd("hello world");
-
-            assert_eq!(cmd.build_search_query(), "hello world");
-        }
-
-        #[test]
-        fn it_wraps_regex_in_slashes() {
-            let cmd = Command {
-                regex: true,
-                ..default_cmd("foo.*bar")
-            };
-
-            assert_eq!(cmd.build_search_query(), "/foo.*bar/");
-        }
-
-        #[test]
-        fn it_preserves_existing_regex_slashes() {
-            let cmd = Command {
-                regex: true,
-                ..default_cmd("/foo.*bar/")
-            };
-
-            assert_eq!(cmd.build_search_query(), "/foo.*bar/");
-        }
+      assert_eq!(cmd.build_search_query(), "hello world");
     }
 
-    mod call {
-        use super::*;
+    #[test]
+    fn it_preserves_existing_regex_slashes() {
+      let cmd = Command {
+        regex: true,
+        ..default_cmd("/foo.*bar/")
+      };
 
-        #[test]
-        fn it_searches_across_all_sections() {
-            let mut ctx = sample_ctx();
-            let cmd = default_cmd("project");
-
-            let result = cmd.call(&mut ctx);
-
-            assert!(result.is_ok());
-        }
-
-        #[test]
-        fn it_searches_specific_section() {
-            let mut ctx = sample_ctx();
-            let cmd = Command {
-                filter: FilterArgs {
-                    section: Some("Currently".into()),
-                    ..FilterArgs::default()
-                },
-                ..default_cmd("Meeting")
-            };
-
-            let result = cmd.call(&mut ctx);
-
-            assert!(result.is_ok());
-        }
-
-        #[test]
-        fn it_handles_no_matches() {
-            let mut ctx = sample_ctx();
-            let cmd = default_cmd("nonexistent");
-
-            let result = cmd.call(&mut ctx);
-
-            assert!(result.is_ok());
-        }
-
-        #[test]
-        fn it_searches_with_exact_mode() {
-            let mut ctx = sample_ctx();
-            let cmd = Command {
-                exact: true,
-                ..default_cmd("Working on")
-            };
-
-            let result = cmd.call(&mut ctx);
-
-            assert!(result.is_ok());
-        }
-
-        #[test]
-        fn it_searches_with_fuzzy_mode() {
-            let mut ctx = sample_ctx();
-            let cmd = Command {
-                fuzzy: true,
-                ..default_cmd("wrk")
-            };
-
-            let result = cmd.call(&mut ctx);
-
-            assert!(result.is_ok());
-        }
-
-        #[test]
-        fn it_searches_with_regex_mode() {
-            let mut ctx = sample_ctx();
-            let cmd = Command {
-                regex: true,
-                ..default_cmd("Work.*project")
-            };
-
-            let result = cmd.call(&mut ctx);
-
-            assert!(result.is_ok());
-        }
+      assert_eq!(cmd.build_search_query(), "/foo.*bar/");
     }
+
+    #[test]
+    fn it_wraps_regex_in_slashes() {
+      let cmd = Command {
+        regex: true,
+        ..default_cmd("foo.*bar")
+      };
+
+      assert_eq!(cmd.build_search_query(), "/foo.*bar/");
+    }
+  }
+
+  mod call {
+    use super::*;
+
+    #[test]
+    fn it_handles_no_matches() {
+      let mut ctx = sample_ctx();
+      let cmd = default_cmd("nonexistent");
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_searches_across_all_sections() {
+      let mut ctx = sample_ctx();
+      let cmd = default_cmd("project");
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_searches_specific_section() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        filter: FilterArgs {
+          section: Some("Currently".into()),
+          ..FilterArgs::default()
+        },
+        ..default_cmd("Meeting")
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_searches_with_exact_mode() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        exact: true,
+        ..default_cmd("Working on")
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_searches_with_fuzzy_mode() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        fuzzy: true,
+        ..default_cmd("wrk")
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_searches_with_regex_mode() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        regex: true,
+        ..default_cmd("Work.*project")
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+  }
 }

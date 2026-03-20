@@ -361,6 +361,22 @@ mod test {
     }
 
     #[test]
+    fn it_parses_bare_abbreviated_day_name() {
+      let result = chronify("fri").unwrap();
+
+      assert_eq!(result.weekday(), Weekday::Fri);
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+    }
+
+    #[test]
+    fn it_parses_bare_full_day_name() {
+      let result = chronify("friday").unwrap();
+
+      assert_eq!(result.weekday(), Weekday::Fri);
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+    }
+
+    #[test]
     fn it_parses_combined_day_of_week_with_time() {
       let result = chronify("yesterday 3pm").unwrap();
       let expected_date = (Local::now() - Duration::days(1)).date_naive();
@@ -454,22 +470,6 @@ mod test {
       let expected = (Local::now() - Duration::days(1)).date_naive();
 
       assert_eq!(result.date_naive(), expected);
-    }
-
-    #[test]
-    fn it_parses_bare_full_day_name() {
-      let result = chronify("friday").unwrap();
-
-      assert_eq!(result.weekday(), Weekday::Fri);
-      assert_eq!(result.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
-    }
-
-    #[test]
-    fn it_parses_bare_abbreviated_day_name() {
-      let result = chronify("fri").unwrap();
-
-      assert_eq!(result.weekday(), Weekday::Fri);
-      assert_eq!(result.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
     }
 
     #[test]

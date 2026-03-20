@@ -356,20 +356,6 @@ mod test {
     }
 
     #[test]
-    fn it_repeats_done_entry_when_no_active_entries() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_no_active(dir.path());
-      let cmd = default_cmd();
-
-      cmd.call(&mut ctx).unwrap();
-
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 2);
-      assert_eq!(entries[1].title(), "Done task");
-      assert!(!entries[1].finished());
-    }
-
-    #[test]
     fn it_filters_by_tag() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_tagged_entries(dir.path());
@@ -430,18 +416,17 @@ mod test {
     }
 
     #[test]
-    fn it_replaces_note_when_specified() {
+    fn it_repeats_done_entry_when_no_active_entries() {
       let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_active_entry(dir.path());
-      let cmd = Command {
-        note: Some("New note".into()),
-        ..default_cmd()
-      };
+      let mut ctx = sample_ctx_no_active(dir.path());
+      let cmd = default_cmd();
 
       cmd.call(&mut ctx).unwrap();
 
       let entries = ctx.document.entries_in_section("Currently");
-      assert!(!entries[1].note().is_empty());
+      assert_eq!(entries.len(), 2);
+      assert_eq!(entries[1].title(), "Done task");
+      assert!(!entries[1].finished());
     }
 
     #[test]
@@ -456,6 +441,21 @@ mod test {
       assert_eq!(entries.len(), 2);
       assert_eq!(entries[1].title(), "Active task");
       assert!(!entries[1].finished());
+    }
+
+    #[test]
+    fn it_replaces_note_when_specified() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_active_entry(dir.path());
+      let cmd = Command {
+        note: Some("New note".into()),
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries = ctx.document.entries_in_section("Currently");
+      assert!(!entries[1].note().is_empty());
     }
   }
 

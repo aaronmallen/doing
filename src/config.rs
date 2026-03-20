@@ -355,14 +355,31 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_returns_defaults_when_no_config_exists() {
+    fn it_expands_tilde_in_paths() {
       let dir = tempfile::tempdir().unwrap();
+      fs::write(
+        dir.path().join(".doingrc"),
+        "doing_file: ~/my_doing.md\nbackup_dir: ~/backups\n",
+      )
+      .unwrap();
 
       let config = Config::load_from(dir.path()).unwrap();
 
-      assert_eq!(config.current_section, "Currently");
-      assert_eq!(config.history_size, 15);
-      assert_eq!(config.order, SortOrder::Asc);
+      assert!(config.doing_file.is_absolute());
+      assert!(config.doing_file.ends_with("my_doing.md"));
+      assert!(config.backup_dir.is_absolute());
+      assert!(config.backup_dir.ends_with("backups"));
+    }
+
+    #[test]
+    fn it_handles_explicit_null_values_in_config() {
+      let dir = tempfile::tempdir().unwrap();
+      fs::write(dir.path().join(".doingrc"), "search:\ncurrent_section: Working\n").unwrap();
+
+      let config = Config::load_from(dir.path()).unwrap();
+
+      assert_eq!(config.current_section, "Working");
+      assert_eq!(config.search, SearchConfig::default());
     }
 
     #[test]
@@ -396,34 +413,6 @@ mod test {
     }
 
     #[test]
-    fn it_expands_tilde_in_paths() {
-      let dir = tempfile::tempdir().unwrap();
-      fs::write(
-        dir.path().join(".doingrc"),
-        "doing_file: ~/my_doing.md\nbackup_dir: ~/backups\n",
-      )
-      .unwrap();
-
-      let config = Config::load_from(dir.path()).unwrap();
-
-      assert!(config.doing_file.is_absolute());
-      assert!(config.doing_file.ends_with("my_doing.md"));
-      assert!(config.backup_dir.is_absolute());
-      assert!(config.backup_dir.ends_with("backups"));
-    }
-
-    #[test]
-    fn it_handles_explicit_null_values_in_config() {
-      let dir = tempfile::tempdir().unwrap();
-      fs::write(dir.path().join(".doingrc"), "search:\ncurrent_section: Working\n").unwrap();
-
-      let config = Config::load_from(dir.path()).unwrap();
-
-      assert_eq!(config.current_section, "Working");
-      assert_eq!(config.search, SearchConfig::default());
-    }
-
-    #[test]
     fn it_preserves_defaults_for_missing_keys() {
       let dir = tempfile::tempdir().unwrap();
       fs::write(dir.path().join(".doingrc"), "history_size: 99\n").unwrap();
@@ -434,6 +423,17 @@ mod test {
       assert_eq!(config.current_section, "Currently");
       assert_eq!(config.marker_tag, "flagged");
       assert_eq!(config.search.matching, "pattern");
+    }
+
+    #[test]
+    fn it_returns_defaults_when_no_config_exists() {
+      let dir = tempfile::tempdir().unwrap();
+
+      let config = Config::load_from(dir.path()).unwrap();
+
+      assert_eq!(config.current_section, "Currently");
+      assert_eq!(config.history_size, 15);
+      assert_eq!(config.order, SortOrder::Asc);
     }
   }
 }

@@ -116,6 +116,14 @@ fn parse_raw_value(raw: &str) -> Value {
   Value::String(raw.into())
 }
 
+fn resolve_config_path_for_write() -> std::path::PathBuf {
+  loader::discover_global_config().unwrap_or_else(|| {
+    dir_spec::config_home()
+      .expect("failed to resolve config directory")
+      .join("doing/config.toml")
+  })
+}
+
 fn resolve_dot_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
   let mut current = value;
   for key in path.split('.') {
@@ -221,14 +229,6 @@ fn set_value_toml(path: &Path, key: &str, raw_value: &str, quiet: bool) -> Resul
   Ok(())
 }
 
-fn resolve_config_path_for_write() -> std::path::PathBuf {
-  loader::discover_global_config().unwrap_or_else(|| {
-    dir_spec::config_home()
-      .expect("failed to resolve config directory")
-      .join("doing/config.toml")
-  })
-}
-
 fn toml_value(raw: &str) -> toml_edit::Item {
   if raw == "true" {
     return toml_edit::value(true);
@@ -250,33 +250,16 @@ mod test {
   use super::*;
   use crate::config::Config;
 
-  fn sample_ctx() -> AppContext {
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: crate::taskpaper::Document::new(),
-      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
-  }
-
   mod get_value {
     use super::*;
 
     #[test]
-    fn it_returns_error_for_missing_key() {
+    fn it_retrieves_nested_value() {
       let ctx = sample_ctx();
 
-      let result = super::super::get_value("nonexistent.key", &ctx);
+      let result = super::super::get_value("search.case", &ctx);
 
-      assert!(result.is_err());
+      assert!(result.is_ok());
     }
 
     #[test]
@@ -289,12 +272,12 @@ mod test {
     }
 
     #[test]
-    fn it_retrieves_nested_value() {
+    fn it_returns_error_for_missing_key() {
       let ctx = sample_ctx();
 
-      let result = super::super::get_value("search.case", &ctx);
+      let result = super::super::get_value("nonexistent.key", &ctx);
 
-      assert!(result.is_ok());
+      assert!(result.is_err());
     }
   }
 
@@ -351,6 +334,23 @@ mod test {
     }
   }
 
+  fn sample_ctx() -> AppContext {
+    AppContext {
+      config: Config::default(),
+      default_answer: false,
+      document: crate::taskpaper::Document::new(),
+      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
   mod set_dot_path {
     use pretty_assertions::assert_eq;
     use serde_json::json;
@@ -380,6 +380,36 @@ mod test {
       super::super::set_dot_path(&mut value, "order", json!("desc")).unwrap();
 
       assert_eq!(value["order"], json!("desc"));
+    }
+  }
+
+  mod set_value_generic {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn it_sets_yaml_value() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join(".doingrc");
+      std::fs::write(&path, "order: asc\n").unwrap();
+
+      super::super::set_value_generic(&path, "history_size", "30", false).unwrap();
+
+      let content: Value = yaml_serde::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+      assert_eq!(content["history_size"], json!(30));
+    }
+
+    #[test]
+    fn it_sets_json_value() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.json");
+      std::fs::write(&path, "{\"order\": \"asc\"}").unwrap();
+
+      super::super::set_value_generic(&path, "history_size", "30", false).unwrap();
+
+      let content: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+      assert_eq!(content["history_size"], json!(30));
     }
   }
 
@@ -434,36 +464,6 @@ mod test {
 
       let content = std::fs::read_to_string(&path).unwrap();
       assert!(content.contains("# My config"));
-    }
-  }
-
-  mod set_value_generic {
-    use serde_json::json;
-
-    use super::*;
-
-    #[test]
-    fn it_sets_yaml_value() {
-      let dir = tempfile::tempdir().unwrap();
-      let path = dir.path().join(".doingrc");
-      std::fs::write(&path, "order: asc\n").unwrap();
-
-      super::super::set_value_generic(&path, "history_size", "30", false).unwrap();
-
-      let content: Value = yaml_serde::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-      assert_eq!(content["history_size"], json!(30));
-    }
-
-    #[test]
-    fn it_sets_json_value() {
-      let dir = tempfile::tempdir().unwrap();
-      let path = dir.path().join("config.json");
-      std::fs::write(&path, "{\"order\": \"asc\"}").unwrap();
-
-      super::super::set_value_generic(&path, "history_size", "30", false).unwrap();
-
-      let content: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
-      assert_eq!(content["history_size"], json!(30));
     }
   }
 }

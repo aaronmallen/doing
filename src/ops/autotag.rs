@@ -182,17 +182,17 @@ mod test {
   use super::*;
   use crate::taskpaper::{Note, Tags};
 
-  fn sample_entry(title: &str, tags: Tags) -> Entry {
-    let date = Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap();
-    Entry::new(date, title, tags, Note::new(), "Currently", None::<String>)
-  }
-
   fn default_config() -> AutotagConfig {
     AutotagConfig {
       synonyms: HashMap::new(),
       transform: Vec::new(),
       whitelist: Vec::new(),
     }
+  }
+
+  fn sample_entry(title: &str, tags: Tags) -> Entry {
+    let date = Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap();
+    Entry::new(date, title, tags, Note::new(), "Currently", None::<String>)
   }
 
   mod apply_default_tags {
@@ -286,6 +286,21 @@ mod test {
     use super::*;
 
     #[test]
+    fn it_generates_multiple_tags() {
+      let mut entry = sample_entry(
+        "Working on project",
+        Tags::from_iter(vec![Tag::new("frontend", None::<String>)]),
+      );
+
+      apply_transform(&mut entry, "@frontend:web ui");
+
+      assert!(entry.tags().has("frontend"));
+      assert!(entry.tags().has("web"));
+      assert!(entry.tags().has("ui"));
+      assert_eq!(entry.tags().len(), 3);
+    }
+
+    #[test]
     fn it_generates_tag_from_capture_group() {
       let mut entry = sample_entry(
         "Working on project",
@@ -314,18 +329,15 @@ mod test {
     }
 
     #[test]
-    fn it_generates_multiple_tags() {
+    fn it_skips_invalid_rules() {
       let mut entry = sample_entry(
         "Working on project",
-        Tags::from_iter(vec![Tag::new("frontend", None::<String>)]),
+        Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
       );
 
-      apply_transform(&mut entry, "@frontend:web ui");
+      apply_transform(&mut entry, "norule");
 
-      assert!(entry.tags().has("frontend"));
-      assert!(entry.tags().has("web"));
-      assert!(entry.tags().has("ui"));
-      assert_eq!(entry.tags().len(), 3);
+      assert_eq!(entry.tags().len(), 1);
     }
 
     #[test]
@@ -339,18 +351,6 @@ mod test {
 
       assert!(entry.tags().has("time:morning"));
       assert!(entry.tags().has("daytime"));
-    }
-
-    #[test]
-    fn it_skips_invalid_rules() {
-      let mut entry = sample_entry(
-        "Working on project",
-        Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
-      );
-
-      apply_transform(&mut entry, "norule");
-
-      assert_eq!(entry.tags().len(), 1);
     }
   }
 
@@ -368,6 +368,16 @@ mod test {
 
       assert!(entry.tags().has("design"));
       assert_eq!(entry.tags().len(), 1);
+    }
+
+    #[test]
+    fn it_does_not_match_partial_words() {
+      let mut entry = sample_entry("Working on redesign", Tags::new());
+      let whitelist = vec!["design".to_string()];
+
+      apply_whitelist(&mut entry, &whitelist);
+
+      assert!(entry.tags().is_empty());
     }
 
     #[test]
@@ -401,16 +411,6 @@ mod test {
       apply_whitelist(&mut entry, &whitelist);
 
       assert_eq!(entry.tags().len(), 1);
-    }
-
-    #[test]
-    fn it_does_not_match_partial_words() {
-      let mut entry = sample_entry("Working on redesign", Tags::new());
-      let whitelist = vec!["design".to_string()];
-
-      apply_whitelist(&mut entry, &whitelist);
-
-      assert!(entry.tags().is_empty());
     }
   }
 
@@ -481,10 +481,14 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_splits_on_single_colon() {
-      let result = parse_transform_rule("pattern:replacement");
+    fn it_returns_none_for_empty_parts() {
+      assert!(parse_transform_rule(":replacement").is_none());
+      assert!(parse_transform_rule("pattern:").is_none());
+    }
 
-      assert_eq!(result, Some(("pattern", "replacement")));
+    #[test]
+    fn it_returns_none_for_no_delimiter() {
+      assert!(parse_transform_rule("norule").is_none());
     }
 
     #[test]
@@ -495,14 +499,10 @@ mod test {
     }
 
     #[test]
-    fn it_returns_none_for_empty_parts() {
-      assert!(parse_transform_rule(":replacement").is_none());
-      assert!(parse_transform_rule("pattern:").is_none());
-    }
+    fn it_splits_on_single_colon() {
+      let result = parse_transform_rule("pattern:replacement");
 
-    #[test]
-    fn it_returns_none_for_no_delimiter() {
-      assert!(parse_transform_rule("norule").is_none());
+      assert_eq!(result, Some(("pattern", "replacement")));
     }
   }
 
@@ -512,12 +512,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_matches_exact_word() {
-      let rx = Regex::new(&wildcard_to_word_regex("design")).unwrap();
+    fn it_converts_question_wildcard() {
+      let rx = Regex::new(&wildcard_to_word_regex("d?sign")).unwrap();
 
       assert!(rx.is_match("design"));
-      assert!(rx.is_match("Design"));
-      assert!(!rx.is_match("redesign"));
+      assert!(!rx.is_match("dsign"));
+
+      let result = wildcard_to_word_regex("d?sign");
+
+      assert_eq!(result, r"(?i)^d\Ssign$");
     }
 
     #[test]
@@ -531,15 +534,12 @@ mod test {
     }
 
     #[test]
-    fn it_converts_question_wildcard() {
-      let rx = Regex::new(&wildcard_to_word_regex("d?sign")).unwrap();
+    fn it_matches_exact_word() {
+      let rx = Regex::new(&wildcard_to_word_regex("design")).unwrap();
 
       assert!(rx.is_match("design"));
-      assert!(!rx.is_match("dsign"));
-
-      let result = wildcard_to_word_regex("d?sign");
-
-      assert_eq!(result, r"(?i)^d\Ssign$");
+      assert!(rx.is_match("Design"));
+      assert!(!rx.is_match("redesign"));
     }
   }
 }

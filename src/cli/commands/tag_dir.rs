@@ -51,8 +51,16 @@ fn merge_tags(path: &PathBuf, new_tags: &[String]) -> Result<()> {
   let content =
     fs::read_to_string(path).map_err(|e| Error::Config(format!("failed to read {}: {e}", path.display())))?;
 
-  let mut value: serde_json::Value =
-    yaml_serde::from_str(&content).map_err(|e| Error::Config(format!("failed to parse {}: {e}", path.display())))?;
+  let mut value: serde_json::Value = if content.trim().is_empty() {
+    serde_json::Value::Object(serde_json::Map::new())
+  } else {
+    yaml_serde::from_str(&content).map_err(|e| Error::Config(format!("failed to parse {}: {e}", path.display())))?
+  };
+
+  // Treat null (bare YAML document) as an empty object
+  if value.is_null() {
+    value = serde_json::Value::Object(serde_json::Map::new());
+  }
 
   let existing = value
     .get("default_tags")
@@ -137,6 +145,21 @@ mod test {
       let tags = content["default_tags"].as_array().unwrap();
 
       assert_eq!(tags.len(), 1);
+    }
+
+    #[test]
+    fn it_handles_empty_file() {
+      let dir = tempfile::tempdir().unwrap();
+      let rc_path = dir.path().join(".doingrc");
+      fs::write(&rc_path, "").unwrap();
+
+      merge_tags(&rc_path, &["auto".into()]).unwrap();
+
+      let content: serde_json::Value = yaml_serde::from_str(&fs::read_to_string(&rc_path).unwrap()).unwrap();
+      let tags = content["default_tags"].as_array().unwrap();
+
+      assert_eq!(tags.len(), 1);
+      assert_eq!(tags[0].as_str().unwrap(), "auto");
     }
 
     #[test]

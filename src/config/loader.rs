@@ -125,8 +125,14 @@ pub fn discover_local_configs(start_dir: &Path) -> Vec<PathBuf> {
 ///
 /// The format is detected from the file extension. Files with no recognized
 /// extension are tried as YAML first (the default config format), then TOML.
+///
+/// Empty or whitespace-only files are treated as empty config objects.
 pub fn parse_file(path: &Path) -> Result<Value> {
   let content = fs::read_to_string(path).map_err(|e| Error::Config(format!("{path}: {e}", path = path.display())))?;
+
+  if content.trim().is_empty() {
+    return Ok(Value::Object(serde_json::Map::new()));
+  }
 
   match ConfigFormat::from_extension(path) {
     Some(format) => parse_str(&content, format),
@@ -408,6 +414,28 @@ mod test {
       let value = parse_file(&path).unwrap();
 
       assert_eq!(value["current_section"], "Working");
+    }
+
+    #[test]
+    fn it_returns_empty_object_for_empty_file() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join(".doingrc");
+      fs::write(&path, "").unwrap();
+
+      let value = parse_file(&path).unwrap();
+
+      assert_eq!(value, serde_json::Value::Object(serde_json::Map::new()));
+    }
+
+    #[test]
+    fn it_returns_empty_object_for_whitespace_only_file() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.yml");
+      fs::write(&path, "  \n  \n").unwrap();
+
+      let value = parse_file(&path).unwrap();
+
+      assert_eq!(value, serde_json::Value::Object(serde_json::Map::new()));
     }
 
     #[test]

@@ -24,6 +24,7 @@ and this project adheres to [Break Versioning].
 - [#44] JSON output schema does not match Brett's doing format; missing `id`, `done`, `end_date`, `timers` fields,
   wrong top-level structure, date format lacks timezone/seconds, tags serialized as objects instead of strings, and
   title has tags stripped
+- [#58] `tag-dir` fails on empty `.doingrc` files; empty config files now treated as empty objects
 
 ## 0.0.1-alpha.1 - 2026-03-19
 
@@ -41,5 +42,6 @@ Initial alpha release
 [#26]: https://github.com/aaronmallen/doing/issues/26
 [#33]: https://github.com/aaronmallen/doing/issues/33
 [#44]: https://github.com/aaronmallen/doing/issues/44
+[#58]: https://github.com/aaronmallen/doing/issues/58
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...main

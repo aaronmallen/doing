@@ -87,6 +87,28 @@ fn it_tags_entries_matching_search() {
 }
 
 #[test]
+fn it_tags_last_unfinished_entry() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Active task"]).assert().success();
+  doing.run(["now", "Finished task"]).assert().success();
+  doing.run(["done"]).assert().success();
+
+  // Tag should apply to "Active task"
+  doing.run(["tag", "important"]).assert().success();
+
+  let content = doing.read_doing_file();
+  let active_line = content
+    .lines()
+    .find(|l| l.contains("Active task"))
+    .expect("should have Active task");
+  assert!(
+    active_line.contains("@important"),
+    "expected @important tag on Active task"
+  );
+}
+
+#[test]
 fn it_tags_last_n_entries_with_count() {
   let doing = DoingCmd::new();
 

@@ -76,3 +76,21 @@ fn it_shows_the_most_recent_entry() {
     "last should show the most recently added entry"
   );
 }
+
+#[test]
+fn it_skips_done_entries_when_selecting_last() {
+  let doing = DoingCmd::new();
+
+  // Create an active entry
+  doing.run(["now", "Active task"]).assert().success();
+
+  // Create and immediately finish another entry
+  doing.run(["now", "Finished task"]).assert().success();
+  doing.run(["done"]).assert().success();
+
+  // `last` should show the active (unfinished) entry
+  let output = doing.run(["last"]).output().expect("failed to run last");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(stdout.contains("Active task"), "expected last to show unfinished entry");
+  assert!(!stdout.contains("Finished task"), "expected last to skip @done entry");
+}

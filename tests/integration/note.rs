@@ -91,6 +91,24 @@ fn it_adds_note_to_entry_matching_tag() {
 }
 
 #[test]
+fn it_adds_note_to_last_unfinished_entry() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Active task"]).assert().success();
+  doing.run(["now", "Finished task"]).assert().success();
+  doing.run(["done"]).assert().success();
+
+  // Add a note — should attach to "Active task", not "Finished task"
+  doing.run(["note", "important note"]).assert().success();
+
+  let content = doing.read_doing_file();
+  // Verify the note appears after "Active task"
+  let active_pos = content.find("Active task").expect("Active task not found");
+  let note_pos = content.find("important note").expect("note not found");
+  assert!(note_pos > active_pos, "note should appear after Active task");
+}
+
+#[test]
 fn it_adds_note_to_last_entry() {
   let doing = DoingCmd::new();
 

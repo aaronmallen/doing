@@ -37,11 +37,11 @@ version = "0.22.1"
 backend = "cargo:cargo-audit"
 
 [[tools."cargo:cargo-llvm-cov"]]
-version = "0.8.4"
+version = "0.8.5"
 backend = "cargo:cargo-llvm-cov"
 
 [[tools."cargo:cargo-nextest"]]
-version = "0.9.130"
+version = "0.9.131"
 backend = "cargo:cargo-nextest"
 
 [[tools."cargo:cargo-outdated"]]
@@ -49,7 +49,7 @@ version = "0.17.0"
 backend = "cargo:cargo-outdated"
 
 [[tools."cargo:cargo-sort"]]
-version = "2.1.1"
+version = "2.1.3"
 backend = "cargo:cargo-sort"
 
 [[tools.editorconfig-checker]]

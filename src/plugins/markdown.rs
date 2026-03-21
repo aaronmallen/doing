@@ -6,10 +6,14 @@ use crate::{
   time::{DurationFormat, FormattedDuration},
 };
 
+/// Fixed date format for markdown output matching Ruby doing: `Fri 9:01AM`.
+const MARKDOWN_DATE_FORMAT: &str = "%a %-I:%M%p";
+
 /// Export plugin that renders entries as GitHub-flavored Markdown.
 ///
 /// Sections are rendered as headers, entries as task list items with `[x]`/`[ ]`
 /// checkboxes. Tags are rendered inline and notes as indented blocks.
+/// Date format uses abbreviated day + time to match the Ruby doing format.
 pub struct MarkdownExport;
 
 impl ExportPlugin for MarkdownExport {
@@ -17,16 +21,19 @@ impl ExportPlugin for MarkdownExport {
     "markdown"
   }
 
-  fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
+  fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
     let sections = group_by_section(entries);
-    let mut out = String::from("# what are you doing?\n");
+    let mut out = String::new();
 
     for (section, items) in &sections {
-      out.push_str(&format!("\n## {section}\n\n"));
+      if !out.is_empty() {
+        out.push('\n');
+      }
+      out.push_str(&format!("## {section}\n\n"));
 
       for entry in items {
         let done = if entry.finished() { "x" } else { " " };
-        let date = entry.date().format(&options.date_format).to_string();
+        let date = entry.date().format(MARKDOWN_DATE_FORMAT).to_string();
 
         let title = entry.full_title();
 
@@ -165,7 +172,25 @@ mod test {
 
       let output = MarkdownExport.render(&[], &options, &config);
 
-      assert_eq!(output, "# what are you doing?\n");
+      assert_eq!(output, "");
+    }
+
+    #[test]
+    fn it_does_not_include_top_level_heading() {
+      let config = Config::default();
+      let options = sample_options();
+      let entry = Entry::new(
+        sample_date(14, 30),
+        "Task",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      let output = MarkdownExport.render(&[entry], &options, &config);
+
+      assert!(!output.contains("# what are you doing?"));
     }
 
     #[test]
@@ -183,7 +208,11 @@ mod test {
 
       let output = MarkdownExport.render(&[entry], &options, &config);
 
-      assert!(output.contains("- [x] 2024-03-17 14:30 Completed task @done(2024-03-17 15:00)"));
+      // Date should be in abbreviated day + time format
+      assert!(output.contains("- [x]"));
+      assert!(output.contains("Completed task @done(2024-03-17 15:00)"));
+      assert!(output.contains("Sun"));
+      assert!(output.contains("2:30PM"));
     }
 
     #[test]
@@ -201,7 +230,27 @@ mod test {
 
       let output = MarkdownExport.render(&[entry], &options, &config);
 
-      assert!(output.contains("- [ ] 2024-03-17 14:30 In progress\n"));
+      assert!(output.contains("- [ ]"));
+      assert!(output.contains("In progress\n"));
+    }
+
+    #[test]
+    fn it_uses_abbreviated_day_time_date_format() {
+      let config = Config::default();
+      let options = sample_options();
+      let entry = Entry::new(
+        sample_date(9, 1),
+        "Morning task",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      let output = MarkdownExport.render(&[entry], &options, &config);
+
+      // Should contain abbreviated day name and time like "Sun 9:01AM"
+      assert!(output.contains("Sun 9:01AM"));
     }
 
     #[test]

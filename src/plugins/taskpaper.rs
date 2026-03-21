@@ -17,38 +17,29 @@ impl ExportPlugin for TaskPaperExport {
   }
 
   fn render(&self, entries: &[Entry], options: &RenderOptions, _config: &Config) -> String {
-    let sections = group_by_section(entries);
     let mut out = String::new();
 
-    for (i, (section, items)) in sections.iter().enumerate() {
-      if i > 0 {
-        out.push('\n');
+    for entry in entries {
+      out.push_str("- ");
+      out.push_str(entry.title());
+
+      if !entry.tags().is_empty() {
+        out.push(' ');
+        out.push_str(&entry.tags().to_string());
       }
-      out.push_str(section);
-      out.push_str(":\n");
 
-      for entry in items {
-        out.push_str("\t- ");
-        out.push_str(entry.title());
+      out.push_str(" @date(");
+      out.push_str(&entry.date().format(&options.date_format).to_string());
+      out.push(')');
 
-        if !entry.tags().is_empty() {
-          out.push(' ');
-          out.push_str(&entry.tags().to_string());
+      if !entry.note().is_empty() {
+        for line in entry.note().lines() {
+          out.push_str("\n\t");
+          out.push_str(line);
         }
-
-        out.push_str(" @date(");
-        out.push_str(&entry.date().format(&options.date_format).to_string());
-        out.push(')');
-
-        if !entry.note().is_empty() {
-          for line in entry.note().lines() {
-            out.push_str("\n\t\t");
-            out.push_str(line);
-          }
-        }
-
-        out.push('\n');
       }
+
+      out.push('\n');
     }
 
     out
@@ -59,22 +50,6 @@ impl ExportPlugin for TaskPaperExport {
       trigger: "task(?:paper)?|tp".into(),
     }
   }
-}
-
-/// Group entries by section name, preserving the order sections are first seen.
-fn group_by_section(entries: &[Entry]) -> Vec<(&str, Vec<&Entry>)> {
-  let mut sections: Vec<(&str, Vec<&Entry>)> = Vec::new();
-
-  for entry in entries {
-    let section_name = entry.section();
-    if let Some(pos) = sections.iter().position(|(name, _)| *name == section_name) {
-      sections[pos].1.push(entry);
-    } else {
-      sections.push((section_name, vec![entry]));
-    }
-  }
-
-  sections
 }
 
 #[cfg(test)]
@@ -93,77 +68,6 @@ mod test {
       date_format: "%Y-%m-%d %H:%M".into(),
       template: String::new(),
       wrap_width: 0,
-    }
-  }
-
-  mod group_by_section {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn it_groups_entries_by_section() {
-      let entries = vec![
-        Entry::new(
-          sample_date(14, 0),
-          "A",
-          Tags::new(),
-          Note::new(),
-          "Currently",
-          None::<String>,
-        ),
-        Entry::new(
-          sample_date(15, 0),
-          "B",
-          Tags::new(),
-          Note::new(),
-          "Archive",
-          None::<String>,
-        ),
-        Entry::new(
-          sample_date(16, 0),
-          "C",
-          Tags::new(),
-          Note::new(),
-          "Currently",
-          None::<String>,
-        ),
-      ];
-
-      let groups = super::super::group_by_section(&entries);
-
-      assert_eq!(groups.len(), 2);
-      assert_eq!(groups[0].0, "Currently");
-      assert_eq!(groups[0].1.len(), 2);
-      assert_eq!(groups[1].0, "Archive");
-      assert_eq!(groups[1].1.len(), 1);
-    }
-
-    #[test]
-    fn it_preserves_first_seen_order() {
-      let entries = vec![
-        Entry::new(
-          sample_date(14, 0),
-          "A",
-          Tags::new(),
-          Note::new(),
-          "Archive",
-          None::<String>,
-        ),
-        Entry::new(
-          sample_date(15, 0),
-          "B",
-          Tags::new(),
-          Note::new(),
-          "Currently",
-          None::<String>,
-        ),
-      ];
-
-      let groups = super::super::group_by_section(&entries);
-
-      assert_eq!(groups[0].0, "Archive");
-      assert_eq!(groups[1].0, "Currently");
     }
   }
 
@@ -194,7 +98,7 @@ mod test {
     }
 
     #[test]
-    fn it_renders_entry_with_tags_and_date() {
+    fn it_renders_flat_entry_with_tags_and_date() {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
@@ -208,10 +112,7 @@ mod test {
 
       let output = TaskPaperExport.render(&[entry], &options, &config);
 
-      assert_eq!(
-        output,
-        "Currently:\n\t- Working on project @coding @date(2024-03-17 14:30)\n"
-      );
+      assert_eq!(output, "- Working on project @coding @date(2024-03-17 14:30)\n");
     }
 
     #[test]
@@ -229,11 +130,11 @@ mod test {
 
       let output = TaskPaperExport.render(&[entry], &options, &config);
 
-      assert!(output.contains("\t\tNote line 1\n\t\tNote line 2"));
+      assert!(output.contains("\tNote line 1\n\tNote line 2"));
     }
 
     #[test]
-    fn it_groups_entries_by_section() {
+    fn it_renders_flat_list_without_section_headers() {
       let config = Config::default();
       let options = sample_options();
       let entries = vec![
@@ -257,8 +158,9 @@ mod test {
 
       let output = TaskPaperExport.render(&entries, &options, &config);
 
-      assert!(output.contains("Currently:\n"));
-      assert!(output.contains("Archive:\n"));
+      assert!(!output.contains("Currently:"));
+      assert!(!output.contains("Archive:"));
+      assert!(output.starts_with("- A"));
     }
   }
 

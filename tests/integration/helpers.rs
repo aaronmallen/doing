@@ -94,6 +94,11 @@ impl DoingCmd {
     cmd
   }
 
+  /// Return the path to the config file for this test environment.
+  pub fn config_path(&self) -> &std::path::Path {
+    &self.config_path
+  }
+
   /// Return the path to the temporary directory backing this test environment.
   pub fn temp_dir_path(&self) -> &std::path::Path {
     self._temp_dir.path()

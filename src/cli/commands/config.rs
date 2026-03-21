@@ -34,7 +34,8 @@ impl Command {
       None | Some(Action::Edit) => editor::edit_config(&ctx.config),
       Some(Action::Get(args)) => get_value(&args.key, ctx),
       Some(Action::List) => list_configs(),
-      Some(Action::Set(args)) => set_value(&args.key, &args.value, ctx.quiet),
+      Some(Action::Set(args)) if args.remove => remove_value(&args.key, ctx.quiet),
+      Some(Action::Set(args)) => set_value(&args.key, args.value.as_deref().unwrap_or_default(), ctx.quiet),
     }
   }
 }
@@ -66,9 +67,12 @@ struct SetArgs {
   /// Dot-separated config key
   #[arg(index = 1, value_name = "KEY")]
   key: String,
-  /// Value to set
-  #[arg(index = 2, value_name = "VALUE")]
-  value: String,
+  /// Value to set (omit when using --remove)
+  #[arg(index = 2, value_name = "VALUE", required_unless_present = "remove")]
+  value: Option<String>,
+  /// Remove the key from the config file instead of setting it
+  #[arg(short = 'r', long = "remove", conflicts_with = "value")]
+  remove: bool,
 }
 
 fn get_value(key: &str, ctx: &AppContext) -> Result<()> {
@@ -114,6 +118,93 @@ fn parse_raw_value(raw: &str) -> Value {
     return Value::Number(n);
   }
   Value::String(raw.into())
+}
+
+fn remove_dot_path(value: &mut Value, path: &str) -> Result<bool> {
+  let parts: Vec<&str> = path.split('.').collect();
+  let (parents, leaf) = parts.split_at(parts.len() - 1);
+
+  let mut current = value;
+  for &part in parents {
+    current = match current.as_object_mut().and_then(|obj| obj.get_mut(part)) {
+      Some(v) => v,
+      None => return Ok(false),
+    };
+  }
+
+  let removed = current
+    .as_object_mut()
+    .map(|obj| obj.remove(leaf[0]))
+    .is_some_and(|v| v.is_some());
+
+  Ok(removed)
+}
+
+fn remove_value(key: &str, quiet: bool) -> Result<()> {
+  let config_path = resolve_config_path_for_write();
+
+  if !config_path.exists() {
+    return Err(Error::Config(format!("key not found: {key}")));
+  }
+
+  match ConfigFormat::from_extension(&config_path) {
+    Some(ConfigFormat::Toml) => remove_value_toml(&config_path, key, quiet),
+    _ => remove_value_generic(&config_path, key, quiet),
+  }
+}
+
+fn remove_value_generic(path: &Path, key: &str, quiet: bool) -> Result<()> {
+  let mut value = loader::parse_file(path)?;
+  let format = ConfigFormat::from_extension(path);
+
+  if !remove_dot_path(&mut value, key)? {
+    return Err(Error::Config(format!("key not found: {key}")));
+  }
+
+  let output = match format {
+    Some(ConfigFormat::Json) => {
+      serde_json::to_string_pretty(&value).map_err(|e| Error::Config(format!("JSON serialization error: {e}")))?
+    }
+    _ => yaml_serde::to_string(&value).map_err(|e| Error::Config(format!("YAML serialization error: {e}")))?,
+  };
+
+  fs::write(path, output).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
+
+  if !quiet {
+    eprintln!("Removed {key}");
+  }
+  Ok(())
+}
+
+fn remove_value_toml(path: &Path, key: &str, quiet: bool) -> Result<()> {
+  let content = fs::read_to_string(path)?;
+
+  let mut doc: toml_edit::DocumentMut = content
+    .parse()
+    .map_err(|e| Error::Config(format!("failed to parse TOML: {e}")))?;
+
+  let parts: Vec<&str> = key.split('.').collect();
+  let (parents, leaf) = parts.split_at(parts.len() - 1);
+  let leaf = leaf[0];
+
+  let mut table = doc.as_table_mut();
+  for &part in parents {
+    table = match table.get_mut(part).and_then(|item| item.as_table_mut()) {
+      Some(t) => t,
+      None => return Err(Error::Config(format!("key not found: {key}"))),
+    };
+  }
+
+  if table.remove(leaf).is_none() {
+    return Err(Error::Config(format!("key not found: {key}")));
+  }
+
+  fs::write(path, doc.to_string()).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
+
+  if !quiet {
+    eprintln!("Removed {key}");
+  }
+  Ok(())
 }
 
 fn resolve_config_path_for_write() -> std::path::PathBuf {
@@ -308,6 +399,149 @@ mod test {
     #[test]
     fn it_parses_strings() {
       assert_eq!(super::super::parse_raw_value("hello"), Value::String("hello".into()));
+    }
+  }
+
+  mod remove_dot_path {
+    use pretty_assertions::assert_eq;
+    use serde_json::json;
+
+    #[test]
+    fn it_removes_nested_key() {
+      let mut value = json!({"search": {"case": "smart", "highlight": true}});
+
+      let removed = super::super::remove_dot_path(&mut value, "search.case").unwrap();
+
+      assert!(removed);
+      assert_eq!(value, json!({"search": {"highlight": true}}));
+    }
+
+    #[test]
+    fn it_removes_top_level_key() {
+      let mut value = json!({"order": "asc", "count": 10});
+
+      let removed = super::super::remove_dot_path(&mut value, "order").unwrap();
+
+      assert!(removed);
+      assert_eq!(value, json!({"count": 10}));
+    }
+
+    #[test]
+    fn it_returns_false_for_missing_key() {
+      let mut value = json!({"search": {"case": "smart"}});
+
+      let removed = super::super::remove_dot_path(&mut value, "search.missing").unwrap();
+
+      assert!(!removed);
+    }
+
+    #[test]
+    fn it_returns_false_for_missing_parent() {
+      let mut value = json!({"search": {"case": "smart"}});
+
+      let removed = super::super::remove_dot_path(&mut value, "nonexistent.key").unwrap();
+
+      assert!(!removed);
+    }
+  }
+
+  mod remove_value_generic {
+    use serde_json::json;
+
+    use super::*;
+
+    #[test]
+    fn it_removes_json_key() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.json");
+      std::fs::write(&path, "{\"order\": \"asc\", \"history_size\": 30}").unwrap();
+
+      super::super::remove_value_generic(&path, "history_size", false).unwrap();
+
+      let content: Value = serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+      assert_eq!(content.get("history_size"), None);
+      assert_eq!(content["order"], json!("asc"));
+    }
+
+    #[test]
+    fn it_removes_yaml_key() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join(".doingrc");
+      std::fs::write(&path, "order: asc\nhistory_size: 30\n").unwrap();
+
+      super::super::remove_value_generic(&path, "history_size", false).unwrap();
+
+      let content: Value = yaml_serde::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+      assert_eq!(content.get("history_size"), None);
+      assert_eq!(content["order"], json!("asc"));
+    }
+
+    #[test]
+    fn it_returns_error_for_missing_key() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join(".doingrc");
+      std::fs::write(&path, "order: asc\n").unwrap();
+
+      let result = super::super::remove_value_generic(&path, "nonexistent", false);
+
+      assert!(result.is_err());
+    }
+  }
+
+  mod remove_value_toml {
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn it_preserves_comments() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.toml");
+      std::fs::write(&path, "# My config\norder = \"asc\"\nhistory_size = 30\n").unwrap();
+
+      super::super::remove_value_toml(&path, "history_size", false).unwrap();
+
+      let content = std::fs::read_to_string(&path).unwrap();
+      assert!(content.contains("# My config"));
+    }
+
+    #[test]
+    fn it_removes_nested_key() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.toml");
+      std::fs::write(&path, "[plugins.say]\nsay_voice = \"Alex\"\nvolume = 5\n").unwrap();
+
+      super::super::remove_value_toml(&path, "plugins.say.say_voice", false).unwrap();
+
+      let content = std::fs::read_to_string(&path).unwrap();
+      let doc: toml_edit::DocumentMut = content.parse().unwrap();
+
+      assert!(doc["plugins"]["say"].get("say_voice").is_none());
+      assert_eq!(doc["plugins"]["say"]["volume"].as_integer(), Some(5));
+    }
+
+    #[test]
+    fn it_removes_top_level_key() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.toml");
+      std::fs::write(&path, "order = \"asc\"\nhistory_size = 30\n").unwrap();
+
+      super::super::remove_value_toml(&path, "history_size", false).unwrap();
+
+      let content = std::fs::read_to_string(&path).unwrap();
+      let doc: toml_edit::DocumentMut = content.parse().unwrap();
+
+      assert!(doc.get("history_size").is_none());
+      assert_eq!(doc["order"].as_str(), Some("asc"));
+    }
+
+    #[test]
+    fn it_returns_error_for_missing_key() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.toml");
+      std::fs::write(&path, "order = \"asc\"\n").unwrap();
+
+      let result = super::super::remove_value_toml(&path, "nonexistent", false);
+
+      assert!(result.is_err());
     }
   }
 

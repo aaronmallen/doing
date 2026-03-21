@@ -131,13 +131,53 @@ fn it_lists_config_files() {
 }
 
 #[test]
-#[ignore = "config set -r (remove key) not implemented (see #16)"]
 fn it_removes_a_config_key() {
   let doing = DoingCmd::new();
 
-  doing.run(["config", "set", "history_size", "30"]).assert().success();
+  doing
+    .run(["config", "set", "current_section", "Working"])
+    .assert()
+    .success();
 
-  doing.run(["config", "set", "-r", "history_size"]).assert().success();
+  let config_content = fs::read_to_string(doing.config_path()).expect("failed to read config");
+  assert!(
+    config_content.contains("current_section"),
+    "key should exist before removal"
+  );
 
-  doing.run(["config", "get", "history_size"]).assert().failure();
+  doing.run(["config", "set", "-r", "current_section"]).assert().success();
+
+  let config_content = fs::read_to_string(doing.config_path()).expect("failed to read config");
+  assert!(
+    !config_content.contains("current_section"),
+    "key should be removed from config file"
+  );
+}
+
+#[test]
+fn it_removes_a_nested_config_key() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["config", "set", "plugins.say.say_voice", "Alex"])
+    .assert()
+    .success();
+
+  doing
+    .run(["config", "set", "-r", "plugins.say.say_voice"])
+    .assert()
+    .success();
+
+  let config_content = fs::read_to_string(doing.config_path()).expect("failed to read config");
+  assert!(
+    !config_content.contains("say_voice"),
+    "nested key should be removed from config file"
+  );
+}
+
+#[test]
+fn it_errors_removing_nonexistent_key() {
+  let doing = DoingCmd::new();
+
+  doing.run(["config", "set", "-r", "nonexistent_key"]).assert().failure();
 }

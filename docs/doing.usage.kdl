@@ -138,7 +138,8 @@ cmd "config" help="View, edit, and manage configuration" {
   cmd "list" help="List all detected config files in the config cascade"
   cmd "set" help="Set a config value by dot-path" {
     arg "<KEY>" help="Dot-separated config key"
-    arg "<VALUE>" help="Value to set"
+    arg "<VALUE>" help="Value to set (omit when using --remove)"
+    flag "-r --remove" help="Remove the key from the config file instead of setting it"
   }
 }
 

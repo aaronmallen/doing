@@ -6,6 +6,7 @@ pub mod import;
 mod json;
 mod markdown;
 mod taskpaper;
+mod timeline;
 
 use regex::Regex;
 
@@ -112,6 +113,7 @@ pub fn default_registry() -> ExportRegistry {
   registry.register(Box::new(json::JsonExport));
   registry.register(Box::new(markdown::MarkdownExport));
   registry.register(Box::new(taskpaper::TaskPaperExport));
+  registry.register(Box::new(timeline::TimelineExport));
   registry
 }
 
@@ -165,7 +167,16 @@ mod test {
 
       assert_eq!(
         registry.available_formats(),
-        vec!["byday", "csv", "doing", "html", "json", "markdown", "taskpaper"]
+        vec![
+          "byday",
+          "csv",
+          "doing",
+          "html",
+          "json",
+          "markdown",
+          "taskpaper",
+          "timeline"
+        ]
       );
     }
   }

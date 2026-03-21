@@ -104,6 +104,30 @@ fn it_outputs_html() {
 }
 
 #[test]
+fn it_outputs_timeline() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Timeline test entry"]).assert().success();
+
+  let output = doing
+    .run(["show", "--output", "timeline"])
+    .output()
+    .expect("failed to run show --output timeline");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("Timeline test entry"),
+    "timeline should contain the entry"
+  );
+  assert!(stdout.contains("<!DOCTYPE html>"), "timeline should be HTML");
+  assert!(stdout.contains("doing timeline"), "timeline should have timeline title");
+  assert!(
+    stdout.contains("timeline-entry"),
+    "timeline should have timeline entry elements"
+  );
+}
+
+#[test]
 fn it_errors_on_invalid_output_format() {
   let doing = DoingCmd::new();
 

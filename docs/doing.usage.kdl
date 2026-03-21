@@ -72,6 +72,7 @@ cmd "budget" help="Manage time budgets for tags" {
 }
 
 cmd "cancel" help="Mark the last entry as cancelled" {
+  arg "[COUNT]" help="Number of entries to cancel"
   flag "-a --archive" help="Move cancelled entries to Archive"
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
@@ -167,6 +168,7 @@ cmd "done" help="Add a completed entry" {
 }
 
 cmd "finish" help="Mark the last entry as finished" {
+  arg "[COUNT]" help="Number of entries to finish"
   flag "-a --archive" help="Move finished entries to Archive"
   flag "--at --finished <AT>" help="Specify the exact completion time"
   flag "--auto" help="Automatically set @done time to the start time of the next entry"
@@ -373,6 +375,7 @@ cmd "open" help="Open the doing file in an editor" {
 cmd "plugins" help="List installed plugins"
 
 cmd "recent" help="Show recent entries" {
+  arg "[COUNT]" help="Number of recent entries to show"
   flag "--duration <DURATION>" help="Duration format for time display"
   flag "-i --interactive" help="Interactively select entries from recent results"
   flag "-o --output <OUTPUT>" help="Output format"

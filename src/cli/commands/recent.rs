@@ -28,6 +28,10 @@ const DEFAULT_COUNT: usize = 10;
 /// ```
 #[derive(Args, Clone, Debug, Default)]
 pub struct Command {
+  /// Number of recent entries to show
+  #[arg(index = 1, value_name = "COUNT")]
+  count_pos: Option<usize>,
+
   #[command(flatten)]
   display: DisplayArgs,
 
@@ -54,10 +58,12 @@ impl Command {
       .cloned()
       .collect();
 
-    let mut options = self
-      .filter
-      .clone()
-      .into_filter_options(&ctx.config, ctx.include_notes)?;
+    let mut filter = self.filter.clone();
+    if filter.count.is_none() {
+      filter.count = self.count_pos;
+    }
+
+    let mut options = filter.into_filter_options(&ctx.config, ctx.include_notes)?;
     options.section = Some(section_name.to_string());
     options.age = Some(Age::Newest);
 
@@ -101,6 +107,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count_pos: None,
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
       interactive: false,

@@ -19,6 +19,10 @@ use crate::{
 /// to the Archive section.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Number of entries to cancel
+  #[arg(index = 1, value_name = "COUNT")]
+  count_pos: Option<usize>,
+
   /// Move cancelled entries to Archive
   #[arg(short, long)]
   archive: bool,
@@ -144,6 +148,10 @@ impl Command {
     Ok(())
   }
 
+  fn effective_count(&self) -> usize {
+    self.count_pos.unwrap_or(self.count)
+  }
+
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
     let has_filters = !self.tag.is_empty() || self.search.is_some();
 
@@ -164,7 +172,7 @@ impl Command {
 
       let options = FilterOptions {
         age: Some(Age::Newest),
-        count: Some(self.count),
+        count: Some(self.effective_count()),
         include_notes: ctx.include_notes,
         search,
         section: Some(section_name.to_string()),
@@ -184,7 +192,7 @@ impl Command {
       .iter()
       .rev()
       .filter(|e| if unfinished { e.unfinished() } else { true })
-      .take(self.count)
+      .take(self.effective_count())
       .map(|e| e.id().to_string())
       .collect();
     ids.reverse();
@@ -225,6 +233,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count_pos: None,
       archive: false,
       bool_op: None,
       count: 1,

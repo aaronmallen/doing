@@ -226,11 +226,18 @@ impl FilterArgs {
       .as_deref()
       .and_then(|q| search::parse_query(q, &search_config));
 
-    let tag_filter = if self.tag.is_empty() {
+    let expanded_tags: Vec<String> = self
+      .tag
+      .iter()
+      .flat_map(|t| t.split(',').map(|s| s.trim().to_string()))
+      .filter(|s| !s.is_empty())
+      .collect();
+
+    let tag_filter = if expanded_tags.is_empty() {
       None
     } else {
       let mode = self.bool_op.map(BooleanMode::from).unwrap_or_default();
-      Some(TagFilter::new(&self.tag, mode))
+      Some(TagFilter::new(&expanded_tags, mode))
     };
 
     let tag_queries = self
@@ -381,6 +388,19 @@ mod test {
 
   mod filter_args {
     use super::*;
+
+    #[test]
+    fn it_builds_tag_filter_from_comma_separated_tags() {
+      let args = FilterArgs {
+        tag: vec!["rust,code".into()],
+        ..Default::default()
+      };
+      let config = Config::default();
+
+      let options = args.into_filter_options(&config, true).unwrap();
+
+      assert!(options.tag_filter.is_some());
+    }
 
     #[test]
     fn it_builds_tag_filter_with_default_bool() {

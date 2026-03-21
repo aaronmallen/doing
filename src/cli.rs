@@ -4,7 +4,7 @@ pub mod editor;
 pub mod interactive;
 pub mod pager;
 
-use std::{ffi::OsString, path::PathBuf};
+use std::{ffi::OsString, io::IsTerminal, path::PathBuf};
 
 use clap::{ArgAction, CommandFactory, Parser, Subcommand};
 use log::debug;
@@ -35,6 +35,46 @@ pub(crate) struct AppContext {
 }
 
 impl AppContext {
+  /// Confirm that a new section should be created.
+  ///
+  /// When running interactively (TTY), prompts the user to confirm before creating.
+  /// Respects `--yes` and `--no` global flags. In non-interactive mode (e.g. piped
+  /// input), sections are created silently.
+  pub fn confirm_new_section(&self, section_name: &str) -> Result<bool> {
+    if self.yes {
+      return Ok(true);
+    }
+    if self.no {
+      return Ok(false);
+    }
+    if self.default_answer || !std::io::stderr().is_terminal() {
+      return Ok(true);
+    }
+
+    dialoguer::Confirm::new()
+      .with_prompt(format!("Section \"{section_name}\" does not exist. Create it?"))
+      .default(true)
+      .interact()
+      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))
+  }
+
+  /// Ensure a section exists in the document, prompting for confirmation if needed.
+  ///
+  /// Returns `Ok(true)` if the section exists (or was created), `Ok(false)` if creation
+  /// was declined, or an error if the prompt failed.
+  pub fn ensure_section(&mut self, section_name: &str) -> Result<bool> {
+    if self.document.has_section(section_name) {
+      return Ok(true);
+    }
+
+    if !self.confirm_new_section(section_name)? {
+      return Ok(false);
+    }
+
+    self.document.add_section(taskpaper::Section::new(section_name));
+    Ok(true)
+  }
+
   /// Print a user-facing status message to stderr.
   ///
   /// Respects `--quiet` — when quiet mode is active, the message is suppressed.

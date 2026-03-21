@@ -8,8 +8,11 @@ fn it_adds_date_stamped_tag() {
   doing.run(["tag", "--date", "dated"]).assert().success();
 
   let contents = doing.read_doing_file();
-  let re = regex::Regex::new(r"@dated\(\d{4}-\d{2}-\d{2}\)").unwrap();
-  assert!(re.is_match(&contents), "entry should have @dated with a date value");
+  let re = regex::Regex::new(r"@dated\(\d{4}-\d{2}-\d{2} \d{2}:\d{2}\)").unwrap();
+  assert!(
+    re.is_match(&contents),
+    "entry should have @dated with a date and time value"
+  );
 }
 
 #[test]

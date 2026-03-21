@@ -48,7 +48,10 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self.section.as_deref().unwrap_or(&ctx.config.current_section);
+    let section_name = self
+      .section
+      .clone()
+      .unwrap_or_else(|| ctx.config.current_section.clone());
     let date = self.resolve_date()?;
 
     let finished_ids = finish_meanwhile_entries(
@@ -72,7 +75,7 @@ impl Command {
     let mut tags = Tags::new();
     tags.add(Tag::new("meanwhile", None::<String>));
 
-    let mut entry = Entry::new(date, &title, tags, note, section_name, None::<String>);
+    let mut entry = Entry::new(date, &title, tags, note, &section_name, None::<String>);
 
     if !self.noauto {
       autotag(&mut entry, &ctx.config.autotag, &ctx.config.default_tags);
@@ -80,10 +83,16 @@ impl Command {
 
     let display_title = entry.full_title();
 
-    if !ctx.document.has_section(section_name) {
-      ctx.document.add_section(Section::new(section_name));
+    if !ctx.ensure_section(&section_name)? {
+      return Err(crate::errors::Error::Config(format!(
+        "section \"{section_name}\" creation declined"
+      )));
     }
-    ctx.document.section_by_name_mut(section_name).unwrap().add_entry(entry);
+    ctx
+      .document
+      .section_by_name_mut(&section_name)
+      .unwrap()
+      .add_entry(entry);
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 

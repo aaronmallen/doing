@@ -118,8 +118,10 @@ impl Command {
 
     let display_title = entry.full_title();
 
-    if !ctx.document.has_section(target_section) {
-      ctx.document.add_section(Section::new(target_section));
+    if !ctx.ensure_section(target_section)? {
+      return Err(crate::errors::Error::Config(format!(
+        "section \"{target_section}\" creation declined"
+      )));
     }
     ctx
       .document

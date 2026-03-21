@@ -26,9 +26,11 @@ json_comments = "0.2"
 log = "0.4"
 md5 = "0.8"
 regex = "1"
-self_update = { features = [
+self_update = { default-features = false, features = [
   "archive-tar",
   "compression-flate2",
+  "reqwest",
+  "rustls",
 ], version = "0.43" }
 serde = { features = ["derive"], version = "1" }
 serde_json = "1"

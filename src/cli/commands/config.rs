@@ -35,8 +35,13 @@ impl Command {
       Some(Action::Edit(args)) => edit_config(args, &ctx.config),
       Some(Action::Get(args)) => get_value(&args.key, ctx),
       Some(Action::List) => list_configs(),
-      Some(Action::Set(args)) if args.remove => remove_value(&args.key, ctx.quiet),
-      Some(Action::Set(args)) => set_value(&args.key, args.value.as_deref().unwrap_or_default(), ctx.quiet),
+      Some(Action::Set(args)) if args.remove => remove_value(&args.key, args.local, ctx.quiet),
+      Some(Action::Set(args)) => set_value(
+        &args.key,
+        args.value.as_deref().unwrap_or_default(),
+        args.local,
+        ctx.quiet,
+      ),
     }
   }
 }
@@ -88,6 +93,9 @@ struct SetArgs {
   /// Value to set (omit when using --remove)
   #[arg(index = 2, value_name = "VALUE", required_unless_present = "remove")]
   value: Option<String>,
+  /// Write to a local .doingrc in the current directory instead of global config
+  #[arg(short = 'l', long)]
+  local: bool,
   /// Remove the key from the config file instead of setting it
   #[arg(short = 'r', long = "remove", conflicts_with = "value")]
   remove: bool,
@@ -222,8 +230,12 @@ fn remove_dot_path(value: &mut Value, path: &str) -> Result<bool> {
   Ok(removed)
 }
 
-fn remove_value(key: &str, quiet: bool) -> Result<()> {
-  let config_path = resolve_config_path_for_write();
+fn remove_value(key: &str, local: bool, quiet: bool) -> Result<()> {
+  let config_path = if local {
+    resolve_local_config_path()
+  } else {
+    resolve_config_path_for_write()
+  };
 
   if !config_path.exists() {
     return Err(Error::Config(format!("key not found: {key}")));
@@ -332,6 +344,10 @@ fn resolve_dot_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
   Some(current)
 }
 
+fn resolve_local_config_path() -> std::path::PathBuf {
+  std_env::current_dir().unwrap_or_default().join(".doingrc")
+}
+
 fn set_dot_path(value: &mut Value, path: &str, new_value: Value) -> Result<()> {
   let parts: Vec<&str> = path.split('.').collect();
   let (parents, leaf) = parts.split_at(parts.len() - 1);
@@ -358,8 +374,12 @@ fn set_dot_path(value: &mut Value, path: &str, new_value: Value) -> Result<()> {
   Ok(())
 }
 
-fn set_value(key: &str, raw_value: &str, quiet: bool) -> Result<()> {
-  let config_path = resolve_config_path_for_write();
+fn set_value(key: &str, raw_value: &str, local: bool, quiet: bool) -> Result<()> {
+  let config_path = if local {
+    resolve_local_config_path()
+  } else {
+    resolve_config_path_for_write()
+  };
 
   if config_path.exists() {
     match ConfigFormat::from_extension(&config_path) {

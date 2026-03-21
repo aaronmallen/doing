@@ -181,3 +181,39 @@ fn it_errors_removing_nonexistent_key() {
 
   doing.run(["config", "set", "-r", "nonexistent_key"]).assert().failure();
 }
+
+#[test]
+fn it_sets_a_local_config_value() {
+  let doing = DoingCmd::new();
+  let temp = doing.temp_dir_path();
+
+  let mut cmd = doing.run(["config", "set", "--local", "current_section", "Working"]);
+  cmd.current_dir(temp);
+  cmd.assert().success();
+
+  let local_config = fs::read_to_string(temp.join(".doingrc")).expect("failed to read .doingrc");
+  assert!(
+    local_config.contains("current_section"),
+    "local .doingrc should contain the set key"
+  );
+  assert!(
+    local_config.contains("Working"),
+    "local .doingrc should contain the set value"
+  );
+}
+
+#[test]
+fn it_sets_a_nested_local_config_value() {
+  let doing = DoingCmd::new();
+  let temp = doing.temp_dir_path();
+
+  let mut cmd = doing.run(["config", "set", "--local", "editors.default", "nano"]);
+  cmd.current_dir(temp);
+  cmd.assert().success();
+
+  let local_config = fs::read_to_string(temp.join(".doingrc")).expect("failed to read .doingrc");
+  assert!(
+    local_config.contains("nano"),
+    "local .doingrc should contain nested value"
+  );
+}

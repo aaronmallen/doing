@@ -144,6 +144,7 @@ cmd "config" help="View, edit, and manage configuration" {
   cmd "set" help="Set a config value by dot-path" {
     arg "<KEY>" help="Dot-separated config key"
     arg "<VALUE>" help="Value to set (omit when using --remove)"
+    flag "-l --local" help="Write to a local .doingrc in the current directory instead of global config"
     flag "-r --remove" help="Remove the key from the config file instead of setting it"
   }
 }

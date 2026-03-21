@@ -4,4 +4,4 @@
 
 set -e
 
-yamlfmt -lint . --config .config/.yamlfmt
+yamlfmt -lint -conf .config/.yamlfmt .

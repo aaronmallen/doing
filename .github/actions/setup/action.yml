@@ -6,6 +6,6 @@ runs:
     - uses: jdx/mise-action@v3
     - uses: Swatinem/rust-cache@v2
     - shell: bash
-      run: |
+      run: |-
         rustup component add --toolchain nightly-x86_64-unknown-linux-gnu rustfmt
         rustup component add --toolchain nightly-x86_64-unknown-linux-gnu clippy

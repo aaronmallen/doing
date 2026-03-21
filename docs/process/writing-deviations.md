@@ -31,25 +31,15 @@ Each deviation record describes:
 - **Rationale**: Why we chose to deviate
 - **Migration**: How users coming from the original can adapt
 
-## Status Lifecycle
-
-| Status                          | Meaning                                                     |
-|---------------------------------|-------------------------------------------------------------|
-| ![Active][badge-active]         | Currently in effect                                         |
-| ![Resolved][badge-resolved]     | No longer a deviation — we now match the original behavior  |
-| ![Deprecated][badge-deprecated] | The original feature was removed or is no longer comparable |
-
 ## Template
 
 ```markdown
 ---
 id: 0000
 title: Deviation Title
-status: active
 scope: []
 tags: []
 created: YYYY-MM-DD
-resolved:
 ---
 
 # DEV-0000: Title
@@ -83,8 +73,5 @@ How users coming from the original `doing` can adapt their workflows or scripts.
 - Related ADRs, issues, or external resources
 ```
 
-[badge-active]: https://img.shields.io/badge/Active-green?style=for-the-badge
-[badge-deprecated]: https://img.shields.io/badge/Deprecated-red?style=for-the-badge
-[badge-resolved]: https://img.shields.io/badge/Resolved-blue?style=for-the-badge
 [deviation-index]: https://github.com/aaronmallen/doing/blob/main/docs/deviations/README.md
 [doing]: https://github.com/ttscoff/doing

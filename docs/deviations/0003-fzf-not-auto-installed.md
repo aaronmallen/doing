@@ -1,11 +1,9 @@
 ---
 id: 0003
 title: fzf Not Auto-Installed
-status: active
 scope: [cli]
 tags: [cli, fzf, dependencies]
 created: 2026-03-21
-resolved:
 ---
 
 # DEV-0003: fzf Not Auto-Installed

@@ -1,11 +1,9 @@
 ---
 id: 0002
 title: Hyphenated Command Names
-status: active
 scope: [cli]
 tags: [cli, commands, naming]
 created: 2026-03-21
-resolved:
 ---
 
 # DEV-0002: Hyphenated Command Names

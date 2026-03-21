@@ -1,11 +1,9 @@
 ---
 id: 0001
 title: Configuration Format
-status: active
 scope: [config]
 tags: [config, format, toml, yaml]
 created: 2026-03-21
-resolved:
 ---
 
 # DEV-0001: Configuration Format

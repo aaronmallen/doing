@@ -1,0 +1,4 @@
+mod when_color_flag_is_provided;
+mod when_debug_flag_is_provided;
+mod when_no_color_flag_is_provided;
+mod when_version_flag_is_provided;

@@ -99,6 +99,21 @@ impl DoingCmd {
     &self.config_path
   }
 
+  /// Return the path to the doing file for this test environment.
+  pub fn doing_file_path(&self) -> &std::path::Path {
+    &self.doing_file_path
+  }
+
+  /// Build an `assert_cmd::Command` with only env-var isolation (no `-f` or `--no-color`).
+  ///
+  /// Use this when testing global flags that conflict with the defaults added by [`cmd`].
+  pub fn raw_cmd(&self) -> Command {
+    let mut cmd = Command::cargo_bin("doing").expect("failed to find doing binary");
+    cmd.env("DOING_BACKUP_DIR", &self.backup_dir);
+    cmd.env("DOING_CONFIG", &self.config_path);
+    cmd
+  }
+
   /// Return the path to the temporary directory backing this test environment.
   pub fn temp_dir_path(&self) -> &std::path::Path {
     self._temp_dir.path()

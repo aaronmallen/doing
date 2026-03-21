@@ -283,7 +283,7 @@ enum Command {
   /// Mark the last entry as cancelled
   Cancel(commands::cancel::Command),
   /// List recent changes in Doing
-  Changes,
+  Changes(commands::changes::Command),
   /// Fuzzy select an entry to act on
   Choose(commands::choose::Command),
   /// Show available color template tokens
@@ -341,6 +341,8 @@ enum Command {
   Sections(commands::sections::Command),
   /// Interactively select entries to act on
   Select(commands::select::Command),
+  /// Update doing to the latest version
+  SelfUpdate(commands::update::Command),
   /// Show entries from a section
   Show(commands::show::Command),
   /// Show entries since a given date
@@ -357,9 +359,6 @@ enum Command {
   Today(commands::today::Command),
   /// Undo the last change
   Undo(commands::undo::Command),
-  /// Update doing to the latest version
-  #[command(hide = true)]
-  Update,
   /// Display a custom view
   View(commands::view::Command),
   /// List available views
@@ -376,9 +375,11 @@ impl Command {
       Self::Autotag(cmd) => cmd.call(ctx),
       Self::Budget(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
+      Self::Changes(cmd) => cmd.call(ctx),
       Self::Colors(cmd) => cmd.call(),
       Self::Commands(cmd) => cmd.call(ctx, &Cli::command()),
       Self::CommandsAccepting(cmd) => cmd.call(&Cli::command()),
+      Self::Completion => todo!(),
       Self::Config(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::External(args) => {
@@ -409,6 +410,7 @@ impl Command {
       Self::Rotate(cmd) => cmd.call(ctx),
       Self::Sections(cmd) => cmd.call(ctx),
       Self::Select(cmd) => cmd.call(ctx),
+      Self::SelfUpdate(cmd) => cmd.call(),
       Self::Show(cmd) => cmd.call(ctx),
       Self::Since(cmd) => cmd.call(ctx),
       Self::Tag(cmd) => cmd.call(ctx),
@@ -420,10 +422,7 @@ impl Command {
       Self::View(cmd) => cmd.call(ctx),
       Self::Views(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),
-      Self::Changes => todo!(),
       Self::Choose(cmd) => cmd.call(ctx),
-      Self::Completion => todo!(),
-      Self::Update => todo!(),
     }
   }
 }

@@ -164,7 +164,7 @@ impl ExportPlugin for HtmlExport {
   fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
     let sections = group_by_section(entries);
     let style = DEFAULT_CSS;
-    let tag_re = Regex::new(r"(@\S+(?:\([^)]*\))?)").expect("tag regex is valid");
+    let tag_re = Regex::new(r"(@[^\s(]+(?:\([^)]*\))?)").expect("tag regex is valid");
 
     let mut items_html = String::new();
     for (section, items) in &sections {
@@ -433,6 +433,28 @@ mod test {
       assert!(output.contains("Working on project"));
       assert!(output.contains(r#"<span class="tag">@coding</span>"#));
       assert!(output.contains(r#"<span class="section">Currently</span>"#));
+    }
+
+    #[test]
+    fn it_wraps_done_tag_with_date_in_single_span() {
+      let config = Config::default();
+      let options = sample_options();
+      let entry = Entry::new(
+        sample_date(14, 30),
+        "Finished task",
+        Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+
+      let output = HtmlExport.render(&[entry], &options, &config);
+
+      assert!(
+        output.contains(r#"<span class="tag">@done(2024-03-17 15:00)</span>"#),
+        "done tag with date should be wrapped in a single span, got: {}",
+        output
+      );
     }
 
     #[test]

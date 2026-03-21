@@ -6,4 +6,6 @@ mod when_no_notes_flag_is_provided;
 mod when_no_pager_flag_is_provided;
 mod when_notes_flag_is_provided;
 mod when_pager_flag_is_provided;
+mod when_quiet_flag_is_provided;
+mod when_stdout_flag_is_provided;
 mod when_version_flag_is_provided;

@@ -53,6 +53,18 @@ pub fn extract_note(title: &str) -> (String, Option<String>) {
   }
 
   let title_part = trimmed[..open_pos].trim();
+
+  // Don't extract if the parenthetical is a tag value (e.g. @project(myapp))
+  if title_part.ends_with(|c: char| c.is_alphanumeric() || c == '_')
+    && title_part.contains('@')
+    && title_part
+      .rfind('@')
+      .map(|at| !title_part[at..].contains(' '))
+      .unwrap_or(false)
+  {
+    return (trimmed.to_string(), None);
+  }
+
   (title_part.to_string(), Some(note_content.to_string()))
 }
 
@@ -87,6 +99,14 @@ mod test {
 
       assert_eq!(title, "Task");
       assert_eq!(note.unwrap(), "note with (nested) parens");
+    }
+
+    #[test]
+    fn it_ignores_tag_values() {
+      let (title, note) = extract_note("Working on @project(myapp)");
+
+      assert_eq!(title, "Working on @project(myapp)");
+      assert!(note.is_none());
     }
 
     #[test]

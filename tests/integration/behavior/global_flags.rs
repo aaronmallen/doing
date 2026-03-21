@@ -1,4 +1,9 @@
 mod when_color_flag_is_provided;
 mod when_debug_flag_is_provided;
+mod when_doing_file_flag_is_provided;
 mod when_no_color_flag_is_provided;
+mod when_no_notes_flag_is_provided;
+mod when_no_pager_flag_is_provided;
+mod when_notes_flag_is_provided;
+mod when_pager_flag_is_provided;
 mod when_version_flag_is_provided;

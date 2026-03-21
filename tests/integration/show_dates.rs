@@ -204,3 +204,30 @@ fn it_filters_entries_by_from_date_range() {
   assert!(!stdout.contains("Too old"), "should exclude entry before range");
   assert!(!stdout.contains("Too new"), "should exclude entry after range");
 }
+
+#[test]
+fn it_filters_entries_by_from_single_date() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "--back", "3 days ago", "Too old"]).assert().success();
+  doing
+    .run(["now", "--back", "1 day ago 10am", "Yesterday entry"])
+    .assert()
+    .success();
+  doing.run(["now", "Today entry"]).assert().success();
+
+  let output = doing
+    .run(["show", "--from", "yesterday"])
+    .output()
+    .expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert_eq!(
+    helpers::count_entries(&stdout),
+    1,
+    "show --from with single date should show only entries from that day"
+  );
+  assert!(stdout.contains("Yesterday entry"), "should include yesterday's entry");
+  assert!(!stdout.contains("Too old"), "should exclude older entries");
+  assert!(!stdout.contains("Today entry"), "should exclude today's entry");
+}

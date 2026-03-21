@@ -13,9 +13,15 @@ and this project adheres to [Break Versioning].
   (e.g. `--back "30m ago"`, `--back "2024-03-17 14:00"`); `--back` and `--at` are mutually exclusive
 - [#8] `--tag_sort` (name/time) and `--tag_order` (asc/desc) flags on `show` command for controlling tag totals
   sort order
+- [#9] `--from` flag accepts a single date (e.g. `--from monday`, `--from "march 15"`) and returns a 24-hour span
+  instead of requiring a range separator
+- [#12] Parenthetical notes in entry titles are automatically extracted as notes
+  (e.g. `doing now "Working on feature (some context)"` attaches "some context" as a note)
 - [#10] `--case` flag on filter commands (show, grep, etc.) to override search case sensitivity; moved from
   grep-specific to shared `FilterArgs`
 - [#11] `--tag` flag accepts comma-separated values (e.g. `--tag project,urgent`) in addition to repeated flags
+- [#15] Fuzzy prefix matching for view names; `doing view co` resolves to `doing view coding` when unambiguous,
+  and returns an error listing candidates when ambiguous
 - [#16] `-r`/`--remove` flag on `config set` to remove configuration keys (e.g. `doing config set -r plugins.say`)
 - [#29] `-x`/`--exact` flag on filter commands for exact string matching; moved from grep-specific to shared
   `FilterArgs`
@@ -23,6 +29,13 @@ and this project adheres to [Break Versioning].
 - [#34] Positional count argument on `finish`, `cancel`, and `recent` commands (e.g. `doing finish 3`); takes
   precedence over `--count` when the flag is not explicitly set
 - [#37] `--archive` flag on `meanwhile` command; moves finished @meanwhile entries to the Archive section when replacing
+- [#40] Interactive prompt before creating new sections; respects `--yes`/`--no`/`--default` flags on `now`, `done`,
+  `meanwhile`, and `again` commands
+- [#43] `--output timeline` format generates a self-contained HTML page with a visual timeline showing entry durations
+  with proportional bars and start/end times
+- [#54] Calendar (ICS) and JSON import formats for the `import` command; `--type calendar` imports VEVENT entries,
+  `--type json` re-imports doing's own JSON export format
+- [#55] `dayone`, `dayone-days`, and `dayone-entries` export plugins for Day One importable JSON output
 - [#56] `-a`/`--app`, `-e`/`--editor`, `-b`/`--bundle_id`, and `-x`/`--default` flags on `config edit`; open config
   with a specific app/editor or reset to defaults
 - [#57] `-l`/`--local` flag on `config set` to write values to `.doingrc` in the current directory instead of the
@@ -46,7 +59,12 @@ and this project adheres to [Break Versioning].
 
 ### Fixed
 
+- [#39] `tag --date` only includes date in tag value; now includes time (`%Y-%m-%d %H:%M`) to match Ruby doing
 - [#41] `today --totals` does not display tag time totals; totals now render consistently with `show --totals`
+- [#42] `--only-timed` includes entries with zero-duration intervals; now correctly excludes entries where
+  start and end times are identical
+- [#45] CSV output format deviations: dates now include seconds and timezone, timer is raw seconds, all fields quoted
+- [#47] `today --output json` already uses full ISO dates; added integration test to lock in correct behavior
 - [#50] `template` command managed display templates instead of export format templates; now lists, displays, and saves
   export templates (HTML CSS, etc.) matching Ruby doing behavior with `--list`, `--path`, `--save`, and `--column` flags
 - [#51] `commands` command lists all subcommands (help-overview) instead of managing optional commands; now supports
@@ -54,12 +72,18 @@ and this project adheres to [Break Versioning].
   config
 - [#53] `-b` short flag on `open` command reassigned from `--backup` to `--bundle_id` to match Ruby doing;
   `--backup` no longer has a short flag; `--bundle_id` accepts a macOS bundle identifier string
+- [#59] HTML output breaks `<span>` tags for `@done(date)` entries; regex now correctly wraps the tag name without
+  consuming the parenthetical value
 - [#65] `archive` command missing positional `[SECTION_OR_TAG]` argument; `doing archive Currently` and
   `doing archive @done` now work without requiring `--section`/`--tag` flags
 - [#69] `grep --duration` accepted a format string argument instead of acting as a boolean toggle; now matches Ruby
   doing's `--[no-]duration` behavior
+- [#73] Markdown output included unnecessary top-level heading and wrong date format; TaskPaper output included
+  section headers and tab indentation not matching Ruby doing
 - [#74] `tags` command output missing `@` prefix on tag names, `--sort count` not supported, no positional
   `MAX_COUNT` argument, and missing filtering flags (`--search`, `--tag`, `--bool`, `--val`, `--not`)
+- [#78] `--ask` flag on `now` incorrectly prompted for title instead of note; added `--ask` to `done`, `meanwhile`,
+  `again`, and `note` commands
 - [#82] `reset` command missing positional `[DATE_STRING]` argument and `--took`/`--for` flag; `doing reset 3pm` and
   `doing reset "1 hour ago" --took 1h30m` now work as expected
 
@@ -149,9 +173,12 @@ Initial alpha release
 [#6]: https://github.com/aaronmallen/doing/issues/6
 [#7]: https://github.com/aaronmallen/doing/issues/7
 [#8]: https://github.com/aaronmallen/doing/issues/8
+[#9]: https://github.com/aaronmallen/doing/issues/9
 [#10]: https://github.com/aaronmallen/doing/issues/10
 [#11]: https://github.com/aaronmallen/doing/issues/11
+[#12]: https://github.com/aaronmallen/doing/issues/12
 [#14]: https://github.com/aaronmallen/doing/issues/14
+[#15]: https://github.com/aaronmallen/doing/issues/15
 [#16]: https://github.com/aaronmallen/doing/issues/16
 [#17]: https://github.com/aaronmallen/doing/issues/17
 [#18]: https://github.com/aaronmallen/doing/issues/18
@@ -174,18 +201,27 @@ Initial alpha release
 [#36]: https://github.com/aaronmallen/doing/issues/36
 [#37]: https://github.com/aaronmallen/doing/issues/37
 [#38]: https://github.com/aaronmallen/doing/issues/38
+[#39]: https://github.com/aaronmallen/doing/issues/39
+[#40]: https://github.com/aaronmallen/doing/issues/40
 [#41]: https://github.com/aaronmallen/doing/issues/41
+[#42]: https://github.com/aaronmallen/doing/issues/42
+[#43]: https://github.com/aaronmallen/doing/issues/43
 [#44]: https://github.com/aaronmallen/doing/issues/44
+[#45]: https://github.com/aaronmallen/doing/issues/45
 [#46]: https://github.com/aaronmallen/doing/issues/46
+[#47]: https://github.com/aaronmallen/doing/issues/47
 [#48]: https://github.com/aaronmallen/doing/issues/48
 [#49]: https://github.com/aaronmallen/doing/issues/49
 [#50]: https://github.com/aaronmallen/doing/issues/50
 [#51]: https://github.com/aaronmallen/doing/issues/51
 [#52]: https://github.com/aaronmallen/doing/issues/52
 [#53]: https://github.com/aaronmallen/doing/issues/53
+[#54]: https://github.com/aaronmallen/doing/issues/54
+[#55]: https://github.com/aaronmallen/doing/issues/55
 [#56]: https://github.com/aaronmallen/doing/issues/56
 [#57]: https://github.com/aaronmallen/doing/issues/57
 [#58]: https://github.com/aaronmallen/doing/issues/58
+[#59]: https://github.com/aaronmallen/doing/issues/59
 [#61]: https://github.com/aaronmallen/doing/issues/61
 [#62]: https://github.com/aaronmallen/doing/issues/62
 [#63]: https://github.com/aaronmallen/doing/issues/63
@@ -198,9 +234,11 @@ Initial alpha release
 [#70]: https://github.com/aaronmallen/doing/issues/70
 [#71]: https://github.com/aaronmallen/doing/issues/71
 [#72]: https://github.com/aaronmallen/doing/issues/72
+[#73]: https://github.com/aaronmallen/doing/issues/73
 [#74]: https://github.com/aaronmallen/doing/issues/74
 [#76]: https://github.com/aaronmallen/doing/issues/76
 [#77]: https://github.com/aaronmallen/doing/issues/77
+[#78]: https://github.com/aaronmallen/doing/issues/78
 [#79]: https://github.com/aaronmallen/doing/issues/79
 [#80]: https://github.com/aaronmallen/doing/issues/80
 [#81]: https://github.com/aaronmallen/doing/issues/81

@@ -7,6 +7,57 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.0.1-alpha.4] - 2026-03-21
+
+### Added
+
+- `--title` flag on display commands accepts an optional string value to set a custom section header (see [#32], [#88])
+- Day One export formats: `dayone`, `dayone-days`, and `dayone-entries` for Day One importable JSON (see [#55])
+- Calendar (ICS) and JSON import formats (see [#54])
+- `--output timeline` format renders entries as a self-contained HTML timeline visualization (see [#43])
+- Prompt before creating new sections in interactive mode (see [#40])
+- Parenthetical notes in entry titles are automatically extracted as notes (see [#12])
+- `--from` flag accepts a single date in addition to date ranges (see [#9])
+- Fuzzy prefix matching for view names (see [#15])
+- `--not` and `--val` flags on `finish`, `cancel`, and `again` commands (see [#80])
+- Positional count argument for `finish`, `cancel`, and `recent` (see [#34])
+- `--exact` flag on all filter commands for exact string matching (see [#29])
+- `--tag` flag accepts comma-separated values (see [#11])
+- `--case` flag on all filter commands for case sensitivity override (see [#10])
+- `--tag_sort` and `--tag_order` flags on `show` (see [#8])
+- `config set --local` flag to write to the local `.doingrc` (see [#57])
+- `config edit` gains `--app`, `--editor`, `--bundle_id`, and `--default` flags (see [#56])
+- `config set --remove` flag to delete a config key (see [#16])
+- `update` command for self-updating the binary (see [#62])
+- `changes` command to display formatted changelog history (see [#61])
+- Visual color swatches in `colors` command output (see [#49])
+- `sections remove --archive` flag to archive entries before removing a section (see [#83])
+- `open` gains `--editor` and `--bundle_id` flags (see [#53], [#81])
+- `last` gains `--delete` and `--editor` flags (see [#77])
+- `grep` gains `--delete` and `--editor` flags (see [#76])
+- `finish --back` flag for backdating completion time (see [#2], [#75])
+- `meanwhile --archive` flag to archive finished entries (see [#37])
+
+### Fixed
+
+- Short flag conflicts resolved to align with Ruby doing conventions (see [#100])
+- `--count` scoped per-command instead of shared, restoring `-c` short flag on individual commands
+- `extract_note` no longer strips tag values like `@project(myapp)`
+- Markdown export removes top-level heading and uses abbreviated date format; TaskPaper renders flat entry list
+  (see [#73])
+- HTML export wraps `@done(date)` tags in a single `<span>` element (see [#59])
+- CSV output format matches Ruby doing (fixed date format, raw timer seconds, quoted fields) (see [#45])
+- `--ask` prompts for note on `now`, `done`, `meanwhile`, `again`, and `note` commands (see [#78])
+- `--only-timed` excludes zero-duration entries (see [#42])
+- `tag --date` includes time in the value (see [#39])
+- `grep --duration` changed from format string to boolean toggle (see [#69])
+- `commands` command behavior matches Ruby doing (see [#51])
+- `template` command lists export templates by default (see [#50])
+- `today` respects the `--totals` flag (see [#41])
+- `reset` gains positional date argument and `--took` flag (see [#82])
+- `tags` adds `@` prefix to output, sorts by count, and gains max count argument and filter flags (see [#74])
+- `archive` accepts positional `[SECTION_OR_TAG]` argument (see [#65])
+
 ## [v0.0.1-alpha.3] - 2026-03-20
 
 ### Added
@@ -67,12 +118,20 @@ Initial alpha release
 [Break Versioning]: https://www.taoensso.com/break-versioning
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
 
+[#2]: https://github.com/aaronmallen/doing/issues/2
 [#3]: https://github.com/aaronmallen/doing/issues/3
 [#4]: https://github.com/aaronmallen/doing/issues/4
 [#5]: https://github.com/aaronmallen/doing/issues/5
 [#6]: https://github.com/aaronmallen/doing/issues/6
 [#7]: https://github.com/aaronmallen/doing/issues/7
+[#8]: https://github.com/aaronmallen/doing/issues/8
+[#9]: https://github.com/aaronmallen/doing/issues/9
+[#10]: https://github.com/aaronmallen/doing/issues/10
+[#11]: https://github.com/aaronmallen/doing/issues/11
+[#12]: https://github.com/aaronmallen/doing/issues/12
 [#14]: https://github.com/aaronmallen/doing/issues/14
+[#15]: https://github.com/aaronmallen/doing/issues/15
+[#16]: https://github.com/aaronmallen/doing/issues/16
 [#17]: https://github.com/aaronmallen/doing/issues/17
 [#18]: https://github.com/aaronmallen/doing/issues/18
 [#19]: https://github.com/aaronmallen/doing/issues/19
@@ -85,27 +144,63 @@ Initial alpha release
 [#26]: https://github.com/aaronmallen/doing/issues/26
 [#27]: https://github.com/aaronmallen/doing/issues/27
 [#28]: https://github.com/aaronmallen/doing/issues/28
+[#29]: https://github.com/aaronmallen/doing/issues/29
 [#30]: https://github.com/aaronmallen/doing/issues/30
 [#31]: https://github.com/aaronmallen/doing/issues/31
+[#32]: https://github.com/aaronmallen/doing/issues/32
 [#33]: https://github.com/aaronmallen/doing/issues/33
+[#34]: https://github.com/aaronmallen/doing/issues/34
 [#36]: https://github.com/aaronmallen/doing/issues/36
+[#37]: https://github.com/aaronmallen/doing/issues/37
 [#38]: https://github.com/aaronmallen/doing/issues/38
+[#39]: https://github.com/aaronmallen/doing/issues/39
+[#40]: https://github.com/aaronmallen/doing/issues/40
+[#41]: https://github.com/aaronmallen/doing/issues/41
+[#42]: https://github.com/aaronmallen/doing/issues/42
+[#43]: https://github.com/aaronmallen/doing/issues/43
 [#44]: https://github.com/aaronmallen/doing/issues/44
+[#45]: https://github.com/aaronmallen/doing/issues/45
 [#46]: https://github.com/aaronmallen/doing/issues/46
 [#48]: https://github.com/aaronmallen/doing/issues/48
+[#49]: https://github.com/aaronmallen/doing/issues/49
+[#50]: https://github.com/aaronmallen/doing/issues/50
+[#51]: https://github.com/aaronmallen/doing/issues/51
 [#52]: https://github.com/aaronmallen/doing/issues/52
+[#53]: https://github.com/aaronmallen/doing/issues/53
+[#54]: https://github.com/aaronmallen/doing/issues/54
+[#55]: https://github.com/aaronmallen/doing/issues/55
+[#56]: https://github.com/aaronmallen/doing/issues/56
+[#57]: https://github.com/aaronmallen/doing/issues/57
 [#58]: https://github.com/aaronmallen/doing/issues/58
+[#59]: https://github.com/aaronmallen/doing/issues/59
+[#61]: https://github.com/aaronmallen/doing/issues/61
+[#62]: https://github.com/aaronmallen/doing/issues/62
 [#63]: https://github.com/aaronmallen/doing/issues/63
 [#64]: https://github.com/aaronmallen/doing/issues/64
+[#65]: https://github.com/aaronmallen/doing/issues/65
 [#66]: https://github.com/aaronmallen/doing/issues/66
 [#67]: https://github.com/aaronmallen/doing/issues/67
 [#68]: https://github.com/aaronmallen/doing/issues/68
+[#69]: https://github.com/aaronmallen/doing/issues/69
 [#70]: https://github.com/aaronmallen/doing/issues/70
 [#71]: https://github.com/aaronmallen/doing/issues/71
 [#72]: https://github.com/aaronmallen/doing/issues/72
+[#73]: https://github.com/aaronmallen/doing/issues/73
+[#74]: https://github.com/aaronmallen/doing/issues/74
+[#75]: https://github.com/aaronmallen/doing/issues/75
+[#76]: https://github.com/aaronmallen/doing/issues/76
+[#77]: https://github.com/aaronmallen/doing/issues/77
+[#78]: https://github.com/aaronmallen/doing/issues/78
 [#79]: https://github.com/aaronmallen/doing/issues/79
+[#80]: https://github.com/aaronmallen/doing/issues/80
+[#81]: https://github.com/aaronmallen/doing/issues/81
+[#82]: https://github.com/aaronmallen/doing/issues/82
+[#83]: https://github.com/aaronmallen/doing/issues/83
 [#86]: https://github.com/aaronmallen/doing/issues/86
+[#88]: https://github.com/aaronmallen/doing/issues/88
+[#100]: https://github.com/aaronmallen/doing/issues/100
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
+[v0.0.1-alpha.4]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4

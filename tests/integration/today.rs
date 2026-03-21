@@ -3,6 +3,34 @@ use pretty_assertions::assert_eq;
 use crate::helpers::{self, DoingCmd};
 
 #[test]
+fn it_outputs_json_with_full_dates() {
+  let doing = DoingCmd::new();
+
+  doing.run(["done", "JSON date test entry"]).assert().success();
+
+  let output = doing
+    .run(["today", "--output", "json"])
+    .output()
+    .expect("failed to run today --output json");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  let parsed: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+  let sections = parsed.as_array().unwrap();
+  let item = &sections[0]["items"][0];
+  let date_str = item["date"].as_str().unwrap();
+
+  // Date should include seconds and timezone, e.g. "2026-03-20 16:06:00 -0500"
+  // not just display time like "4:06 PM"
+  assert!(
+    date_str.contains(':') && date_str.len() > 20,
+    "date should be full datetime with timezone, got: {date_str}"
+  );
+  assert!(
+    date_str.ends_with("00") || date_str.contains('-') || date_str.contains('+'),
+    "date should include timezone offset, got: {date_str}"
+  );
+}
+
+#[test]
 fn it_excludes_entries_from_yesterday() {
   let doing = DoingCmd::new();
 

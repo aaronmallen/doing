@@ -131,7 +131,12 @@ cmd "completion" help="Generate shell completions" {
 }
 
 cmd "config" help="View, edit, and manage configuration" {
-  cmd "edit" help="Open the config file in the configured editor"
+  cmd "edit" help="Open the config file in the configured editor" {
+    flag "-a --app <APP>" help="Open config with the specified application"
+    flag "-b --bundle-id <BUNDLE_ID>" help="Open config with the specified macOS app bundle identifier"
+    flag "-e --editor <EDITOR>" help="Open config with the specified editor"
+    flag "-x --default" help="Reset the config file to default values"
+  }
   cmd "get" help="Get a config value by dot-path (e.g., editors.default)" {
     arg "<KEY>" help="Dot-separated config key (e.g., editors.default, search.case)"
   }

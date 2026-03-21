@@ -1,4 +1,4 @@
-use std::{env as std_env, fs, path::Path};
+use std::{env as std_env, fs, path::Path, process};
 
 use clap::{Args, Subcommand};
 use serde_json::Value;
@@ -31,7 +31,8 @@ pub struct Command {
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match &self.action {
-      None | Some(Action::Edit) => editor::edit_config(&ctx.config),
+      None => editor::edit_config(&ctx.config),
+      Some(Action::Edit(args)) => edit_config(args, &ctx.config),
       Some(Action::Get(args)) => get_value(&args.key, ctx),
       Some(Action::List) => list_configs(),
       Some(Action::Set(args)) if args.remove => remove_value(&args.key, ctx.quiet),
@@ -44,13 +45,30 @@ impl Command {
 #[derive(Clone, Debug, Subcommand)]
 enum Action {
   /// Open the config file in the configured editor
-  Edit,
+  Edit(EditArgs),
   /// Get a config value by dot-path (e.g., editors.default)
   Get(GetArgs),
   /// List all detected config files in the config cascade
   List,
   /// Set a config value by dot-path
   Set(SetArgs),
+}
+
+/// Arguments for the `config edit` subcommand.
+#[derive(Args, Clone, Debug)]
+struct EditArgs {
+  /// Open config with the specified application
+  #[arg(short = 'a', long)]
+  app: Option<String>,
+  /// Open config with the specified macOS app bundle identifier
+  #[arg(short = 'b', long)]
+  bundle_id: Option<String>,
+  /// Reset the config file to default values
+  #[arg(short = 'x', long)]
+  default: bool,
+  /// Open config with the specified editor
+  #[arg(short = 'e', long)]
+  editor: Option<String>,
 }
 
 /// Arguments for the `config get` subcommand.
@@ -73,6 +91,28 @@ struct SetArgs {
   /// Remove the key from the config file instead of setting it
   #[arg(short = 'r', long = "remove", conflicts_with = "value")]
   remove: bool,
+}
+
+fn edit_config(args: &EditArgs, config: &crate::config::Config) -> Result<()> {
+  let config_path = loader::resolve_global_config_path();
+
+  if args.default {
+    return reset_config_to_defaults(&config_path);
+  }
+
+  if let Some(ref app) = args.app {
+    return open_with_app(&config_path, app);
+  }
+
+  if let Some(ref bundle_id) = args.bundle_id {
+    return open_with_bundle_id(&config_path, bundle_id);
+  }
+
+  if let Some(ref ed) = args.editor {
+    return open_with_editor(&config_path, ed);
+  }
+
+  editor::edit_config(config)
 }
 
 fn get_value(key: &str, ctx: &AppContext) -> Result<()> {
@@ -99,6 +139,48 @@ fn list_configs() -> Result<()> {
     println!("{}", path.display());
   }
 
+  Ok(())
+}
+
+fn open_with_app(config_path: &Path, app: &str) -> Result<()> {
+  let status = process::Command::new("open")
+    .arg("-a")
+    .arg(app)
+    .arg(config_path)
+    .status()?;
+
+  if !status.success() {
+    return Err(Error::Config(format!("failed to open config with app '{app}'")));
+  }
+  Ok(())
+}
+
+fn open_with_bundle_id(config_path: &Path, bundle_id: &str) -> Result<()> {
+  let status = process::Command::new("open")
+    .arg("-b")
+    .arg(bundle_id)
+    .arg(config_path)
+    .status()?;
+
+  if !status.success() {
+    return Err(Error::Config(format!(
+      "failed to open config with bundle id '{bundle_id}'"
+    )));
+  }
+  Ok(())
+}
+
+fn open_with_editor(config_path: &Path, editor_cmd: &str) -> Result<()> {
+  let parts: Vec<&str> = editor_cmd.split_whitespace().collect();
+  let (cmd, args) = parts.split_first().expect("editor command must not be empty");
+
+  let status = process::Command::new(cmd).args(args).arg(config_path).status()?;
+
+  if !status.success() {
+    return Err(Error::Config(format!(
+      "editor '{editor_cmd}' exited with non-zero status"
+    )));
+  }
   Ok(())
 }
 
@@ -204,6 +286,33 @@ fn remove_value_toml(path: &Path, key: &str, quiet: bool) -> Result<()> {
   if !quiet {
     eprintln!("Removed {key}");
   }
+  Ok(())
+}
+
+fn reset_config_to_defaults(config_path: &Path) -> Result<()> {
+  let default_config = crate::config::Config::default();
+  let value = serde_json::to_value(&default_config).map_err(|e| Error::Config(format!("serialization error: {e}")))?;
+
+  // Determine format from extension, default to TOML
+  let output = match ConfigFormat::from_extension(config_path) {
+    Some(ConfigFormat::Json) => {
+      serde_json::to_string_pretty(&value).map_err(|e| Error::Config(format!("JSON serialization error: {e}")))?
+    }
+    Some(ConfigFormat::Yaml) => {
+      yaml_serde::to_string(&value).map_err(|e| Error::Config(format!("YAML serialization error: {e}")))?
+    }
+    _ => {
+      toml::to_string_pretty(&default_config).map_err(|e| Error::Config(format!("TOML serialization error: {e}")))?
+    }
+  };
+
+  if let Some(parent) = config_path.parent() {
+    fs::create_dir_all(parent)?;
+  }
+  fs::write(config_path, output)
+    .map_err(|e| Error::Config(format!("failed to write {}: {e}", config_path.display())))?;
+
+  eprintln!("Config reset to defaults at {}", config_path.display());
   Ok(())
 }
 
@@ -542,6 +651,33 @@ mod test {
       let result = super::super::remove_value_toml(&path, "nonexistent", false);
 
       assert!(result.is_err());
+    }
+  }
+
+  mod reset_config_to_defaults {
+    #[test]
+    fn it_creates_default_toml_config() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.toml");
+
+      super::super::reset_config_to_defaults(&path).unwrap();
+
+      let content = std::fs::read_to_string(&path).unwrap();
+      assert!(content.contains("current_section"));
+      assert!(content.contains("history_size"));
+    }
+
+    #[test]
+    fn it_overwrites_existing_config() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("config.toml");
+      std::fs::write(&path, "custom_key = \"value\"\n").unwrap();
+
+      super::super::reset_config_to_defaults(&path).unwrap();
+
+      let content = std::fs::read_to_string(&path).unwrap();
+      assert!(!content.contains("custom_key"));
+      assert!(content.contains("current_section"));
     }
   }
 

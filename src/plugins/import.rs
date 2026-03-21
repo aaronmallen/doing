@@ -1,4 +1,6 @@
+mod calendar;
 mod doing;
+mod json;
 mod timing;
 
 use std::path::Path;
@@ -101,7 +103,9 @@ struct RegisteredPlugin {
 /// Build the default import registry with all built-in import plugins.
 pub fn default_registry() -> ImportRegistry {
   let mut registry = ImportRegistry::new();
+  registry.register(Box::new(calendar::CalendarImport));
   registry.register(Box::new(doing::DoingImport));
+  registry.register(Box::new(json::JsonImport));
   registry.register(Box::new(timing::TimingImport));
   registry
 }
@@ -151,7 +155,10 @@ mod test {
     fn it_registers_all_built_in_plugins() {
       let registry = default_registry();
 
-      assert_eq!(registry.available_formats(), vec!["doing", "timing"]);
+      assert_eq!(
+        registry.available_formats(),
+        vec!["calendar", "doing", "json", "timing"]
+      );
     }
   }
 

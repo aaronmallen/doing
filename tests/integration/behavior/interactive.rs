@@ -1,0 +1,6 @@
+mod when_default_flag_bypasses_interactive_menus;
+mod when_interactive_flag_is_provided;
+mod when_menu_flag_is_provided;
+mod when_no_flag_bypasses_interactive_prompts;
+mod when_non_tty_is_detected;
+mod when_yes_flag_bypasses_interactive_prompts;

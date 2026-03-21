@@ -98,7 +98,6 @@ fn it_respects_view_section_setting() {
 }
 
 #[test]
-#[ignore = "view fuzzy matching not implemented (see #15)"]
 fn it_fuzzy_matches_view_names() {
   let doing = DoingCmd::new_with_config(VIEW_CONFIG);
 
@@ -112,6 +111,40 @@ fn it_fuzzy_matches_view_names() {
     1,
     "fuzzy match 'tes' should resolve to 'test' view"
   );
+}
+
+#[test]
+fn it_returns_error_for_ambiguous_view_name() {
+  let config = r#"
+current_section = "Currently"
+doing_file_sort = "asc"
+include_notes = true
+paginate = false
+
+[templates.default]
+date_format = "%Y-%m-%d %H:%M"
+template = "%date | %title%note"
+wrap_width = 0
+order = "asc"
+
+[views.color]
+section = "Currently"
+count = 10
+template = "default"
+order = "asc"
+
+[views.completed]
+section = "Done"
+count = 5
+template = "default"
+order = "desc"
+
+[editors]
+default = "cat"
+"#;
+  let doing = DoingCmd::new_with_config(config);
+
+  doing.run(["view", "co"]).assert().failure();
 }
 
 #[test]

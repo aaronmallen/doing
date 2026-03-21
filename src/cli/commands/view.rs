@@ -1,4 +1,7 @@
+use std::collections::HashMap;
+
 use clap::Args;
+use log::debug;
 
 use crate::{
   cli::{
@@ -59,12 +62,8 @@ impl Command {
   }
 
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let view = ctx
-      .config
-      .views
-      .get(&self.name)
-      .ok_or_else(|| Error::Config(format!("view '{}' not found", self.name)))?
-      .clone();
+    let resolved_name = resolve_view_name(&self.name, &ctx.config.views)?;
+    let view = ctx.config.views.get(&resolved_name).unwrap().clone();
 
     let section_name = self.resolve_section(&view, &ctx.config.current_section);
 
@@ -142,6 +141,37 @@ fn parse_bool_mode(s: &str) -> BooleanMode {
     "NOT" => BooleanMode::Not,
     "PATTERN" => BooleanMode::Pattern,
     _ => BooleanMode::Or,
+  }
+}
+
+/// Resolve a view name against the configured views.
+///
+/// Tries an exact match first. If that fails, falls back to prefix matching.
+/// Returns an error if zero or multiple views match.
+fn resolve_view_name(name: &str, views: &HashMap<String, ViewConfig>) -> Result<String> {
+  // Exact match takes priority
+  if views.contains_key(name) {
+    return Ok(name.to_string());
+  }
+
+  // Try prefix matching
+  let matches: Vec<&String> = views.keys().filter(|key| key.starts_with(name)).collect();
+
+  match matches.len() {
+    0 => Err(Error::Config(format!("view '{name}' not found"))),
+    1 => {
+      let matched = matches[0].clone();
+      debug!("Assuming \"{matched}\"");
+      Ok(matched)
+    }
+    _ => {
+      let mut names: Vec<&str> = matches.iter().map(|s| s.as_str()).collect();
+      names.sort();
+      Err(Error::Config(format!(
+        "ambiguous view name '{name}', could match: {}",
+        names.join(", ")
+      )))
+    }
   }
 }
 
@@ -482,6 +512,60 @@ mod test {
       let template = cmd.resolve_template(&view);
 
       assert_eq!(template, "today");
+    }
+  }
+
+  mod resolve_view_name {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    fn sample_views() -> HashMap<String, ViewConfig> {
+      let mut views = HashMap::new();
+      views.insert("color".into(), ViewConfig::default());
+      views.insert("completed".into(), ViewConfig::default());
+      views.insert("done".into(), ViewConfig::default());
+      views
+    }
+
+    #[test]
+    fn it_prefers_exact_match() {
+      let views = sample_views();
+
+      let result = super::super::resolve_view_name("done", &views).unwrap();
+
+      assert_eq!(result, "done");
+    }
+
+    #[test]
+    fn it_resolves_unique_prefix() {
+      let views = sample_views();
+
+      let result = super::super::resolve_view_name("col", &views).unwrap();
+
+      assert_eq!(result, "color");
+    }
+
+    #[test]
+    fn it_returns_error_for_ambiguous_prefix() {
+      let views = sample_views();
+
+      let err = super::super::resolve_view_name("co", &views).unwrap_err();
+      let msg = err.to_string();
+
+      assert!(msg.contains("ambiguous"), "error should mention ambiguity: {msg}");
+      assert!(msg.contains("color"), "error should list 'color': {msg}");
+      assert!(msg.contains("completed"), "error should list 'completed': {msg}");
+    }
+
+    #[test]
+    fn it_returns_error_for_no_match() {
+      let views = sample_views();
+
+      let err = super::super::resolve_view_name("xyz", &views).unwrap_err();
+      let msg = err.to_string();
+
+      assert!(msg.contains("not found"), "error should say not found: {msg}");
     }
   }
 }

@@ -7,7 +7,7 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
-## [v0.0.1-alpha.4] - 2026-03-21
+## [v0.0.1-alpha.4.1] - 2026-03-21
 
 ### Added
 
@@ -200,7 +200,7 @@ Initial alpha release
 [#88]: https://github.com/aaronmallen/doing/issues/88
 [#100]: https://github.com/aaronmallen/doing/issues/100
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
-[v0.0.1-alpha.4]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4
+[v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1

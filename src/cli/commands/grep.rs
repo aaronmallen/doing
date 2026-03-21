@@ -42,10 +42,6 @@ use crate::{
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
-  /// Case sensitivity mode (smart/sensitive/ignore)
-  #[arg(long)]
-  case: Option<String>,
-
   /// Delete all matching entries
   #[arg(short, long)]
   delete: bool,
@@ -184,10 +180,6 @@ impl Command {
 
     let mut search_config = ctx.config.search.clone();
 
-    if let Some(ref case_override) = self.case {
-      search_config.case = case_override.clone();
-    }
-
     if self.highlight {
       search_config.highlight = true;
     }
@@ -236,7 +228,6 @@ mod test {
 
   fn default_cmd(query: &str) -> Command {
     Command {
-      case: None,
       delete: false,
       display: DisplayArgs::default(),
       editor: false,
@@ -370,7 +361,10 @@ mod test {
     fn it_overrides_case_sensitivity() {
       let ctx = sample_ctx();
       let cmd = Command {
-        case: Some("sensitive".into()),
+        filter: FilterArgs {
+          case: Some("sensitive".into()),
+          ..FilterArgs::default()
+        },
         ..default_cmd("project")
       };
 

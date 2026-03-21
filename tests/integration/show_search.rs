@@ -82,7 +82,6 @@ fn it_negates_search_results_with_not_flag() {
 }
 
 #[test]
-#[ignore = "show command missing --case flag (see plan to add --case to FilterArgs)"]
 fn it_performs_case_sensitive_search_with_case_flag() {
   let doing = DoingCmd::new();
 

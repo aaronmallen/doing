@@ -165,6 +165,10 @@ pub struct FilterArgs {
   #[arg(long = "bool", value_enum, ignore_case = true)]
   pub bool_op: Option<BoolArg>,
 
+  /// Case sensitivity for search (smart/sensitive/ignore)
+  #[arg(long)]
+  pub case: Option<String>,
+
   /// Maximum number of entries to return
   #[arg(short, long)]
   pub count: Option<usize>,
@@ -212,10 +216,15 @@ impl FilterArgs {
     let effective_after = from_after.or(after);
     let effective_before = from_before.or(before);
 
+    let mut search_config = config.search.clone();
+    if let Some(ref case_override) = self.case {
+      search_config.case = case_override.clone();
+    }
+
     let search = self
       .search
       .as_deref()
-      .and_then(|q| search::parse_query(q, &config.search));
+      .and_then(|q| search::parse_query(q, &search_config));
 
     let tag_filter = if self.tag.is_empty() {
       None

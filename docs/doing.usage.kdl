@@ -188,7 +188,6 @@ cmd "finish" help="Mark the last entry as finished" {
 cmd "grep" help="Search for entries matching a pattern" {
   alias "search"
   arg "<QUERY>" help="Search query"
-  flag "--case <CASE>" help="Case sensitivity mode (smart/sensitive/ignore)"
   flag "--duration <DURATION>" help="Duration format for time display"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
@@ -212,6 +211,7 @@ cmd "grep" help="Search for entries matching a pattern" {
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
+  flag "--case <CASE>" help="Case sensitivity for search (smart/sensitive/ignore)"
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
@@ -503,6 +503,7 @@ cmd "show" help="Show entries from a section" {
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
+  flag "--case <CASE>" help="Case sensitivity for search (smart/sensitive/ignore)"
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"

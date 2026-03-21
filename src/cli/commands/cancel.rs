@@ -39,6 +39,10 @@ pub struct Command {
   #[arg(short, long)]
   interactive: bool,
 
+  /// Negate all filter results
+  #[arg(long)]
+  not: bool,
+
   /// Text search query to filter entries
   #[arg(long)]
   search: Option<String>,
@@ -54,6 +58,10 @@ pub struct Command {
   /// Only cancel unfinished entries (no @done tag)
   #[arg(short = 'u', long)]
   unfinished: bool,
+
+  /// Tag value queries (e.g. "progress > 50")
+  #[arg(long)]
+  val: Vec<String>,
 }
 
 impl Command {
@@ -170,13 +178,24 @@ impl Command {
         .as_deref()
         .and_then(|q| crate::ops::search::parse_query(q, &ctx.config.search));
 
+      let tag_queries = self
+        .val
+        .iter()
+        .map(|v| {
+          crate::ops::tag_query::TagQuery::parse(v)
+            .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+        })
+        .collect::<crate::errors::Result<Vec<_>>>()?;
+
       let options = FilterOptions {
         age: Some(Age::Newest),
         count: Some(self.effective_count()),
         include_notes: ctx.include_notes,
+        negate: self.not,
         search,
         section: Some(section_name.to_string()),
         tag_filter,
+        tag_queries,
         unfinished: self.unfinished,
         ..Default::default()
       };
@@ -238,10 +257,12 @@ mod test {
       bool_op: None,
       count: 1,
       interactive: false,
+      not: false,
       search: None,
       section: None,
       tag: vec![],
       unfinished: false,
+      val: vec![],
     }
   }
 

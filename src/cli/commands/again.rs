@@ -50,6 +50,10 @@ pub struct Command {
   #[arg(short, long)]
   note: Option<String>,
 
+  /// Negate all filter results
+  #[arg(long)]
+  not: bool,
+
   /// Text search query to find the entry to repeat
   #[arg(long)]
   search: Option<String>,
@@ -61,6 +65,10 @@ pub struct Command {
   /// Tags to filter by (can be repeated)
   #[arg(short, long)]
   tag: Vec<String>,
+
+  /// Tag value queries (e.g. "progress > 50")
+  #[arg(long)]
+  val: Vec<String>,
 }
 
 impl Command {
@@ -145,13 +153,24 @@ impl Command {
       .as_deref()
       .and_then(|q| crate::ops::search::parse_query(q, &ctx.config.search));
 
+    let tag_queries = self
+      .val
+      .iter()
+      .map(|v| {
+        crate::ops::tag_query::TagQuery::parse(v)
+          .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+      })
+      .collect::<crate::errors::Result<Vec<_>>>()?;
+
     let options = FilterOptions {
       age: Some(Age::Newest),
       count: Some(1),
       include_notes: ctx.include_notes,
+      negate: self.not,
       search,
       section: self.section.clone(),
       tag_filter,
+      tag_queries,
       ..Default::default()
     };
 
@@ -215,10 +234,12 @@ mod test {
       interactive: false,
       in_section: None,
       noauto: true,
+      not: false,
       note: None,
       search: None,
       section: None,
       tag: vec![],
+      val: vec![],
     }
   }
 

@@ -33,9 +33,11 @@ cmd "again" help="Repeat the last entry" {
   flag "-i --interactive" help="Interactively select the entry to repeat"
   flag "-X --noauto" help="Skip autotagging and default tags"
   flag "-n --note <NOTE>" help="Attach a note directly from the command line"
+  flag "--not" help="Negate all filter results"
   flag "--search <SEARCH>" help="Text search query to find the entry to repeat"
   flag "-s --section <SECTION>" help="Source section to find the entry to repeat"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 
 cmd "archive" help="Move entries to the Archive section" {
@@ -79,10 +81,12 @@ cmd "cancel" help="Mark the last entry as cancelled" {
   }
   flag "-c --count <COUNT>" help="Cancel the last N entries" default="1"
   flag "-i --interactive" help="Interactively select entries to cancel"
+  flag "--not" help="Negate all filter results"
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to cancel entries from"
   flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "-u --unfinished" help="Only cancel unfinished entries (no @done tag)"
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 
 cmd "choose" help="Fuzzy select an entry to act on" {
@@ -178,6 +182,7 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "-c --count <COUNT>" help="Finish the last N entries" default="1"
   flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
   flag "-i --interactive" help="Interactively select entries to finish"
+  flag "--not" help="Negate all filter results"
   flag "-r --remove" help="Remove @done tag instead of adding"
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to finish entries from"
@@ -185,6 +190,7 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "--took --for <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
   flag "--unfinished" help="Only finish unfinished entries (no @done tag)"
   flag "-u --update" help="Overwrite an existing @done tag with a new timestamp"
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 
 cmd "grep" help="Search for entries matching a pattern" {

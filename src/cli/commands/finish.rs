@@ -60,6 +60,10 @@ pub struct Command {
   #[arg(long = "no-date", action = ArgAction::SetTrue, hide = true, overrides_with = "date")]
   no_date: bool,
 
+  /// Negate all filter results
+  #[arg(long)]
+  not: bool,
+
   /// Remove @done tag instead of adding
   #[arg(short, long)]
   remove: bool,
@@ -87,6 +91,10 @@ pub struct Command {
   /// Overwrite an existing @done tag with a new timestamp
   #[arg(short, long)]
   update: bool,
+
+  /// Tag value queries (e.g. "progress > 50")
+  #[arg(long)]
+  val: Vec<String>,
 }
 
 impl Command {
@@ -214,13 +222,24 @@ impl Command {
         .as_deref()
         .and_then(|q| crate::ops::search::parse_query(q, &ctx.config.search));
 
+      let tag_queries = self
+        .val
+        .iter()
+        .map(|v| {
+          crate::ops::tag_query::TagQuery::parse(v)
+            .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+        })
+        .collect::<crate::errors::Result<Vec<_>>>()?;
+
       let options = FilterOptions {
         age: Some(Age::Newest),
         count: Some(self.effective_count()),
         include_notes: ctx.include_notes,
+        negate: self.not,
         search,
         section: Some(section_name.to_string()),
         tag_filter,
+        tag_queries,
         unfinished: self.unfinished && !self.update,
         ..Default::default()
       };
@@ -421,6 +440,7 @@ mod test {
       date: true,
       interactive: false,
       no_date: false,
+      not: false,
       remove: false,
       search: None,
       section: None,
@@ -428,6 +448,7 @@ mod test {
       took: None,
       unfinished: false,
       update: false,
+      val: vec![],
     }
   }
 

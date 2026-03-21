@@ -233,8 +233,6 @@ mod test {
   }
 
   mod parse_json_date {
-    use super::*;
-
     #[test]
     fn it_parses_date_with_timezone() {
       let result = super::super::parse_json_date("2024-03-17 14:30:00 -0500");

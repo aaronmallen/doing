@@ -266,8 +266,6 @@ mod test {
   }
 
   mod parse_ics_date {
-    use super::*;
-
     #[test]
     fn it_parses_utc_datetime() {
       let result = super::super::parse_ics_date("20240317T143000Z");

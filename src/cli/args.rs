@@ -173,6 +173,10 @@ pub struct FilterArgs {
   #[arg(short, long)]
   pub count: Option<usize>,
 
+  /// Use exact (literal substring) matching for search
+  #[arg(short = 'x', long)]
+  pub exact: bool,
+
   /// Date range expression (e.g. "monday to friday")
   #[arg(long)]
   pub from: Option<String>,
@@ -219,6 +223,9 @@ impl FilterArgs {
     let mut search_config = config.search.clone();
     if let Some(ref case_override) = self.case {
       search_config.case = case_override.clone();
+    }
+    if self.exact {
+      search_config.matching = "exact".into();
     }
 
     let search = self

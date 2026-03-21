@@ -53,15 +53,11 @@ pub struct Command {
   #[arg(short, long)]
   editor: bool,
 
-  /// Use exact (literal substring) matching
-  #[arg(long, conflicts_with_all = ["fuzzy", "regex"])]
-  exact: bool,
-
   #[command(flatten)]
   filter: FilterArgs,
 
   /// Use fuzzy matching
-  #[arg(long, conflicts_with_all = ["exact", "regex"])]
+  #[arg(long, conflicts_with = "regex")]
   fuzzy: bool,
 
   /// Highlight matching text in output
@@ -81,7 +77,7 @@ pub struct Command {
   query: String,
 
   /// Use regex matching
-  #[arg(long, conflicts_with_all = ["exact", "fuzzy"])]
+  #[arg(long, conflicts_with = "fuzzy")]
   regex: bool,
 }
 
@@ -184,9 +180,7 @@ impl Command {
       search_config.highlight = true;
     }
 
-    if self.exact {
-      search_config.matching = "exact".into();
-    } else if self.fuzzy {
+    if self.fuzzy {
       search_config.matching = "fuzzy".into();
     } else if self.regex {
       search_config.matching = "regex".into();
@@ -203,7 +197,7 @@ impl Command {
   }
 
   fn build_search_query(&self) -> String {
-    if self.exact {
+    if self.filter.exact {
       format!("'{}", self.query)
     } else if self.regex {
       if self.query.starts_with('/') && self.query.ends_with('/') {
@@ -231,7 +225,6 @@ mod test {
       delete: false,
       display: DisplayArgs::default(),
       editor: false,
-      exact: false,
       filter: FilterArgs::default(),
       fuzzy: false,
       highlight: false,
@@ -402,7 +395,10 @@ mod test {
     #[test]
     fn it_prepends_quote_for_exact_mode() {
       let cmd = Command {
-        exact: true,
+        filter: FilterArgs {
+          exact: true,
+          ..FilterArgs::default()
+        },
         ..default_cmd("hello world")
       };
 
@@ -480,7 +476,10 @@ mod test {
     fn it_searches_with_exact_mode() {
       let mut ctx = sample_ctx();
       let cmd = Command {
-        exact: true,
+        filter: FilterArgs {
+          exact: true,
+          ..FilterArgs::default()
+        },
         ..default_cmd("Working on")
       };
 

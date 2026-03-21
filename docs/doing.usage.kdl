@@ -197,7 +197,6 @@ cmd "grep" help="Search for entries matching a pattern" {
   flag "--template <TEMPLATE>" help="Named template to use for output"
   flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"
-  flag "--exact" help="Use exact (literal substring) matching"
   flag "--fuzzy" help="Use fuzzy matching"
   flag "--highlight" help="Highlight matching text in output"
   flag "-i --interactive" help="Interactively select entries from search results"
@@ -213,6 +212,7 @@ cmd "grep" help="Search for entries matching a pattern" {
   }
   flag "--case <CASE>" help="Case sensitivity for search (smart/sensitive/ignore)"
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "-x --exact" help="Use exact (literal substring) matching for search"
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"
@@ -505,6 +505,7 @@ cmd "show" help="Show entries from a section" {
   }
   flag "--case <CASE>" help="Case sensitivity for search (smart/sensitive/ignore)"
   flag "-c --count <COUNT>" help="Maximum number of entries to return"
+  flag "-x --exact" help="Use exact (literal substring) matching for search"
   flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "--not" help="Negate all filter results"
   flag "--only-timed" help="Only include entries with a recorded time interval"

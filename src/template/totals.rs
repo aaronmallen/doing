@@ -4,6 +4,26 @@ use chrono::Duration;
 
 use crate::{taskpaper::Entry, time::format_tag_total};
 
+/// How tags are sorted in the totals section.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum TagSortField {
+  /// Sort tags alphabetically by name.
+  #[default]
+  Name,
+  /// Sort tags by total time.
+  Time,
+}
+
+/// Sort order for tag totals.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum TagSortOrder {
+  /// Sort in ascending order.
+  #[default]
+  Asc,
+  /// Sort in descending order.
+  Desc,
+}
+
 /// Aggregated time totals per tag.
 #[derive(Clone, Debug, Default)]
 pub struct TagTotals {
@@ -29,7 +49,7 @@ impl TagTotals {
     self.tags.is_empty()
   }
 
-  /// Render the tag totals as a formatted text block.
+  /// Render the tag totals as a formatted text block, sorted by the given field and order.
   ///
   /// Output format:
   /// ```text
@@ -39,19 +59,28 @@ impl TagTotals {
   ///
   /// Total tracked: 01:32:30
   /// ```
-  pub fn render(&self) -> String {
+  pub fn render_sorted(&self, sort_field: TagSortField, sort_order: TagSortOrder) -> String {
     if self.tags.is_empty() {
       return String::new();
     }
 
     let max_name_len = self.tags.keys().map(|k| k.len()).max().unwrap_or(0) + 1;
 
+    let mut sorted_tags: Vec<(&String, &Duration)> = self.tags.iter().collect();
+    match sort_field {
+      TagSortField::Name => sorted_tags.sort_by(|(a, _), (b, _)| a.cmp(b)),
+      TagSortField::Time => sorted_tags.sort_by(|(_, a), (_, b)| a.cmp(b)),
+    }
+    if sort_order == TagSortOrder::Desc {
+      sorted_tags.reverse();
+    }
+
     let mut lines: Vec<String> = Vec::new();
     lines.push("\n--- Tag Totals ---".into());
 
-    for (tag, duration) in &self.tags {
+    for (tag, duration) in &sorted_tags {
       let padding = " ".repeat(max_name_len - tag.len());
-      lines.push(format!("{tag}:{padding}{}", format_tag_total(*duration)));
+      lines.push(format!("{tag}:{padding}{}", format_tag_total(**duration)));
     }
 
     lines.push(String::new());
@@ -168,7 +197,7 @@ mod test {
       let entries = vec![entry_with_tags(&["coding"], "2024-03-17 14:30")];
 
       let totals = TagTotals::from_entries(&entries);
-      let output = totals.render();
+      let output = totals.render_sorted(TagSortField::default(), TagSortOrder::default());
 
       assert!(output.contains("Tag Totals"));
       assert!(output.contains("coding:"));
@@ -179,7 +208,10 @@ mod test {
     fn it_returns_empty_for_no_data() {
       let totals = TagTotals::default();
 
-      assert_eq!(totals.render(), "");
+      assert_eq!(
+        totals.render_sorted(TagSortField::default(), TagSortOrder::default()),
+        ""
+      );
     }
   }
 }

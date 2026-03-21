@@ -12,7 +12,10 @@ use crate::{
   },
   plugins::default_registry,
   taskpaper::Entry,
-  template::renderer::{RenderOptions, format_items},
+  template::{
+    renderer::{RenderOptions, format_items_with_tag_sort},
+    totals::{TagSortField, TagSortOrder},
+  },
   time::{chronify, parse_range},
 };
 
@@ -79,6 +82,14 @@ pub struct DisplayArgs {
   #[arg(long, value_enum)]
   pub sort: Option<SortArg>,
 
+  /// Sort order for tag totals (asc/desc)
+  #[arg(long, alias = "tag_order", value_enum)]
+  pub tag_order: Option<SortArg>,
+
+  /// Sort field for tag totals
+  #[arg(long, alias = "tag_sort", value_enum)]
+  pub tag_sort: Option<TagSortArg>,
+
   /// Named template to use for output
   #[arg(long)]
   pub template: Option<String>,
@@ -115,7 +126,23 @@ impl DisplayArgs {
       )));
     }
 
-    Ok(format_items(entries, &render_options, config, self.totals))
+    let tag_sort_field = match self.tag_sort.unwrap_or_default() {
+      TagSortArg::Name => TagSortField::Name,
+      TagSortArg::Time => TagSortField::Time,
+    };
+    let tag_sort_order = match self.tag_order {
+      Some(SortArg::Desc) => TagSortOrder::Desc,
+      _ => TagSortOrder::Asc,
+    };
+
+    Ok(format_items_with_tag_sort(
+      entries,
+      &render_options,
+      config,
+      self.totals,
+      tag_sort_field,
+      tag_sort_order,
+    ))
   }
 }
 
@@ -246,6 +273,16 @@ pub enum SortArg {
   Asc,
   /// Sort in descending order.
   Desc,
+}
+
+/// How tags are sorted in the totals section.
+#[derive(Clone, Copy, Debug, Default, ValueEnum)]
+pub enum TagSortArg {
+  /// Sort tags alphabetically by name.
+  #[default]
+  Name,
+  /// Sort tags by total time.
+  Time,
 }
 
 impl From<SortArg> for SortOrder {

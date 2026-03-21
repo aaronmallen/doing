@@ -486,6 +486,12 @@ cmd "show" help="Show entries from a section" {
   flag "--sort <SORT>" help="Sort order for results" {
     choices "asc" "desc"
   }
+  flag "--tag-order <TAG_ORDER>" help="Sort order for tag totals (asc/desc)" {
+    choices "asc" "desc"
+  }
+  flag "--tag-sort <TAG_SORT>" help="Sort field for tag totals" {
+    choices "name" "time"
+  }
   flag "--template <TEMPLATE>" help="Named template to use for output"
   flag "-t --times" help="Show time intervals on @done tasks"
   flag "--totals" help="Show tag time totals"

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use super::{
   colors,
   parser::{self, Indent, IndentChar, Token, TokenKind},
-  totals::TagTotals,
+  totals::{TagSortField, TagSortOrder, TagTotals},
   wrap,
 };
 use crate::{
@@ -55,6 +55,25 @@ impl RenderOptions {
 /// Render a collection of entries, applying colors, wrapping, marker highlighting,
 /// and optionally appending tag totals.
 pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config, show_totals: bool) -> String {
+  format_items_with_tag_sort(
+    entries,
+    options,
+    config,
+    show_totals,
+    TagSortField::default(),
+    TagSortOrder::default(),
+  )
+}
+
+/// Render a collection of entries with configurable tag totals sorting.
+pub fn format_items_with_tag_sort(
+  entries: &[Entry],
+  options: &RenderOptions,
+  config: &Config,
+  show_totals: bool,
+  tag_sort_field: TagSortField,
+  tag_sort_order: TagSortOrder,
+) -> String {
   let lines: Vec<String> = entries
     .iter()
     .map(|entry| {
@@ -80,7 +99,7 @@ pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config,
   if show_totals {
     let totals = TagTotals::from_entries(entries);
     if !totals.is_empty() {
-      output.push_str(&totals.render());
+      output.push_str(&totals.render_sorted(tag_sort_field, tag_sort_order));
     }
   }
 

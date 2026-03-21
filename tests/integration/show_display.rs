@@ -225,7 +225,6 @@ fn it_shows_totals_only_for_timed_entries() {
 }
 
 #[test]
-#[ignore = "show command missing --tag_sort CLI flag (see plan to add --tag_sort/--tag_order flags)"]
 fn it_sorts_totals_by_tag_name_ascending() {
   let doing = DoingCmd::new();
 
@@ -255,7 +254,6 @@ fn it_sorts_totals_by_tag_name_ascending() {
 }
 
 #[test]
-#[ignore = "show command missing --tag_sort CLI flag (see plan to add --tag_sort/--tag_order flags)"]
 fn it_sorts_totals_by_tag_name_descending() {
   let doing = DoingCmd::new();
 
@@ -285,7 +283,6 @@ fn it_sorts_totals_by_tag_name_descending() {
 }
 
 #[test]
-#[ignore = "show command missing --tag_sort CLI flag (see plan to add --tag_sort/--tag_order flags)"]
 fn it_sorts_totals_by_time_descending() {
   let doing = DoingCmd::new();
 

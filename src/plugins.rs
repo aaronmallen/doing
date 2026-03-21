@@ -1,5 +1,6 @@
 mod byday;
 mod csv;
+mod dayone;
 mod doing;
 pub mod html;
 pub mod import;
@@ -108,6 +109,9 @@ pub fn default_registry() -> ExportRegistry {
   let mut registry = ExportRegistry::new();
   registry.register(Box::new(byday::BydayExport));
   registry.register(Box::new(csv::CsvExport));
+  registry.register(Box::new(dayone::DayoneExport));
+  registry.register(Box::new(dayone::DayoneDaysExport));
+  registry.register(Box::new(dayone::DayoneEntriesExport));
   registry.register(Box::new(doing::DoingExport));
   registry.register(Box::new(html::HtmlExport));
   registry.register(Box::new(json::JsonExport));
@@ -170,6 +174,9 @@ mod test {
         vec![
           "byday",
           "csv",
+          "dayone",
+          "dayone-days",
+          "dayone-entries",
           "doing",
           "html",
           "json",

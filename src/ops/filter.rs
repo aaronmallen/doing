@@ -144,10 +144,13 @@ fn matches_date_range(entry: &Entry, options: &FilterOptions) -> bool {
   true
 }
 
-/// Test whether an entry has a recorded time interval.
+/// Test whether an entry has a recorded time interval with positive duration.
+///
+/// Entries with zero-minute intervals are excluded because they have no meaningful
+/// tracked time.
 fn matches_only_timed(entry: &Entry, options: &FilterOptions) -> bool {
   if options.only_timed {
-    return entry.interval().is_some();
+    return entry.interval().is_some_and(|d| d.num_minutes() > 0);
   }
   true
 }
@@ -450,6 +453,22 @@ mod test {
       };
 
       assert!(super::super::matches_only_timed(&entry, &options));
+    }
+
+    #[test]
+    fn it_excludes_zero_duration_entries_when_only_timed() {
+      let entry = make_entry(
+        "test",
+        "Currently",
+        date(2024, 3, 15, 10, 0),
+        done_tags("2024-03-15 10:00"),
+      );
+      let options = FilterOptions {
+        only_timed: true,
+        ..Default::default()
+      };
+
+      assert!(!super::super::matches_only_timed(&entry, &options));
     }
 
     #[test]

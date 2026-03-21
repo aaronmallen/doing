@@ -11,7 +11,22 @@ and this project adheres to [Break Versioning].
 
 - [#2] `-b`/`--back` flag on `finish` command to backdate `@done` timestamp using natural language
   (e.g. `--back "30m ago"`, `--back "2024-03-17 14:00"`); `--back` and `--at` are mutually exclusive
+- [#8] `--tag_sort` (name/time) and `--tag_order` (asc/desc) flags on `show` command for controlling tag totals
+  sort order
+- [#10] `--case` flag on filter commands (show, grep, etc.) to override search case sensitivity; moved from
+  grep-specific to shared `FilterArgs`
+- [#11] `--tag` flag accepts comma-separated values (e.g. `--tag project,urgent`) in addition to repeated flags
+- [#16] `-r`/`--remove` flag on `config set` to remove configuration keys (e.g. `doing config set -r plugins.say`)
+- [#29] `-x`/`--exact` flag on filter commands for exact string matching; moved from grep-specific to shared
+  `FilterArgs`
+- [#32] `--title` flag on display commands to show section headers in output
+- [#34] Positional count argument on `finish`, `cancel`, and `recent` commands (e.g. `doing finish 3`); takes
+  precedence over `--count` when the flag is not explicitly set
 - [#37] `--archive` flag on `meanwhile` command; moves finished @meanwhile entries to the Archive section when replacing
+- [#56] `-a`/`--app`, `-e`/`--editor`, `-b`/`--bundle_id`, and `-x`/`--default` flags on `config edit`; open config
+  with a specific app/editor or reset to defaults
+- [#57] `-l`/`--local` flag on `config set` to write values to `.doingrc` in the current directory instead of the
+  global config
 - [#61] `changes` command displays a formatted changelog of recent doing versions with `--all`, `--lookup`,
   `--search`, `--only`, `--sort`, `--markdown`, `--changes`, `--prefix`, and `--interactive` flags; `changelog` is a
   visible alias
@@ -20,6 +35,7 @@ and this project adheres to [Break Versioning].
   `--editor` opens matches in an editor for batch editing; both respect `--interactive` for selective action
 - [#77] `-d`/`--delete` and `-e`/`--editor` flags on `last` command; `--delete` removes the last entry from the doing
   file and `--editor` opens it in `$EDITOR` for modification
+- [#80] `--not` and `--val` flags on `finish`, `cancel`, and `again` commands for tag negation and value filtering
 - [#81] `-e`/`--editor` flag on `open` command to override the default editor
 - [#83] `sections remove --archive` flag to archive entries before removing a section
 
@@ -40,6 +56,8 @@ and this project adheres to [Break Versioning].
   `--backup` no longer has a short flag; `--bundle_id` accepts a macOS bundle identifier string
 - [#65] `archive` command missing positional `[SECTION_OR_TAG]` argument; `doing archive Currently` and
   `doing archive @done` now work without requiring `--section`/`--tag` flags
+- [#69] `grep --duration` accepted a format string argument instead of acting as a boolean toggle; now matches Ruby
+  doing's `--[no-]duration` behavior
 - [#74] `tags` command output missing `@` prefix on tag names, `--sort count` not supported, no positional
   `MAX_COUNT` argument, and missing filtering flags (`--search`, `--tag`, `--bool`, `--val`, `--not`)
 - [#82] `reset` command missing positional `[DATE_STRING]` argument and `--took`/`--for` flag; `doing reset 3pm` and
@@ -130,7 +148,11 @@ Initial alpha release
 [#5]: https://github.com/aaronmallen/doing/issues/5
 [#6]: https://github.com/aaronmallen/doing/issues/6
 [#7]: https://github.com/aaronmallen/doing/issues/7
+[#8]: https://github.com/aaronmallen/doing/issues/8
+[#10]: https://github.com/aaronmallen/doing/issues/10
+[#11]: https://github.com/aaronmallen/doing/issues/11
 [#14]: https://github.com/aaronmallen/doing/issues/14
+[#16]: https://github.com/aaronmallen/doing/issues/16
 [#17]: https://github.com/aaronmallen/doing/issues/17
 [#18]: https://github.com/aaronmallen/doing/issues/18
 [#19]: https://github.com/aaronmallen/doing/issues/19
@@ -143,9 +165,12 @@ Initial alpha release
 [#26]: https://github.com/aaronmallen/doing/issues/26
 [#27]: https://github.com/aaronmallen/doing/issues/27
 [#28]: https://github.com/aaronmallen/doing/issues/28
+[#29]: https://github.com/aaronmallen/doing/issues/29
 [#30]: https://github.com/aaronmallen/doing/issues/30
 [#31]: https://github.com/aaronmallen/doing/issues/31
+[#32]: https://github.com/aaronmallen/doing/issues/32
 [#33]: https://github.com/aaronmallen/doing/issues/33
+[#34]: https://github.com/aaronmallen/doing/issues/34
 [#36]: https://github.com/aaronmallen/doing/issues/36
 [#37]: https://github.com/aaronmallen/doing/issues/37
 [#38]: https://github.com/aaronmallen/doing/issues/38
@@ -158,6 +183,8 @@ Initial alpha release
 [#51]: https://github.com/aaronmallen/doing/issues/51
 [#52]: https://github.com/aaronmallen/doing/issues/52
 [#53]: https://github.com/aaronmallen/doing/issues/53
+[#56]: https://github.com/aaronmallen/doing/issues/56
+[#57]: https://github.com/aaronmallen/doing/issues/57
 [#58]: https://github.com/aaronmallen/doing/issues/58
 [#61]: https://github.com/aaronmallen/doing/issues/61
 [#62]: https://github.com/aaronmallen/doing/issues/62
@@ -167,6 +194,7 @@ Initial alpha release
 [#66]: https://github.com/aaronmallen/doing/issues/66
 [#67]: https://github.com/aaronmallen/doing/issues/67
 [#68]: https://github.com/aaronmallen/doing/issues/68
+[#69]: https://github.com/aaronmallen/doing/issues/69
 [#70]: https://github.com/aaronmallen/doing/issues/70
 [#71]: https://github.com/aaronmallen/doing/issues/71
 [#72]: https://github.com/aaronmallen/doing/issues/72
@@ -174,6 +202,7 @@ Initial alpha release
 [#76]: https://github.com/aaronmallen/doing/issues/76
 [#77]: https://github.com/aaronmallen/doing/issues/77
 [#79]: https://github.com/aaronmallen/doing/issues/79
+[#80]: https://github.com/aaronmallen/doing/issues/80
 [#81]: https://github.com/aaronmallen/doing/issues/81
 [#82]: https://github.com/aaronmallen/doing/issues/82
 [#83]: https://github.com/aaronmallen/doing/issues/83

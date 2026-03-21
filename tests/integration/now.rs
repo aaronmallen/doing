@@ -1,4 +1,5 @@
 use pretty_assertions::assert_eq;
+use regex::Regex;
 
 use crate::helpers::{self, DoingCmd};
 
@@ -113,9 +114,35 @@ fn it_verifies_doing_file_after_entry_creation() {
     contents.contains("Currently:"),
     "doing file should contain the Currently section"
   );
-  let entry_re = regex::Regex::new(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2} \| Verify file entry").unwrap();
+  let entry_re = Regex::new(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2} \| Verify file entry").unwrap();
   assert!(
     entry_re.is_match(&contents),
     "doing file should contain a properly formatted entry"
+  );
+}
+
+#[test]
+fn it_extracts_parenthetical_note_from_title() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["now", "Working on feature (some context)"])
+    .assert()
+    .success();
+
+  let contents = doing.read_doing_file();
+  assert!(
+    contents.contains("Working on feature"),
+    "doing file should contain the title without parenthetical"
+  );
+  assert!(
+    !Regex::new(r"\| Working on feature \(some context\)")
+      .unwrap()
+      .is_match(&contents),
+    "title should not include the parenthetical"
+  );
+  assert!(
+    contents.contains("some context"),
+    "doing file should contain the extracted note"
   );
 }

@@ -5,7 +5,7 @@ use crate::{
   cli::AppContext,
   config::Config,
   errors::Result,
-  ops::{autotag::autotag, backup::write_with_backup},
+  ops::{autotag::autotag, backup::write_with_backup, extract_note::extract_note},
   taskpaper::{Entry, Note, Section, Tag, Tags},
   time::chronify,
 };
@@ -62,15 +62,13 @@ impl Command {
       archive_entries(&mut ctx.document, &finished_ids);
     }
 
-    let title = self.resolve_title(&ctx.config)?;
+    let (title, note) = self.resolve_title_and_note(&ctx.config)?;
 
     if title.is_empty() {
       ctx.status("Finished @meanwhile tasks");
       write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
       return Ok(());
     }
-
-    let note = self.resolve_note();
     let mut tags = Tags::new();
     tags.add(Tag::new("meanwhile", None::<String>));
 
@@ -100,21 +98,23 @@ impl Command {
     }
   }
 
-  fn resolve_note(&self) -> Note {
-    match &self.note {
-      Some(text) => Note::from_str(text),
-      None => Note::new(),
-    }
-  }
-
-  fn resolve_title(&self, config: &Config) -> Result<String> {
-    if self.editor {
+  fn resolve_title_and_note(&self, config: &Config) -> Result<(String, Note)> {
+    let raw_title = if self.editor {
       let content = crate::cli::editor::edit("", config)?;
-      let title = content.lines().next().unwrap_or("").trim().to_string();
-      return Ok(title);
-    }
+      content.lines().next().unwrap_or("").trim().to_string()
+    } else {
+      self.title.join(" ")
+    };
 
-    Ok(self.title.join(" "))
+    let (title, extracted_note) = extract_note(&raw_title);
+    let note = match (&self.note, extracted_note) {
+      (Some(explicit), Some(extracted)) => Note::from_str(&format!("{explicit}\n{extracted}")),
+      (Some(explicit), None) => Note::from_str(explicit),
+      (None, Some(extracted)) => Note::from_str(&extracted),
+      (None, None) => Note::new(),
+    };
+
+    Ok((title, note))
   }
 }
 

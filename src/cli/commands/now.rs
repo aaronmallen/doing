@@ -5,7 +5,7 @@ use crate::{
   cli::AppContext,
   config::Config,
   errors::Result,
-  ops::{autotag::autotag, backup::write_with_backup},
+  ops::{autotag::autotag, backup::write_with_backup, extract_note::extract_note},
   taskpaper::{Document, Entry, Note, Section, Tag, Tags},
   time::chronify,
 };
@@ -58,8 +58,7 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let section_name = self.section.as_deref().unwrap_or(&ctx.config.current_section);
     let date = self.resolve_date()?;
-    let title = self.resolve_title(&ctx.config)?;
-    let note = self.resolve_note();
+    let (title, note) = self.resolve_title_and_note(&ctx.config)?;
 
     if title.is_empty() {
       return Err(crate::errors::Error::Config("no entry title provided".into()));
@@ -121,30 +120,28 @@ impl Command {
     Ok(Local::now())
   }
 
-  fn resolve_note(&self) -> Note {
-    match &self.note {
-      Some(text) => Note::from_str(text),
-      None => Note::new(),
-    }
-  }
-
-  fn resolve_title(&self, config: &Config) -> Result<String> {
-    if self.editor {
+  fn resolve_title_and_note(&self, config: &Config) -> Result<(String, Note)> {
+    let raw_title = if self.editor {
       let content = crate::cli::editor::edit("", config)?;
-      let mut lines = content.lines();
-      let title = lines.next().unwrap_or("").trim().to_string();
-      return Ok(title);
-    }
-
-    if self.ask {
-      let title: String = dialoguer::Input::new()
+      content.lines().next().unwrap_or("").trim().to_string()
+    } else if self.ask {
+      dialoguer::Input::new()
         .with_prompt("Entry title")
         .interact_text()
-        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
-      return Ok(title);
-    }
+        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?
+    } else {
+      self.title.join(" ")
+    };
 
-    Ok(self.title.join(" "))
+    let (title, extracted_note) = extract_note(&raw_title);
+    let note = match (&self.note, extracted_note) {
+      (Some(explicit), Some(extracted)) => Note::from_str(&format!("{explicit}\n{extracted}")),
+      (Some(explicit), None) => Note::from_str(explicit),
+      (None, Some(extracted)) => Note::from_str(&extracted),
+      (None, None) => Note::new(),
+    };
+
+    Ok((title, note))
   }
 }
 

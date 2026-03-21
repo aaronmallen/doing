@@ -56,7 +56,7 @@ cmd "archive" help="Move entries to the Archive section" {
   flag "--only-timed" help="Only include entries with a recorded time interval"
   flag "--search <SEARCH>" help="Text search query"
   flag "-s --section <SECTION>" help="Section name to filter by"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
   flag "-k --keep <KEEP>" help="Number of entries to keep in the source section"
   flag "-l --label" help="Add @from(section) tag to moved entries (default)"
@@ -188,10 +188,10 @@ cmd "finish" help="Mark the last entry as finished" {
   flag "-r --remove" help="Remove @done tag instead of adding"
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to finish entries from"
-  flag "-t --tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
-  flag "--took --for <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
-  flag "--unfinished" help="Only finish unfinished entries (no @done tag)"
-  flag "-u --update" help="Overwrite an existing @done tag with a new timestamp"
+  flag "--tag <TAG>" help="Tags to filter by (can be repeated)" var=#true
+  flag "-t --took --for <TOOK>" help="Specify duration (e.g. \"1h30m\") to calculate completion time"
+  flag "-u --unfinished" help="Only finish unfinished entries (no @done tag)"
+  flag "--update" help="Overwrite an existing @done tag with a new timestamp"
   flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 

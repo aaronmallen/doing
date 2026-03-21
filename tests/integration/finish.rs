@@ -7,21 +7,6 @@ use crate::helpers::{
 };
 
 #[test]
-fn it_backdates_done_time_with_back_flag() {
-  let doing = DoingCmd::new();
-  let now = Local::now();
-  let back_time = now - chrono::Duration::minutes(30);
-
-  doing.run(["now", "Test back entry"]).assert().success();
-  doing.run(["finish", "--back", "30m ago"]).assert().success();
-
-  let contents = doing.read_doing_file();
-  let done_ts = extract_done_timestamp(&contents);
-
-  assert_times_within_tolerance(&done_ts, &fmt_time(back_time), 1, "done time should be 30 minutes ago");
-}
-
-#[test]
 fn it_backdates_done_time_with_absolute_back_value() {
   let doing = DoingCmd::new();
   let back_time = Local::now() - chrono::Duration::hours(3);
@@ -39,6 +24,21 @@ fn it_backdates_done_time_with_absolute_back_value() {
     1,
     "done time should match absolute --back time",
   );
+}
+
+#[test]
+fn it_backdates_done_time_with_back_flag() {
+  let doing = DoingCmd::new();
+  let now = Local::now();
+  let back_time = now - chrono::Duration::minutes(30);
+
+  doing.run(["now", "Test back entry"]).assert().success();
+  doing.run(["finish", "--back", "30m ago"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let done_ts = extract_done_timestamp(&contents);
+
+  assert_times_within_tolerance(&done_ts, &fmt_time(back_time), 1, "done time should be 30 minutes ago");
 }
 
 #[test]
@@ -171,6 +171,24 @@ default = "cat"
 }
 
 #[test]
+fn it_finishes_only_unfinished_entries_with_unfinished_flag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Active entry"]).assert().success();
+  doing.run(["done", "Already done entry"]).assert().success();
+
+  // --unfinished restricts to entries without @done
+  doing.run(["finish", "--unfinished"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let active_line = contents
+    .lines()
+    .find(|l| l.contains("Active entry"))
+    .expect("should have active entry");
+  assert!(active_line.contains("@done"), "active entry should now be marked @done");
+}
+
+#[test]
 fn it_marks_last_entry_done() {
   let doing = DoingCmd::new();
   let now = Local::now();
@@ -232,24 +250,6 @@ fn it_skips_already_finished_entries() {
 }
 
 #[test]
-fn it_finishes_only_unfinished_entries_with_unfinished_flag() {
-  let doing = DoingCmd::new();
-
-  doing.run(["now", "Active entry"]).assert().success();
-  doing.run(["done", "Already done entry"]).assert().success();
-
-  // --unfinished restricts to entries without @done
-  doing.run(["finish", "--unfinished"]).assert().success();
-
-  let contents = doing.read_doing_file();
-  let active_line = contents
-    .lines()
-    .find(|l| l.contains("Active entry"))
-    .expect("should have active entry");
-  assert!(active_line.contains("@done"), "active entry should now be marked @done");
-}
-
-#[test]
 fn it_uses_s_short_flag_in_finish_command() {
   let doing = DoingCmd::new();
 
@@ -281,4 +281,39 @@ fn it_uses_s_short_flag_in_finish_command() {
     !current_line.contains("@done"),
     "Current entry should not be marked @done"
   );
+}
+
+#[test]
+fn it_uses_t_short_flag_for_took() {
+  let doing = DoingCmd::new();
+  let now = Local::now();
+
+  doing
+    .run(["now", "--back", "60m ago", "Test took short flag"])
+    .assert()
+    .success();
+  doing.run(["finish", "-t", "60m"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let done_ts = extract_done_timestamp(&contents);
+
+  assert_times_within_tolerance(&done_ts, &fmt_time(now), 1, "done time should be start + 60 minutes");
+}
+
+#[test]
+fn it_uses_u_short_flag_for_unfinished() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Active entry"]).assert().success();
+  doing.run(["done", "Already done entry"]).assert().success();
+
+  // -u should map to --unfinished, restricting to entries without @done
+  doing.run(["finish", "-u"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let active_line = contents
+    .lines()
+    .find(|l| l.contains("Active entry"))
+    .expect("should have active entry");
+  assert!(active_line.contains("@done"), "active entry should now be marked @done");
 }

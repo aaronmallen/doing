@@ -77,19 +77,19 @@ pub struct Command {
   section: Option<String>,
 
   /// Tags to filter by (can be repeated)
-  #[arg(short, long)]
+  #[arg(long)]
   tag: Vec<String>,
 
   /// Specify duration (e.g. "1h30m") to calculate completion time
-  #[arg(long, visible_alias = "for")]
+  #[arg(short = 't', long, visible_alias = "for")]
   took: Option<String>,
 
   /// Only finish unfinished entries (no @done tag)
-  #[arg(long)]
+  #[arg(short, long)]
   unfinished: bool,
 
   /// Overwrite an existing @done tag with a new timestamp
-  #[arg(short, long)]
+  #[arg(long)]
   update: bool,
 
   /// Tag value queries (e.g. "progress > 50")

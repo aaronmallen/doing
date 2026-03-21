@@ -27,7 +27,7 @@ use crate::{
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Show usage counts alongside tag names
-  #[arg(long)]
+  #[arg(short, long)]
   counts: bool,
 
   #[command(flatten)]

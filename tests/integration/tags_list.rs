@@ -138,3 +138,19 @@ fn it_sorts_tags_alphabetically() {
     "last tag in asc sort should be zebra"
   );
 }
+
+#[test]
+fn it_uses_c_short_flag_for_counts() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Task one @coding"]).assert().success();
+  doing.run(["now", "Task two @coding"]).assert().success();
+
+  let output = doing.run(["tags", "-c"]).output().expect("failed to run tags");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("@coding") && stdout.contains('('),
+    "-c should show counts like --counts, got: {stdout}"
+  );
+}

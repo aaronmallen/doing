@@ -175,7 +175,7 @@ pub struct FilterArgs {
   pub case: Option<String>,
 
   /// Maximum number of entries to return
-  #[arg(short, long)]
+  #[arg(long)]
   pub count: Option<usize>,
 
   /// Use exact (literal substring) matching for search

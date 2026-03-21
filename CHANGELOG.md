@@ -88,6 +88,9 @@ and this project adheres to [Break Versioning].
   `again`, and `note` commands
 - [#82] `reset` command missing positional `[DATE_STRING]` argument and `--took`/`--for` flag; `doing reset 3pm` and
   `doing reset "1 hour ago" --took 1h30m` now work as expected
+- [#100] Short flag conflicts across commands: `-t` on `finish` remapped from `--tag` to `--took`, `-u` on `finish`
+  remapped from `--update` to `--unfinished`, `-c` on `tags` added for `--counts`; `-q` on `select` kept for global
+  `--quiet` (`--query` remains long-only)
 
 ## [v0.0.1-alpha.3] - 2026-03-20
 
@@ -247,6 +250,7 @@ Initial alpha release
 [#82]: https://github.com/aaronmallen/doing/issues/82
 [#83]: https://github.com/aaronmallen/doing/issues/83
 [#88]: https://github.com/aaronmallen/doing/issues/88
+[#100]: https://github.com/aaronmallen/doing/issues/100
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

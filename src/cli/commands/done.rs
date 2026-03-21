@@ -24,6 +24,10 @@ pub struct Command {
   #[arg(short, long)]
   archive: bool,
 
+  /// Prompt interactively for a note
+  #[arg(long)]
+  ask: bool,
+
   /// Specify the completion time
   #[arg(long, visible_alias = "finished")]
   at: Option<String>,
@@ -201,11 +205,27 @@ impl Command {
     };
 
     let (title, extracted_note) = extract_note(&raw_title);
-    let note = match (&self.note, extracted_note) {
-      (Some(explicit), Some(extracted)) => Note::from_str(&format!("{explicit}\n{extracted}")),
-      (Some(explicit), None) => Note::from_str(explicit),
-      (None, Some(extracted)) => Note::from_str(&extracted),
-      (None, None) => Note::new(),
+
+    let asked_note = if self.ask {
+      let input: String = dialoguer::Input::new()
+        .with_prompt("Add a note")
+        .allow_empty(true)
+        .interact_text()
+        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      if input.is_empty() { None } else { Some(input) }
+    } else {
+      None
+    };
+
+    let parts: Vec<&str> = [self.note.as_deref(), extracted_note.as_deref(), asked_note.as_deref()]
+      .into_iter()
+      .flatten()
+      .collect();
+
+    let note = if parts.is_empty() {
+      Note::new()
+    } else {
+      Note::from_str(&parts.join("\n"))
     };
 
     Ok((title, note))
@@ -281,6 +301,7 @@ mod test {
   fn default_cmd() -> Command {
     Command {
       archive: false,
+      ask: false,
       at: None,
       back: None,
       date: true,

@@ -22,6 +22,10 @@ use crate::{
 /// to select which entry to repeat.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Prompt interactively for a note
+  #[arg(long)]
+  ask: bool,
+
   /// Backdate the entry using natural language (e.g. "30m ago")
   #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
@@ -84,7 +88,7 @@ impl Command {
     let target_section = self.in_section.as_deref().unwrap_or(&source_section).to_string();
 
     let title = self.resolve_title(&source, &ctx.config)?;
-    let note = self.resolve_note(&source);
+    let note = self.resolve_note(&source)?;
 
     let mut entry = Entry::new(date, &title, Tags::new(), note, &target_section, None::<String>);
 
@@ -198,11 +202,36 @@ impl Command {
     }
   }
 
-  fn resolve_note(&self, source: &Entry) -> Note {
-    if let Some(ref text) = self.note {
-      return Note::from_str(text);
+  fn resolve_note(&self, source: &Entry) -> Result<Note> {
+    let asked_note = if self.ask {
+      let input: String = dialoguer::Input::new()
+        .with_prompt("Add a note")
+        .allow_empty(true)
+        .interact_text()
+        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      if input.is_empty() { None } else { Some(input) }
+    } else {
+      None
+    };
+
+    let parts: Vec<String> = [
+      self.note.clone(),
+      if source.note().is_empty() {
+        None
+      } else {
+        Some(source.note().to_string())
+      },
+      asked_note,
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+
+    if parts.is_empty() {
+      Ok(Note::new())
+    } else {
+      Ok(Note::from_str(&parts.join("\n")))
     }
-    source.note().clone()
   }
 
   fn resolve_title(&self, source: &Entry, config: &Config) -> Result<String> {
@@ -230,6 +259,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      ask: false,
       back: None,
       bool_op: None,
       editor: false,

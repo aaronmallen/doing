@@ -17,7 +17,7 @@ use crate::{
 /// entry, applies autotagging, and attaches notes.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
-  /// Prompt interactively for the entry title
+  /// Prompt interactively for a note
   #[arg(long)]
   ask: bool,
 
@@ -133,21 +133,32 @@ impl Command {
     let raw_title = if self.editor {
       let content = crate::cli::editor::edit("", config)?;
       content.lines().next().unwrap_or("").trim().to_string()
-    } else if self.ask {
-      dialoguer::Input::new()
-        .with_prompt("Entry title")
-        .interact_text()
-        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?
     } else {
       self.title.join(" ")
     };
 
     let (title, extracted_note) = extract_note(&raw_title);
-    let note = match (&self.note, extracted_note) {
-      (Some(explicit), Some(extracted)) => Note::from_str(&format!("{explicit}\n{extracted}")),
-      (Some(explicit), None) => Note::from_str(explicit),
-      (None, Some(extracted)) => Note::from_str(&extracted),
-      (None, None) => Note::new(),
+
+    let asked_note = if self.ask {
+      let input: String = dialoguer::Input::new()
+        .with_prompt("Add a note")
+        .allow_empty(true)
+        .interact_text()
+        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      if input.is_empty() { None } else { Some(input) }
+    } else {
+      None
+    };
+
+    let parts: Vec<&str> = [self.note.as_deref(), extracted_note.as_deref(), asked_note.as_deref()]
+      .into_iter()
+      .flatten()
+      .collect();
+
+    let note = if parts.is_empty() {
+      Note::new()
+    } else {
+      Note::from_str(&parts.join("\n"))
     };
 
     Ok((title, note))

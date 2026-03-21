@@ -17,6 +17,10 @@ use crate::{
 /// Supports --section/--tag/--search to select which entry to annotate.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Prompt interactively for a note
+  #[arg(long)]
+  ask: bool,
+
   /// Open an editor to compose the note
   #[arg(short, long)]
   editor: bool,
@@ -179,6 +183,17 @@ impl Command {
     let mut lines: Vec<String> = self.text.clone();
     lines.extend(self.note_text.clone());
 
+    if self.ask {
+      let input: String = dialoguer::Input::new()
+        .with_prompt("Add a note")
+        .allow_empty(true)
+        .interact_text()
+        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      if !input.is_empty() {
+        lines.push(input);
+      }
+    }
+
     if lines.is_empty() {
       return Ok(None);
     }
@@ -226,6 +241,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      ask: false,
       editor: false,
       filter: FilterArgs::default(),
       interactive: false,

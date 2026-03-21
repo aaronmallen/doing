@@ -24,6 +24,7 @@ arg "[TITLE]..." help="Create a new entry without using the 'now' subcommand (re
 
 cmd "again" help="Repeat the last entry" {
   alias "resume"
+  flag "--ask" help="Prompt interactively for a note"
   flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
@@ -157,6 +158,7 @@ cmd "config" help="View, edit, and manage configuration" {
 cmd "done" help="Add a completed entry" {
   alias "did"
   flag "-a --archive" help="Immediately archive the entry"
+  flag "--ask" help="Prompt interactively for a note"
   flag "--at --finished <AT>" help="Specify the completion time"
   flag "-b --back --started --since <DATE>" help="Backdate the start time using natural language (e.g. \"30m ago\", \"24h\")"
   flag "--date" help="Include date in @done tag" default=#true negate="--no-date"
@@ -298,6 +300,7 @@ cmd "mark" help="Toggle the marker tag on the last entry" {
 }
 
 cmd "meanwhile" help="Add an entry while finishing the last" {
+  flag "--ask" help="Prompt interactively for a note"
   flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "-X --noauto" help="Skip autotagging and default tags"
@@ -307,6 +310,7 @@ cmd "meanwhile" help="Add an entry while finishing the last" {
 }
 
 cmd "note" help="Add or display notes on the last entry" {
+  flag "--ask" help="Prompt interactively for a note"
   flag "-e --editor" help="Open an editor to compose the note"
   flag "-i --interactive" help="Interactively select entries to annotate"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
@@ -332,7 +336,7 @@ cmd "note" help="Add or display notes on the last entry" {
 
 cmd "now" help="Add a new entry" {
   alias "next"
-  flag "--ask" help="Prompt interactively for the entry title"
+  flag "--ask" help="Prompt interactively for a note"
   flag "-b --back --started --since <DATE>" help="Backdate the entry using natural language (e.g. \"30m ago\", \"24h\")"
   flag "-e --editor" help="Open an editor to compose the entry title and notes"
   flag "--finish-last" help="Mark the previous entry in the section as @done before adding"

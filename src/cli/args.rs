@@ -98,6 +98,10 @@ pub struct DisplayArgs {
   #[arg(short = 't', long)]
   pub times: bool,
 
+  /// Show section title in output
+  #[arg(long)]
+  pub title: bool,
+
   /// Show tag time totals
   #[arg(long)]
   pub totals: bool,
@@ -140,6 +144,7 @@ impl DisplayArgs {
       &render_options,
       config,
       self.totals,
+      self.title,
       tag_sort_field,
       tag_sort_order,
     ))

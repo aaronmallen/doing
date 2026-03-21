@@ -60,41 +60,52 @@ pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config,
     options,
     config,
     show_totals,
+    false,
     TagSortField::default(),
     TagSortOrder::default(),
   )
 }
 
-/// Render a collection of entries with configurable tag totals sorting.
+/// Render a collection of entries with configurable tag totals sorting and optional section titles.
 pub fn format_items_with_tag_sort(
   entries: &[Entry],
   options: &RenderOptions,
   config: &Config,
   show_totals: bool,
+  show_title: bool,
   tag_sort_field: TagSortField,
   tag_sort_order: TagSortOrder,
 ) -> String {
-  let lines: Vec<String> = entries
-    .iter()
-    .map(|entry| {
-      let mut line = render(entry, options, config);
+  let mut output = String::new();
+  let mut current_section = "";
 
-      // Apply marker color to flagged entries
-      if entry.tags().iter().any(|t| t.name() == config.marker_tag)
-        && let Some(color) = colors::Color::parse(&config.marker_color)
-      {
-        let ansi = color.to_ansi();
-        if !ansi.is_empty() {
-          let reset = colors::Color::parse("reset").map(|c| c.to_ansi()).unwrap_or_default();
-          line = format!("{ansi}{line}{reset}");
-        }
+  for entry in entries {
+    if show_title && entry.section() != current_section {
+      if !output.is_empty() {
+        output.push('\n');
       }
+      output.push_str(entry.section());
+      output.push_str(":\n");
+      current_section = entry.section();
+    } else if !output.is_empty() {
+      output.push('\n');
+    }
 
-      line
-    })
-    .collect();
+    let mut line = render(entry, options, config);
 
-  let mut output = lines.join("\n");
+    // Apply marker color to flagged entries
+    if entry.tags().iter().any(|t| t.name() == config.marker_tag)
+      && let Some(color) = colors::Color::parse(&config.marker_color)
+    {
+      let ansi = color.to_ansi();
+      if !ansi.is_empty() {
+        let reset = colors::Color::parse("reset").map(|c| c.to_ansi()).unwrap_or_default();
+        line = format!("{ansi}{line}{reset}");
+      }
+    }
+
+    output.push_str(&line);
+  }
 
   if show_totals {
     let totals = TagTotals::from_entries(entries);

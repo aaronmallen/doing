@@ -494,6 +494,7 @@ cmd "show" help="Show entries from a section" {
   }
   flag "--template <TEMPLATE>" help="Named template to use for output"
   flag "-t --times" help="Show time intervals on @done tasks"
+  flag "--title" help="Show section title in output"
   flag "--totals" help="Show tag time totals"
   flag "--after <AFTER>" help="Date range (e.g. \"monday to friday\")"
   flag "--age <AGE>" help="Which end to keep when limiting by count (newest/oldest)" {

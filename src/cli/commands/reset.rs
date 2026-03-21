@@ -27,6 +27,10 @@ pub struct Command {
   #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
 
+  /// Maximum number of entries to reset
+  #[arg(long)]
+  count: Option<usize>,
+
   /// Date expression to reset the start time to (alternative to --back)
   #[arg(index = 1, value_name = "DATE_STRING")]
   date_string: Option<String>,
@@ -110,7 +114,7 @@ impl Command {
       );
     }
 
-    let count = self.filter.count.unwrap_or(1);
+    let count = self.count.unwrap_or(1);
     let entries = ctx.document.entries_in_section(&section);
     let mut locs: Vec<EntryLocation> = entries
       .iter()
@@ -258,6 +262,7 @@ mod test {
   fn default_cmd() -> Command {
     Command {
       back: None,
+      count: None,
       date_string: None,
       filter: FilterArgs::default(),
       interactive: false,
@@ -465,10 +470,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(2),
-          ..Default::default()
-        },
+        count: Some(2),
         ..default_cmd()
       };
 

@@ -21,6 +21,10 @@ pub struct Command {
   #[arg(value_name = "TAGS")]
   tags: Vec<String>,
 
+  /// Maximum number of entries to tag
+  #[arg(short = 'c', long)]
+  count: Option<usize>,
+
   /// Include current date as the tag value
   #[arg(short, long)]
   date: bool,
@@ -141,7 +145,7 @@ impl Command {
       );
     }
 
-    let count = self.filter.count.unwrap_or(1);
+    let count = self.count.unwrap_or(1);
     let entries = ctx.document.entries_in_section(&section);
     let unfinished = self.filter.unfinished;
     let mut locs: Vec<EntryLocation> = entries
@@ -283,6 +287,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count: None,
       date: false,
       filter: FilterArgs::default(),
       force: false,
@@ -553,10 +558,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(2),
-          ..Default::default()
-        },
+        count: Some(2),
         regex: true,
         remove: true,
         tags: vec!["^proj-".into()],
@@ -575,10 +577,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(2),
-          ..Default::default()
-        },
+        count: Some(2),
         remove: true,
         tags: vec!["proj-*".into()],
         ..default_cmd()
@@ -613,10 +612,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(2),
-          ..Default::default()
-        },
+        count: Some(2),
         rename: vec!["proj-*".into(), "project".into()],
         ..default_cmd()
       };
@@ -651,10 +647,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(2),
-          ..Default::default()
-        },
+        count: Some(2),
         tags: vec!["important".into()],
         ..default_cmd()
       };

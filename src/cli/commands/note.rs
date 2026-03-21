@@ -21,6 +21,10 @@ pub struct Command {
   #[arg(long)]
   ask: bool,
 
+  /// Maximum number of entries to annotate
+  #[arg(long)]
+  count: Option<usize>,
+
   /// Open an editor to compose the note
   #[arg(short, long)]
   editor: bool,
@@ -108,7 +112,7 @@ impl Command {
       );
     }
 
-    let count = self.filter.count.unwrap_or(1);
+    let count = self.count.unwrap_or(1);
     let entries = ctx.document.entries_in_section(&section);
     let mut locs: Vec<EntryLocation> = entries
       .iter()
@@ -242,6 +246,7 @@ mod test {
   fn default_cmd() -> Command {
     Command {
       ask: false,
+      count: None,
       editor: false,
       filter: FilterArgs::default(),
       interactive: false,

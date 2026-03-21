@@ -28,6 +28,10 @@ use crate::{
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Maximum number of entries to archive
+  #[arg(long)]
+  count: Option<usize>,
+
   #[command(flatten)]
   filter: FilterArgs,
 
@@ -135,7 +139,7 @@ impl Command {
     }
 
     // Apply --count: limit number of entries to move
-    if let Some(count) = filter.count {
+    if let Some(count) = self.count {
       candidates.truncate(count);
     }
 
@@ -184,6 +188,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count: None,
       filter: FilterArgs::default(),
       keep: None,
       label: true,
@@ -375,10 +380,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple_done(dir.path());
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(1),
-          ..FilterArgs::default()
-        },
+        count: Some(1),
         ..default_cmd()
       };
 

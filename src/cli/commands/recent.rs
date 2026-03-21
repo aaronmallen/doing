@@ -28,6 +28,10 @@ const DEFAULT_COUNT: usize = 10;
 /// ```
 #[derive(Args, Clone, Debug, Default)]
 pub struct Command {
+  /// Maximum number of entries to return
+  #[arg(long)]
+  count: Option<usize>,
+
   /// Number of recent entries to show
   #[arg(index = 1, value_name = "COUNT")]
   count_pos: Option<usize>,
@@ -58,12 +62,11 @@ impl Command {
       .cloned()
       .collect();
 
-    let mut filter = self.filter.clone();
-    if filter.count.is_none() {
-      filter.count = self.count_pos;
-    }
-
-    let mut options = filter.into_filter_options(&ctx.config, ctx.include_notes)?;
+    let mut options = self
+      .filter
+      .clone()
+      .into_filter_options(&ctx.config, ctx.include_notes)?;
+    options.count = self.count.or(self.count_pos);
     options.section = Some(section_name.to_string());
     options.age = Some(Age::Newest);
 
@@ -107,6 +110,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count: None,
       count_pos: None,
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
@@ -169,10 +173,7 @@ mod test {
     fn it_respects_count_override() {
       let mut ctx = sample_ctx();
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(1),
-          ..FilterArgs::default()
-        },
+        count: Some(1),
         ..default_cmd()
       };
 

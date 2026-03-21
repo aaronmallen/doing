@@ -17,6 +17,10 @@ use crate::{
 /// added. Use --remove to explicitly remove the marker tag without toggling.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Maximum number of entries to mark
+  #[arg(long)]
+  count: Option<usize>,
+
   /// Include current date as the tag value
   #[arg(short, long)]
   date: bool,
@@ -116,7 +120,7 @@ impl Command {
       );
     }
 
-    let count = self.filter.count.unwrap_or(1);
+    let count = self.count.unwrap_or(1);
     let entries = ctx.document.entries_in_section(&section);
     let unfinished = self.filter.unfinished;
     let mut locs: Vec<EntryLocation> = entries
@@ -210,6 +214,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count: None,
       date: false,
       filter: FilterArgs::default(),
       force: false,
@@ -477,10 +482,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(2),
-          ..Default::default()
-        },
+        count: Some(2),
         ..default_cmd()
       };
 

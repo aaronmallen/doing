@@ -31,6 +31,10 @@ pub struct Command {
   #[command(flatten)]
   display: DisplayArgs,
 
+  /// Maximum number of entries to return
+  #[arg(short = 'c', long)]
+  count: Option<usize>,
+
   #[command(flatten)]
   filter: FilterArgs,
 
@@ -103,6 +107,7 @@ impl Command {
     };
 
     let mut options = filter_with_tags.into_filter_options(&ctx.config, ctx.include_notes)?;
+    options.count = self.count;
     options.section = Some(section_name.to_string());
     Ok(options)
   }
@@ -117,6 +122,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count: None,
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
       interactive: false,

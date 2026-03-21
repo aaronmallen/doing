@@ -37,6 +37,10 @@ pub struct Command {
   #[command(flatten)]
   display: DisplayArgs,
 
+  /// Maximum number of entries to return
+  #[arg(short = 'c', long)]
+  count: Option<usize>,
+
   #[command(flatten)]
   filter: FilterArgs,
 
@@ -53,6 +57,7 @@ impl Command {
   /// Call with a view name from an external subcommand.
   pub fn call_external(name: &str, ctx: &mut AppContext) -> Result<()> {
     let cmd = Self {
+      count: None,
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
       name: name.to_string(),
@@ -105,6 +110,9 @@ impl Command {
       let mode = parse_bool_mode(&view.tags_bool);
       options.tag_filter = Some(TagFilter::new(&tags, mode));
     }
+
+    // Apply CLI count
+    options.count = self.count;
 
     // Apply view count if no CLI count was provided
     if options.count.is_none() && view.count > 0 {
@@ -184,6 +192,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      count: None,
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
       name: "test_view".into(),
@@ -293,10 +302,7 @@ mod test {
     fn it_prefers_cli_count_over_view_count() {
       let ctx = sample_ctx();
       let cmd = Command {
-        filter: FilterArgs {
-          count: Some(3),
-          ..FilterArgs::default()
-        },
+        count: Some(3),
         ..default_cmd()
       };
       let view = ctx.config.views.get("test_view").unwrap();

@@ -174,10 +174,6 @@ pub struct FilterArgs {
   #[arg(long)]
   pub case: Option<String>,
 
-  /// Maximum number of entries to return
-  #[arg(long)]
-  pub count: Option<usize>,
-
   /// Use exact (literal substring) matching for search
   #[arg(short = 'x', long)]
   pub exact: bool,
@@ -262,7 +258,7 @@ impl FilterArgs {
       after: effective_after,
       age: self.age.map(Age::from),
       before: effective_before,
-      count: self.count,
+      count: None,
       include_notes,
       negate: self.not,
       only_timed: self.only_timed,

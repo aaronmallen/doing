@@ -1,0 +1,5 @@
+mod when_file_sort_interacts_with_display_sort;
+mod when_file_sort_interacts_with_keep;
+mod when_file_sort_is_asc;
+mod when_file_sort_is_desc;
+mod when_file_sort_is_not_configured;

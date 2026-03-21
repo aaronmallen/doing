@@ -56,6 +56,8 @@ and this project adheres to [Break Versioning].
 
 - [#49] `colors` command displays visual color swatches with labels, organized by category (foreground, bold/bright,
   background, modifiers, themes, reset/default) instead of a flat list
+- [#88] `--title` on display commands accepts an optional string value (e.g. `--title "My Title"`) to set a custom
+  section header; `--title` without a value still shows the section name
 
 ### Fixed
 
@@ -244,6 +246,7 @@ Initial alpha release
 [#81]: https://github.com/aaronmallen/doing/issues/81
 [#82]: https://github.com/aaronmallen/doing/issues/82
 [#83]: https://github.com/aaronmallen/doing/issues/83
+[#88]: https://github.com/aaronmallen/doing/issues/88
 
 [Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2

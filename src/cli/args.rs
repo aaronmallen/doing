@@ -98,9 +98,9 @@ pub struct DisplayArgs {
   #[arg(short = 't', long)]
   pub times: bool,
 
-  /// Show section title in output
-  #[arg(long)]
-  pub title: bool,
+  /// Show section title in output; accepts an optional custom title string
+  #[arg(long, num_args = 0..=1, default_missing_value = "")]
+  pub title: Option<String>,
 
   /// Show tag time totals
   #[arg(long)]
@@ -144,7 +144,7 @@ impl DisplayArgs {
       &render_options,
       config,
       self.totals,
-      self.title,
+      self.title.as_deref(),
       tag_sort_field,
       tag_sort_order,
     ))

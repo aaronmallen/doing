@@ -6,7 +6,7 @@ use crate::{
   config::Config,
   errors::Result,
   ops::{autotag::autotag, backup::write_with_backup, extract_note::extract_note},
-  taskpaper::{Document, Entry, Note, Section, Tag, Tags},
+  taskpaper::{Document, Entry, Note, Tag, Tags},
   time::chronify,
 };
 
@@ -203,6 +203,7 @@ mod test {
   use chrono::{Local, TimeZone};
 
   use super::*;
+  use crate::taskpaper::Section;
 
   fn sample_ctx(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");

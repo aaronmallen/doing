@@ -235,6 +235,26 @@ fn it_searches_with_regex_mode() {
 }
 
 #[test]
+fn it_shows_custom_title_with_title_value() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Alpha task"]).assert().success();
+  doing.run(["now", "Beta work"]).assert().success();
+
+  let output = doing
+    .run(["grep", "--title", "Results", "Alpha"])
+    .output()
+    .expect("failed to run grep");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("Results:"),
+    "output should contain the custom title header, got: {stdout}"
+  );
+  assert!(stdout.contains("Alpha task"), "matching entry should be included");
+}
+
+#[test]
 fn it_works_with_search_alias() {
   let doing = DoingCmd::new();
 

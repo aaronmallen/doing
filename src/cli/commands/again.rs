@@ -11,7 +11,7 @@ use crate::{
     filter::{Age, FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},
   },
-  taskpaper::{Entry, Note, Section, Tag, Tags},
+  taskpaper::{Entry, Note, Tag, Tags},
   time::chronify,
 };
 

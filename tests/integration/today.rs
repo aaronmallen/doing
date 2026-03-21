@@ -86,6 +86,21 @@ fn it_shows_entries_from_today() {
 }
 
 #[test]
+fn it_shows_section_name_with_title_flag_no_value() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Today title test"]).assert().success();
+
+  let output = doing.run(["today", "--title"]).output().expect("failed to run today");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("Currently:"),
+    "today --title (no value) should show section name as title, got: {stdout}"
+  );
+}
+
+#[test]
 fn it_shows_tag_totals_with_totals_flag() {
   let doing = DoingCmd::new();
 

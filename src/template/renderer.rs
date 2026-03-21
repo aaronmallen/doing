@@ -60,33 +60,55 @@ pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config,
     options,
     config,
     show_totals,
-    false,
+    None,
     TagSortField::default(),
     TagSortOrder::default(),
   )
 }
 
 /// Render a collection of entries with configurable tag totals sorting and optional section titles.
+///
+/// The `title` parameter controls section header rendering:
+/// - `None` — no section headers
+/// - `Some("")` — show the section name as the header (e.g. `"Currently:"`)
+/// - `Some("Custom")` — show a custom title once before all entries
 pub fn format_items_with_tag_sort(
   entries: &[Entry],
   options: &RenderOptions,
   config: &Config,
   show_totals: bool,
-  show_title: bool,
+  title: Option<&str>,
   tag_sort_field: TagSortField,
   tag_sort_order: TagSortOrder,
 ) -> String {
   let mut output = String::new();
   let mut current_section = "";
+  let mut custom_title_shown = false;
 
   for entry in entries {
-    if show_title && entry.section() != current_section {
-      if !output.is_empty() {
-        output.push('\n');
+    if let Some(title_value) = title {
+      if title_value.is_empty() {
+        // Show section name as header when section changes
+        if entry.section() != current_section {
+          if !output.is_empty() {
+            output.push('\n');
+          }
+          output.push_str(entry.section());
+          output.push_str(":\n");
+          current_section = entry.section();
+        } else if !output.is_empty() {
+          output.push('\n');
+        }
+      } else {
+        // Show custom title once before all entries
+        if !custom_title_shown {
+          output.push_str(title_value);
+          output.push_str(":\n");
+          custom_title_shown = true;
+        } else if !output.is_empty() {
+          output.push('\n');
+        }
       }
-      output.push_str(entry.section());
-      output.push_str(":\n");
-      current_section = entry.section();
     } else if !output.is_empty() {
       output.push('\n');
     }

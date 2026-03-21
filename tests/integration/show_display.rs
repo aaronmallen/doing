@@ -111,6 +111,44 @@ fn it_filters_entries_with_val_tag_query() {
 }
 
 #[test]
+fn it_shows_custom_title_with_title_value() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "First task"]).assert().success();
+  doing.run(["now", "Second task"]).assert().success();
+
+  let output = doing
+    .run(["show", "--title", "My Title"])
+    .output()
+    .expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("My Title:"),
+    "output should contain the custom title header, got: {stdout}"
+  );
+  assert!(
+    !stdout.contains("Currently:"),
+    "output should not contain the section name when custom title is set, got: {stdout}"
+  );
+}
+
+#[test]
+fn it_shows_section_name_with_title_flag_no_value() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Some task"]).assert().success();
+
+  let output = doing.run(["show", "--title"]).output().expect("failed to run show");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("Currently:"),
+    "output should contain section name as title header, got: {stdout}"
+  );
+}
+
+#[test]
 fn it_shows_tag_totals_with_totals_flag() {
   let doing = DoingCmd::new();
 

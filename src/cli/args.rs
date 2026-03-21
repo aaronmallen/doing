@@ -66,9 +66,9 @@ impl From<BoolArg> for BooleanMode {
 /// Shared display/output arguments reused across commands.
 #[derive(Args, Clone, Debug, Default)]
 pub struct DisplayArgs {
-  /// Duration format for time display
+  /// Show elapsed time on open entries
   #[arg(long)]
-  pub duration: Option<String>,
+  pub duration: bool,
 
   /// Output format
   #[arg(short, long)]

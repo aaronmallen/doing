@@ -190,7 +190,7 @@ cmd "finish" help="Mark the last entry as finished" {
 cmd "grep" help="Search for entries matching a pattern" {
   alias "search"
   arg "<QUERY>" help="Search query"
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -237,7 +237,7 @@ cmd "import" help="Import entries from other sources" {
 }
 
 cmd "last" help="Show the last entry" {
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -339,7 +339,7 @@ cmd "now" help="Add a new entry" {
 
 cmd "on" help="Show entries from a specific date" {
   arg "<DATE>" help="Date or date range expression (e.g. \"friday\", \"last friday\", \"3/15 to 3/20\")"
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -376,7 +376,7 @@ cmd "plugins" help="List installed plugins"
 
 cmd "recent" help="Show recent entries" {
   arg "[COUNT]" help="Number of recent entries to show"
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-i --interactive" help="Interactively select entries from recent results"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
@@ -482,7 +482,7 @@ cmd "select" help="Interactively select entries to act on" {
 cmd "show" help="Show entries from a section" {
   arg "[SECTION]" help="Section to display entries from (default: current section, \"all\" for every section)"
   arg "[TAGS]..." help="Additional tag filters (e.g. @tag1 @tag2)"
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-i --interactive" help="Interactively select entries to display"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
@@ -522,7 +522,7 @@ cmd "show" help="Show entries from a section" {
 
 cmd "since" help="Show entries since a given date" {
   arg "<DATE>" help="Date expression for the starting point (e.g. \"monday\", \"last friday\")"
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -601,7 +601,7 @@ cmd "template" help="Show or edit entry templates" {
 }
 
 cmd "today" help="Show entries from today" {
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -636,7 +636,7 @@ cmd "undo" help="Undo the last change" {
 
 cmd "view" help="Display a custom view" {
   arg "<NAME>" help="View name from configuration"
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {
@@ -674,7 +674,7 @@ cmd "views" help="List available views" {
 }
 
 cmd "yesterday" help="Show entries from yesterday" {
-  flag "--duration <DURATION>" help="Duration format for time display"
+  flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
   flag "--sort <SORT>" help="Sort order for results" {

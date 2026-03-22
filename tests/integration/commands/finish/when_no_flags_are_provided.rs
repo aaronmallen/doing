@@ -1,0 +1,71 @@
+use std::fs;
+
+use crate::support::helpers::{DoingCmd, assert_times_within_tolerance, extract_done_timestamp, fmt_time};
+
+#[test]
+fn it_marks_last_entry_as_done_with_current_time() {
+  let doing = DoingCmd::new();
+  let now = fmt_time(chrono::Local::now());
+
+  doing.run(["now", "Entry one"]).assert().success();
+  doing.run(["now", "Entry two"]).assert().success();
+  doing.run(["finish"]).assert().success();
+
+  let contents = doing.read_doing_file();
+
+  // Only the most recent entry should be finished
+  let entry_two_line = contents.lines().find(|l| l.contains("Entry two")).unwrap();
+  assert!(
+    entry_two_line.contains("@done("),
+    "expected most recent entry to be finished, got: {entry_two_line}"
+  );
+
+  let entry_one_line = contents.lines().find(|l| l.contains("Entry one")).unwrap();
+  assert!(
+    !entry_one_line.contains("@done"),
+    "expected older entry to remain unfinished, got: {entry_one_line}"
+  );
+
+  let done_time = extract_done_timestamp(&contents);
+  assert_times_within_tolerance(&done_time, &now, 1, "@done should be approximately now");
+}
+
+#[test]
+#[ignore = "finish stderr message format differs from Ruby (see #164)"]
+fn it_outputs_status_to_stderr() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Stderr test entry"]).assert().success();
+
+  let output = doing.run(["finish"]).output().expect("failed to run finish");
+
+  let stderr = String::from_utf8_lossy(&output.stderr);
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stderr.contains("Tagged"),
+    "expected 'Tagged' on stderr, got stderr: {stderr}"
+  );
+  assert!(stdout.is_empty(), "expected stdout to be empty, got: {stdout}");
+}
+
+#[test]
+#[ignore = "finish does not overwrite existing @done date by default (see #165)"]
+fn it_overwrites_existing_done_date_without_unfinished_flag() {
+  let doing = DoingCmd::new();
+
+  fs::write(
+    doing.doing_file_path(),
+    "Currently:\n\t- 2026-03-22 09:00 | Already done @done(2026-03-20 12:00)\n",
+  )
+  .expect("failed to write doing file");
+
+  doing.run(["finish"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  assert!(
+    !contents.contains("@done(2026-03-20 12:00)"),
+    "expected old @done date to be overwritten, got: {contents}"
+  );
+  assert!(contents.contains("@done("), "expected new @done date, got: {contents}");
+}

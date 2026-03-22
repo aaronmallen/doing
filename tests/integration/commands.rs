@@ -2,6 +2,7 @@ mod budget;
 mod colors;
 mod commands;
 mod completion;
+mod config;
 mod done;
 mod finish;
 mod help;

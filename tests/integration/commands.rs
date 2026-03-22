@@ -30,6 +30,7 @@ mod show;
 mod since;
 mod tag;
 mod tag_dir;
+mod tags;
 mod template;
 mod today;
 mod undo;

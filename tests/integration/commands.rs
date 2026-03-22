@@ -9,6 +9,7 @@ mod finish;
 mod help;
 mod meanwhile;
 mod now;
+mod on;
 mod open;
 mod plugins;
 mod recent;

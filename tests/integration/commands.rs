@@ -1,3 +1,4 @@
+mod budget;
 mod colors;
 mod commands;
 mod completion;

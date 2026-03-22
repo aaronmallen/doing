@@ -1,0 +1,15 @@
+mod when_config_template_flag;
+mod when_count_argument;
+mod when_duration_flag;
+mod when_interactive_flag;
+mod when_no_flags;
+mod when_only_timed_flag;
+mod when_output_flag;
+mod when_save_flag;
+mod when_section_flag;
+mod when_tag_order_flag;
+mod when_tag_sort_flag;
+mod when_template_flag;
+mod when_times_flag;
+mod when_title_flag;
+mod when_totals_flag;

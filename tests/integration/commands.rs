@@ -10,6 +10,7 @@ mod meanwhile;
 mod now;
 mod open;
 mod plugins;
+mod recent;
 mod redo;
 mod sections;
 mod tag_dir;

@@ -13,6 +13,7 @@ mod plugins;
 mod recent;
 mod redo;
 mod sections;
+mod since;
 mod tag_dir;
 mod template;
 mod today;

@@ -166,14 +166,13 @@ impl Command {
 
       self.finish_entry(ctx, &section_name, &entry_id, done_date, include_date)?;
 
-      if let Some(start) = new_start {
-        if let Some(entry) = ctx
+      if let Some(start) = new_start
+        && let Some(entry) = ctx
           .document
           .section_by_name_mut(&section_name)
           .and_then(|s| s.entries_mut().iter_mut().find(|e| e.id() == entry_id))
-        {
-          entry.set_date(start);
-        }
+      {
+        entry.set_date(start);
       }
     }
 

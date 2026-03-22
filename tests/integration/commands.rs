@@ -1,5 +1,6 @@
 mod colors;
 mod commands;
+mod completion;
 mod done;
 mod finish;
 mod help;

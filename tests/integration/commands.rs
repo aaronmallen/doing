@@ -6,6 +6,7 @@ mod completion;
 mod config;
 mod done;
 mod finish;
+mod grep;
 mod help;
 mod last;
 mod meanwhile;

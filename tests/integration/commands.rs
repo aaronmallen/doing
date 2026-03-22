@@ -9,4 +9,5 @@ mod meanwhile;
 mod now;
 mod open;
 mod plugins;
+mod sections;
 mod update;

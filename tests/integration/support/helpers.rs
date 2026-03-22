@@ -66,11 +66,6 @@ impl DoingCmd {
     }
   }
 
-  /// Return the path to the backup directory for this test environment.
-  pub fn backup_dir(&self) -> &std::path::Path {
-    &self.backup_dir
-  }
-
   /// Build an `assert_cmd::Command` for the `doing` binary with isolation env vars set.
   pub fn cmd(&self) -> Command {
     let mut cmd = Command::cargo_bin("doing").expect("failed to find doing binary");
@@ -79,11 +74,6 @@ impl DoingCmd {
     cmd.arg("-f").arg(&self.doing_file_path);
     cmd.arg("--no-color");
     cmd
-  }
-
-  /// Return the path to the config file for this test environment.
-  pub fn config_path(&self) -> &std::path::Path {
-    &self.config_path
   }
 
   /// Return the path to the doing file for this test environment.

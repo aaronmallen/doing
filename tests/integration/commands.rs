@@ -4,4 +4,5 @@ mod finish;
 mod help;
 mod meanwhile;
 mod now;
+mod plugins;
 mod update;

@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "finish count argument not working (see #166)"]
 fn it_finishes_n_most_recent_entries() {
   let doing = DoingCmd::new();
 

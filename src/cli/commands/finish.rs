@@ -109,7 +109,7 @@ impl Command {
       return self.remove_done_tags(ctx, &section_name);
     }
 
-    let entries = if self.interactive {
+    let mut entries = if self.interactive {
       self.interactive_select(ctx, &section_name)?
     } else {
       self.find_entries(ctx, &section_name)?
@@ -117,6 +117,18 @@ impl Command {
 
     if entries.is_empty() {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
+    }
+
+    // When using --auto timing, entries must be in section order so that
+    // next_entry_start can find the correct following entry.
+    if self.auto {
+      let section_ids: Vec<String> = ctx
+        .document
+        .entries_in_section(&section_name)
+        .iter()
+        .map(|e| e.id().to_string())
+        .collect();
+      entries.sort_by_key(|id| section_ids.iter().position(|s| s == id).unwrap_or(usize::MAX));
     }
 
     let finish_date = self.resolve_finish_date()?;
@@ -248,19 +260,23 @@ impl Command {
       return Ok(results.iter().map(|e| e.id().to_string()).collect());
     }
 
-    // No filters: take the last N entries from the section.
+    // No filters: take the N most recent entries from the section.
     // When --unfinished (and not --update), restrict to entries without @done.
-    // Collect in reverse to find the N most recent, then reverse back to section order.
+    // Sort by date descending (with position as tiebreaker for same-minute entries)
+    // so we always pick the newest entries regardless of file order.
     let entries = ctx.document.entries_in_section(section_name);
     let filter_unfinished = self.unfinished && !self.update;
-    let mut ids: Vec<String> = entries
+    let mut candidates: Vec<(usize, &&Entry)> = entries
       .iter()
-      .rev()
-      .filter(|e| if filter_unfinished { e.unfinished() } else { true })
-      .take(self.effective_count())
-      .map(|e| e.id().to_string())
+      .enumerate()
+      .filter(|(_, e)| if filter_unfinished { e.unfinished() } else { true })
       .collect();
-    ids.reverse();
+    candidates.sort_by(|(i_a, a), (i_b, b)| b.date().cmp(&a.date()).then_with(|| i_b.cmp(i_a)));
+    let ids: Vec<String> = candidates
+      .iter()
+      .take(self.effective_count())
+      .map(|(_, e)| e.id().to_string())
+      .collect();
 
     Ok(ids)
   }

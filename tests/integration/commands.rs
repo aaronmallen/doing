@@ -12,5 +12,6 @@ mod plugins;
 mod redo;
 mod sections;
 mod tag_dir;
+mod template;
 mod undo;
 mod update;

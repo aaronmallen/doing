@@ -9,6 +9,7 @@ mod finish;
 mod grep;
 mod help;
 mod last;
+mod mark;
 mod meanwhile;
 mod note;
 mod now;

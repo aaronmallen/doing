@@ -288,10 +288,6 @@ impl Command {
       .find(|e| e.id() == entry_id)
       .ok_or_else(|| crate::errors::Error::Config("entry not found".into()))?;
 
-    if entry.finished() && !self.update {
-      return Ok(());
-    }
-
     if !entry.should_finish(&ctx.config.never_finish) {
       return Ok(());
     }
@@ -792,15 +788,22 @@ mod test {
     }
 
     #[test]
-    fn it_skips_already_done_entry_without_error() {
+    fn it_overwrites_existing_done_date() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
-      let cmd = default_cmd();
+      let cmd = Command {
+        at: Some("2024-03-17 18:00".into()),
+        ..default_cmd()
+      };
 
       cmd.call(&mut ctx).unwrap();
 
       let entries = ctx.document.entries_in_section("Currently");
       assert!(entries[0].finished());
+      assert_eq!(
+        entries[0].done_date().unwrap(),
+        Local.with_ymd_and_hms(2024, 3, 17, 18, 0, 0).unwrap()
+      );
     }
 
     #[test]

@@ -50,7 +50,6 @@ fn it_outputs_status_to_stderr() {
 }
 
 #[test]
-#[ignore = "finish does not overwrite existing @done date by default (see #165)"]
 fn it_overwrites_existing_done_date_without_unfinished_flag() {
   let doing = DoingCmd::new();
 

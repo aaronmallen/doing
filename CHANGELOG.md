@@ -7,7 +7,7 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
-## [v0.0.1-alpha.5]
+## [v0.0.1-alpha.5] - 2026-03-22
 
 ### Fixed
 

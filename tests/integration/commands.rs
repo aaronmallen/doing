@@ -20,6 +20,7 @@ mod plugins;
 mod recent;
 mod redo;
 mod reset;
+mod rotate;
 mod sections;
 mod since;
 mod tag;

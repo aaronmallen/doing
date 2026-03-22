@@ -26,6 +26,7 @@ mod reset;
 mod rotate;
 mod sections;
 mod select;
+mod show;
 mod since;
 mod tag;
 mod tag_dir;

@@ -5,7 +5,6 @@ use crate::support::helpers::{
 };
 
 #[test]
-#[ignore = "finish --back does not modify entry start time (see #167)"]
 fn it_backdates_start_time() {
   let doing = DoingCmd::new();
   let now = fmt_time(chrono::Local::now());

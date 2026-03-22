@@ -5,7 +5,6 @@ use crate::support::helpers::{
 };
 
 #[test]
-#[ignore = "finish --took does not modify entry start time (see #167)"]
 fn it_adjusts_start_time_for_elapsed_duration() {
   let doing = DoingCmd::new();
   let now = fmt_time(chrono::Local::now());

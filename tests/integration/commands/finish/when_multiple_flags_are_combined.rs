@@ -5,7 +5,6 @@ use crate::support::helpers::{
 };
 
 #[test]
-#[ignore = "finish --at combined with --took errors (see #173)"]
 fn it_combines_at_and_took() {
   let doing = DoingCmd::new();
   let today = chrono::Local::now().format("%Y-%m-%d").to_string();

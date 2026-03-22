@@ -131,7 +131,7 @@ impl Command {
       entries.sort_by_key(|id| section_ids.iter().position(|s| s == id).unwrap_or(usize::MAX));
     }
 
-    let finish_date = self.resolve_finish_date()?;
+    let (finish_date, new_start) = self.resolve_timing()?;
     let confirm_threshold = parse_duration(&ctx.config.interaction.confirm_longer_than).ok();
 
     for (i, entry_id) in entries.iter().enumerate() {
@@ -165,6 +165,16 @@ impl Command {
       }
 
       self.finish_entry(ctx, &section_name, &entry_id, done_date, include_date)?;
+
+      if let Some(start) = new_start {
+        if let Some(entry) = ctx
+          .document
+          .section_by_name_mut(&section_name)
+          .and_then(|s| s.entries_mut().iter_mut().find(|e| e.id() == entry_id))
+        {
+          entry.set_date(start);
+        }
+      }
     }
 
     if self.archive {
@@ -402,7 +412,13 @@ impl Command {
     Ok(())
   }
 
-  fn resolve_finish_date(&self) -> Result<DateTime<Local>> {
+  /// Resolve the finish timing, returning (done_date, optional_new_start_date).
+  ///
+  /// - `--at`: sets done_date; when combined with `--took`, also backdates start
+  /// - `--back`: sets start_date, done_date is now
+  /// - `--took`: sets start_date to now - duration, done_date is now
+  /// - default: done_date is now, no start change
+  fn resolve_timing(&self) -> Result<(DateTime<Local>, Option<DateTime<Local>>)> {
     let now = Local::now();
 
     if self.at.is_some() && self.back.is_some() {
@@ -412,19 +428,25 @@ impl Command {
     }
 
     if let Some(ref at_str) = self.at {
-      return chronify(at_str);
+      let done = chronify(at_str)?;
+      if let Some(ref took_str) = self.took {
+        let duration = parse_duration(took_str)?;
+        return Ok((done, Some(done - duration)));
+      }
+      return Ok((done, None));
     }
 
     if let Some(ref back_str) = self.back {
-      return chronify(back_str);
+      let start = chronify(back_str)?;
+      return Ok((now, Some(start)));
     }
 
     if let Some(ref took_str) = self.took {
       let duration = parse_duration(took_str)?;
-      return Ok(now - duration + duration);
+      return Ok((now, Some(now - duration)));
     }
 
-    Ok(now)
+    Ok((now, None))
   }
 }
 
@@ -882,30 +904,32 @@ mod test {
     }
   }
 
-  mod resolve_finish_date {
+  mod resolve_timing {
     use super::*;
 
     #[test]
-    fn it_defaults_to_now() {
+    fn it_defaults_to_now_with_no_start_change() {
       let cmd = default_cmd();
       let before = Local::now();
 
-      let date = cmd.resolve_finish_date().unwrap();
+      let (done, start) = cmd.resolve_timing().unwrap();
 
       let after = Local::now();
-      assert!(date >= before && date <= after);
+      assert!(done >= before && done <= after);
+      assert!(start.is_none());
     }
 
     #[test]
-    fn it_uses_at_time() {
+    fn it_uses_at_time_with_no_start_change() {
       let cmd = Command {
         at: Some("2024-03-17 15:00".into()),
         ..default_cmd()
       };
 
-      let date = cmd.resolve_finish_date().unwrap();
+      let (done, start) = cmd.resolve_timing().unwrap();
 
-      assert_eq!(date, Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap());
+      assert_eq!(done, Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap());
+      assert!(start.is_none());
     }
 
     #[test]
@@ -916,19 +940,54 @@ mod test {
         ..default_cmd()
       };
 
-      assert!(cmd.resolve_finish_date().is_err());
+      assert!(cmd.resolve_timing().is_err());
     }
 
     #[test]
-    fn it_uses_back_time() {
+    fn it_sets_start_from_back_and_done_to_now() {
       let cmd = Command {
         back: Some("2024-03-17 14:00".into()),
         ..default_cmd()
       };
+      let before = Local::now();
 
-      let date = cmd.resolve_finish_date().unwrap();
+      let (done, start) = cmd.resolve_timing().unwrap();
 
-      assert_eq!(date, Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap());
+      let after = Local::now();
+      assert!(done >= before && done <= after);
+      assert_eq!(start.unwrap(), Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap());
+    }
+
+    #[test]
+    fn it_sets_start_from_took_and_done_to_now() {
+      let cmd = Command {
+        took: Some("45m".into()),
+        ..default_cmd()
+      };
+      let before = Local::now();
+
+      let (done, start) = cmd.resolve_timing().unwrap();
+
+      let after = Local::now();
+      assert!(done >= before && done <= after);
+      let expected_start = before - chrono::Duration::minutes(45);
+      let start = start.unwrap();
+      assert!(start >= expected_start - chrono::Duration::seconds(2));
+      assert!(start <= expected_start + chrono::Duration::seconds(2));
+    }
+
+    #[test]
+    fn it_combines_at_and_took() {
+      let cmd = Command {
+        at: Some("2024-03-17 15:00".into()),
+        took: Some("1h".into()),
+        ..default_cmd()
+      };
+
+      let (done, start) = cmd.resolve_timing().unwrap();
+
+      assert_eq!(done, Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap());
+      assert_eq!(start.unwrap(), Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap());
     }
   }
 }

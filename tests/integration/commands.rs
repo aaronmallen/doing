@@ -14,6 +14,7 @@ mod redo;
 mod sections;
 mod tag_dir;
 mod template;
+mod today;
 mod undo;
 mod update;
 mod views;

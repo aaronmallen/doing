@@ -7,6 +7,7 @@ mod config;
 mod done;
 mod finish;
 mod help;
+mod last;
 mod meanwhile;
 mod now;
 mod on;

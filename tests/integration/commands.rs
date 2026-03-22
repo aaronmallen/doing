@@ -16,3 +16,4 @@ mod tag_dir;
 mod template;
 mod undo;
 mod update;
+mod views;

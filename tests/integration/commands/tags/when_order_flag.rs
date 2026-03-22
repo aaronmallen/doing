@@ -3,7 +3,6 @@ use pretty_assertions::assert_eq;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_orders_ascending() {
   let doing = DoingCmd::new();
 
@@ -22,7 +21,6 @@ fn it_orders_ascending() {
 }
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_orders_ascending_with_short_flag() {
   let doing = DoingCmd::new();
 
@@ -40,7 +38,6 @@ fn it_orders_ascending_with_short_flag() {
 }
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_orders_descending() {
   let doing = DoingCmd::new();
 

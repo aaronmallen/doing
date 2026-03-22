@@ -3,7 +3,6 @@ use pretty_assertions::assert_eq;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_sorts_by_name() {
   let doing = DoingCmd::new();
 
@@ -22,14 +21,13 @@ fn it_sorts_by_name() {
 }
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_sorts_by_count() {
   let doing = DoingCmd::new();
 
-  doing.run(["now", "Task @rare"]).assert().success();
-  doing.run(["now", "Task @common @rare"]).assert().success();
-  doing.run(["now", "Task @common"]).assert().success();
-  doing.run(["now", "Task @common"]).assert().success();
+  doing.run(["now", "Task one @rare"]).assert().success();
+  doing.run(["now", "Task two @common @rare"]).assert().success();
+  doing.run(["now", "Task three @common"]).assert().success();
+  doing.run(["now", "Task four @common"]).assert().success();
 
   let output = doing.run(["tags", "--sort", "count"]).output().expect("failed to run");
 

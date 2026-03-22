@@ -3,7 +3,6 @@ use pretty_assertions::assert_eq;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_lists_all_unique_tags() {
   let doing = DoingCmd::new();
 

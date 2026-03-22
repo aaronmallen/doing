@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_uses_and_boolean() {
   let doing = DoingCmd::new();
 
@@ -27,7 +26,6 @@ fn it_uses_and_boolean() {
 }
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_uses_or_boolean() {
   let doing = DoingCmd::new();
 

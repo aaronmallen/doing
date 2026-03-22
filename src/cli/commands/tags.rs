@@ -42,7 +42,7 @@ pub struct Command {
   max_count: Option<usize>,
 
   /// Sort order
-  #[arg(long, default_value = "asc")]
+  #[arg(short = 'o', long, default_value = "asc")]
   order: OrderArg,
 
   /// Sort by name, count, or time (total interval)
@@ -88,9 +88,9 @@ impl Command {
     } else {
       for (name, count) in &tag_counts {
         if self.counts {
-          println!("@{name} ({count})");
+          println!("{name} ({count})");
         } else {
-          println!("@{name}");
+          println!("{name}");
         }
       }
     }

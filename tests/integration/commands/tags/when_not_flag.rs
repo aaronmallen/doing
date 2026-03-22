@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags outputs @-prefixed names instead of bare names (see #207)"]
 fn it_inverts_filter() {
   let doing = DoingCmd::new();
 

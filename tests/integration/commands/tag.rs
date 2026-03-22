@@ -1,0 +1,17 @@
+mod when_autotag_flag_is_provided;
+mod when_bool_flag_is_and;
+mod when_bool_flag_is_not;
+mod when_case_flag_is_provided;
+mod when_count_flag_is_provided;
+mod when_date_flag_is_provided;
+mod when_no_flags_are_provided;
+mod when_not_flag_is_provided;
+mod when_regex_flag_is_provided;
+mod when_remove_flag_is_provided;
+mod when_rename_flag_is_provided;
+mod when_search_flag_is_provided;
+mod when_section_flag_is_provided;
+mod when_tag_filter_is_provided;
+mod when_unfinished_flag_is_provided;
+mod when_val_flag_is_provided;
+mod when_value_flag_is_provided;

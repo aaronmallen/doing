@@ -22,6 +22,7 @@ mod redo;
 mod reset;
 mod sections;
 mod since;
+mod tag;
 mod tag_dir;
 mod template;
 mod today;

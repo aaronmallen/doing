@@ -18,6 +18,7 @@ mod open;
 mod plugins;
 mod recent;
 mod redo;
+mod reset;
 mod sections;
 mod since;
 mod tag_dir;

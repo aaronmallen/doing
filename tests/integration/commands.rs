@@ -18,3 +18,4 @@ mod today;
 mod undo;
 mod update;
 mod views;
+mod yesterday;

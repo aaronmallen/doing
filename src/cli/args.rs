@@ -251,7 +251,18 @@ impl FilterArgs {
     let tag_queries = self
       .val
       .iter()
-      .map(|v| TagQuery::parse(v).ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}"))))
+      .map(|v| {
+        if let Some(q) = TagQuery::parse(v) {
+          Ok(q)
+        } else if !expanded_tags.is_empty() {
+          // Bare value: treat as equality check against the first --tag
+          let tag_name = &expanded_tags[0];
+          TagQuery::parse(&format!("{tag_name} == {v}"))
+            .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+        } else {
+          Err(crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+        }
+      })
       .collect::<Result<Vec<_>>>()?;
 
     Ok(FilterOptions {

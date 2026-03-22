@@ -217,16 +217,23 @@ impl Command {
   }
 
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
-    let has_filters = !self.tag.is_empty() || self.search.is_some();
+    let has_filters = !self.tag.is_empty() || self.search.is_some() || !self.val.is_empty();
 
     if has_filters {
       let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
 
-      let tag_filter = if self.tag.is_empty() {
+      let expanded_tags: Vec<String> = self
+        .tag
+        .iter()
+        .flat_map(|t| t.split(',').map(|s| s.trim().to_string()))
+        .filter(|s| !s.is_empty())
+        .collect();
+
+      let tag_filter = if expanded_tags.is_empty() {
         None
       } else {
         let mode = self.bool_op.map(BooleanMode::from).unwrap_or_default();
-        Some(TagFilter::new(&self.tag, mode))
+        Some(TagFilter::new(&expanded_tags, mode))
       };
 
       let search = self
@@ -238,8 +245,15 @@ impl Command {
         .val
         .iter()
         .map(|v| {
-          crate::ops::tag_query::TagQuery::parse(v)
-            .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+          if let Some(q) = crate::ops::tag_query::TagQuery::parse(v) {
+            Ok(q)
+          } else if !expanded_tags.is_empty() {
+            let tag_name = &expanded_tags[0];
+            crate::ops::tag_query::TagQuery::parse(&format!("{tag_name} == {v}"))
+              .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+          } else {
+            Err(crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+          }
         })
         .collect::<crate::errors::Result<Vec<_>>>()?;
 

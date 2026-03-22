@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "val flag filtering not yet implemented (see #185)"]
 fn it_adds_note_to_entries_matching_tag_value() {
   let doing = DoingCmd::new();
 

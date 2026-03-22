@@ -26,7 +26,6 @@ template = "%date | %title"
 "#;
 
 #[test]
-#[ignore = "view --val flag query syntax needs investigation (see #185)"]
 fn it_filters_by_tag_value() {
   let doing = DoingCmd::new_with_config(VIEW_CONFIG);
 

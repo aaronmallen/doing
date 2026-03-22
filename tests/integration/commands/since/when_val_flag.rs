@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our --val flag expects a query format like 'field > value', not a bare value (see #185)"]
 fn it_filters_by_tag_value() {
   let doing = DoingCmd::new();
 

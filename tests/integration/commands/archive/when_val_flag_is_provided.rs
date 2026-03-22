@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "archive --val filter does not correctly filter by tag value (see #185)"]
 fn it_archives_entries_matching_tag_value_query() {
   let doing = DoingCmd::new();
 

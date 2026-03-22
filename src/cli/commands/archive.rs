@@ -116,7 +116,8 @@ impl Command {
       || filter.search.is_some()
       || filter.before.is_some()
       || filter.after.is_some()
-      || filter.from.is_some();
+      || filter.from.is_some()
+      || !filter.val.is_empty();
 
     let mut candidates = if has_filters {
       let mut options = filter.clone().into_filter_options(&ctx.config, ctx.include_notes)?;

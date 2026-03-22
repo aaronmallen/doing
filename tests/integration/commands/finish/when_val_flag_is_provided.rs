@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "finish --val does not filter by tag value (see #172)"]
 fn it_finishes_entries_matching_tag_value() {
   let doing = DoingCmd::new();
 

@@ -89,7 +89,7 @@ impl Command {
       .clone()
       .unwrap_or_else(|| ctx.config.current_section.clone());
 
-    let has_filters = !self.filter.tag.is_empty() || self.filter.search.is_some();
+    let has_filters = !self.filter.tag.is_empty() || self.filter.search.is_some() || !self.filter.val.is_empty();
 
     if has_filters {
       let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();

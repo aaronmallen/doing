@@ -10,6 +10,7 @@ mod grep;
 mod help;
 mod last;
 mod meanwhile;
+mod note;
 mod now;
 mod on;
 mod open;

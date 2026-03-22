@@ -7,6 +7,18 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.0.1-alpha.5]
+
+### Fixed
+
+- `--back` and `--took` flags on `finish` now correctly adjust entry start time (see [#167], [#173])
+- `finish` supports `--bool AND` with comma-separated `--tag` values (see [#170])
+- `--val` flag included in filter checks across all commands; bare values fall back to equality checks against the first
+  tag (see [#185])
+- `finish` count argument selects the N most recent entries by date (see [#166])
+- `finish` overwrites existing `@done` dates by default, matching Ruby doing behavior (see [#165])
+- `tags` outputs bare tag names instead of `@`-prefixed names in default and `--counts` modes (see [#207])
+
 ## [v0.0.1-alpha.4.1] - 2026-03-21
 
 ### Added
@@ -199,8 +211,16 @@ Initial alpha release
 [#86]: https://github.com/aaronmallen/doing/issues/86
 [#88]: https://github.com/aaronmallen/doing/issues/88
 [#100]: https://github.com/aaronmallen/doing/issues/100
+[#165]: https://github.com/aaronmallen/doing/issues/165
+[#166]: https://github.com/aaronmallen/doing/issues/166
+[#167]: https://github.com/aaronmallen/doing/issues/167
+[#170]: https://github.com/aaronmallen/doing/issues/170
+[#173]: https://github.com/aaronmallen/doing/issues/173
+[#185]: https://github.com/aaronmallen/doing/issues/185
+[#207]: https://github.com/aaronmallen/doing/issues/207
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
+[v0.0.1-alpha.5]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...0.0.1-alpha.5

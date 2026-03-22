@@ -460,7 +460,7 @@ dependencies = [
 
 [[package]]
 name = "doing"
-version = "0.0.1-alpha.4.1"
+version = "0.0.1-alpha.5"
 dependencies = [
  "assert_cmd",
  "chrono",

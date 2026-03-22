@@ -11,6 +11,6 @@ if [ -n "${usage_filter}" ]; then
   FILTER_ARGS="--no-fail-fast --filter-expr 'test(/${usage_filter}/)'"
 fi
 
-eval cargo llvm-cov nextest --test '*' --summary-only --all-features --no-tests pass $FILTER_ARGS
+eval cargo llvm-cov nextest --test "'*'" --summary-only --all-features --no-tests pass $FILTER_ARGS
 cargo llvm-cov report --html --output-dir coverage
 cargo llvm-cov report --cobertura --output-path coverage/cobertura.xml

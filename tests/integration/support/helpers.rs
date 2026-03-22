@@ -5,10 +5,10 @@ use chrono::Local;
 use regex::Regex;
 use tempfile::TempDir;
 
-/// Entry line pattern: matches either explicit template (`2024-01-15 14:30 | text`)
-/// or the built-in default template (`  9:01am ║ text`).
-const ENTRY_PATTERN: &str = r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2} \|";
+/// Entry line pattern: matches the built-in default template (`  9:01am ║ text`).
 const BUILTIN_ENTRY_PATTERN: &str = r"^\s*\S+\s+║";
+/// Entry line pattern: matches explicit template (`2024-01-15 14:30 | text`).
+const ENTRY_PATTERN: &str = r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2} \|";
 
 /// Minimal TOML config for isolated tests.
 const TEST_CONFIG: &str = r#"
@@ -16,6 +16,9 @@ current_section = "Currently"
 doing_file_sort = "asc"
 include_notes = true
 paginate = false
+
+[interaction]
+confirm_longer_than = ""
 
 [templates.default]
 date_format = "%Y-%m-%d %H:%M"
@@ -78,22 +81,6 @@ impl DoingCmd {
     cmd
   }
 
-  /// Read the contents of the doing file after commands have run.
-  pub fn read_doing_file(&self) -> String {
-    fs::read_to_string(&self.doing_file_path).unwrap_or_default()
-  }
-
-  /// Run a doing subcommand with the given arguments and return the command for assertions.
-  pub fn run<I, S>(&self, args: I) -> Command
-  where
-    I: IntoIterator<Item = S>,
-    S: AsRef<OsStr>,
-  {
-    let mut cmd = self.cmd();
-    cmd.args(args);
-    cmd
-  }
-
   /// Return the path to the config file for this test environment.
   pub fn config_path(&self) -> &std::path::Path {
     &self.config_path
@@ -111,6 +98,22 @@ impl DoingCmd {
     let mut cmd = Command::cargo_bin("doing").expect("failed to find doing binary");
     cmd.env("DOING_BACKUP_DIR", &self.backup_dir);
     cmd.env("DOING_CONFIG", &self.config_path);
+    cmd
+  }
+
+  /// Read the contents of the doing file after commands have run.
+  pub fn read_doing_file(&self) -> String {
+    fs::read_to_string(&self.doing_file_path).unwrap_or_default()
+  }
+
+  /// Run a doing subcommand with the given arguments and return the command for assertions.
+  pub fn run<I, S>(&self, args: I) -> Command
+  where
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+  {
+    let mut cmd = self.cmd();
+    cmd.args(args);
     cmd
   }
 
@@ -147,7 +150,7 @@ pub fn count_entries(output: &str) -> usize {
 
 /// Extract the @done(timestamp) value from the doing file
 pub fn extract_done_timestamp(contents: &str) -> String {
-  let re = Regex::new(r"@done\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)").unwrap();
+  let re = Regex::new(r"@done\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)").expect("invalid done timestamp regex");
   let cap = re
     .captures(contents)
     .expect("doing file should contain a @done timestamp");
@@ -156,7 +159,7 @@ pub fn extract_done_timestamp(contents: &str) -> String {
 
 /// Extract the entry start timestamp from the doing file (e.g., `2024-03-17 14:30`)
 pub fn extract_entry_timestamp(contents: &str) -> String {
-  let re = Regex::new(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \|").unwrap();
+  let re = Regex::new(r"(\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \|").expect("invalid entry timestamp regex");
   let cap = re
     .captures(contents)
     .expect("doing file should contain an entry timestamp");

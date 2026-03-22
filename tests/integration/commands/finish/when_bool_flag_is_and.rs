@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "finish --bool AND with comma-separated tags fails (see #170)"]
 fn it_finishes_entries_matching_all_tags() {
   let doing = DoingCmd::new();
 

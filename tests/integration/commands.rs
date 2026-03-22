@@ -11,6 +11,7 @@ mod done;
 mod finish;
 mod grep;
 mod help;
+mod import;
 mod last;
 mod mark;
 mod meanwhile;

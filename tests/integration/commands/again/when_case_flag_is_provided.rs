@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our again command does not support --case flag (see #194)"]
 fn it_performs_case_sensitive_search_with_case_c() {
   let doing = DoingCmd::new();
 
@@ -32,7 +31,6 @@ Currently:
 }
 
 #[test]
-#[ignore = "our again command does not support --case flag (see #194)"]
 fn it_performs_case_insensitive_search_with_case_i() {
   let doing = DoingCmd::new();
 
@@ -60,7 +58,6 @@ Currently:
 }
 
 #[test]
-#[ignore = "our again command does not support --case flag (see #194)"]
 fn it_uses_smart_case_with_case_s() {
   let doing = DoingCmd::new();
 

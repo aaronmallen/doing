@@ -34,6 +34,14 @@ pub struct Command {
   #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
 
+  /// Case sensitivity for search (smart/sensitive/ignore)
+  #[arg(long)]
+  case: Option<String>,
+
+  /// Use exact (literal substring) matching for search
+  #[arg(long)]
+  exact: bool,
+
   /// Open an editor to compose the entry title and notes
   #[arg(short, long)]
   editor: bool,
@@ -159,17 +167,32 @@ impl Command {
   fn find_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
     let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
 
-    let tag_filter = if self.tag.is_empty() {
+    let expanded_tags: Vec<String> = self
+      .tag
+      .iter()
+      .flat_map(|t| t.split(',').map(|s| s.trim().to_string()))
+      .filter(|s| !s.is_empty())
+      .collect();
+
+    let tag_filter = if expanded_tags.is_empty() {
       None
     } else {
       let mode = self.bool_op.map(BooleanMode::from).unwrap_or_default();
-      Some(TagFilter::new(&self.tag, mode))
+      Some(TagFilter::new(&expanded_tags, mode))
     };
+
+    let mut search_config = ctx.config.search.clone();
+    if let Some(ref case_override) = self.case {
+      search_config.case = case_override.clone();
+    }
+    if self.exact {
+      search_config.matching = "exact".into();
+    }
 
     let search = self
       .search
       .as_deref()
-      .and_then(|q| crate::ops::search::parse_query(q, &ctx.config.search));
+      .and_then(|q| crate::ops::search::parse_query(q, &search_config));
 
     let tag_queries = self
       .val
@@ -274,6 +297,8 @@ mod test {
       ask: false,
       back: None,
       bool_op: None,
+      case: None,
+      exact: false,
       editor: false,
       interactive: false,
       in_section: None,

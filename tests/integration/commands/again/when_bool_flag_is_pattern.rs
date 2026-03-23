@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our again command does not support PATTERN bool with +/- syntax (see #195)"]
 fn it_uses_plus_minus_syntax_for_tag_matching() {
   let doing = DoingCmd::new();
 

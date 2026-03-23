@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our again command does not support --exact flag (see #194)"]
 fn it_forces_exact_string_matching() {
   let doing = DoingCmd::new();
 

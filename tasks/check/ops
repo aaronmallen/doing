@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Check doing-ops for compilation errors"
+
+set -e
+
+cargo check -p "doing-ops" --all-targets --all-features

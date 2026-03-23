@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Check doing-taskpaper for compilation errors"
+
+set -e
+
+cargo check -p "doing-taskpaper" --all-targets --all-features

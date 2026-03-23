@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Build doing-ops"
+
+set -e
+
+cargo build -p "doing-ops" --all-features

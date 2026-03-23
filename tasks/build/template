@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Build doing-template"
+
+set -e
+
+cargo build -p "doing-template" --all-features

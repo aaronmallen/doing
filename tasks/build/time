@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Build doing-time"
+
+set -e
+
+cargo build -p "doing-time" --all-features

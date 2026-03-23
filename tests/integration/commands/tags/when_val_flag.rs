@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags --val flag not supported (see #210)"]
 fn it_filters_by_tag_value() {
   let doing = DoingCmd::new();
 

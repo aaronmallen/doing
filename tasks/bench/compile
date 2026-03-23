@@ -18,17 +18,35 @@ hyperfine \
   --warmup 1 \
   --runs "$RUNS" \
   --prepare 'cargo clean' \
-  --command-name 'cargo check' 'cargo check' \
-  --command-name 'cargo build' 'cargo build' \
-  --command-name 'cargo test --no-run' 'cargo test --no-run' \
-  --command-name 'cargo build --release' 'cargo build --release'
+  --command-name 'cargo check --workspace' 'cargo check --workspace' \
+  --command-name 'cargo build --workspace' 'cargo build --workspace' \
+  --command-name 'cargo test --workspace --no-run' 'cargo test --workspace --no-run' \
+  --command-name 'cargo build --workspace --release' 'cargo build --workspace --release'
 
 echo ""
-echo "--- Incremental builds (touch src/main.rs) ---"
-cargo build 2>/dev/null
+echo "--- Incremental builds (touch src/main.rs — binary crate) ---"
+cargo build --workspace 2>/dev/null
 hyperfine \
   --warmup 1 \
   --runs "$INCREMENTAL_RUNS" \
   --prepare 'touch src/main.rs' \
-  --command-name 'cargo build' 'cargo build' \
-  --command-name 'cargo build --release' 'cargo build --release'
+  --command-name 'cargo build --workspace' 'cargo build --workspace' \
+  --command-name 'cargo build --workspace --release' 'cargo build --workspace --release'
+
+echo ""
+echo "--- Incremental builds (touch crates/error/src/lib.rs — leaf crate) ---"
+hyperfine \
+  --warmup 1 \
+  --runs "$INCREMENTAL_RUNS" \
+  --prepare 'touch crates/error/src/lib.rs' \
+  --command-name 'cargo build --workspace' 'cargo build --workspace' \
+  --command-name 'cargo build --workspace --release' 'cargo build --workspace --release'
+
+echo ""
+echo "--- Incremental builds (touch crates/taskpaper/src/lib.rs — mid-tier crate) ---"
+hyperfine \
+  --warmup 1 \
+  --runs "$INCREMENTAL_RUNS" \
+  --prepare 'touch crates/taskpaper/src/lib.rs' \
+  --command-name 'cargo build --workspace' 'cargo build --workspace' \
+  --command-name 'cargo build --workspace --release' 'cargo build --workspace --release'

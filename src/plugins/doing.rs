@@ -1,10 +1,8 @@
 use doing_config::Config;
 use doing_taskpaper::{Document, Entry, Section, serialize};
+use doing_template::renderer::RenderOptions;
 
-use crate::{
-  plugins::{ExportPlugin, ExportPluginSettings},
-  template::renderer::RenderOptions,
-};
+use crate::plugins::{ExportPlugin, ExportPluginSettings};
 
 /// Export plugin that renders entries in the native doing file format.
 ///

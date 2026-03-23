@@ -12,9 +12,8 @@ mod timeline;
 
 use doing_config::Config;
 use doing_taskpaper::Entry;
+use doing_template::renderer::RenderOptions;
 use regex::Regex;
-
-use crate::template::renderer::RenderOptions;
 
 /// The interface that export format plugins must implement.
 ///

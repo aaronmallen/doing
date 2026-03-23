@@ -4,6 +4,7 @@ use clap::Args;
 use doing_config::SortOrder;
 use doing_ops::{backup::write_with_backup, filter::filter_entries};
 use doing_taskpaper::{Entry, Section, Tag};
+use doing_template::renderer::{RenderOptions, format_items};
 
 use crate::{
   Result,
@@ -13,7 +14,6 @@ use crate::{
     pager,
   },
   plugins::default_registry,
-  template::renderer::{RenderOptions, format_items},
 };
 
 /// The actions available after selecting an entry.

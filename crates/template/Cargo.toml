@@ -1,0 +1,20 @@
+[package]
+description = "Template parsing and rendering for the doing CLI"
+edition.workspace = true
+license.workspace = true
+name = "doing-template"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.0"
+
+[dependencies]
+chrono.workspace = true
+doing-config.workspace = true
+doing-error.workspace = true
+doing-taskpaper.workspace = true
+doing-time.workspace = true
+regex.workspace = true
+yansi.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

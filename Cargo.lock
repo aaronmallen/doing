@@ -481,6 +481,7 @@ dependencies = [
  "doing-error",
  "doing-ops",
  "doing-taskpaper",
+ "doing-template",
  "doing-time",
  "env_logger",
  "indexmap",
@@ -553,6 +554,20 @@ dependencies = [
  "pretty_assertions",
  "regex",
  "tempfile",
+]
+
+[[package]]
+name = "doing-template"
+version = "0.0.1-alpha.1"
+dependencies = [
+ "chrono",
+ "doing-config",
+ "doing-error",
+ "doing-taskpaper",
+ "doing-time",
+ "pretty_assertions",
+ "regex",
+ "yansi",
 ]
 
 [[package]]

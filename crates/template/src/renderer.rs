@@ -4,7 +4,7 @@ use doing_config::{Config, TemplateConfig};
 use doing_taskpaper::Entry;
 use doing_time::{DurationFormat, FormattedDuration, FormattedShortdate};
 
-use super::{
+use crate::{
   colors,
   parser::{self, Indent, IndentChar, Token, TokenKind},
   totals::{TagSortField, TagSortOrder, TagTotals},
@@ -12,11 +12,11 @@ use super::{
 };
 
 /// Built-in template: full format with section labels, separator, and interval.
-const BUILTIN_TEMPLATE_FULL: &str =
-  "%boldwhite%-10shortdate %boldcyan║ %boldwhite%title%reset  %interval  %cyan[%10section]%reset%cyan%note%reset";
+const BUILTIN_TEMPLATE_FULL: &str = "%boldwhite%-10shortdate %boldcyan\u{2551} %boldwhite%title%reset  %interval  %cyan[%10section]%reset%cyan%note%reset";
 
 /// Built-in template: simplified format without section labels or interval.
-const BUILTIN_TEMPLATE_SIMPLE: &str = "%boldwhite%-10shortdate %boldcyan║ %boldwhite%title%reset%cyan%note%reset";
+const BUILTIN_TEMPLATE_SIMPLE: &str =
+  "%boldwhite%-10shortdate %boldcyan\u{2551} %boldwhite%title%reset%cyan%note%reset";
 
 /// Options controlling how an entry is rendered against a template.
 #[derive(Clone, Debug)]
@@ -666,7 +666,10 @@ mod test {
 
       let options = RenderOptions::from_config("default", &config);
 
-      assert!(options.template.contains("║"), "default should use ║ separator");
+      assert!(
+        options.template.contains("\u{2551}"),
+        "default should use \u{2551} separator"
+      );
       assert!(options.template.contains("interval"), "default should include interval");
       assert!(options.template.contains("section"), "default should include section");
     }
@@ -677,7 +680,10 @@ mod test {
 
       let options = RenderOptions::from_config("today", &config);
 
-      assert!(options.template.contains("║"), "today should use ║ separator");
+      assert!(
+        options.template.contains("\u{2551}"),
+        "today should use \u{2551} separator"
+      );
       assert!(options.template.contains("interval"), "today should include interval");
       assert!(options.template.contains("section"), "today should include section");
     }
@@ -688,7 +694,10 @@ mod test {
 
       let options = RenderOptions::from_config("last", &config);
 
-      assert!(options.template.contains("║"), "last should use ║ separator");
+      assert!(
+        options.template.contains("\u{2551}"),
+        "last should use \u{2551} separator"
+      );
       assert!(
         !options.template.contains("%interval"),
         "last should not include interval"
@@ -705,7 +714,10 @@ mod test {
 
       let options = RenderOptions::from_config("yesterday", &config);
 
-      assert!(options.template.contains("║"), "yesterday should use ║ separator");
+      assert!(
+        options.template.contains("\u{2551}"),
+        "yesterday should use \u{2551} separator"
+      );
       assert!(
         !options.template.contains("%interval"),
         "yesterday should not include interval"

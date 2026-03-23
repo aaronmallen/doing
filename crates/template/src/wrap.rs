@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use super::colors;
+use crate::colors;
 
 static TAG_VALUE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"@\S+\(.*?\)").unwrap());
 

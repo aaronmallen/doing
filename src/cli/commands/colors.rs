@@ -1,6 +1,7 @@
 use clap::Args;
+use doing_template::colors;
 
-use crate::{Result, template::colors};
+use crate::Result;
 
 const BACKGROUND_COLORS: [&str; 9] = [
   "bgblack",

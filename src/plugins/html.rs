@@ -2,12 +2,10 @@ use std::sync::LazyLock;
 
 use doing_config::Config;
 use doing_taskpaper::Entry;
+use doing_template::renderer::RenderOptions;
 use regex::Regex;
 
-use crate::{
-  plugins::{ExportPlugin, ExportPluginSettings, helpers},
-  template::renderer::RenderOptions,
-};
+use crate::plugins::{ExportPlugin, ExportPluginSettings, helpers};
 
 static TAG_HIGHLIGHT_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(@[^\s(]+(?:\([^)]*\))?)").unwrap());
 

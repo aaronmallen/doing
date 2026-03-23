@@ -14,7 +14,7 @@ use doing_taskpaper::{Document, Section, io as taskpaper_io};
 use log::debug;
 use yansi::Condition;
 
-use crate::{Result, template};
+use crate::Result;
 
 /// Shared application context passed to all command handlers.
 #[allow(dead_code)]
@@ -181,7 +181,7 @@ pub(crate) struct Cli {
 
 impl Cli {
   fn call(&self) -> Result<()> {
-    template::colors::init();
+    doing_template::colors::init();
     init_logger(self.log_level());
 
     debug!("CLI parsed successfully");

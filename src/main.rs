@@ -1,6 +1,5 @@
 mod cli;
 mod plugins;
-mod template;
 
 pub use doing_error::{Error, Result};
 

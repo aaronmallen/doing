@@ -6,6 +6,7 @@ use doing_ops::{
   filter::{FilterOptions, filter_entries},
   tag_filter::{BooleanMode, TagFilter},
 };
+use doing_template::renderer::{RenderOptions, format_items};
 use log::debug;
 
 use crate::{
@@ -16,7 +17,6 @@ use crate::{
     pager,
   },
   plugins::default_registry,
-  template::renderer::{RenderOptions, format_items},
 };
 
 /// Display entries using a saved view from your configuration.

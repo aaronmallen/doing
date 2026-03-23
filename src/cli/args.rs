@@ -8,16 +8,13 @@ use doing_ops::{
   tag_query::TagQuery,
 };
 use doing_taskpaper::Entry;
+use doing_template::{
+  renderer::{RenderOptions, format_items_with_tag_sort},
+  totals::{TagSortField, TagSortOrder},
+};
 use doing_time::{chronify, parse_range};
 
-use crate::{
-  Result,
-  plugins::default_registry,
-  template::{
-    renderer::{RenderOptions, format_items_with_tag_sort},
-    totals::{TagSortField, TagSortOrder},
-  },
-};
+use crate::{Result, plugins::default_registry};
 
 /// Which end of the chronological list to keep.
 #[derive(Clone, Copy, Debug, ValueEnum)]

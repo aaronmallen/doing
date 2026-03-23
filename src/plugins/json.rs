@@ -2,12 +2,10 @@ use std::collections::BTreeMap;
 
 use doing_config::Config;
 use doing_taskpaper::Entry;
+use doing_template::renderer::RenderOptions;
 use serde::Serialize;
 
-use crate::{
-  plugins::{ExportPlugin, ExportPluginSettings},
-  template::renderer::RenderOptions,
-};
+use crate::plugins::{ExportPlugin, ExportPluginSettings};
 
 /// Date format matching Brett's doing: `2026-03-19 16:06:00 -0500`
 const JSON_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";

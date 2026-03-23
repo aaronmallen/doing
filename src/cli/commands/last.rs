@@ -4,6 +4,7 @@ use doing_ops::{
   backup::write_with_backup,
   filter::{Age, filter_entries},
 };
+use doing_template::renderer::{RenderOptions, format_items};
 
 use crate::{
   Result,
@@ -12,7 +13,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     editor, pager,
   },
-  template::renderer::{RenderOptions, format_items},
 };
 
 /// Show the single most recent entry.

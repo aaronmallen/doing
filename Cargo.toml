@@ -37,6 +37,7 @@ doing-config = { path = "crates/config" }
 doing-error = { path = "crates/error" }
 doing-ops = { path = "crates/ops" }
 doing-taskpaper = { path = "crates/taskpaper" }
+doing-template = { path = "crates/template" }
 doing-time = { path = "crates/time" }
 env_logger = "0.11"
 indexmap = "2"
@@ -74,6 +75,7 @@ doing-config.workspace = true
 doing-error.workspace = true
 doing-ops.workspace = true
 doing-taskpaper.workspace = true
+doing-template.workspace = true
 doing-time.workspace = true
 env_logger.workspace = true
 indexmap.workspace = true

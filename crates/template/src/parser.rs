@@ -2,7 +2,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use super::colors;
+use crate::colors;
 
 static COLOR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"%((?:[fb]g?)?#[a-fA-F0-9]{6}|[a-zA-Z_]+)").unwrap());
 static PLACEHOLDER_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -302,7 +302,7 @@ mod test {
 
     #[test]
     fn it_parses_combined_width_indent_and_prefix() {
-      let tokens = parse("%80_14┃ note");
+      let tokens = parse("%80_14\u{2503} note");
 
       assert_eq!(
         tokens,
@@ -313,7 +313,7 @@ mod test {
           }),
           kind: TokenKind::Note,
           marker: None,
-          prefix: Some("┃ ".into()),
+          prefix: Some("\u{2503} ".into()),
           width: Some(80),
         }]
       );
@@ -450,7 +450,7 @@ mod test {
 
     #[test]
     fn it_parses_prefix_with_separator() {
-      let tokens = parse("%80║ title");
+      let tokens = parse("%80\u{2551} title");
 
       assert_eq!(
         tokens,
@@ -458,7 +458,7 @@ mod test {
           indent: None,
           kind: TokenKind::Title,
           marker: None,
-          prefix: Some("║ ".into()),
+          prefix: Some("\u{2551} ".into()),
           width: Some(80),
         }]
       );

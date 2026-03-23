@@ -3,12 +3,10 @@ use std::collections::BTreeMap;
 use chrono::Local;
 use doing_config::Config;
 use doing_taskpaper::Entry;
+use doing_template::renderer::RenderOptions;
 use serde::Serialize;
 
-use crate::{
-  plugins::{ExportPlugin, ExportPluginSettings, helpers},
-  template::renderer::RenderOptions,
-};
+use crate::plugins::{ExportPlugin, ExportPluginSettings, helpers};
 
 /// Date format for Day One entries.
 const DAYONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";

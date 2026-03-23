@@ -1,15 +1,13 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires GUI environment"]
 fn it_opens_in_specified_app() {
   let doing = DoingCmd::new();
 
   doing.run(["now", "Test entry"]).assert().success();
 
-  // --app requires a macOS app name, hard to test in CI without a real app
   let output = doing
-    .run(["open", "--app", "TextEdit"])
+    .run(["open", "--app", "cat"])
     .output()
     .expect("failed to run open --app");
 
@@ -21,14 +19,13 @@ fn it_opens_in_specified_app() {
 }
 
 #[test]
-#[ignore = "requires GUI environment"]
 fn it_opens_with_short_flag() {
   let doing = DoingCmd::new();
 
   doing.run(["now", "Test entry"]).assert().success();
 
   let output = doing
-    .run(["open", "-a", "TextEdit"])
+    .run(["open", "-a", "cat"])
     .output()
     .expect("failed to run open -a");
 

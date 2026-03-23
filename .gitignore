@@ -13,6 +13,7 @@
 .claude/*
 !.claude/agents
 !.claude/skills
+.doingrc
 coverage
 target
 tmp

@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires GUI environment"]
 fn it_opens_with_bundle_id() {
   let doing = DoingCmd::new();
 
@@ -21,7 +20,6 @@ fn it_opens_with_bundle_id() {
 }
 
 #[test]
-#[ignore = "requires GUI environment"]
 fn it_opens_with_short_flag() {
   let doing = DoingCmd::new();
 

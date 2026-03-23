@@ -26,7 +26,6 @@ template = "%date | %title"
 "#;
 
 #[test]
-#[ignore = "interactive mode requires TTY and cannot be tested in CI"]
 fn it_enables_interactive_mode() {
   let doing = DoingCmd::new_with_config(VIEW_CONFIG);
 

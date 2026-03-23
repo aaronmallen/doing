@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "--interactive flag not yet implemented (see #174)"]
 fn it_presents_interactive_menu() {
   let doing = DoingCmd::new();
 
@@ -21,7 +20,6 @@ fn it_presents_interactive_menu() {
 }
 
 #[test]
-#[ignore = "--interactive flag not yet implemented (see #174)"]
 fn it_presents_with_short_flag() {
   let doing = DoingCmd::new();
 

@@ -34,7 +34,6 @@ mod tags;
 mod template;
 mod today;
 mod undo;
-mod update;
 mod view;
 mod views;
 mod yesterday;

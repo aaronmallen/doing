@@ -1,6 +1,21 @@
 use crate::support::helpers::{DoingCmd, extract_done_timestamp, fmt_time};
 
 #[test]
+fn it_exits_with_error_when_section_is_empty() {
+  let doing = DoingCmd::new();
+
+  let output = doing.run(["done"]).output().expect("failed to run");
+
+  assert!(!output.status.success(), "expected non-zero exit code");
+
+  let stderr = String::from_utf8_lossy(&output.stderr);
+  assert!(
+    stderr.contains("no items matched"),
+    "expected 'no items matched' error on stderr, got: {stderr}"
+  );
+}
+
+#[test]
 fn it_marks_last_entry_as_done_with_current_timestamp() {
   let doing = DoingCmd::new();
   let now = fmt_time(chrono::Local::now());
@@ -32,22 +47,6 @@ fn it_marks_last_entry_as_done_with_current_timestamp() {
 }
 
 #[test]
-fn it_exits_with_error_when_section_is_empty() {
-  let doing = DoingCmd::new();
-
-  let output = doing.run(["done"]).output().expect("failed to run");
-
-  assert!(!output.status.success(), "expected non-zero exit code");
-
-  let stderr = String::from_utf8_lossy(&output.stderr);
-  assert!(
-    stderr.contains("no items matched"),
-    "expected 'no items matched' error on stderr, got: {stderr}"
-  );
-}
-
-#[test]
-#[ignore = "status message format differs from Ruby doing (see #159)"]
 fn it_outputs_status_to_stderr() {
   let doing = DoingCmd::new();
 
@@ -62,7 +61,7 @@ fn it_outputs_status_to_stderr() {
 
   assert!(stdout.is_empty(), "expected stdout to be empty, got: {stdout}");
   assert!(
-    stderr.contains("Tagged:"),
-    "expected 'Tagged:' status message on stderr, got: {stderr}"
+    stderr.contains("Marked") && stderr.contains("@done"),
+    "expected status message on stderr indicating entry was marked done, got: {stderr}"
   );
 }

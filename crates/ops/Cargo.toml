@@ -1,0 +1,22 @@
+[package]
+description = "Domain operations for the doing CLI"
+edition.workspace = true
+license.workspace = true
+name = "doing-ops"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.0"
+
+[dependencies]
+chrono.workspace = true
+doing-config.workspace = true
+doing-error.workspace = true
+doing-taskpaper.workspace = true
+doing-time.workspace = true
+indexmap.workspace = true
+regex.workspace = true
+sublime_fuzzy.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

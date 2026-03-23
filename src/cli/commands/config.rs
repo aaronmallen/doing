@@ -277,7 +277,7 @@ fn undo_config(ctx: &AppContext) -> Result<()> {
   }
 
   let backup_dir = resolve_backup_dir();
-  let backups = crate::ops::backup::list_backups(&config_path, &backup_dir)?;
+  let backups = doing_ops::backup::list_backups(&config_path, &backup_dir)?;
   let backup = backups
     .first()
     .ok_or_else(|| Error::Config("no config backups available".into()))?;
@@ -475,7 +475,7 @@ fn set_value(key: &str, raw_value: &str, local: bool, quiet: bool) -> Result<()>
   // Create a backup before modifying for `config undo`
   if config_path.exists() {
     let backup_dir = resolve_backup_dir();
-    let _ = crate::ops::backup::create_backup(&config_path, &backup_dir);
+    let _ = doing_ops::backup::create_backup(&config_path, &backup_dir);
   }
 
   if config_path.exists() {

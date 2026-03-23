@@ -4,11 +4,9 @@ use std::{
 };
 
 use chrono::Local;
+use doing_error::{Error, Result};
 
-use crate::{
-  Error, Result,
-  ops::backup::{self, backup_prefix},
-};
+use crate::backup::{self, backup_prefix};
 
 /// Restore from the Nth most recent consumed (`.undone`) backup (1-indexed),
 /// reversing the last N undo operations.

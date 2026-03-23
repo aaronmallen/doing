@@ -1,14 +1,14 @@
 use clap::Args;
+use doing_ops::{
+  autotag::autotag,
+  backup::write_with_backup,
+  filter::{Age, filter_entries},
+};
 use doing_taskpaper::{Entry, Tag};
 
 use crate::{
   Result,
   cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
-  ops::{
-    autotag::autotag,
-    backup::write_with_backup,
-    filter::{Age, filter_entries},
-  },
 };
 
 /// Add, remove, or rename tags on existing entries.

@@ -2,6 +2,7 @@ use std::io::IsTerminal;
 
 use clap::Args;
 use doing_config::SortOrder;
+use doing_ops::filter::{FilterOptions, filter_entries};
 
 use crate::{
   Result,
@@ -10,7 +11,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     pager,
   },
-  ops::filter::{FilterOptions, filter_entries},
 };
 
 /// Display entries from a section with full filtering, custom templates, and

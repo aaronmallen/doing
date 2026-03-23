@@ -1,10 +1,7 @@
 use clap::Args;
+use doing_ops::{autotag, backup::write_with_backup};
 
-use crate::{
-  Result,
-  cli::AppContext,
-  ops::{autotag, backup::write_with_backup},
-};
+use crate::{Result, cli::AppContext};
 
 /// Apply autotagging rules to existing entries.
 ///

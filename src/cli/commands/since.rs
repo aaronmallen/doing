@@ -1,5 +1,6 @@
 use clap::Args;
 use doing_config::SortOrder;
+use doing_ops::filter::filter_entries;
 use doing_time::chronify;
 
 use crate::{
@@ -9,7 +10,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     pager,
   },
-  ops::filter::filter_entries,
 };
 
 /// Show entries since a given date.

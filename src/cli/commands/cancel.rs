@@ -1,14 +1,14 @@
 use clap::Args;
+use doing_ops::{
+  backup::write_with_backup,
+  filter::{Age, FilterOptions, filter_entries},
+  tag_filter::{BooleanMode, TagFilter},
+};
 use doing_taskpaper::{Entry, Section, Tag};
 
 use crate::{
   Result,
   cli::{AppContext, args::BoolArg},
-  ops::{
-    backup::write_with_backup,
-    filter::{Age, FilterOptions, filter_entries},
-    tag_filter::{BooleanMode, TagFilter},
-  },
 };
 
 /// Mark the last entry as cancelled.
@@ -199,17 +199,17 @@ impl Command {
       let search = self
         .search
         .as_deref()
-        .and_then(|q| crate::ops::search::parse_query(q, &search_config));
+        .and_then(|q| doing_ops::search::parse_query(q, &search_config));
 
       let tag_queries = self
         .val
         .iter()
         .map(|v| {
-          if let Some(q) = crate::ops::tag_query::TagQuery::parse(v) {
+          if let Some(q) = doing_ops::tag_query::TagQuery::parse(v) {
             Ok(q)
           } else if !expanded_tags.is_empty() {
             let tag_name = &expanded_tags[0];
-            crate::ops::tag_query::TagQuery::parse(&format!("{tag_name} == {v}"))
+            doing_ops::tag_query::TagQuery::parse(&format!("{tag_name} == {v}"))
               .ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
           } else {
             Err(crate::Error::Parse(format!("invalid tag query: {v}")))

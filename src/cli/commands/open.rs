@@ -1,8 +1,9 @@
 use std::process;
 
 use clap::Args;
+use doing_ops::backup::list_backups;
 
-use crate::{Error, Result, cli::AppContext, ops::backup::list_backups};
+use crate::{Error, Result, cli::AppContext};
 
 /// Open the doing file in an editor.
 ///

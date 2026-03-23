@@ -6,16 +6,15 @@ use std::{
 
 use chrono::Local;
 use doing_config::Config;
+use doing_error::Result;
 use doing_taskpaper::{Document, io as taskpaper_io};
-
-use crate::Result;
 
 /// Generate a backup prefix that uniquely identifies a source file by its canonical path.
 ///
 /// Format: `{filename}_{path_hash}_` where `path_hash` is 16 hex characters derived from
 /// hashing the full canonical path. This ensures files with the same name at different
 /// locations get isolated backup histories.
-pub(crate) fn backup_prefix(source: &Path) -> String {
+pub fn backup_prefix(source: &Path) -> String {
   let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
   let canonical = source
     .canonicalize()

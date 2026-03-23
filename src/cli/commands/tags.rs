@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use clap::{Args, ValueEnum};
+use doing_ops::filter::filter_entries;
 
 use crate::{
   Result,
   cli::{AppContext, args::FilterArgs},
-  ops::filter::filter_entries,
 };
 
 /// List all tags in the doing file with optional counts and sorting.

@@ -1,13 +1,13 @@
 use clap::Args;
+use doing_ops::{
+  backup::write_with_backup,
+  filter::{Age, filter_entries},
+};
 use doing_taskpaper::{Entry, Section, Tag};
 
 use crate::{
   Result,
   cli::{AppContext, args::FilterArgs},
-  ops::{
-    backup::write_with_backup,
-    filter::{Age, filter_entries},
-  },
 };
 
 /// Move entries to the Archive section.

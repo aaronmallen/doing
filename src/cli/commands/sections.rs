@@ -1,7 +1,8 @@
 use clap::{Args, Subcommand};
+use doing_ops::backup::write_with_backup;
 use doing_taskpaper::{Entry, Section};
 
-use crate::{Error, Result, cli::AppContext, ops::backup::write_with_backup};
+use crate::{Error, Result, cli::AppContext};
 
 /// List, add, or remove sections in the doing file.
 ///

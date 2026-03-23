@@ -2,6 +2,7 @@ use std::{fs, path::PathBuf};
 
 use clap::Args;
 use doing_config::SortOrder;
+use doing_ops::{backup::write_with_backup, filter::filter_entries};
 use doing_taskpaper::{Entry, Note, Section, Tag, Tags};
 
 use crate::{
@@ -11,7 +12,6 @@ use crate::{
     args::{BoolArg, FilterArgs},
     editor, pager,
   },
-  ops::{backup::write_with_backup, filter::filter_entries},
   plugins::default_registry,
   template::renderer::{RenderOptions, format_items},
 };

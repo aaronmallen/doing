@@ -2,12 +2,12 @@ use std::path::{Path, PathBuf};
 
 use chrono::Local;
 use clap::Args;
+use doing_ops::backup::write_with_backup;
 use doing_taskpaper::{Document, Entry, Section, io as taskpaper_io};
 
 use crate::{
   Result,
   cli::{AppContext, args::FilterArgs},
-  ops::backup::write_with_backup,
 };
 
 /// Move entries to a dated archive file.
@@ -109,7 +109,7 @@ impl Command {
         ..self.filter.clone()
       };
       let options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
-      crate::ops::filter::filter_entries(all_entries, &options)
+      doing_ops::filter::filter_entries(all_entries, &options)
     } else {
       all_entries
     };

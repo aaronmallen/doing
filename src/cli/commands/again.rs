@@ -1,18 +1,18 @@
 use chrono::{DateTime, Local};
 use clap::Args;
 use doing_config::Config;
+use doing_ops::{
+  autotag::autotag,
+  backup::write_with_backup,
+  filter::{Age, FilterOptions, filter_entries},
+  tag_filter::{BooleanMode, TagFilter},
+};
 use doing_taskpaper::{Entry, Note, Tag, Tags};
 use doing_time::chronify;
 
 use crate::{
   Result,
   cli::{AppContext, args::BoolArg},
-  ops::{
-    autotag::autotag,
-    backup::write_with_backup,
-    filter::{Age, FilterOptions, filter_entries},
-    tag_filter::{BooleanMode, TagFilter},
-  },
 };
 
 /// Repeat the last entry.
@@ -192,13 +192,13 @@ impl Command {
     let search = self
       .search
       .as_deref()
-      .and_then(|q| crate::ops::search::parse_query(q, &search_config));
+      .and_then(|q| doing_ops::search::parse_query(q, &search_config));
 
     let tag_queries = self
       .val
       .iter()
       .map(|v| {
-        crate::ops::tag_query::TagQuery::parse(v).ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
+        doing_ops::tag_query::TagQuery::parse(v).ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
       })
       .collect::<crate::Result<Vec<_>>>()?;
 

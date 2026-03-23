@@ -2,6 +2,10 @@ use std::collections::HashMap;
 
 use clap::Args;
 use doing_config::{SortOrder, ViewConfig};
+use doing_ops::{
+  filter::{FilterOptions, filter_entries},
+  tag_filter::{BooleanMode, TagFilter},
+};
 use log::debug;
 
 use crate::{
@@ -10,10 +14,6 @@ use crate::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
     pager,
-  },
-  ops::{
-    filter::{FilterOptions, filter_entries},
-    tag_filter::{BooleanMode, TagFilter},
   },
   plugins::default_registry,
   template::renderer::{RenderOptions, format_items},

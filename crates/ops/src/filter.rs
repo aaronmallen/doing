@@ -2,7 +2,7 @@ use chrono::{DateTime, Local};
 use doing_config::SortOrder;
 use doing_taskpaper::Entry;
 
-use crate::ops::{
+use crate::{
   search::{self, CaseSensitivity, SearchMode},
   tag_filter::TagFilter,
   tag_query::TagQuery,
@@ -198,7 +198,7 @@ mod test {
   use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::ops::tag_filter::BooleanMode;
+  use crate::tag_filter::BooleanMode;
 
   fn date(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Local> {
     Local.with_ymd_and_hms(year, month, day, hour, min, 0).unwrap()

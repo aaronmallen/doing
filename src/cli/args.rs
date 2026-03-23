@@ -1,17 +1,17 @@
 use chrono::{DateTime, Local};
 use clap::{Args, ValueEnum};
 use doing_config::{Config, SortOrder};
+use doing_ops::{
+  filter::{Age, FilterOptions},
+  search,
+  tag_filter::{BooleanMode, TagFilter},
+  tag_query::TagQuery,
+};
 use doing_taskpaper::Entry;
 use doing_time::{chronify, parse_range};
 
 use crate::{
   Result,
-  ops::{
-    filter::{Age, FilterOptions},
-    search,
-    tag_filter::{BooleanMode, TagFilter},
-    tag_query::TagQuery,
-  },
   plugins::default_registry,
   template::{
     renderer::{RenderOptions, format_items_with_tag_sort},

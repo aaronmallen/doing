@@ -1,14 +1,11 @@
 use chrono::{DateTime, Local};
 use clap::Args;
 use doing_config::Config;
+use doing_ops::{autotag::autotag, backup::write_with_backup};
 use doing_taskpaper::{Document, Entry, Note, Tag, Tags};
 use doing_time::{chronify, parse_range};
 
-use crate::{
-  Result,
-  cli::AppContext,
-  ops::{autotag::autotag, backup::write_with_backup},
-};
+use crate::{Result, cli::AppContext};
 
 /// Add a new entry to the doing file.
 ///

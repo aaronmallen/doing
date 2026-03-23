@@ -1,3 +1,5 @@
+//! Domain operations for the doing CLI.
+
 pub mod autotag;
 pub mod backup;
 pub mod extract_note;

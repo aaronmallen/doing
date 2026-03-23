@@ -1,5 +1,9 @@
 use clap::Args;
 use doing_config::SortOrder;
+use doing_ops::{
+  backup::write_with_backup,
+  filter::{FilterOptions, filter_entries},
+};
 
 use crate::{
   Result,
@@ -7,10 +11,6 @@ use crate::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
     editor, pager,
-  },
-  ops::{
-    backup::write_with_backup,
-    filter::{FilterOptions, filter_entries},
   },
   template::renderer::{RenderOptions, format_items},
 };

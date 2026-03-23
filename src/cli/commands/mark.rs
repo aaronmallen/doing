@@ -1,13 +1,13 @@
 use clap::Args;
+use doing_ops::{
+  backup::write_with_backup,
+  filter::{Age, filter_entries},
+};
 use doing_taskpaper::{Entry, Tag};
 
 use crate::{
   Result,
   cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
-  ops::{
-    backup::write_with_backup,
-    filter::{Age, filter_entries},
-  },
 };
 
 /// Toggle the marker tag on entries.

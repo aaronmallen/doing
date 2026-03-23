@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use crate::{Result, cli::AppContext, ops};
+use crate::{Result, cli::AppContext};
 
 /// Redo the last undone change.
 ///
@@ -38,13 +38,13 @@ impl Command {
       self.count
     };
 
-    ops::undo::redo(target, &ctx.config.backup_dir, count)?;
+    doing_ops::undo::redo(target, &ctx.config.backup_dir, count)?;
     ctx.status(format!("Redid {count} step(s)"));
     Ok(())
   }
 
   fn select_redo(&self, target: &std::path::Path, backup_dir: &std::path::Path) -> Result<usize> {
-    let backups = ops::backup::list_undone(target, backup_dir)?;
+    let backups = doing_ops::backup::list_undone(target, backup_dir)?;
 
     if backups.is_empty() {
       return Err(crate::Error::HistoryLimit("end of redo history".into()));

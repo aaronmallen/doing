@@ -1,14 +1,10 @@
 use std::{mem, path::PathBuf};
 
 use clap::Args;
+use doing_ops::{autotag::autotag, backup::write_with_backup};
 use doing_taskpaper::{Entry, Section, Tag};
 
-use crate::{
-  Result,
-  cli::AppContext,
-  ops::{autotag::autotag, backup::write_with_backup},
-  plugins::import,
-};
+use crate::{Result, cli::AppContext, plugins::import};
 
 /// Import entries from other doing files or Timing.app JSON exports.
 ///
@@ -163,7 +159,7 @@ impl Command {
       ..Default::default()
     };
     let options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
-    let filtered = crate::ops::filter::filter_entries(mem::take(entries), &options);
+    let filtered = doing_ops::filter::filter_entries(mem::take(entries), &options);
     *entries = filtered;
     Ok(())
   }
@@ -184,9 +180,9 @@ impl Command {
 
   fn apply_search_filter(&self, entries: &mut Vec<Entry>) -> Result<()> {
     if let Some(ref query) = self.search {
-      let (mode, case) = crate::ops::search::parse_query(query, &Default::default())
+      let (mode, case) = doing_ops::search::parse_query(query, &Default::default())
         .ok_or_else(|| crate::Error::Parse(format!("invalid search query: {query}")))?;
-      entries.retain(|e| crate::ops::search::matches_entry(e, &mode, case, true));
+      entries.retain(|e| doing_ops::search::matches_entry(e, &mode, case, true));
     }
     Ok(())
   }

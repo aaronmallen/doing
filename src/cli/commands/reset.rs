@@ -1,15 +1,15 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
+use doing_ops::{
+  backup::write_with_backup,
+  filter::{Age, filter_entries},
+};
 use doing_taskpaper::{Entry, Tag};
 use doing_time::{chronify, parse_duration, parse_range};
 
 use crate::{
   Result,
   cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
-  ops::{
-    backup::write_with_backup,
-    filter::{Age, filter_entries},
-  },
 };
 
 /// Reset the start date of the last entry to now.

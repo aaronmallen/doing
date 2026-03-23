@@ -1,6 +1,7 @@
 use chrono::{Duration, Local, NaiveTime};
 use clap::Args;
 use doing_config::SortOrder;
+use doing_ops::filter::filter_entries;
 
 use crate::{
   Result,
@@ -9,7 +10,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     pager,
   },
-  ops::filter::filter_entries,
 };
 
 /// Show entries from yesterday.

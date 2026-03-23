@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use crate::{Result, cli::AppContext, ops};
+use crate::{Result, cli::AppContext};
 
 /// Undo the last change.
 ///
@@ -41,13 +41,13 @@ impl Command {
     let target = self.file.as_deref().unwrap_or(&ctx.doing_file);
 
     if self.prune {
-      ops::backup::prune_backups(target, &ctx.config.backup_dir, ctx.config.history_size)?;
+      doing_ops::backup::prune_backups(target, &ctx.config.backup_dir, ctx.config.history_size)?;
       ctx.status("Pruned old backups");
       return Ok(());
     }
 
     if self.redo {
-      ops::undo::redo(target, &ctx.config.backup_dir, 1)?;
+      doing_ops::undo::redo(target, &ctx.config.backup_dir, 1)?;
       ctx.status("Restored from redo backup");
       return Ok(());
     }
@@ -58,13 +58,13 @@ impl Command {
       self.count
     };
 
-    ops::undo::undo(target, &ctx.config.backup_dir, count)?;
+    doing_ops::undo::undo(target, &ctx.config.backup_dir, count)?;
     ctx.status(format!("Undid {count} step(s)"));
     Ok(())
   }
 
   fn select_backup(&self, target: &std::path::Path, backup_dir: &std::path::Path) -> Result<usize> {
-    let backups = ops::backup::list_backups(target, backup_dir)?;
+    let backups = doing_ops::backup::list_backups(target, backup_dir)?;
 
     if backups.is_empty() {
       return Err(crate::Error::HistoryLimit("end of undo history".into()));
@@ -94,11 +94,12 @@ mod test {
     use std::fs;
 
     use doing_config::Config;
+    use doing_ops::backup::backup_prefix;
     use doing_taskpaper::Document;
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::{cli::AppContext, ops::backup::backup_prefix};
+    use crate::cli::AppContext;
 
     #[test]
     fn it_restores_from_most_recent_backup() {

@@ -19,7 +19,6 @@ fn it_parses_iso_date_format() {
   );
 }
 
-#[ignore = "short US date without year not yet supported (#151)"]
 #[test]
 fn it_parses_short_us_date() {
   let doing = DoingCmd::new();
@@ -68,7 +67,6 @@ fn it_parses_us_date_format() {
   );
 }
 
-#[ignore = "US date with time combination not yet supported (#152)"]
 #[test]
 fn it_parses_us_date_with_time() {
   let doing = DoingCmd::new();

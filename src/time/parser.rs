@@ -117,6 +117,26 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
     ));
   }
 
+  // MM/DD (short US date, no year — resolve to current year or most recent past)
+  let re_us_no_year = Regex::new(r"^(\d{1,2})/(\d{1,2})$").ok()?;
+  if let Some(caps) = re_us_no_year.captures(input) {
+    let month: u32 = caps[1].parse().ok()?;
+    let day: u32 = caps[2].parse().ok()?;
+    let today = Local::now().date_naive();
+    let year = today.year();
+
+    let date = NaiveDate::from_ymd_opt(year, month, day)?;
+    // If the date is in the future, use last year
+    let date = if date > today {
+      NaiveDate::from_ymd_opt(year - 1, month, day)?
+    } else {
+      date
+    };
+    return Some(beginning_of_day(
+      Local.from_local_datetime(&date.and_hms_opt(0, 0, 0)?).unwrap(),
+    ));
+  }
+
   None
 }
 
@@ -160,6 +180,8 @@ fn parse_combined(input: &str) -> Option<DateTime<Local>> {
   let base_date = if let Some(dt) = parse_relative(date_part) {
     dt
   } else if let Some(dt) = parse_day_of_week(date_part) {
+    dt
+  } else if let Some(dt) = parse_absolute(date_part) {
     dt
   } else {
     return None;

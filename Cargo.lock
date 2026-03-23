@@ -480,6 +480,7 @@ dependencies = [
  "doing-config",
  "doing-error",
  "doing-ops",
+ "doing-plugins",
  "doing-taskpaper",
  "doing-template",
  "doing-time",
@@ -545,6 +546,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "doing-plugins"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "doing-config",
+ "doing-error",
+ "doing-taskpaper",
+ "doing-template",
+ "doing-time",
+ "indexmap",
+ "pretty_assertions",
+ "regex",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "yansi",
+]
+
+[[package]]
 name = "doing-taskpaper"
 version = "0.1.0"
 dependencies = [
@@ -558,7 +578,7 @@ dependencies = [
 
 [[package]]
 name = "doing-template"
-version = "0.0.1-alpha.1"
+version = "0.1.0"
 dependencies = [
  "chrono",
  "doing-config",

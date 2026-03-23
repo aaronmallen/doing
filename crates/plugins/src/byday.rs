@@ -3,7 +3,7 @@ use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use indexmap::IndexMap;
 
-use crate::plugins::{ExportPlugin, ExportPluginSettings};
+use crate::{ExportPlugin, ExportPluginSettings};
 
 /// Export plugin that groups entries by date, rendering a table with daily and grand totals.
 ///

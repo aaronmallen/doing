@@ -1,8 +1,10 @@
+//! Export and import plugins for the doing CLI.
+
 mod byday;
 mod csv;
 mod dayone;
 mod doing;
-mod helpers;
+pub mod helpers;
 pub mod html;
 pub mod import;
 mod json;

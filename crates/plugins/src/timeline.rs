@@ -3,7 +3,7 @@ use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 
-use crate::plugins::{ExportPlugin, ExportPluginSettings, helpers, html::escape_html};
+use crate::{ExportPlugin, ExportPluginSettings, helpers, html::escape_html};
 
 const TIMELINE_CSS: &str = r#"* { box-sizing: border-box; margin: 0; padding: 0; }
 

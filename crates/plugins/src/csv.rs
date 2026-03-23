@@ -2,7 +2,7 @@ use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 
-use crate::plugins::{ExportPlugin, ExportPluginSettings};
+use crate::{ExportPlugin, ExportPluginSettings};
 
 /// Fixed date format for CSV output matching Ruby doing: `YYYY-MM-DD HH:MM:SS %z`.
 const CSV_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";

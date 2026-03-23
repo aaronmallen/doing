@@ -1,11 +1,9 @@
 use std::{fs, path::Path};
 
+use doing_error::Result;
 use doing_taskpaper::{Document, Entry};
 
-use crate::{
-  Result,
-  plugins::import::{ImportPlugin, ImportPluginSettings},
-};
+use crate::import::{ImportPlugin, ImportPluginSettings};
 
 /// Import plugin that reads entries from a doing file.
 ///

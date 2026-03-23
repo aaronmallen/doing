@@ -5,7 +5,7 @@ use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use regex::Regex;
 
-use crate::plugins::{ExportPlugin, ExportPluginSettings, helpers};
+use crate::{ExportPlugin, ExportPluginSettings, helpers};
 
 static TAG_HIGHLIGHT_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(@[^\s(]+(?:\([^)]*\))?)").unwrap());
 
@@ -319,7 +319,7 @@ mod test {
         ),
       ];
 
-      let groups = crate::plugins::helpers::group_by_section(&entries);
+      let groups = crate::helpers::group_by_section(&entries);
 
       assert_eq!(groups.len(), 2);
       assert_eq!(groups[0].0, "Currently");
@@ -349,7 +349,7 @@ mod test {
         ),
       ];
 
-      let groups = crate::plugins::helpers::group_by_section(&entries);
+      let groups = crate::helpers::group_by_section(&entries);
 
       assert_eq!(groups[0].0, "Archive");
       assert_eq!(groups[1].0, "Currently");

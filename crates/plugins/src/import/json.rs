@@ -1,14 +1,12 @@
 use std::{fs, path::Path, sync::LazyLock};
 
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use doing_error::{Error, Result};
 use doing_taskpaper::{Entry, Note, Tag, Tags};
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::{
-  Error, Result,
-  plugins::import::{ImportPlugin, ImportPluginSettings},
-};
+use crate::import::{ImportPlugin, ImportPluginSettings};
 
 static STRIP_INLINE_TAGS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s*@[^\s(]+(?:\([^)]*\))?").unwrap());
 

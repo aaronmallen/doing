@@ -1,6 +1,7 @@
 use clap::Args;
+use doing_plugins as plugins;
 
-use crate::{Result, plugins};
+use crate::Result;
 
 /// List all registered export and import plugins.
 ///

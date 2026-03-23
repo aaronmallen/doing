@@ -6,7 +6,7 @@ use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use serde::Serialize;
 
-use crate::plugins::{ExportPlugin, ExportPluginSettings, helpers};
+use crate::{ExportPlugin, ExportPluginSettings, helpers};
 
 /// Date format for Day One entries.
 const DAYONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";

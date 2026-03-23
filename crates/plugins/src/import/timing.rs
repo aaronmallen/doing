@@ -1,13 +1,11 @@
 use std::{fs, path::Path};
 
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use doing_error::{Error, Result};
 use doing_taskpaper::{Entry, Note, Tag, Tags};
 use serde::Deserialize;
 
-use crate::{
-  Error, Result,
-  plugins::import::{ImportPlugin, ImportPluginSettings},
-};
+use crate::import::{ImportPlugin, ImportPluginSettings};
 
 /// Import plugin that reads entries from a Timing.app JSON export.
 ///
@@ -79,7 +77,7 @@ fn convert_entry(raw: &TimingEntry) -> Option<Entry> {
 
   let mut tags = Tags::new();
   if let Some(ref project) = raw.project {
-    for part in project.split(" ▸ ") {
+    for part in project.split(" \u{25B8} ") {
       let normalized: String = part.chars().filter(|c| c.is_alphanumeric()).collect();
       let tag_name = normalized.to_lowercase();
       if !tag_name.is_empty() && !tags.has(&tag_name) {
@@ -138,7 +136,7 @@ mod test {
         activity_type: Some("Task".into()),
         end_date: Some("2024-03-17 15:00".into()),
         notes: None,
-        project: Some("Work ▸ ProjectA".into()),
+        project: Some("Work \u{25B8} ProjectA".into()),
         start_date: Some("2024-03-17 14:00".into()),
       };
 
@@ -307,7 +305,7 @@ mod test {
             "activityType": "Task",
             "startDate": "2024-03-17 14:00",
             "endDate": "2024-03-17 15:00",
-            "project": "Work ▸ ProjectA",
+            "project": "Work \u25B8 ProjectA",
             "notes": null
           }
         ]"#,

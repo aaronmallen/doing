@@ -1,0 +1,26 @@
+[package]
+categories = ["command-line-utilities"]
+description = "Export and import plugins for the doing CLI"
+edition.workspace = true
+license.workspace = true
+name = "doing-plugins"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.0"
+
+[dependencies]
+chrono.workspace = true
+doing-config.workspace = true
+doing-error.workspace = true
+doing-taskpaper.workspace = true
+doing-template.workspace = true
+doing-time.workspace = true
+indexmap.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+yansi.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+tempfile.workspace = true

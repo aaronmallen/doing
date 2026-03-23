@@ -36,6 +36,7 @@ dir_spec = "0.5"
 doing-config = { path = "crates/config" }
 doing-error = { path = "crates/error" }
 doing-ops = { path = "crates/ops" }
+doing-plugins = { path = "crates/plugins" }
 doing-taskpaper = { path = "crates/taskpaper" }
 doing-template = { path = "crates/template" }
 doing-time = { path = "crates/time" }
@@ -74,6 +75,7 @@ dir_spec.workspace = true
 doing-config.workspace = true
 doing-error.workspace = true
 doing-ops.workspace = true
+doing-plugins.workspace = true
 doing-taskpaper.workspace = true
 doing-template.workspace = true
 doing-time.workspace = true

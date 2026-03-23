@@ -1,5 +1,4 @@
 mod cli;
-mod plugins;
 
 pub use doing_error::{Error, Result};
 

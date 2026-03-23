@@ -1,8 +1,9 @@
 use std::{fs, path::Path};
 
 use clap::Args;
+use doing_plugins::default_registry;
 
-use crate::{Result, cli::AppContext, plugins::default_registry};
+use crate::{Result, cli::AppContext};
 
 /// Manage export format templates.
 ///
@@ -173,7 +174,7 @@ fn show_template(name: &str, ctx: &AppContext) -> Result<()> {
 
 fn builtin_css() -> &'static str {
   // The default CSS used by the HTML export plugin
-  crate::plugins::html::DEFAULT_CSS
+  doing_plugins::html::DEFAULT_CSS
 }
 
 /// Describe where a template comes from.

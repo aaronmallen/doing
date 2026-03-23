@@ -5,10 +5,9 @@ mod timing;
 
 use std::path::Path;
 
+use doing_error::Result;
 use doing_taskpaper::Entry;
 use regex::Regex;
-
-use crate::Result;
 
 /// The interface that import format plugins must implement.
 ///

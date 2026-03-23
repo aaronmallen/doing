@@ -3,6 +3,7 @@ use std::{fs, path::PathBuf};
 use clap::Args;
 use doing_config::SortOrder;
 use doing_ops::{backup::write_with_backup, filter::filter_entries};
+use doing_plugins::default_registry;
 use doing_taskpaper::{Entry, Note, Section, Tag, Tags};
 use doing_template::renderer::{RenderOptions, format_items};
 
@@ -13,7 +14,6 @@ use crate::{
     args::{BoolArg, FilterArgs},
     editor, pager,
   },
-  plugins::default_registry,
 };
 
 /// Interactively select entries to act on.

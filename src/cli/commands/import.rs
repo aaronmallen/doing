@@ -2,9 +2,10 @@ use std::{mem, path::PathBuf};
 
 use clap::Args;
 use doing_ops::{autotag::autotag, backup::write_with_backup};
+use doing_plugins::import;
 use doing_taskpaper::{Entry, Section, Tag};
 
-use crate::{Result, cli::AppContext, plugins::import};
+use crate::{Result, cli::AppContext};
 
 /// Import entries from other doing files or Timing.app JSON exports.
 ///

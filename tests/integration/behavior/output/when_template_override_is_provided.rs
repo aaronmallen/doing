@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_uses_inline_template_string() {
   let doing = DoingCmd::new();
   doing.run(["now", "Template inline test"]).assert().success();
@@ -29,7 +28,6 @@ fn it_uses_inline_template_string() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_uses_date_placeholder() {
   let doing = DoingCmd::new();
   doing.run(["now", "Template date test"]).assert().success();
@@ -51,7 +49,6 @@ fn it_uses_date_placeholder() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_uses_section_placeholder() {
   let doing = DoingCmd::new();
   doing.run(["now", "Template section test"]).assert().success();
@@ -73,7 +70,6 @@ fn it_uses_section_placeholder() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_uses_interval_placeholder_for_done_entries() {
   let doing = DoingCmd::new();
   doing.run(["now", "Template interval test"]).assert().success();

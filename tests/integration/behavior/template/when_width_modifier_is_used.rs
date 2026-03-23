@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_pads_output_to_specified_width() {
   let doing = DoingCmd::new();
   doing.run(["now", "Short"]).assert().success();
@@ -23,7 +22,6 @@ fn it_pads_output_to_specified_width() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_truncates_long_titles_to_width() {
   let doing = DoingCmd::new();
   let long_title = "A".repeat(100);

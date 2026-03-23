@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_differs_from_full_date() {
   let doing = DoingCmd::new();
   doing.run(["now", "Date comparison entry"]).assert().success();

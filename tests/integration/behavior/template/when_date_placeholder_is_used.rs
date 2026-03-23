@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_full_date() {
   let doing = DoingCmd::new();
   doing.run(["now", "Date placeholder test"]).assert().success();
@@ -25,7 +24,6 @@ fn it_renders_full_date() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_respects_config_date_format() {
   let config = r#"
 current_section = "Currently"

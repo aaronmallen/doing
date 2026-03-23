@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_correct_section_for_archived_entries() {
   let config = r#"
 current_section = "Currently"
@@ -35,7 +34,6 @@ order = "asc"
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_section_name() {
   let doing = DoingCmd::new();
   doing.run(["now", "Section placeholder test"]).assert().success();

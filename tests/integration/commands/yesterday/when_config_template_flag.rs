@@ -1,7 +1,7 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our yesterday command does not support --config-template flag (see #158)"]
+#[ignore = "test fixture missing custom template definition"]
 fn it_uses_config_template() {
   let doing = DoingCmd::new();
 

@@ -90,7 +90,11 @@ pub struct DisplayArgs {
   #[arg(long, alias = "tag_sort", value_enum)]
   pub tag_sort: Option<TagSortArg>,
 
-  /// Named template to use for output
+  /// Named template from config to use for output
+  #[arg(long, alias = "config_template")]
+  pub config_template: Option<String>,
+
+  /// Inline template string for output (e.g. "%title", "%date - %title")
   #[arg(long)]
   pub template: Option<String>,
 
@@ -125,8 +129,28 @@ impl DisplayArgs {
     default_template: &str,
     include_notes: bool,
   ) -> Result<String> {
-    let template_name = self.template.as_deref().unwrap_or(default_template);
-    let mut render_options = RenderOptions::from_config(template_name, config);
+    // --config-template: always looks up a named template from config
+    // --template: if it contains %, treat as inline template string; otherwise as config name
+    if let Some(ref name) = self.config_template
+      && !config.templates.contains_key(name.as_str())
+    {
+      return Err(crate::errors::Error::Config(format!(
+        "template \"{name}\" not found in config"
+      )));
+    }
+
+    let template_name = self.config_template.as_deref().or(self.template.as_deref());
+    let is_inline = self.template.as_ref().is_some_and(|t| t.contains('%'));
+
+    let resolved_name = template_name.unwrap_or(default_template);
+    let mut render_options = if is_inline {
+      let mut opts = RenderOptions::from_config(default_template, config);
+      opts.template = self.template.clone().unwrap();
+      opts
+    } else {
+      RenderOptions::from_config(resolved_name, config)
+    };
+
     render_options.include_notes = include_notes;
 
     if let Some(ref format) = self.output {

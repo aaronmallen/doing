@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_empty_for_entries_without_notes() {
   let doing = DoingCmd::new();
   doing.run(["now", "No note entry"]).assert().success();

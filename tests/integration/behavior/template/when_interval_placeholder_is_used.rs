@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_empty_for_open_entries() {
   let doing = DoingCmd::new();
   doing.run(["now", "Interval open test"]).assert().success();
@@ -25,7 +24,6 @@ fn it_renders_empty_for_open_entries() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_time_interval_for_done_entries() {
   let doing = DoingCmd::new();
   doing

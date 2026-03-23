@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --config-template flag (see #158)"]
 fn it_uses_named_template_from_config() {
   let config = r#"
 current_section = "Currently"
@@ -40,7 +39,6 @@ order = "asc"
 }
 
 #[test]
-#[ignore = "requires --config-template flag (see #158)"]
 fn it_falls_back_to_default_template_if_name_not_found() {
   let doing = DoingCmd::new();
   doing.run(["now", "Config template fallback test"]).assert().success();

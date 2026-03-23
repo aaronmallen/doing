@@ -32,7 +32,6 @@ fn it_renders_date_and_title_together() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_literal_percent_sign() {
   let doing = DoingCmd::new();
   doing.run(["now", "Percent literal test"]).assert().success();
@@ -53,7 +52,6 @@ fn it_renders_literal_percent_sign() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_section_date_and_title() {
   let doing = DoingCmd::new();
   doing.run(["now", "Triple combo entry"]).assert().success();
@@ -86,7 +84,6 @@ fn it_renders_section_date_and_title() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_renders_title_with_note_and_interval() {
   let doing = DoingCmd::new();
   doing

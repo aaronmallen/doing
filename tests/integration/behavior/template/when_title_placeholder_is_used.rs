@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_handles_empty_title() {
   let doing = DoingCmd::new();
   // Create an entry with minimal title

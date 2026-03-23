@@ -26,7 +26,6 @@ order = "asc"
 "#;
 
 #[test]
-#[ignore = "our today command does not support --config-template flag (see #158)"]
 fn it_uses_config_template() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_TEMPLATE);
 

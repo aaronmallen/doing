@@ -63,10 +63,6 @@ impl Command {
     let date = self.resolve_date()?;
     let (title, note) = self.resolve_title_and_note(&ctx.config)?;
 
-    if title.is_empty() {
-      return Err(crate::errors::Error::Config("no entry title provided".into()));
-    }
-
     if self.finish_last {
       finish_last_entry(
         &mut ctx.document,
@@ -355,7 +351,7 @@ mod test {
     }
 
     #[test]
-    fn it_errors_on_empty_title() {
+    fn it_accepts_empty_title() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
       let cmd = Command {
@@ -370,7 +366,9 @@ mod test {
         title: vec![],
       };
 
-      assert!(cmd.call(&mut ctx).is_err());
+      cmd.call(&mut ctx).unwrap();
+      let entries = ctx.document.entries_in_section("Currently");
+      assert_eq!(entries.len(), 1);
     }
 
     #[test]

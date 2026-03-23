@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_applies_template_to_all_display_commands() {
   let doing = DoingCmd::new();
   doing.run(["now", "Multi cmd template test"]).assert().success();
@@ -53,7 +52,6 @@ fn it_applies_template_to_json_output_independently() {
 }
 
 #[test]
-#[ignore = "requires --template inline string support (see #158)"]
 fn it_overrides_config_template_with_inline_string() {
   let doing = DoingCmd::new();
   doing.run(["now", "Template override test"]).assert().success();
@@ -84,7 +82,6 @@ fn it_overrides_config_template_with_inline_string() {
 }
 
 #[test]
-#[ignore = "requires --config-template flag (see #158)"]
 fn it_uses_named_config_template() {
   let config = r#"
 current_section = "Currently"

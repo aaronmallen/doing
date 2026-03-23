@@ -136,6 +136,19 @@ impl Document {
   pub fn sections_mut(&mut self) -> &mut Vec<Section> {
     &mut self.sections
   }
+
+  /// Sort entries within each section by date then title, in ascending order.
+  /// If `reverse` is true, sort in descending order.
+  pub fn sort_entries(&mut self, reverse: bool) {
+    for section in &mut self.sections {
+      section
+        .entries_mut()
+        .sort_by(|a, b| a.date().cmp(&b.date()).then_with(|| a.title().cmp(b.title())));
+      if reverse {
+        section.entries_mut().reverse();
+      }
+    }
+  }
 }
 
 impl Default for Document {

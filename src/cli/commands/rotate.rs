@@ -160,7 +160,8 @@ impl Command {
       archive_section.add_entry(entry.clone());
     }
 
-    taskpaper_io::write_file(&archive_doc, archive_path, ctx.config.doing_file_sort)?;
+    archive_doc.sort_entries(ctx.config.doing_file_sort == doing_config::SortOrder::Desc);
+    taskpaper_io::write_file(&archive_doc, archive_path)?;
 
     Ok(())
   }

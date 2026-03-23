@@ -30,7 +30,8 @@ impl ExportPlugin for DoingExport {
       }
     }
 
-    crate::taskpaper::serializer::serialize(&doc, config.doing_file_sort)
+    doc.sort_entries(config.doing_file_sort == doing_config::SortOrder::Desc);
+    crate::taskpaper::serializer::serialize(&doc)
   }
 
   fn settings(&self) -> ExportPluginSettings {

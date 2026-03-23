@@ -1,7 +1,5 @@
 use std::{fs, path::Path};
 
-use doing_config::SortOrder;
-
 use super::{Document, serializer};
 use crate::{Error, Result};
 
@@ -32,8 +30,9 @@ pub fn read_file(path: &Path) -> Result<Document> {
 ///
 /// Writes to a temporary file in the same directory first, then renames
 /// into place to prevent corruption from interrupted writes.
-pub fn write_file(doc: &Document, path: &Path, sort_order: SortOrder) -> Result<()> {
-  let content = serializer::serialize(doc, sort_order);
+/// Callers are responsible for sorting entries before calling this function.
+pub fn write_file(doc: &Document, path: &Path) -> Result<()> {
+  let content = serializer::serialize(doc);
 
   let parent = path.parent().ok_or_else(|| {
     Error::Io(std::io::Error::new(
@@ -166,7 +165,7 @@ mod test {
       ));
       doc.add_section(section);
 
-      write_file(&doc, &path, SortOrder::Asc).unwrap();
+      write_file(&doc, &path).unwrap();
 
       let content = fs::read_to_string(&path).unwrap();
       assert!(content.contains("Currently:"));
@@ -186,7 +185,7 @@ Archive:
       fs::write(&path, original).unwrap();
 
       let doc = read_file(&path).unwrap();
-      write_file(&doc, &path, SortOrder::Asc).unwrap();
+      write_file(&doc, &path).unwrap();
 
       let content = fs::read_to_string(&path).unwrap();
       assert_eq!(content, original);

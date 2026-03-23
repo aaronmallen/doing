@@ -1,13 +1,11 @@
-use doing_config::SortOrder;
-
 use super::Document;
 use crate::template::colors::STRIP_ANSI_RE;
 
 /// Serialize a `Document` into the doing file format string.
 ///
-/// Deduplicates entries by ID, sorts entries within each section according to
-/// the given `sort_order`, and strips any ANSI color codes from the output.
-pub fn serialize(doc: &Document, sort_order: SortOrder) -> String {
+/// Deduplicates entries by ID and strips any ANSI color codes from the output.
+/// Callers are responsible for sorting entries before calling this function.
+pub fn serialize(doc: &Document) -> String {
   let mut doc = doc.clone();
   doc.dedup();
 
@@ -26,13 +24,7 @@ pub fn serialize(doc: &Document, sort_order: SortOrder) -> String {
     out.push_str(section.title());
     out.push(':');
 
-    let mut entries: Vec<_> = section.entries().to_vec();
-    entries.sort_by(|a, b| a.date().cmp(&b.date()).then_with(|| a.title().cmp(b.title())));
-    if sort_order == SortOrder::Desc {
-      entries.reverse();
-    }
-
-    for entry in &entries {
+    for entry in section.entries() {
       out.push_str(&format!("\n\t- {} | {}", entry.date().format("%Y-%m-%d %H:%M"), entry));
       if !entry.note().is_empty() {
         out.push_str(&format!("\n{}", entry.note()));
@@ -73,7 +65,7 @@ mod test {
     fn it_produces_empty_string_for_empty_document() {
       let doc = Document::new();
 
-      assert_eq!(serialize(&doc, SortOrder::Asc), "");
+      assert_eq!(serialize(&doc), "");
     }
 
     #[test]
@@ -86,67 +78,9 @@ Archive:
 \t- 2024-03-16 10:00 | Old task @done(2024-03-16 11:00) <bbbbccccddddeeeeffffaaaabbbbcccc>";
       let doc = Document::parse(content);
 
-      let output = serialize(&doc, SortOrder::Asc);
+      let output = serialize(&doc);
 
       assert_eq!(output, content);
-    }
-
-    #[test]
-    fn it_sorts_entries_ascending() {
-      let mut doc = Document::new();
-      let mut section = Section::new("Currently");
-      section.add_entry(Entry::new(
-        sample_date(15, 0),
-        "Later task",
-        Tags::new(),
-        Note::new(),
-        "Currently",
-        Some("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
-      ));
-      section.add_entry(Entry::new(
-        sample_date(14, 0),
-        "Earlier task",
-        Tags::new(),
-        Note::new(),
-        "Currently",
-        Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
-      ));
-      doc.add_section(section);
-
-      let output = serialize(&doc, SortOrder::Asc);
-
-      let lines: Vec<&str> = output.lines().collect();
-      assert!(lines[1].contains("Earlier task"));
-      assert!(lines[2].contains("Later task"));
-    }
-
-    #[test]
-    fn it_sorts_entries_descending() {
-      let mut doc = Document::new();
-      let mut section = Section::new("Currently");
-      section.add_entry(Entry::new(
-        sample_date(14, 0),
-        "Earlier task",
-        Tags::new(),
-        Note::new(),
-        "Currently",
-        Some("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
-      ));
-      section.add_entry(Entry::new(
-        sample_date(15, 0),
-        "Later task",
-        Tags::new(),
-        Note::new(),
-        "Currently",
-        Some("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
-      ));
-      doc.add_section(section);
-
-      let output = serialize(&doc, SortOrder::Desc);
-
-      let lines: Vec<&str> = output.lines().collect();
-      assert!(lines[1].contains("Later task"));
-      assert!(lines[2].contains("Earlier task"));
     }
 
     #[test]
@@ -167,7 +101,7 @@ Archive:
       doc.add_section(s1);
       doc.add_section(s2);
 
-      let output = serialize(&doc, SortOrder::Asc);
+      let output = serialize(&doc);
 
       assert_eq!(output.matches("Task A").count(), 1);
     }
@@ -186,7 +120,7 @@ Archive:
       ));
       doc.add_section(section);
 
-      let output = serialize(&doc, SortOrder::Asc);
+      let output = serialize(&doc);
 
       assert!(!output.contains("\x1b["));
       assert!(output.contains("Red task"));
@@ -198,7 +132,7 @@ Archive:
       doc.other_content_top_mut().push("# My Doing File".to_string());
       doc.add_section(Section::new("Currently"));
 
-      let output = serialize(&doc, SortOrder::Asc);
+      let output = serialize(&doc);
 
       assert!(output.starts_with("# My Doing File\n"));
     }
@@ -209,7 +143,7 @@ Archive:
       doc.add_section(Section::new("Currently"));
       doc.other_content_bottom_mut().push("# Footer".to_string());
 
-      let output = serialize(&doc, SortOrder::Asc);
+      let output = serialize(&doc);
 
       assert!(output.ends_with("# Footer"));
     }
@@ -228,7 +162,7 @@ Archive:
       ));
       doc.add_section(section);
 
-      let output = serialize(&doc, SortOrder::Asc);
+      let output = serialize(&doc);
 
       assert!(output.contains("\t\tA note line"));
       assert!(output.contains("\t\tAnother note"));
@@ -251,7 +185,7 @@ Archive:
       ));
       doc.add_section(section);
 
-      let output = serialize(&doc, SortOrder::Asc);
+      let output = serialize(&doc);
 
       assert!(output.contains("@coding"));
       assert!(output.contains("@done(2024-03-17 15:00)"));

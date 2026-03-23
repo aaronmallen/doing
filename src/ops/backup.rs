@@ -86,14 +86,16 @@ pub fn prune_backups(source: &Path, backup_dir: &Path, history_size: u32) -> Res
 /// Steps:
 /// 1. If the file already exists, create a timestamped backup.
 /// 2. Prune old backups beyond `history_size`.
-/// 3. Write the document atomically via temp-file-then-rename.
+/// 3. Sort entries according to config, then write the document atomically.
 pub fn write_with_backup(doc: &Document, path: &Path, config: &Config) -> Result<()> {
   if path.exists() {
     create_backup(path, &config.backup_dir)?;
     prune_backups(path, &config.backup_dir, config.history_size)?;
   }
 
-  taskpaper_io::write_file(doc, path, config.doing_file_sort)
+  let mut doc = doc.clone();
+  doc.sort_entries(config.doing_file_sort == doing_config::SortOrder::Desc);
+  taskpaper_io::write_file(&doc, path)
 }
 
 fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {

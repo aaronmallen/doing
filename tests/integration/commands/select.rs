@@ -5,6 +5,7 @@ mod when_before_flag;
 mod when_cancel_flag;
 mod when_case_flag;
 mod when_delete_flag;
+mod when_editor_flag;
 mod when_exact_flag;
 mod when_finish_flag;
 mod when_flag_flag;

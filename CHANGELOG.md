@@ -7,7 +7,7 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
-## [v0.0.1-alpha.6] - 2026-03-23
+## [v0.0.1-alpha.6.1] - 2026-03-23
 
 ### Added
 
@@ -19,8 +19,8 @@ and this project adheres to [Break Versioning].
 ### Fixed
 
 - `--output json` on `view` uses export plugin pipeline instead of template rendering (see [#206])
-- `show_template` falls through to built-in handling when template file is empty; `--no-column` flag disables column format
-  (see [#203])
+- `show_template` falls through to built-in handling when template file is empty; `--no-column` flag disables column
+  format (see [#203])
 - `on` date range `to` boundary is now inclusive for date-only expressions (see [#201])
 - `note --remove` with text replaces the note instead of clearing it (see [#198])
 - `tags --val` flag now functional (see [#210])
@@ -260,9 +260,9 @@ Initial alpha release
 [#207]: https://github.com/aaronmallen/doing/issues/207
 [#210]: https://github.com/aaronmallen/doing/issues/210
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6.1...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
 [v0.0.1-alpha.5]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...0.0.1-alpha.5
-[v0.0.1-alpha.6]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...0.0.1-alpha.6
+[v0.0.1-alpha.6.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...0.0.1-alpha.6.1

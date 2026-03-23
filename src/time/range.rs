@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use chrono::{DateTime, Duration, Local, NaiveTime, TimeZone};
 use regex::Regex;
 
@@ -5,6 +7,9 @@ use crate::{
   errors::{Error, Result},
   time::parser::chronify,
 };
+
+pub static RANGE_SEPARATOR_RE: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+").unwrap());
 
 /// Parse a date range expression into a `(start, end)` tuple of `DateTime<Local>`.
 ///
@@ -29,10 +34,7 @@ pub fn parse_range(input: &str) -> Result<(DateTime<Local>, DateTime<Local>)> {
     return Err(Error::InvalidTimeExpression("empty range input".into()));
   }
 
-  let re = Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+")
-    .map_err(|e| Error::InvalidTimeExpression(e.to_string()))?;
-
-  let parts: Vec<&str> = re.splitn(input, 2).collect();
+  let parts: Vec<&str> = RANGE_SEPARATOR_RE.splitn(input, 2).collect();
 
   if parts.len() == 2 {
     let start = chronify(parts[0])?;

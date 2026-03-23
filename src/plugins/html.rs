@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use regex::Regex;
 
 use crate::{
@@ -6,6 +8,8 @@ use crate::{
   taskpaper::Entry,
   template::renderer::RenderOptions,
 };
+
+static TAG_HIGHLIGHT_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(@[^\s(]+(?:\([^)]*\))?)").unwrap());
 
 pub const DEFAULT_CSS: &str = r#"body {
   background: #fff;
@@ -163,13 +167,11 @@ impl ExportPlugin for HtmlExport {
   fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
     let sections = helpers::group_by_section(entries);
     let style = DEFAULT_CSS;
-    let tag_re = Regex::new(r"(@[^\s(]+(?:\([^)]*\))?)").expect("tag regex is valid");
-
     let mut items_html = String::new();
     for (section, items) in &sections {
       for entry in items {
         let title_with_tags = escape_html(&entry.full_title());
-        let title_styled = tag_re
+        let title_styled = TAG_HIGHLIGHT_RE
           .replace_all(&title_with_tags, r#"<span class="tag">$1</span>"#)
           .into_owned();
 

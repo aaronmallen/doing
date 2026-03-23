@@ -1,7 +1,7 @@
 mod duration;
 mod format;
 pub(crate) mod parser;
-mod range;
+pub(crate) mod range;
 
 #[allow(unused_imports)]
 pub use duration::parse_duration;

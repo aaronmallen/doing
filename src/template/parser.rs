@@ -1,6 +1,21 @@
+use std::sync::LazyLock;
+
 use regex::Regex;
 
 use super::colors;
+
+static COLOR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"%((?:[fb]g?)?#[a-fA-F0-9]{6}|[a-zA-Z_]+)").unwrap());
+static PLACEHOLDER_RE: LazyLock<Regex> = LazyLock::new(|| {
+  Regex::new(concat!(
+    r"%(?P<width>-?\d+)?",
+    r"(?:\^(?P<marker>.))?",
+    r"(?:(?P<ichar>[ _t]|[^a-zA-Z0-9\s])(?P<icount>\d+))?",
+    r"(?P<prefix>.[ _t]?)?",
+    r"(?P<kind>shortdate|date|title|section|odnote|idnote|chompnote|note",
+    r"|interval|duration|tags|hr_under|hr|n|t)\b",
+  ))
+  .unwrap()
+});
 
 const ESCAPE_SENTINEL: &str = "\x01";
 
@@ -95,22 +110,10 @@ impl TokenMatch<'_> {
 pub fn parse(template: &str) -> Vec<Token> {
   let escaped = template.replace("\\%", ESCAPE_SENTINEL);
 
-  let placeholder_re = Regex::new(concat!(
-    r"%(?P<width>-?\d+)?",
-    r"(?:\^(?P<marker>.))?",
-    r"(?:(?P<ichar>[ _t]|[^a-zA-Z0-9\s])(?P<icount>\d+))?",
-    r"(?P<prefix>.[ _t]?)?",
-    r"(?P<kind>shortdate|date|title|section|odnote|idnote|chompnote|note",
-    r"|interval|duration|tags|hr_under|hr|n|t)\b",
-  ))
-  .expect("template token regex is valid");
-
-  let color_re = Regex::new(r"%((?:[fb]g?)?#[a-fA-F0-9]{6}|[a-zA-Z_]+)").expect("color token regex is valid");
-
   // Build a combined list of all matches sorted by position
   let mut matches: Vec<TokenMatch> = Vec::new();
 
-  for caps in placeholder_re.captures_iter(&escaped) {
+  for caps in PLACEHOLDER_RE.captures_iter(&escaped) {
     let m = caps.get(0).unwrap();
     matches.push(TokenMatch::Placeholder {
       caps,
@@ -119,7 +122,7 @@ pub fn parse(template: &str) -> Vec<Token> {
     });
   }
 
-  for caps in color_re.captures_iter(&escaped) {
+  for caps in COLOR_RE.captures_iter(&escaped) {
     let m = caps.get(0).unwrap();
     let color_str = caps.get(1).unwrap().as_str();
     if let Some(valid) = colors::validate_color(color_str) {

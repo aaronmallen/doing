@@ -1,7 +1,14 @@
+use std::sync::LazyLock;
+
 use chrono::{Local, NaiveDateTime, TimeZone};
 use regex::Regex;
 
 use super::{Document, Entry, Note, Section, Tag, Tags};
+
+static ENTRY_RX: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"^\t- (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \| (.*?)(?:\s+<([a-f0-9]{32})>)?\s*$").unwrap());
+static SECTION_RX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\S[\S ]+):\s*$").unwrap());
+static TAG_RX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?:^| )(@([^\s(]+)(?:\(([^)]+)\))?)").unwrap());
 
 /// Flush the current entry (with accumulated note lines) into the current section.
 fn flush_entry(current_section: &mut Option<Section>, current_entry: &mut Option<(Entry, Vec<String>)>) {
@@ -27,16 +34,13 @@ fn flush_section(doc: &mut Document, current_section: &mut Option<Section>) {
 /// Recognizes section headers, entries with dates/tags/IDs, and notes.
 /// Non-entry, non-section content is preserved as other content.
 pub fn parse(content: &str) -> Document {
-  let section_rx = Regex::new(r"^(\S[\S ]+):\s*$").unwrap();
-  let entry_rx = Regex::new(r"^\t- (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \| (.*?)(?:\s+<([a-f0-9]{32})>)?\s*$").unwrap();
-
   let mut doc = Document::new();
   let mut current_section: Option<Section> = None;
   let mut current_entry: Option<(Entry, Vec<String>)> = None;
   let mut found_first_section = false;
 
   for line in content.lines() {
-    if let Some(caps) = section_rx.captures(line) {
+    if let Some(caps) = SECTION_RX.captures(line) {
       flush_entry(&mut current_section, &mut current_entry);
       flush_section(&mut doc, &mut current_section);
       found_first_section = true;
@@ -44,7 +48,7 @@ pub fn parse(content: &str) -> Document {
       continue;
     }
 
-    if let Some(caps) = entry_rx.captures(line) {
+    if let Some(caps) = ENTRY_RX.captures(line) {
       flush_entry(&mut current_section, &mut current_entry);
 
       if !found_first_section {
@@ -93,12 +97,11 @@ pub fn parse(content: &str) -> Document {
 
 /// Extract tags from a title string, returning the tag-free title and a `Tags` collection.
 fn parse_tags(title: &str) -> (String, Tags) {
-  let tag_rx = Regex::new(r"(?:^| )(@([^\s(]+)(?:\(([^)]+)\))?)").unwrap();
   let mut tags = Vec::new();
 
   // Collect tag match byte ranges so we can build the cleaned title in one pass
   let mut tag_ranges: Vec<(usize, usize)> = Vec::new();
-  for caps in tag_rx.captures_iter(title) {
+  for caps in TAG_RX.captures_iter(title) {
     let m = caps.get(1).unwrap();
     tag_ranges.push((m.start(), m.end()));
     let name = &caps[2];

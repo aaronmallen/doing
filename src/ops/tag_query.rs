@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use chrono::{DateTime, Local};
 use regex::Regex;
 
@@ -5,6 +7,9 @@ use crate::{
   taskpaper::Entry,
   time::{chronify, parse_duration},
 };
+
+static VALUE_QUERY_RE: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"^(!)?@?(\S+)\s+(!?[<>=][=*]?|[$*^]=)\s+(.+)$").unwrap());
 
 /// A comparison operator for tag value queries.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -70,8 +75,7 @@ impl TagQuery {
   ///
   /// Operators: `<`, `<=`, `>`, `>=`, `==`, `=`, `!=`, `*=`, `^=`, `$=`
   pub fn parse(input: &str) -> Option<Self> {
-    let re = Regex::new(r"^(!)?@?(\S+)\s+(!?[<>=][=*]?|[$*^]=)\s+(.+)$").ok()?;
-    let caps = re.captures(input.trim())?;
+    let caps = VALUE_QUERY_RE.captures(input.trim())?;
 
     let negated = caps.get(1).is_some();
     let property = parse_property(&caps[2]);

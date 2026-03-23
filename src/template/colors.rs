@@ -1,8 +1,12 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::{
+  fmt::{Display, Formatter, Result as FmtResult},
+  sync::LazyLock,
+};
 
+use regex::Regex;
 use yansi::{Condition, Style};
 
-const ESCAPE_REGEX: &str = r"\x1b\[[0-9;]*m";
+pub static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9;]*m").unwrap());
 
 /// A named ANSI color or modifier that can appear as a `%color` token in templates.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -345,8 +349,7 @@ fn available_colors() -> Vec<&'static str> {
 
 /// Strip all ANSI escape sequences from a string.
 pub fn strip_ansi(s: &str) -> String {
-  let re = regex::Regex::new(ESCAPE_REGEX).expect("ANSI regex is valid");
-  re.replace_all(s, "").into_owned()
+  STRIP_ANSI_RE.replace_all(s, "").into_owned()
 }
 
 /// Validate a color name string, returning the longest valid prefix.

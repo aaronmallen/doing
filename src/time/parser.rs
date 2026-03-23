@@ -1,8 +1,24 @@
+use std::sync::LazyLock;
+
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
 use regex::Regex;
 
 use super::duration::parse_duration;
 use crate::errors::{Error, Result};
+
+static RE_AGO: LazyLock<Regex> = LazyLock::new(|| {
+  Regex::new(r"^(\w+)\s*(minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo)\s+ago$").unwrap()
+});
+static RE_DAY_OF_WEEK: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"^(last|next|this)?\s*(mon|tue|wed|thu|fri|sat|sun)\w*$").unwrap());
+static RE_ISO_DATE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{4})-(\d{2})-(\d{2})$").unwrap());
+static RE_ISO_DATETIME: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})$").unwrap());
+static RE_TIME_12H: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$").unwrap());
+static RE_TIME_24H: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{1,2}):(\d{2})$").unwrap());
+static RE_US_DATE_LONG: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{1,2})/(\d{1,2})/(\d{4})$").unwrap());
+static RE_US_DATE_NO_YEAR: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{1,2})/(\d{1,2})$").unwrap());
+static RE_US_DATE_SHORT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{1,2})/(\d{1,2})/(\d{2})$").unwrap());
 
 /// Parse a natural language date/time expression into a `DateTime<Local>`.
 ///
@@ -64,8 +80,7 @@ fn beginning_of_day(dt: DateTime<Local>) -> DateTime<Local> {
 /// `MM/DD/YY`, `MM/DD/YYYY`.
 fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
   // YYYY-MM-DD HH:MM
-  let re_iso_dt = Regex::new(r"^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2}):(\d{2})$").ok()?;
-  if let Some(caps) = re_iso_dt.captures(input) {
+  if let Some(caps) = RE_ISO_DATETIME.captures(input) {
     let year: i32 = caps[1].parse().ok()?;
     let month: u32 = caps[2].parse().ok()?;
     let day: u32 = caps[3].parse().ok()?;
@@ -78,8 +93,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
   }
 
   // YYYY-MM-DD
-  let re_iso = Regex::new(r"^(\d{4})-(\d{2})-(\d{2})$").ok()?;
-  if let Some(caps) = re_iso.captures(input) {
+  if let Some(caps) = RE_ISO_DATE.captures(input) {
     let year: i32 = caps[1].parse().ok()?;
     let month: u32 = caps[2].parse().ok()?;
     let day: u32 = caps[3].parse().ok()?;
@@ -91,8 +105,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
   }
 
   // MM/DD/YYYY
-  let re_us_long = Regex::new(r"^(\d{1,2})/(\d{1,2})/(\d{4})$").ok()?;
-  if let Some(caps) = re_us_long.captures(input) {
+  if let Some(caps) = RE_US_DATE_LONG.captures(input) {
     let month: u32 = caps[1].parse().ok()?;
     let day: u32 = caps[2].parse().ok()?;
     let year: i32 = caps[3].parse().ok()?;
@@ -104,8 +117,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
   }
 
   // MM/DD/YY
-  let re_us_short = Regex::new(r"^(\d{1,2})/(\d{1,2})/(\d{2})$").ok()?;
-  if let Some(caps) = re_us_short.captures(input) {
+  if let Some(caps) = RE_US_DATE_SHORT.captures(input) {
     let month: u32 = caps[1].parse().ok()?;
     let day: u32 = caps[2].parse().ok()?;
     let short_year: i32 = caps[3].parse().ok()?;
@@ -118,8 +130,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
   }
 
   // MM/DD (short US date, no year — resolve to current year or most recent past)
-  let re_us_no_year = Regex::new(r"^(\d{1,2})/(\d{1,2})$").ok()?;
-  if let Some(caps) = re_us_no_year.captures(input) {
+  if let Some(caps) = RE_US_DATE_NO_YEAR.captures(input) {
     let month: u32 = caps[1].parse().ok()?;
     let day: u32 = caps[2].parse().ok()?;
     let today = Local::now().date_naive();
@@ -143,8 +154,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
 /// Parse `N unit(s) ago` expressions. Supports shorthand (`30m ago`, `2h ago`)
 /// and long form (`3 days ago`, `one month ago`).
 fn parse_ago(input: &str, now: DateTime<Local>) -> Option<DateTime<Local>> {
-  let re = Regex::new(r"^(\w+)\s*(minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo)\s+ago$").ok()?;
-  let caps = re.captures(input)?;
+  let caps = RE_AGO.captures(input)?;
 
   let amount = parse_number(&caps[1])?;
   let unit = &caps[2];
@@ -194,8 +204,7 @@ fn parse_combined(input: &str) -> Option<DateTime<Local>> {
 /// Bare weekday names default to the most recent past occurrence.
 fn parse_day_of_week(input: &str) -> Option<DateTime<Local>> {
   let now = Local::now();
-  let re = Regex::new(r"^(last|next|this)?\s*(mon|tue|wed|thu|fri|sat|sun)\w*$").ok()?;
-  let caps = re.captures(input)?;
+  let caps = RE_DAY_OF_WEEK.captures(input)?;
 
   let direction = caps.get(1).map(|m| m.as_str());
   let weekday = parse_weekday(&caps[2])?;
@@ -279,8 +288,7 @@ fn resolve_time_expression(input: &str) -> Option<NaiveTime> {
   }
 
   // 12-hour: 3pm, 3:30pm, 12:00am
-  let re12 = Regex::new(r"^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$").ok()?;
-  if let Some(caps) = re12.captures(input) {
+  if let Some(caps) = RE_TIME_12H.captures(input) {
     let mut hour: u32 = caps[1].parse().ok()?;
     let min: u32 = caps.get(2).map_or(0, |m| m.as_str().parse().unwrap_or(0));
     let period = &caps[3];
@@ -299,8 +307,7 @@ fn resolve_time_expression(input: &str) -> Option<NaiveTime> {
   }
 
   // 24-hour: 15:00, 08:30
-  let re24 = Regex::new(r"^(\d{1,2}):(\d{2})$").ok()?;
-  if let Some(caps) = re24.captures(input) {
+  if let Some(caps) = RE_TIME_24H.captures(input) {
     let hour: u32 = caps[1].parse().ok()?;
     let min: u32 = caps[2].parse().ok()?;
 

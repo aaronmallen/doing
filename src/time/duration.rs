@@ -1,7 +1,16 @@
+use std::sync::LazyLock;
+
 use chrono::Duration;
 use regex::Regex;
 
 use crate::errors::{Error, Result};
+
+static RE_CLOCK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+):(\d{2})(?::(\d{2}))?$").unwrap());
+static RE_COMPACT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(?:(\d+)d)? *(?:(\d+)h)? *(?:(\d+)m)?$").unwrap());
+static RE_DECIMAL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+(?:\.\d+)?)\s*([dhm])$").unwrap());
+static RE_NATURAL: LazyLock<Regex> =
+  LazyLock::new(|| Regex::new(r"(\d+)\s*(days?|hours?|hrs?|minutes?|mins?|seconds?|secs?)").unwrap());
+static RE_PLAIN_NUMBER: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+)$").unwrap());
 
 /// Parse a duration string into a `chrono::Duration`.
 ///
@@ -40,8 +49,7 @@ pub fn parse_duration(input: &str) -> Result<Duration> {
 
 /// Parse `HH:MM:SS` or `HH:MM` clock format.
 fn try_clock_format(input: &str) -> Option<Duration> {
-  let re = Regex::new(r"^(\d+):(\d{2})(?::(\d{2}))?$").ok()?;
-  let caps = re.captures(input)?;
+  let caps = RE_CLOCK.captures(input)?;
 
   let hours: i64 = caps[1].parse().ok()?;
   let minutes: i64 = caps[2].parse().ok()?;
@@ -56,8 +64,7 @@ fn try_clock_format(input: &str) -> Option<Duration> {
 
 /// Parse compact duration: `1d2h30m`, `2h`, `45m`, `1h30m`.
 fn try_compact_format(input: &str) -> Option<Duration> {
-  let re = Regex::new(r"^(?:(\d+)d)? *(?:(\d+)h)? *(?:(\d+)m)?$").ok()?;
-  let caps = re.captures(input)?;
+  let caps = RE_COMPACT.captures(input)?;
 
   let days: i64 = caps.get(1).map_or(0, |m| m.as_str().parse().unwrap_or(0));
   let hours: i64 = caps.get(2).map_or(0, |m| m.as_str().parse().unwrap_or(0));
@@ -72,8 +79,7 @@ fn try_compact_format(input: &str) -> Option<Duration> {
 
 /// Parse decimal duration: `1.5h`, `2.5d`, `0.5m`.
 fn try_decimal_format(input: &str) -> Option<Duration> {
-  let re = Regex::new(r"^(\d+(?:\.\d+)?)\s*([dhm])$").ok()?;
-  let caps = re.captures(input)?;
+  let caps = RE_DECIMAL.captures(input)?;
 
   let amount: f64 = caps[1].parse().ok()?;
   let unit = &caps[2];
@@ -90,12 +96,10 @@ fn try_decimal_format(input: &str) -> Option<Duration> {
 
 /// Parse natural language duration: `1 hour 30 minutes`, `2 days`, `90 minutes`.
 fn try_natural_format(input: &str) -> Option<Duration> {
-  let re = Regex::new(r"(\d+)\s*(days?|hours?|hrs?|minutes?|mins?|seconds?|secs?)").ok()?;
-
   let mut total_seconds: i64 = 0;
   let mut matched = false;
 
-  for caps in re.captures_iter(input) {
+  for caps in RE_NATURAL.captures_iter(input) {
     matched = true;
     let amount: i64 = caps[1].parse().ok()?;
     let unit = &caps[2];
@@ -118,8 +122,7 @@ fn try_natural_format(input: &str) -> Option<Duration> {
 
 /// Parse a plain number as minutes.
 fn try_plain_number(input: &str) -> Option<Duration> {
-  let re = Regex::new(r"^(\d+)$").ok()?;
-  let caps = re.captures(input)?;
+  let caps = RE_PLAIN_NUMBER.captures(input)?;
 
   let minutes: i64 = caps[1].parse().ok()?;
   Some(Duration::minutes(minutes))

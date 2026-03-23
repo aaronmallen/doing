@@ -1,6 +1,7 @@
-use std::{fs, path::Path};
+use std::{fs, path::Path, sync::LazyLock};
 
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use regex::Regex;
 use serde::Deserialize;
 
 use crate::{
@@ -8,6 +9,8 @@ use crate::{
   plugins::import::{ImportPlugin, ImportPluginSettings},
   taskpaper::{Entry, Note, Tag, Tags},
 };
+
+static STRIP_INLINE_TAGS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s*@[^\s(]+(?:\([^)]*\))?").unwrap());
 
 /// Date format used in doing JSON exports.
 const JSON_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
@@ -111,8 +114,7 @@ fn parse_json_date(s: &str) -> Option<DateTime<Local>> {
 
 /// Strip inline tags (e.g., `@tag`, `@done(...)`) from a title string.
 fn strip_inline_tags(title: &str) -> String {
-  let re = regex::Regex::new(r"\s*@[^\s(]+(?:\([^)]*\))?").expect("tag regex is valid");
-  re.replace_all(title, "").trim().to_string()
+  STRIP_INLINE_TAGS_RE.replace_all(title, "").trim().to_string()
 }
 
 #[cfg(test)]

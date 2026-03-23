@@ -222,10 +222,7 @@ fn parse_range_or_durations(input: &str) -> Result<(DateTime<Local>, DateTime<Lo
     return Ok(result);
   }
 
-  let re = regex::Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+")
-    .map_err(|e| crate::errors::Error::InvalidTimeExpression(e.to_string()))?;
-
-  let parts: Vec<&str> = re.splitn(input, 2).collect();
+  let parts: Vec<&str> = crate::time::range::RANGE_SEPARATOR_RE.splitn(input, 2).collect();
   if parts.len() != 2 {
     return Err(crate::errors::Error::InvalidTimeExpression(format!(
       "no range separator found in: {input:?}"

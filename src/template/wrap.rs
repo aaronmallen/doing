@@ -1,6 +1,10 @@
+use std::sync::LazyLock;
+
 use regex::Regex;
 
 use super::colors;
+
+static TAG_VALUE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"@\S+\(.*?\)").unwrap());
 
 const TAG_VALUE_SENTINEL: &str = "\x02\x02\x02\x02";
 
@@ -16,10 +20,8 @@ pub fn wrap(text: &str, width: usize) -> String {
     return text.to_string();
   }
 
-  let tag_re = Regex::new(r"@\S+\(.*?\)").expect("tag value regex is valid");
-
   // Protect spaces inside tag values from splitting
-  let protected = tag_re.replace_all(text, |caps: &regex::Captures| caps[0].replace(' ', TAG_VALUE_SENTINEL));
+  let protected = TAG_VALUE_RE.replace_all(text, |caps: &regex::Captures| caps[0].replace(' ', TAG_VALUE_SENTINEL));
 
   let normalized = protected.replace('\n', " ");
   let words: Vec<String> = normalized
@@ -91,8 +93,7 @@ pub fn wrap_with_indent(text: &str, width: usize, indent: usize) -> String {
     return wrap(text, width);
   }
 
-  let tag_re = Regex::new(r"@\S+\(.*?\)").expect("tag value regex is valid");
-  let protected = tag_re.replace_all(text, |caps: &regex::Captures| caps[0].replace(' ', TAG_VALUE_SENTINEL));
+  let protected = TAG_VALUE_RE.replace_all(text, |caps: &regex::Captures| caps[0].replace(' ', TAG_VALUE_SENTINEL));
   let normalized = protected.replace('\n', " ");
   let words: Vec<String> = normalized
     .split(' ')

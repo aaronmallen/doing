@@ -1,10 +1,5 @@
-use regex::Regex;
-
 use super::Document;
-use crate::config::SortOrder;
-
-/// ANSI escape sequence pattern for stripping color codes.
-const ANSI_ESCAPE_REGEX: &str = r"\x1b\[[0-9;]*m";
+use crate::{config::SortOrder, template::colors::STRIP_ANSI_RE};
 
 /// Serialize a `Document` into the doing file format string.
 ///
@@ -53,8 +48,7 @@ pub fn serialize(doc: &Document, sort_order: SortOrder) -> String {
 
 /// Remove ANSI escape sequences from a string.
 fn strip_ansi(text: &str) -> String {
-  let rx = Regex::new(ANSI_ESCAPE_REGEX).unwrap();
-  rx.replace_all(text, "").into_owned()
+  STRIP_ANSI_RE.replace_all(text, "").into_owned()
 }
 
 #[cfg(test)]

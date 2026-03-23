@@ -40,6 +40,9 @@ pub struct Command {
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_date", default_value_t = true)]
   date: bool,
 
+  #[arg(long = "no-date", action = ArgAction::SetTrue, hide = true, overrides_with = "date")]
+  no_date: bool,
+
   /// Open an editor to compose the entry title and notes
   #[arg(short, long)]
   editor: bool,
@@ -47,9 +50,6 @@ pub struct Command {
   /// Set a specific start time
   #[arg(long)]
   from: Option<String>,
-
-  #[arg(long = "no-date", action = ArgAction::SetTrue, hide = true, overrides_with = "date")]
-  no_date: bool,
 
   /// Skip autotagging and default tags
   #[arg(short = 'x', long)]

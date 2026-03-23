@@ -388,6 +388,7 @@ impl Command {
       Self::Budget(cmd) => cmd.call(ctx),
       Self::Cancel(cmd) => cmd.call(ctx),
       Self::Changes(cmd) => cmd.call(ctx),
+      Self::Choose(cmd) => cmd.call(ctx),
       Self::Colors(cmd) => cmd.call(),
       Self::Commands(cmd) => cmd.call(ctx, &Cli::command()),
       Self::CommandsAccepting(cmd) => cmd.call(&Cli::command()),
@@ -434,7 +435,6 @@ impl Command {
       Self::View(cmd) => cmd.call(ctx),
       Self::Views(cmd) => cmd.call(ctx),
       Self::Yesterday(cmd) => cmd.call(ctx),
-      Self::Choose(cmd) => cmd.call(ctx),
     }
   }
 }

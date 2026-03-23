@@ -104,16 +104,6 @@ impl Command {
     Ok(())
   }
 
-  fn apply_autotags(&self, ctx: &mut AppContext, entry_ids: &[EntryLocation]) -> Result<()> {
-    let autotag_config = ctx.config.autotag.clone();
-    let default_tags = ctx.config.default_tags.clone();
-    for loc in entry_ids {
-      let entry = self.find_entry_mut(ctx, loc)?;
-      autotag(entry, &autotag_config, &default_tags);
-    }
-    Ok(())
-  }
-
   fn add_tags(&self, ctx: &mut AppContext, entry_ids: &[EntryLocation]) -> Result<()> {
     let tag_names = self.parse_tag_names();
     if tag_names.is_empty() {
@@ -129,6 +119,16 @@ impl Command {
       }
     }
 
+    Ok(())
+  }
+
+  fn apply_autotags(&self, ctx: &mut AppContext, entry_ids: &[EntryLocation]) -> Result<()> {
+    let autotag_config = ctx.config.autotag.clone();
+    let default_tags = ctx.config.default_tags.clone();
+    for loc in entry_ids {
+      let entry = self.find_entry_mut(ctx, loc)?;
+      autotag(entry, &autotag_config, &default_tags);
+    }
     Ok(())
   }
 

@@ -25,6 +25,14 @@ pub fn autotag(entry: &mut Entry, config: &AutotagConfig, default_tags: &[String
   entry.tags_mut().dedup();
 }
 
+fn apply_default_tags(entry: &mut Entry, default_tags: &[String]) {
+  for tag_name in default_tags {
+    if !entry.tags().has(tag_name) {
+      entry.tags_mut().add(Tag::new(tag_name, None::<String>));
+    }
+  }
+}
+
 /// Apply Ruby-style key-value mappings: if word appears in title, add the mapped tag.
 fn apply_mappings(entry: &mut Entry, mappings: &HashMap<String, String>) {
   let title_lower = entry.title().to_lowercase();
@@ -36,14 +44,6 @@ fn apply_mappings(entry: &mut Entry, mappings: &HashMap<String, String>) {
     }
     let target = word.to_lowercase();
     if words.iter().any(|w| *w == target) {
-      entry.tags_mut().add(Tag::new(tag_name, None::<String>));
-    }
-  }
-}
-
-fn apply_default_tags(entry: &mut Entry, default_tags: &[String]) {
-  for tag_name in default_tags {
-    if !entry.tags().has(tag_name) {
       entry.tags_mut().add(Tag::new(tag_name, None::<String>));
     }
   }

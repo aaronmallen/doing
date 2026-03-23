@@ -28,12 +28,12 @@ use crate::{
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
-  #[command(flatten)]
-  display: DisplayArgs,
-
   /// Maximum number of entries to return
   #[arg(short = 'c', long)]
   count: Option<usize>,
+
+  #[command(flatten)]
+  display: DisplayArgs,
 
   #[command(flatten)]
   filter: FilterArgs,

@@ -19,8 +19,6 @@ use crate::{
   time::{chronify, parse_range},
 };
 
-type DateRange = (Option<DateTime<Local>>, Option<DateTime<Local>>);
-
 /// Which end of the chronological list to keep.
 #[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum AgeArg {
@@ -66,6 +64,10 @@ impl From<BoolArg> for BooleanMode {
 /// Shared display/output arguments reused across commands.
 #[derive(Args, Clone, Debug, Default)]
 pub struct DisplayArgs {
+  /// Named template from config to use for output
+  #[arg(long, alias = "config_template")]
+  pub config_template: Option<String>,
+
   /// Show elapsed time on open entries
   #[arg(long)]
   pub duration: bool,
@@ -89,10 +91,6 @@ pub struct DisplayArgs {
   /// Sort field for tag totals
   #[arg(long, alias = "tag_sort", value_enum)]
   pub tag_sort: Option<TagSortArg>,
-
-  /// Named template from config to use for output
-  #[arg(long, alias = "config_template")]
-  pub config_template: Option<String>,
 
   /// Inline template string for output (e.g. "%title", "%date - %title")
   #[arg(long)]
@@ -362,6 +360,8 @@ impl From<SortArg> for SortOrder {
     }
   }
 }
+
+type DateRange = (Option<DateTime<Local>>, Option<DateTime<Local>>);
 
 #[cfg(test)]
 mod test {

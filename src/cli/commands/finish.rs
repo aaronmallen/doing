@@ -41,32 +41,32 @@ pub struct Command {
   #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
 
-  /// Case sensitivity for search (smart/sensitive/ignore)
-  #[arg(long)]
-  case: Option<String>,
-
   /// Boolean operator for combining tag filters
   #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
+
+  /// Case sensitivity for search (smart/sensitive/ignore)
+  #[arg(long)]
+  case: Option<String>,
 
   /// Finish the last N entries
   #[arg(short, long, default_value_t = 1)]
   count: usize,
 
-  /// Date range for start and done times (e.g. "1pm to 3pm")
-  #[arg(long)]
-  from: Option<String>,
-
   /// Include date in @done tag
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_date", default_value_t = true)]
   date: bool,
 
+  #[arg(long = "no-date", action = ArgAction::SetTrue, hide = true, overrides_with = "date")]
+  no_date: bool,
+
+  /// Date range for start and done times (e.g. "1pm to 3pm")
+  #[arg(long)]
+  from: Option<String>,
+
   /// Interactively select entries to finish
   #[arg(short, long)]
   interactive: bool,
-
-  #[arg(long = "no-date", action = ArgAction::SetTrue, hide = true, overrides_with = "date")]
-  no_date: bool,
 
   /// Negate all filter results
   #[arg(long)]
@@ -515,13 +515,13 @@ mod test {
       at: None,
       auto: false,
       back: None,
-      case: None,
       bool_op: None,
+      case: None,
       count: 1,
       date: true,
+      no_date: false,
       from: None,
       interactive: false,
-      no_date: false,
       not: false,
       remove: false,
       search: None,

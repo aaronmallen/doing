@@ -38,13 +38,13 @@ pub struct Command {
   #[arg(long)]
   case: Option<String>,
 
-  /// Use exact (literal substring) matching for search
-  #[arg(long)]
-  exact: bool,
-
   /// Open an editor to compose the entry title and notes
   #[arg(short, long)]
   editor: bool,
+
+  /// Use exact (literal substring) matching for search
+  #[arg(long)]
+  exact: bool,
 
   /// Target section for the new entry
   #[arg(long = "in")]
@@ -58,13 +58,13 @@ pub struct Command {
   #[arg(short = 'x', long)]
   noauto: bool,
 
-  /// Attach a note directly from the command line
-  #[arg(short, long)]
-  note: Option<String>,
-
   /// Negate all filter results
   #[arg(long)]
   not: bool,
+
+  /// Attach a note directly from the command line
+  #[arg(short, long)]
+  note: Option<String>,
 
   /// Text search query to find the entry to repeat
   #[arg(long)]

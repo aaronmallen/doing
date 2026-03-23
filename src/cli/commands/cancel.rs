@@ -31,6 +31,10 @@ pub struct Command {
   #[arg(long = "bool", value_enum, ignore_case = true)]
   bool_op: Option<BoolArg>,
 
+  /// Case sensitivity for search (smart/sensitive/ignore)
+  #[arg(long)]
+  case: Option<String>,
+
   /// Cancel the last N entries
   #[arg(short, long, default_value_t = 1)]
   count: usize,
@@ -180,10 +184,15 @@ impl Command {
         Some(TagFilter::new(&expanded_tags, mode))
       };
 
+      let mut search_config = ctx.config.search.clone();
+      if let Some(ref case_override) = self.case {
+        search_config.case = case_override.clone();
+      }
+
       let search = self
         .search
         .as_deref()
-        .and_then(|q| crate::ops::search::parse_query(q, &ctx.config.search));
+        .and_then(|q| crate::ops::search::parse_query(q, &search_config));
 
       let tag_queries = self
         .val
@@ -269,6 +278,7 @@ mod test {
       count_pos: None,
       archive: false,
       bool_op: None,
+      case: None,
       count: 1,
       interactive: false,
       not: false,

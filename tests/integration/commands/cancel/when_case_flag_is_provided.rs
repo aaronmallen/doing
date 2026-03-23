@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "--case not yet implemented (see #197)"]
 fn it_respects_case_sensitivity() {
   let doing = DoingCmd::new();
 

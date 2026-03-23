@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "--bool AND not yet implemented (see #197)"]
 fn it_cancels_entries_matching_all_tags() {
   let doing = DoingCmd::new();
 

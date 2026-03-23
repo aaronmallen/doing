@@ -21,7 +21,6 @@ fn it_lists_all_unique_tags() {
 }
 
 #[test]
-#[ignore = "tags prints message instead of empty output when no tags found (see #211)"]
 fn it_returns_nothing_when_no_tags() {
   let doing = DoingCmd::new();
 

@@ -3,7 +3,6 @@ use pretty_assertions::assert_eq;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags --no-line flag not supported (see #209)"]
 fn it_disables_single_line() {
   let doing = DoingCmd::new();
 

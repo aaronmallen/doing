@@ -3,7 +3,6 @@ use pretty_assertions::assert_eq;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tags --no-counts flag not supported (see #208)"]
 fn it_hides_counts_when_disabled() {
   let doing = DoingCmd::new();
 

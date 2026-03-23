@@ -27,15 +27,21 @@ use crate::{
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Show usage counts alongside tag names
-  #[arg(short, long)]
+  #[arg(short, long, overrides_with = "no_counts")]
   counts: bool,
+
+  #[arg(long = "no-counts", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "counts")]
+  no_counts: bool,
 
   #[command(flatten)]
   filter: FilterArgs,
 
   /// Output tags on a single line (for scripting)
-  #[arg(short = 'l', long)]
+  #[arg(short = 'l', long, overrides_with = "no_line")]
   line: bool,
+
+  #[arg(long = "no-line", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "line")]
+  no_line: bool,
 
   /// Maximum number of tags to display
   #[arg(index = 1, value_name = "MAX_COUNT")]
@@ -78,16 +84,15 @@ impl Command {
     }
 
     if tag_counts.is_empty() {
-      println!("No tags found.");
       return Ok(());
     }
 
-    if self.line {
+    if self.line && !self.no_line {
       let names: Vec<String> = tag_counts.iter().map(|(name, _)| format!("@{name}")).collect();
       println!("{}", names.join(" "));
     } else {
       for (name, count) in &tag_counts {
-        if self.counts {
+        if self.counts && !self.no_counts {
           println!("{name} ({count})");
         } else {
           println!("{name}");

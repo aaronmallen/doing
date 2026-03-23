@@ -2,7 +2,7 @@ use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
 
 use crate::{
-  cli::{AppContext, args::FilterArgs},
+  cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
   errors::Result,
   ops::{
     backup::write_with_backup,
@@ -211,13 +211,6 @@ impl Command {
 
     Ok((date, done_date))
   }
-}
-
-/// Tracks an entry's ID and section for locating it in the document.
-#[derive(Clone, Debug)]
-struct EntryLocation {
-  id: String,
-  section: String,
 }
 
 /// Parse a range expression, falling back to interpreting each side as a duration meaning "X ago".

@@ -3,7 +3,7 @@ use std::io::IsTerminal;
 use clap::Args;
 
 use crate::{
-  cli::{AppContext, args::FilterArgs},
+  cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
   errors::Result,
   ops::{
     backup::write_with_backup,
@@ -236,13 +236,6 @@ impl Command {
 
     Ok(())
   }
-}
-
-/// Tracks an entry's ID and section for locating it in the document.
-#[derive(Clone, Debug)]
-struct EntryLocation {
-  id: String,
-  section: String,
 }
 
 #[cfg(test)]

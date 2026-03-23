@@ -1,6 +1,7 @@
 pub mod args;
 pub mod commands;
 pub mod editor;
+pub mod entry_location;
 pub mod interactive;
 pub mod pager;
 

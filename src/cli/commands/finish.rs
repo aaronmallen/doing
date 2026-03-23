@@ -127,26 +127,33 @@ impl Command {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
     }
 
-    // When using --auto timing, entries must be in section order so that
-    // next_entry_start can find the correct following entry.
+    // When using --auto timing, sort entries chronologically (oldest first)
+    // so that next_entry_start finds the correct following entry.
     if self.auto {
-      let section_ids: Vec<String> = ctx
-        .document
-        .entries_in_section(&section_name)
-        .iter()
-        .map(|e| e.id().to_string())
-        .collect();
-      entries.sort_by_key(|id| section_ids.iter().position(|s| s == id).unwrap_or(usize::MAX));
+      let all_entries = ctx.document.entries_in_section(&section_name);
+      entries.sort_by_key(|id| {
+        all_entries
+          .iter()
+          .find(|e| e.id() == *id)
+          .map(|e| e.date())
+          .unwrap_or_else(Local::now)
+      });
     }
 
-    let (finish_date, new_start) = self.resolve_timing()?;
+    let (finish_date, new_start) = if self.auto {
+      // --auto overrides --date and --back: last entry gets @done(now)
+      (Local::now(), None)
+    } else {
+      self.resolve_timing()?
+    };
     let confirm_threshold = parse_duration(&ctx.config.interaction.confirm_longer_than).ok();
 
     for (i, entry_id) in entries.iter().enumerate() {
       let entry_id = entry_id.clone();
 
       let done_date = if self.auto && i + 1 < entries.len() {
-        self.next_entry_start(ctx, &section_name, &entry_id)
+        // Set @done to 1 minute before next entry's start time
+        self.next_entry_start(ctx, &section_name, &entry_id) - chrono::Duration::minutes(1)
       } else {
         finish_date
       };
@@ -376,9 +383,11 @@ impl Command {
   }
 
   fn next_entry_start(&self, ctx: &AppContext, section_name: &str, entry_id: &str) -> DateTime<Local> {
-    let entries = ctx.document.entries_in_section(section_name);
+    // Find the next entry chronologically (by date, ascending)
+    let mut entries: Vec<_> = ctx.document.entries_in_section(section_name).to_vec();
+    entries.sort_by_key(|e| e.date());
     let mut found = false;
-    for entry in entries {
+    for entry in &entries {
       if found {
         return entry.date();
       }
@@ -797,11 +806,11 @@ mod test {
       cmd.call(&mut ctx).unwrap();
 
       let entries = ctx.document.entries_in_section("Currently");
-      // Second task (index 1) should have @done set to third task's start time
+      // Second task (index 1) should have @done set to 1 min before third task's start
       assert!(entries[1].finished());
       assert_eq!(
         entries[1].done_date().unwrap(),
-        Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap()
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 59, 0).unwrap()
       );
     }
 

@@ -163,8 +163,12 @@ impl Command {
     let now = Local::now();
 
     if let Some(ref from_str) = self.from {
-      // Try range first ("1pm to 3pm")
-      if let Ok((start, end)) = parse_range(from_str) {
+      // Check for range separator before trying parse_range
+      let has_separator = regex::Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+")
+        .ok()
+        .is_some_and(|re| re.is_match(from_str));
+
+      if has_separator && let Ok((start, end)) = parse_range(from_str) {
         return Ok((start, end));
       }
       let start = chronify(from_str)?;

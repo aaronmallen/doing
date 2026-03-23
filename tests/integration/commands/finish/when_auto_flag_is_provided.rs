@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::{DoingCmd, assert_times_within_tolerance, fmt_time};
 
 #[test]
-#[ignore = "finish --auto not implemented (see #168)"]
 fn it_generates_done_dates_from_next_entry_start() {
   let doing = DoingCmd::new();
   let now = fmt_time(chrono::Local::now());
@@ -40,7 +39,6 @@ fn it_generates_done_dates_from_next_entry_start() {
 }
 
 #[test]
-#[ignore = "finish --auto not implemented (see #168)"]
 fn it_overrides_date_and_back_parameters() {
   let doing = DoingCmd::new();
 

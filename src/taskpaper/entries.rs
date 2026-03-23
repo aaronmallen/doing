@@ -137,7 +137,7 @@ impl Entry {
   /// Returns `false` if any pattern in `never_finish` matches this entry's
   /// tags (patterns starting with `@`) or section name.
   pub fn should_finish(&self, never_finish: &[String]) -> bool {
-    should(never_finish, &self.tags, &self.section)
+    no_patterns_match(never_finish, &self.tags, &self.section)
   }
 
   /// Check whether the entry should receive a date on the `@done` tag.
@@ -145,7 +145,7 @@ impl Entry {
   /// Returns `false` if any pattern in `never_time` matches this entry's
   /// tags (patterns starting with `@`) or section name.
   pub fn should_time(&self, never_time: &[String]) -> bool {
-    should(never_time, &self.tags, &self.section)
+    no_patterns_match(never_time, &self.tags, &self.section)
   }
 
   /// Return the tags.
@@ -206,7 +206,7 @@ fn parse_tag_date(value: &str) -> Option<DateTime<Local>> {
 /// Each pattern is either `@tagname` (matches if the entry has that tag) or a
 /// section name (matches if the entry belongs to that section). If any pattern
 /// matches, returns `false`.
-fn should(patterns: &[String], tags: &Tags, section: &str) -> bool {
+fn no_patterns_match(patterns: &[String], tags: &Tags, section: &str) -> bool {
   for pattern in patterns {
     if let Some(tag_name) = pattern.strip_prefix('@') {
       if tags.has(tag_name) {

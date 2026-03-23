@@ -138,12 +138,10 @@ impl DisplayArgs {
     }
 
     let template_name = self.config_template.as_deref().or(self.template.as_deref());
-    let is_inline = self.template.as_ref().is_some_and(|t| t.contains('%'));
-
     let resolved_name = template_name.unwrap_or(default_template);
-    let mut render_options = if is_inline {
+    let mut render_options = if let Some(inline_template) = self.template.as_ref().filter(|t| t.contains('%')) {
       let mut opts = RenderOptions::from_config(default_template, config);
-      opts.template = self.template.clone().unwrap();
+      opts.template = inline_template.clone();
       opts
     } else {
       RenderOptions::from_config(resolved_name, config)

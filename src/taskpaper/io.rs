@@ -11,7 +11,7 @@ use crate::{
 /// If the file already exists and is non-empty, this is a no-op.
 /// Creates parent directories as needed.
 pub fn create_file(path: &Path, default_section: &str) -> Result<()> {
-  if path.exists() && fs::metadata(path).map(|m| m.len() > 0).unwrap_or(false) {
+  if fs::metadata(path).map(|m| m.len() > 0).unwrap_or(false) {
     return Ok(());
   }
 

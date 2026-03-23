@@ -4,7 +4,7 @@ pub mod loader;
 use std::{
   collections::HashMap,
   env as std_env,
-  fmt::{self, Display, Formatter},
+  fmt::{Display, Formatter},
   path::PathBuf,
 };
 
@@ -303,7 +303,7 @@ pub enum SortOrder {
 }
 
 impl Display for SortOrder {
-  fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
     match self {
       Self::Asc => write!(f, "asc"),
       Self::Desc => write!(f, "desc"),

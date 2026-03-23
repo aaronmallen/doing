@@ -57,7 +57,6 @@ fn it_converts_trailing_parenthetical_to_note() {
 }
 
 #[test]
-#[ignore = "status message format differs from Ruby doing (see #159)"]
 fn it_outputs_status_to_stderr() {
   let doing = DoingCmd::new();
 

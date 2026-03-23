@@ -98,7 +98,10 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    ctx.status(format!("Added \"{}\" to {}", display_title, section_name));
+    let time_str = date.format("%_I:%M%P").to_string();
+    ctx.status(format!(
+      "New entry: added \"{time_str}: {display_title}\" to {section_name}"
+    ));
     Ok(())
   }
 

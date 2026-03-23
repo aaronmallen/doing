@@ -20,7 +20,6 @@ fn it_removes_note_when_no_text_given() {
 }
 
 #[test]
-#[ignore = "--remove with text not yet implemented (see #198)"]
 fn it_replaces_note_when_text_given() {
   let doing = DoingCmd::new();
 

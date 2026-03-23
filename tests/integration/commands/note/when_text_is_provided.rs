@@ -35,7 +35,6 @@ fn it_appends_to_existing_note() {
 }
 
 #[test]
-#[ignore = "stderr format not yet implemented (see #198)"]
 fn it_outputs_status_to_stderr() {
   let doing = DoingCmd::new();
 

@@ -61,22 +61,18 @@ impl Command {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
     }
 
+    let mut titles = Vec::new();
     for loc in &entries {
+      if let Ok(entry) = self.find_entry_mut(ctx, loc) {
+        titles.push(entry.full_title());
+      }
       self.update_note(ctx, loc)?;
     }
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    let count = entries.len();
-    let action = if self.remove {
-      "Removed notes from"
-    } else {
-      "Updated note on"
-    };
-    if count == 1 {
-      ctx.status(format!("{action} 1 entry"));
-    } else {
-      ctx.status(format!("{action} {count} entries"));
+    for title in &titles {
+      ctx.status(format!("Entry updated: {title}"));
     }
 
     Ok(())
@@ -209,6 +205,13 @@ impl Command {
     if self.remove {
       let entry = self.find_entry_mut(ctx, loc)?;
       *entry.note_mut() = Note::new();
+
+      // If text was provided with --remove, add it as replacement
+      let text = self.resolve_note_text(ctx)?;
+      if let Some(text) = text {
+        let entry = self.find_entry_mut(ctx, loc)?;
+        entry.note_mut().add(text);
+      }
       return Ok(());
     }
 

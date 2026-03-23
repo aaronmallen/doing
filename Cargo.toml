@@ -34,6 +34,7 @@ clap_complete = "4"
 dialoguer = "0.12"
 dir_spec = "0.5"
 doing-error = { path = "crates/error" }
+doing-time = { path = "crates/time" }
 env_logger = "0.11"
 indexmap = "2"
 json_comments = "0.2"
@@ -67,6 +68,7 @@ clap_complete.workspace = true
 dialoguer.workspace = true
 dir_spec.workspace = true
 doing-error.workspace = true
+doing-time.workspace = true
 env_logger.workspace = true
 indexmap.workspace = true
 json_comments.workspace = true

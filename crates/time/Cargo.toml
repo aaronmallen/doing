@@ -1,0 +1,13 @@
+[package]
+description = "Time parsing and formatting for the doing CLI"
+edition.workspace = true
+license.workspace = true
+name = "doing-time"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.0"
+
+[dependencies]
+chrono.workspace = true
+doing-error.workspace = true
+regex.workspace = true

@@ -7,7 +7,7 @@ use crate::{
   errors::Result,
   ops::{autotag::autotag, backup::write_with_backup, extract_note::extract_note},
   taskpaper::{Entry, Note, Section, Tag, Tags},
-  time::{chronify, parse_duration},
+  time::{chronify, parse_duration, parse_range},
 };
 
 /// Add a completed item with @done(date).
@@ -163,6 +163,10 @@ impl Command {
     let now = Local::now();
 
     if let Some(ref from_str) = self.from {
+      // Try range first ("1pm to 3pm")
+      if let Ok((start, end)) = parse_range(from_str) {
+        return Ok((start, end));
+      }
       let start = chronify(from_str)?;
       let finish = now;
       return Ok((start, finish));

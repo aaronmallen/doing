@@ -5,7 +5,6 @@ use crate::support::helpers::{
 };
 
 #[test]
-#[ignore = "--from range parsing not yet supported (see #160)"]
 fn it_sets_start_and_done_from_range() {
   let doing = DoingCmd::new();
   let today = chrono::Local::now().format("%Y-%m-%d").to_string();

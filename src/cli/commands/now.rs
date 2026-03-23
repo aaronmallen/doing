@@ -7,7 +7,7 @@ use crate::{
   errors::Result,
   ops::{autotag::autotag, backup::write_with_backup, extract_note::extract_note},
   taskpaper::{Document, Entry, Note, Tag, Tags},
-  time::chronify,
+  time::{chronify, parse_range},
 };
 
 /// Add a new entry to the doing file.
@@ -60,7 +60,7 @@ impl Command {
       .section
       .clone()
       .unwrap_or_else(|| ctx.config.current_section.clone());
-    let date = self.resolve_date()?;
+    let (date, done_date) = self.resolve_dates()?;
     let (title, note) = self.resolve_title_and_note(&ctx.config)?;
 
     if self.finish_last {
@@ -74,6 +74,12 @@ impl Command {
     }
 
     let mut entry = Entry::new(date, &title, Tags::new(), note, &section_name, None::<String>);
+
+    // Add @done tag when --from specifies a range or single time
+    if let Some(done) = done_date {
+      let done_value = done.format("%Y-%m-%d %H:%M").to_string();
+      entry.tags_mut().add(Tag::new("done", Some(done_value)));
+    }
 
     if !self.noauto {
       autotag(&mut entry, &ctx.config.autotag, &ctx.config.default_tags);
@@ -118,14 +124,29 @@ impl Command {
     cmd.call(ctx)
   }
 
-  fn resolve_date(&self) -> Result<DateTime<Local>> {
+  fn resolve_dates(&self) -> Result<(DateTime<Local>, Option<DateTime<Local>>)> {
     if let Some(ref back) = self.back {
-      return chronify(back);
+      return Ok((chronify(back)?, None));
     }
     if let Some(ref from) = self.from {
-      return chronify(from);
+      // Check for range separator before trying parse_range
+      let has_separator = regex::Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+")
+        .ok()
+        .is_some_and(|re| re.is_match(from));
+
+      if has_separator && let Ok((start, end)) = parse_range(from) {
+        return Ok((start, Some(end)));
+      }
+      // Single time: set start, done at 23:59 today
+      let start = chronify(from)?;
+      let end_of_day = start
+        .date_naive()
+        .and_hms_opt(23, 59, 0)
+        .and_then(|dt| dt.and_local_timezone(chrono::Local).single())
+        .unwrap_or(start);
+      return Ok((start, Some(end_of_day)));
     }
-    Ok(Local::now())
+    Ok((Local::now(), None))
   }
 
   fn resolve_title_and_note(&self, config: &Config) -> Result<(String, Note)> {

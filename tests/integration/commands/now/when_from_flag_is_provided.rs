@@ -3,7 +3,6 @@ use crate::support::helpers::{
 };
 
 #[test]
-#[ignore = "--from single time parsing not yet implemented (see #160)"]
 fn it_sets_done_to_end_of_day_when_single_time_given() {
   let doing = DoingCmd::new();
   let today = chrono::Local::now().format("%Y-%m-%d").to_string();
@@ -22,7 +21,6 @@ fn it_sets_done_to_end_of_day_when_single_time_given() {
 }
 
 #[test]
-#[ignore = "--from range parsing not yet implemented (see #160)"]
 fn it_sets_start_and_done_from_range() {
   let doing = DoingCmd::new();
   let today = chrono::Local::now().format("%Y-%m-%d").to_string();

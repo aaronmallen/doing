@@ -53,6 +53,10 @@ pub struct Command {
   #[arg(short, long, default_value_t = 1)]
   count: usize,
 
+  /// Date range for start and done times (e.g. "1pm to 3pm")
+  #[arg(long)]
+  from: Option<String>,
+
   /// Include date in @done tag
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_date", default_value_t = true)]
   date: bool,
@@ -431,6 +435,15 @@ impl Command {
   fn resolve_timing(&self) -> Result<(DateTime<Local>, Option<DateTime<Local>>)> {
     let now = Local::now();
 
+    if let Some(ref from_str) = self.from {
+      use crate::time::parse_range;
+      if let Ok((start, end)) = parse_range(from_str) {
+        return Ok((end, Some(start)));
+      }
+      let start = chronify(from_str)?;
+      return Ok((now, Some(start)));
+    }
+
     if self.at.is_some() && self.back.is_some() {
       return Err(crate::errors::Error::Config(
         "--at and --back are mutually exclusive".into(),
@@ -497,6 +510,7 @@ mod test {
       bool_op: None,
       count: 1,
       date: true,
+      from: None,
       interactive: false,
       no_date: false,
       not: false,

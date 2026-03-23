@@ -1,8 +1,11 @@
-use std::{fs, io::Write, process::Command};
+use std::{fs, io::Write, path::Path, process::Command};
 
 use tempfile::NamedTempFile;
 
-use crate::{config::Config, errors::Result};
+use crate::{
+  config::Config,
+  errors::{Error, Result},
+};
 
 /// Launch an editor with the given initial content and return the edited result.
 ///
@@ -51,6 +54,16 @@ pub fn edit_config(config: &Config) -> Result<()> {
     ))));
   }
 
+  Ok(())
+}
+
+/// Open a file using a macOS bundle identifier (e.g. `com.apple.TextEdit`).
+pub fn open_with_bundle_id(bundle_id: &str, file_path: &Path) -> Result<()> {
+  let status = Command::new("open").arg("-b").arg(bundle_id).arg(file_path).status()?;
+
+  if !status.success() {
+    return Err(Error::Config(format!("failed to open with bundle id '{bundle_id}'")));
+  }
   Ok(())
 }
 

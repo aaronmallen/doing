@@ -132,7 +132,7 @@ fn print_budget_line(
 }
 
 fn remove_budget(tag: &str, quiet: bool) -> Result<()> {
-  let config_path = resolve_config_path();
+  let config_path = crate::config::loader::resolve_global_config_path();
   let content = std::fs::read_to_string(&config_path).unwrap_or_default();
 
   let mut doc: toml_edit::DocumentMut = content
@@ -151,19 +151,11 @@ fn remove_budget(tag: &str, quiet: bool) -> Result<()> {
   Ok(())
 }
 
-fn resolve_config_path() -> std::path::PathBuf {
-  crate::config::loader::discover_global_config().unwrap_or_else(|| {
-    dir_spec::config_home()
-      .expect("failed to resolve config directory")
-      .join("doing/config.toml")
-  })
-}
-
 fn set_budget(tag: &str, amount: &str, quiet: bool) -> Result<()> {
   // Validate the amount is a parseable duration
   parse_duration(amount)?;
 
-  let config_path = resolve_config_path();
+  let config_path = crate::config::loader::resolve_global_config_path();
   let content = if config_path.exists() {
     std::fs::read_to_string(&config_path)?
   } else {

@@ -56,7 +56,7 @@ impl Command {
     };
 
     if let Some(ref bundle_id) = self.bundle_id {
-      return open_with_bundle_id(bundle_id, &file_path);
+      return crate::cli::editor::open_with_bundle_id(bundle_id, &file_path);
     }
 
     let editor = resolve_open_editor(&self.app, &self.editor, ctx);
@@ -76,22 +76,6 @@ impl Command {
 
     Ok(())
   }
-}
-
-fn open_with_bundle_id(bundle_id: &str, file_path: &std::path::Path) -> Result<()> {
-  let status = process::Command::new("open")
-    .arg("-b")
-    .arg(bundle_id)
-    .arg(file_path)
-    .status()?;
-
-  if !status.success() {
-    return Err(Error::Io(std::io::Error::other(format!(
-      "open -b {bundle_id} exited with status {status}"
-    ))));
-  }
-
-  Ok(())
 }
 
 fn resolve_open_editor(app: &Option<String>, editor_flag: &Option<String>, ctx: &AppContext) -> String {

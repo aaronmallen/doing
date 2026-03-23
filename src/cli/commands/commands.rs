@@ -158,11 +158,7 @@ fn validate_command_name(name: &str, app: &clap::Command) -> Result<()> {
 }
 
 fn write_disabled_commands(disabled: &[String]) -> Result<()> {
-  let config_path = loader::discover_global_config().unwrap_or_else(|| {
-    dir_spec::config_home()
-      .expect("failed to resolve config directory")
-      .join("doing/config.toml")
-  });
+  let config_path = loader::resolve_global_config_path();
 
   if config_path.exists() {
     match ConfigFormat::from_extension(&config_path) {

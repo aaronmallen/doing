@@ -176,7 +176,7 @@ fn edit_config(args: &EditArgs, config: &crate::config::Config) -> Result<()> {
   }
 
   if let Some(ref bundle_id) = args.bundle_id {
-    return open_with_bundle_id(&config_path, bundle_id);
+    return crate::cli::editor::open_with_bundle_id(bundle_id, &config_path);
   }
 
   if let Some(ref ed) = args.editor {
@@ -246,21 +246,6 @@ fn open_with_app(config_path: &Path, app: &str) -> Result<()> {
   Ok(())
 }
 
-fn open_with_bundle_id(config_path: &Path, bundle_id: &str) -> Result<()> {
-  let status = process::Command::new("open")
-    .arg("-b")
-    .arg(bundle_id)
-    .arg(config_path)
-    .status()?;
-
-  if !status.success() {
-    return Err(Error::Config(format!(
-      "failed to open config with bundle id '{bundle_id}'"
-    )));
-  }
-  Ok(())
-}
-
 fn open_with_editor(config_path: &Path, editor_cmd: &str) -> Result<()> {
   let parts: Vec<&str> = editor_cmd.split_whitespace().collect();
   let (cmd, args) = parts
@@ -285,7 +270,7 @@ fn resolve_backup_dir() -> std::path::PathBuf {
 }
 
 fn undo_config(ctx: &AppContext) -> Result<()> {
-  let config_path = resolve_config_path_for_write();
+  let config_path = loader::resolve_global_config_path();
 
   if !config_path.exists() {
     return Err(Error::Config("no config file found".into()));
@@ -348,7 +333,7 @@ fn remove_value(key: &str, local: bool, quiet: bool) -> Result<()> {
   let config_path = if local {
     resolve_local_config_path()
   } else {
-    resolve_config_path_for_write()
+    loader::resolve_global_config_path()
   };
 
   if !config_path.exists() {
@@ -442,14 +427,6 @@ fn reset_config_to_defaults(config_path: &Path) -> Result<()> {
   Ok(())
 }
 
-fn resolve_config_path_for_write() -> std::path::PathBuf {
-  loader::discover_global_config().unwrap_or_else(|| {
-    dir_spec::config_home()
-      .expect("failed to resolve config directory")
-      .join("doing/config.toml")
-  })
-}
-
 fn resolve_dot_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
   let mut current = value;
   for key in path.split('.') {
@@ -492,7 +469,7 @@ fn set_value(key: &str, raw_value: &str, local: bool, quiet: bool) -> Result<()>
   let config_path = if local {
     resolve_local_config_path()
   } else {
-    resolve_config_path_for_write()
+    loader::resolve_global_config_path()
   };
 
   // Create a backup before modifying for `config undo`

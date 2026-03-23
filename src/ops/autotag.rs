@@ -18,10 +18,27 @@ use crate::{
 /// Autotagging is idempotent — applying it twice does not duplicate tags.
 pub fn autotag(entry: &mut Entry, config: &AutotagConfig, default_tags: &[String]) {
   apply_default_tags(entry, default_tags);
+  apply_mappings(entry, &config.mappings);
   apply_whitelist(entry, &config.whitelist);
   apply_synonyms(entry, &config.synonyms);
   apply_transforms(entry, &config.transform);
   entry.tags_mut().dedup();
+}
+
+/// Apply Ruby-style key-value mappings: if word appears in title, add the mapped tag.
+fn apply_mappings(entry: &mut Entry, mappings: &HashMap<String, String>) {
+  let title_lower = entry.title().to_lowercase();
+  let words: Vec<&str> = title_lower.split_whitespace().collect();
+
+  for (word, tag_name) in mappings {
+    if entry.tags().has(tag_name) {
+      continue;
+    }
+    let target = word.to_lowercase();
+    if words.iter().any(|w| *w == target) {
+      entry.tags_mut().add(Tag::new(tag_name, None::<String>));
+    }
+  }
 }
 
 fn apply_default_tags(entry: &mut Entry, default_tags: &[String]) {
@@ -184,6 +201,7 @@ mod test {
 
   fn default_config() -> AutotagConfig {
     AutotagConfig {
+      mappings: HashMap::new(),
       synonyms: HashMap::new(),
       transform: Vec::new(),
       whitelist: Vec::new(),

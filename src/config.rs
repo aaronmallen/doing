@@ -14,12 +14,61 @@ use serde_json::Value;
 use crate::{errors::Result, paths::expand_tilde};
 
 /// Autotag configuration for automatic tag assignment.
-#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(default)]
+///
+/// Supports both structured format (synonyms/transform/whitelist) and Ruby-style
+/// simple key-value mappings where `word = "tag"` means: if "word" appears in the
+/// title, add `@tag`.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct AutotagConfig {
+  /// Ruby-style simple mappings: word → tag name
+  pub mappings: HashMap<String, String>,
   pub synonyms: HashMap<String, Vec<String>>,
   pub transform: Vec<String>,
   pub whitelist: Vec<String>,
+}
+
+impl<'de> serde::Deserialize<'de> for AutotagConfig {
+  fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+  where
+    D: serde::Deserializer<'de>,
+  {
+    let value: serde_json::Value = serde::Deserialize::deserialize(deserializer)?;
+
+    let obj = match value.as_object() {
+      Some(obj) => obj,
+      None => return Ok(Self::default()),
+    };
+
+    let mut config = Self::default();
+
+    for (key, val) in obj {
+      match key.as_str() {
+        "synonyms" => {
+          if let Ok(v) = serde_json::from_value(val.clone()) {
+            config.synonyms = v;
+          }
+        }
+        "transform" => {
+          if let Ok(v) = serde_json::from_value(val.clone()) {
+            config.transform = v;
+          }
+        }
+        "whitelist" => {
+          if let Ok(v) = serde_json::from_value(val.clone()) {
+            config.whitelist = v;
+          }
+        }
+        _ => {
+          // Ruby-style mapping: word = "tag"
+          if let Some(tag) = val.as_str() {
+            config.mappings.insert(key.clone(), tag.to_string());
+          }
+        }
+      }
+    }
+
+    Ok(config)
+  }
 }
 
 /// Configuration for the byday plugin.

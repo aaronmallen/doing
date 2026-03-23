@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "autotag config format differs from Ruby doing (see #163), flag letter differs (see #156)"]
 fn it_excludes_auto_tags() {
   let config = r#"
 current_section = "Currently"

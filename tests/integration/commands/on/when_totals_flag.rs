@@ -7,9 +7,10 @@ fn it_shows_tag_time_totals() {
   let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
   doing
-    .run(["done", "--back", &format!("{today} 09:00"), "Completed task @project"])
+    .run(["now", "--back", "1h", "Completed task @project"])
     .assert()
     .success();
+  doing.run(["done"]).assert().success();
 
   let output = doing.run(["on", &today, "--totals"]).output().expect("failed to run");
 
@@ -17,9 +18,40 @@ fn it_shows_tag_time_totals() {
 
   let stdout = String::from_utf8_lossy(&output.stdout);
 
-  // Totals output should contain time summary information
   assert!(
-    stdout.contains("Completed task") || stdout.contains("project"),
-    "expected entry or tag totals in output, got: {stdout}"
+    stdout.contains("Completed task"),
+    "expected entry in output, got: {stdout}"
+  );
+
+  assert!(
+    stdout.contains("project"),
+    "expected tag name 'project' in totals output, got: {stdout}"
+  );
+}
+
+#[test]
+fn it_does_not_show_totals_without_flag() {
+  let doing = DoingCmd::new();
+
+  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+  doing
+    .run(["now", "--back", "1h", "No totals task @project"])
+    .assert()
+    .success();
+  doing.run(["done"]).assert().success();
+
+  let with_totals = doing.run(["on", &today, "--totals"]).output().expect("failed to run");
+  let without_totals = doing.run(["on", &today]).output().expect("failed to run");
+
+  let with_stdout = String::from_utf8_lossy(&with_totals.stdout);
+  let without_stdout = String::from_utf8_lossy(&without_totals.stdout);
+
+  // With --totals should have more output (the totals section)
+  assert!(
+    with_stdout.len() > without_stdout.len(),
+    "expected --totals output to be longer than default output.\nWith totals ({} bytes): {with_stdout}\nWithout totals ({} bytes): {without_stdout}",
+    with_stdout.len(),
+    without_stdout.len()
   );
 }

@@ -36,3 +36,34 @@ fn it_hides_duration() {
     "expected entry in output without duration, got: {stdout}"
   );
 }
+
+#[test]
+fn it_includes_interval_for_finished_entries() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["now", "--back", "1h", "Finished today entry"])
+    .assert()
+    .success();
+  doing.run(["done"]).assert().success();
+
+  let output = doing
+    .run(["today", "--duration", "--template", "%title %interval"])
+    .output()
+    .expect("failed to run");
+
+  assert!(output.status.success(), "expected success exit code");
+
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(
+    stdout.contains("Finished today entry"),
+    "expected entry in output, got: {stdout}"
+  );
+
+  let re = regex::Regex::new(r"\d+:\d+:\d+").unwrap();
+  assert!(
+    re.is_match(&stdout),
+    "expected interval in HH:MM:SS format in output, got: {stdout}"
+  );
+}

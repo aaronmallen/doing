@@ -19,4 +19,8 @@ fn it_limits_to_time_range() {
     stdout.contains("Recent entry"),
     "expected recent entry in output, got: {stdout}"
   );
+  assert!(
+    !stdout.contains("Morning entry"),
+    "expected morning entry to be excluded by --from time range, got: {stdout}"
+  );
 }

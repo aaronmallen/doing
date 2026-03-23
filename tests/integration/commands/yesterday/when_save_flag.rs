@@ -15,4 +15,10 @@ fn it_saves_output_to_file() {
     .expect("failed to run");
 
   assert!(output.status.success(), "expected success exit code");
+
+  let stdout = String::from_utf8_lossy(&output.stdout);
+  assert!(
+    stdout.contains("Yesterday save"),
+    "expected entry text in output, got: {stdout}"
+  );
 }

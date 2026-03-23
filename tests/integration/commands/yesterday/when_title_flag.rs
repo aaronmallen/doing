@@ -18,4 +18,37 @@ fn it_overrides_section_title() {
     stdout.contains("Yesterday title"),
     "expected entry in output, got: {stdout}"
   );
+
+  assert!(
+    stdout.contains("Yesterday's Work"),
+    "expected custom title 'Yesterday's Work' in output, got: {stdout}"
+  );
+}
+
+#[test]
+fn it_uses_default_title_without_flag() {
+  let doing = DoingCmd::new();
+
+  doing
+    .run(["now", "--back", "1d", "Yesterday default"])
+    .assert()
+    .success();
+
+  let with_title = doing
+    .run(["yesterday", "--title", "Custom Title"])
+    .output()
+    .expect("failed to run");
+  let without_title = doing.run(["yesterday"]).output().expect("failed to run");
+
+  let with_stdout = String::from_utf8_lossy(&with_title.stdout);
+  let without_stdout = String::from_utf8_lossy(&without_title.stdout);
+
+  assert!(
+    with_stdout.contains("Custom Title"),
+    "expected custom title in --title output, got: {with_stdout}"
+  );
+  assert!(
+    !without_stdout.contains("Custom Title"),
+    "expected no custom title in default output, got: {without_stdout}"
+  );
 }

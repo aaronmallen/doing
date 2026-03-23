@@ -20,4 +20,8 @@ fn it_filters_entries_after_time() {
     stdout.contains("Recent entry"),
     "expected recent entry in output, got: {stdout}"
   );
+  assert!(
+    !stdout.contains("Morning entry"),
+    "expected morning entry to be excluded by --after filter, got: {stdout}"
+  );
 }

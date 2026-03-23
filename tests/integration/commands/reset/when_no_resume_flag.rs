@@ -22,7 +22,6 @@ fn it_keeps_done_tag_with_no_resume() {
 }
 
 #[test]
-#[ignore = "-n short flag not yet implemented (see #199)"]
 fn it_keeps_done_tag_with_n_shortcut() {
   let doing = DoingCmd::new();
 

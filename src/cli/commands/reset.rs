@@ -42,7 +42,7 @@ pub struct Command {
   #[arg(short, long)]
   interactive: bool,
 
-  #[arg(long = "no-resume", action = ArgAction::SetTrue, hide = true, overrides_with = "resume")]
+  #[arg(short = 'n', long = "no-resume", action = ArgAction::SetTrue, hide = true, overrides_with = "resume")]
   no_resume: bool,
 
   /// Remove @done tag to re-open the entry
@@ -50,7 +50,7 @@ pub struct Command {
   resume: bool,
 
   /// Specify duration (e.g. "1h30m") to set completion time relative to new start
-  #[arg(long, visible_alias = "for")]
+  #[arg(short = 't', long, visible_alias = "for")]
   took: Option<String>,
 }
 

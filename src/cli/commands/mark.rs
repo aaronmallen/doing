@@ -18,7 +18,7 @@ use crate::{
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Maximum number of entries to mark
-  #[arg(long)]
+  #[arg(short = 'c', long)]
   count: Option<usize>,
 
   /// Include current date as the tag value

@@ -35,7 +35,6 @@ fn it_sets_completion_with_for_alias() {
 }
 
 #[test]
-#[ignore = "-t short flag not yet implemented (see #199)"]
 fn it_sets_completion_with_short_flag() {
   let doing = DoingCmd::new();
 

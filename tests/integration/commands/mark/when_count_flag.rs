@@ -23,7 +23,6 @@ fn it_flags_multiple_entries() {
 }
 
 #[test]
-#[ignore = "-c short flag not yet implemented (see #199)"]
 fn it_flags_multiple_entries_with_short_flag() {
   let doing = DoingCmd::new();
 

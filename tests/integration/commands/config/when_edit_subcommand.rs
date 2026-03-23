@@ -18,7 +18,6 @@ fn it_opens_config_in_editor() {
 }
 
 #[test]
-#[ignore = "open alias not yet implemented (see #181)"]
 fn it_opens_with_open_alias() {
   let doing = DoingCmd::new();
 
@@ -35,7 +34,7 @@ fn it_opens_with_open_alias() {
 }
 
 #[test]
-#[ignore = "--app flag not yet implemented (see #181)"]
+#[ignore = "requires GUI environment"]
 fn it_opens_with_specific_app() {
   let doing = DoingCmd::new();
 
@@ -52,7 +51,7 @@ fn it_opens_with_specific_app() {
 }
 
 #[test]
-#[ignore = "--app flag not yet implemented (see #181)"]
+#[ignore = "requires GUI environment"]
 fn it_opens_with_app_short_flag() {
   let doing = DoingCmd::new();
 
@@ -69,7 +68,7 @@ fn it_opens_with_app_short_flag() {
 }
 
 #[test]
-#[ignore = "--bundle-id flag not yet implemented (see #181)"]
+#[ignore = "requires GUI environment"]
 fn it_opens_with_bundle_id() {
   let doing = DoingCmd::new();
 
@@ -86,7 +85,7 @@ fn it_opens_with_bundle_id() {
 }
 
 #[test]
-#[ignore = "--bundle-id flag not yet implemented (see #181)"]
+#[ignore = "requires GUI environment"]
 fn it_opens_with_bundle_id_short_flag() {
   let doing = DoingCmd::new();
 

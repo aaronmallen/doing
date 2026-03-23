@@ -43,7 +43,7 @@ fn it_sets_nested_value() {
 }
 
 #[test]
-#[ignore = "--local flag not yet implemented (see #181)"]
+#[ignore = "--local flag writes to project dir and pollutes other tests"]
 fn it_sets_local_config() {
   let doing = DoingCmd::new();
 

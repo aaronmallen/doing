@@ -32,9 +32,10 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match &self.action {
       None => editor::edit_config(&ctx.config),
+      Some(Action::Dump(args)) | Some(Action::Get(args)) => get_value(args, ctx),
       Some(Action::Edit(args)) => edit_config(args, &ctx.config),
-      Some(Action::Get(args)) => get_value(&args.key, ctx),
       Some(Action::List) => list_configs(),
+      Some(Action::Open) => editor::edit_config(&ctx.config),
       Some(Action::Set(args)) if args.remove => remove_value(&args.key, args.local, ctx.quiet),
       Some(Action::Set(args)) => set_value(
         &args.key,
@@ -42,6 +43,7 @@ impl Command {
         args.local,
         ctx.quiet,
       ),
+      Some(Action::Undo) => undo_config(ctx),
     }
   }
 }
@@ -49,14 +51,20 @@ impl Command {
 /// Subcommands for managing configuration.
 #[derive(Clone, Debug, Subcommand)]
 enum Action {
+  /// Dump a config value (alias for `get`)
+  Dump(GetArgs),
   /// Open the config file in the configured editor
   Edit(EditArgs),
   /// Get a config value by dot-path (e.g., editors.default)
   Get(GetArgs),
   /// List all detected config files in the config cascade
   List,
+  /// Open the config file in the configured editor (alias for `edit`)
+  Open,
   /// Set a config value by dot-path
   Set(SetArgs),
+  /// Undo the last config change made by `config set`
+  Undo,
 }
 
 /// Arguments for the `config edit` subcommand.
@@ -79,9 +87,13 @@ struct EditArgs {
 /// Arguments for the `config get` subcommand.
 #[derive(Args, Clone, Debug)]
 struct GetArgs {
-  /// Dot-separated config key (e.g., editors.default, search.case)
+  /// Dot-separated config key (e.g., editors.default, search.case). Omit to dump entire config.
   #[arg(index = 1, value_name = "KEY")]
-  key: String,
+  key: Option<String>,
+
+  /// Output format (json or yaml)
+  #[arg(short, long)]
+  output: Option<String>,
 }
 
 /// Arguments for the `config set` subcommand.
@@ -99,6 +111,57 @@ struct SetArgs {
   /// Remove the key from the config file instead of setting it
   #[arg(short = 'r', long = "remove", conflicts_with = "value")]
   remove: bool,
+}
+
+/// Attempt to fuzzy-match a dot-path against a JSON value tree.
+///
+/// Each segment is matched against keys at that level using:
+/// 1. Prefix match (e.g. "curr" matches "current_section")
+/// 2. Substring match (e.g. "section" matches "current_section")
+/// 3. Abbreviation match (e.g. "curr_sec" matches "current_section")
+///
+/// Returns `None` if any segment matches zero or more than one key.
+fn fuzzy_resolve_dot_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
+  let mut current = value;
+  for segment in path.split('.') {
+    let obj = current.as_object()?;
+    // Try prefix match first
+    let mut matches: Vec<&str> = obj
+      .keys()
+      .filter(|k| k.starts_with(segment))
+      .map(|k| k.as_str())
+      .collect();
+    if matches.len() != 1 {
+      // Try substring match
+      matches = obj.keys().filter(|k| k.contains(segment)).map(|k| k.as_str()).collect();
+    }
+    if matches.len() != 1 {
+      // Try abbreviation match: each char of segment appears in order in key
+      matches = obj
+        .keys()
+        .filter(|k| abbreviation_matches(segment, k))
+        .map(|k| k.as_str())
+        .collect();
+    }
+    if matches.len() == 1 {
+      current = obj.get(matches[0])?;
+    } else {
+      return None;
+    }
+  }
+  Some(current)
+}
+
+/// Check if `abbr` is an abbreviation of `full` — each character of `abbr`
+/// appears in `full` in order (case-insensitive).
+fn abbreviation_matches(abbr: &str, full: &str) -> bool {
+  let mut full_chars = full.chars();
+  for ac in abbr.chars() {
+    if !full_chars.any(|fc| fc.eq_ignore_ascii_case(&ac)) {
+      return false;
+    }
+  }
+  true
 }
 
 fn edit_config(args: &EditArgs, config: &crate::config::Config) -> Result<()> {
@@ -123,15 +186,35 @@ fn edit_config(args: &EditArgs, config: &crate::config::Config) -> Result<()> {
   editor::edit_config(config)
 }
 
-fn get_value(key: &str, ctx: &AppContext) -> Result<()> {
+fn get_value(args: &GetArgs, ctx: &AppContext) -> Result<()> {
   let value = serde_json::to_value(&ctx.config).map_err(|e| Error::Config(format!("serialization error: {e}")))?;
 
-  let result = resolve_dot_path(&value, key).ok_or_else(|| Error::Config(format!("key not found: {key}")))?;
+  let result = if let Some(ref key) = args.key {
+    // Try exact match first, then fuzzy match
+    resolve_dot_path(&value, key)
+      .or_else(|| fuzzy_resolve_dot_path(&value, key))
+      .ok_or_else(|| Error::Config(format!("key not found: {key}")))?
+  } else {
+    &value
+  };
 
-  match result {
-    Value::String(s) => println!("{s}"),
-    Value::Null => println!("null"),
-    other => println!("{}", serde_json::to_string_pretty(other).unwrap_or_default()),
+  match args.output.as_deref() {
+    Some("json") => {
+      println!("{}", serde_json::to_string_pretty(result).unwrap_or_default());
+    }
+    Some("yaml") => {
+      println!("{}", yaml_serde::to_string(result).unwrap_or_default());
+    }
+    Some(fmt) => {
+      return Err(Error::Config(format!(
+        "unsupported output format: {fmt} (use json or yaml)"
+      )));
+    }
+    None => match result {
+      Value::String(s) => println!("{s}"),
+      Value::Null => println!("null"),
+      other => println!("{}", serde_json::to_string_pretty(other).unwrap_or_default()),
+    },
   }
 
   Ok(())
@@ -189,6 +272,35 @@ fn open_with_editor(config_path: &Path, editor_cmd: &str) -> Result<()> {
       "editor '{editor_cmd}' exited with non-zero status"
     )));
   }
+  Ok(())
+}
+
+fn resolve_backup_dir() -> std::path::PathBuf {
+  crate::config::env::DOING_BACKUP_DIR
+    .value()
+    .map(std::path::PathBuf::from)
+    .unwrap_or_else(|_| crate::config::Config::default().backup_dir)
+}
+
+fn undo_config(ctx: &AppContext) -> Result<()> {
+  let config_path = resolve_config_path_for_write();
+
+  if !config_path.exists() {
+    return Err(Error::Config("no config file found".into()));
+  }
+
+  let backup_dir = resolve_backup_dir();
+  let backups = crate::ops::backup::list_backups(&config_path, &backup_dir)?;
+  let backup = backups
+    .first()
+    .ok_or_else(|| Error::Config("no config backups available".into()))?;
+
+  fs::copy(backup, &config_path)?;
+
+  if !ctx.quiet {
+    eprintln!("Config restored from backup");
+  }
+
   Ok(())
 }
 
@@ -381,6 +493,12 @@ fn set_value(key: &str, raw_value: &str, local: bool, quiet: bool) -> Result<()>
     resolve_config_path_for_write()
   };
 
+  // Create a backup before modifying for `config undo`
+  if config_path.exists() {
+    let backup_dir = resolve_backup_dir();
+    let _ = crate::ops::backup::create_backup(&config_path, &backup_dir);
+  }
+
   if config_path.exists() {
     match ConfigFormat::from_extension(&config_path) {
       Some(ConfigFormat::Toml) => set_value_toml(&config_path, key, raw_value, quiet),
@@ -476,8 +594,12 @@ mod test {
     #[test]
     fn it_retrieves_nested_value() {
       let ctx = sample_ctx();
+      let args = GetArgs {
+        key: Some("search.case".into()),
+        output: None,
+      };
 
-      let result = super::super::get_value("search.case", &ctx);
+      let result = super::super::get_value(&args, &ctx);
 
       assert!(result.is_ok());
     }
@@ -485,8 +607,12 @@ mod test {
     #[test]
     fn it_retrieves_top_level_value() {
       let ctx = sample_ctx();
+      let args = GetArgs {
+        key: Some("current_section".into()),
+        output: None,
+      };
 
-      let result = super::super::get_value("current_section", &ctx);
+      let result = super::super::get_value(&args, &ctx);
 
       assert!(result.is_ok());
     }
@@ -494,8 +620,12 @@ mod test {
     #[test]
     fn it_returns_error_for_missing_key() {
       let ctx = sample_ctx();
+      let args = GetArgs {
+        key: Some("nonexistent.key".into()),
+        output: None,
+      };
 
-      let result = super::super::get_value("nonexistent.key", &ctx);
+      let result = super::super::get_value(&args, &ctx);
 
       assert!(result.is_err());
     }

@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "config undo not yet implemented (see #182)"]
 fn it_undoes_last_config_change() {
   let doing = DoingCmd::new();
 

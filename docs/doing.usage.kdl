@@ -137,6 +137,10 @@ cmd "completion" help="Generate shell completions" {
 }
 
 cmd "config" help="View, edit, and manage configuration" {
+  cmd "dump" help="Dump a config value (alias for get)" {
+    arg "<KEY>" help="Dot-separated config key"
+    flag "-o --output <OUTPUT>" help="Output format (json or yaml)"
+  }
   cmd "edit" help="Open the config file in the configured editor" {
     flag "-a --app <APP>" help="Open config with the specified application"
     flag "-b --bundle-id <BUNDLE_ID>" help="Open config with the specified macOS app bundle identifier"
@@ -145,14 +149,17 @@ cmd "config" help="View, edit, and manage configuration" {
   }
   cmd "get" help="Get a config value by dot-path (e.g., editors.default)" {
     arg "<KEY>" help="Dot-separated config key (e.g., editors.default, search.case)"
+    flag "-o --output <OUTPUT>" help="Output format (json or yaml)"
   }
   cmd "list" help="List all detected config files in the config cascade"
+  cmd "open" help="Open the config file in the configured editor (alias for edit)"
   cmd "set" help="Set a config value by dot-path" {
     arg "<KEY>" help="Dot-separated config key"
     arg "<VALUE>" help="Value to set (omit when using --remove)"
     flag "-l --local" help="Write to a local .doingrc in the current directory instead of global config"
     flag "-r --remove" help="Remove the key from the config file instead of setting it"
   }
+  cmd "undo" help="Undo the last config change made by config set"
 }
 
 cmd "done" help="Add a completed entry" {

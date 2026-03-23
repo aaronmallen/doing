@@ -18,7 +18,6 @@ fn it_outputs_config_value() {
 }
 
 #[test]
-#[ignore = "dump alias not yet implemented (see #181)"]
 fn it_outputs_config_value_with_dump_alias() {
   let doing = DoingCmd::new();
 
@@ -35,7 +34,6 @@ fn it_outputs_config_value_with_dump_alias() {
 }
 
 #[test]
-#[ignore = "--output flag not yet implemented (see #181)"]
 fn it_outputs_config_value_as_json() {
   let doing = DoingCmd::new();
 
@@ -54,7 +52,6 @@ fn it_outputs_config_value_as_json() {
 }
 
 #[test]
-#[ignore = "--output flag not yet implemented (see #181)"]
 fn it_outputs_with_short_flag() {
   let doing = DoingCmd::new();
 
@@ -89,7 +86,6 @@ fn it_supports_dot_separated_key_paths() {
 }
 
 #[test]
-#[ignore = "fuzzy key matching not yet implemented (see #183)"]
 fn it_fuzzy_matches_key_paths() {
   let doing = DoingCmd::new();
 

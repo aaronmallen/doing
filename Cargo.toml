@@ -26,7 +26,8 @@ license = "MIT"
 repository = "https://github.com/aaronmallen/doing"
 rust-version = "1.88.0"
 
-[dependencies]
+[workspace.dependencies]
+assert_cmd = "2"
 chrono = { features = ["serde"], version = "0.4" }
 clap = { features = ["derive", "suggestions"], version = "4" }
 clap_complete = "4"
@@ -37,6 +38,8 @@ indexmap = "2"
 json_comments = "0.2"
 log = "0.4"
 md5 = "0.8"
+predicates = "3"
+pretty_assertions = "1"
 regex = "1"
 self_update = { default-features = false, features = [
   "archive-tar",
@@ -56,7 +59,32 @@ typed-env = "0.3"
 yaml_serde = "0.10"
 yansi = { features = ["detect-env", "detect-tty", "hyperlink"], version = "1" }
 
+[dependencies]
+chrono.workspace = true
+clap.workspace = true
+clap_complete.workspace = true
+dialoguer.workspace = true
+dir_spec.workspace = true
+env_logger.workspace = true
+indexmap.workspace = true
+json_comments.workspace = true
+log.workspace = true
+md5.workspace = true
+regex.workspace = true
+self_update.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+strsim.workspace = true
+sublime_fuzzy.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+toml_edit.workspace = true
+typed-env.workspace = true
+yaml_serde.workspace = true
+yansi.workspace = true
+
 [dev-dependencies]
-assert_cmd = "2"
-predicates = "3"
-pretty_assertions = "1"
+assert_cmd.workspace = true
+predicates.workspace = true
+pretty_assertions.workspace = true

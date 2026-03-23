@@ -133,6 +133,17 @@ impl Command {
     Ok(())
   }
 
+  fn apply_date_filter(&self, entries: &mut Vec<Entry>) -> Result<()> {
+    if let Some(ref from) = self.from {
+      let (after, before) = crate::time::parse_range(from)?;
+      entries.retain(|e| {
+        let date = e.date();
+        date >= after && date <= before
+      });
+    }
+    Ok(())
+  }
+
   fn apply_filter_flags(&self, entries: &mut Vec<Entry>, ctx: &AppContext) -> Result<()> {
     let has_filters =
       self.after.is_some() || self.before.is_some() || self.case.is_some() || self.exact || self.not || self.only_timed;
@@ -154,17 +165,6 @@ impl Command {
     let options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
     let filtered = crate::ops::filter::filter_entries(mem::take(entries), &options);
     *entries = filtered;
-    Ok(())
-  }
-
-  fn apply_date_filter(&self, entries: &mut Vec<Entry>) -> Result<()> {
-    if let Some(ref from) = self.from {
-      let (after, before) = crate::time::parse_range(from)?;
-      entries.retain(|e| {
-        let date = e.date();
-        date >= after && date <= before
-      });
-    }
     Ok(())
   }
 

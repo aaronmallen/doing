@@ -63,28 +63,6 @@ pub fn list_undone(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
   list_files_with_ext(source, backup_dir, ".undone")
 }
 
-fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {
-  if !backup_dir.exists() {
-    return Ok(Vec::new());
-  }
-
-  let prefix = backup_prefix(source);
-  let mut backups: Vec<PathBuf> = fs::read_dir(backup_dir)?
-    .filter_map(|entry| entry.ok())
-    .map(|entry| entry.path())
-    .filter(|path| {
-      path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .map(|n| n.starts_with(&prefix) && n.ends_with(ext))
-        .unwrap_or(false)
-    })
-    .collect();
-
-  backups.sort_by(|a, b| b.cmp(a));
-  Ok(backups)
-}
-
 /// Remove old backups for `source` that exceed `history_size`.
 ///
 /// Backups are identified by the `{stem}_*.bak` glob pattern in `backup_dir`
@@ -116,6 +94,28 @@ pub fn write_with_backup(doc: &Document, path: &Path, config: &Config) -> Result
   }
 
   taskpaper_io::write_file(doc, path, config.doing_file_sort)
+}
+
+fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {
+  if !backup_dir.exists() {
+    return Ok(Vec::new());
+  }
+
+  let prefix = backup_prefix(source);
+  let mut backups: Vec<PathBuf> = fs::read_dir(backup_dir)?
+    .filter_map(|entry| entry.ok())
+    .map(|entry| entry.path())
+    .filter(|path| {
+      path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .map(|n| n.starts_with(&prefix) && n.ends_with(ext))
+        .unwrap_or(false)
+    })
+    .collect();
+
+  backups.sort_by(|a, b| b.cmp(a));
+  Ok(backups)
 }
 
 #[cfg(test)]

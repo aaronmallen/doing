@@ -110,34 +110,6 @@ fn clear_tags(rc_path: &PathBuf, ctx: &mut crate::cli::AppContext) -> Result<()>
   Ok(())
 }
 
-fn remove_tags(path: &PathBuf, tags_to_remove: &[String]) -> Result<()> {
-  if !path.exists() {
-    return Ok(());
-  }
-
-  let content =
-    fs::read_to_string(path).map_err(|e| Error::Config(format!("failed to read {}: {e}", path.display())))?;
-
-  let mut value: serde_json::Value = if content.trim().is_empty() {
-    return Ok(());
-  } else {
-    yaml_serde::from_str(&content).map_err(|e| Error::Config(format!("failed to parse {}: {e}", path.display())))?
-  };
-
-  if let Some(tags) = value.get_mut("default_tags").and_then(|v| v.as_array_mut()) {
-    tags.retain(|t| {
-      t.as_str()
-        .map(|s| !tags_to_remove.iter().any(|r| r.eq_ignore_ascii_case(s)))
-        .unwrap_or(true)
-    });
-  }
-
-  let yaml = yaml_serde::to_string(&value).map_err(|e| Error::Config(format!("failed to serialize config: {e}")))?;
-  fs::write(path, yaml).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
-
-  Ok(())
-}
-
 fn merge_tags(path: &PathBuf, new_tags: &[String]) -> Result<()> {
   let content =
     fs::read_to_string(path).map_err(|e| Error::Config(format!("failed to read {}: {e}", path.display())))?;
@@ -178,6 +150,34 @@ fn merge_tags(path: &PathBuf, new_tags: &[String]) -> Result<()> {
     "default_tags".into(),
     serde_json::Value::Array(merged.into_iter().map(serde_json::Value::String).collect()),
   );
+
+  let yaml = yaml_serde::to_string(&value).map_err(|e| Error::Config(format!("failed to serialize config: {e}")))?;
+  fs::write(path, yaml).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
+
+  Ok(())
+}
+
+fn remove_tags(path: &PathBuf, tags_to_remove: &[String]) -> Result<()> {
+  if !path.exists() {
+    return Ok(());
+  }
+
+  let content =
+    fs::read_to_string(path).map_err(|e| Error::Config(format!("failed to read {}: {e}", path.display())))?;
+
+  let mut value: serde_json::Value = if content.trim().is_empty() {
+    return Ok(());
+  } else {
+    yaml_serde::from_str(&content).map_err(|e| Error::Config(format!("failed to parse {}: {e}", path.display())))?
+  };
+
+  if let Some(tags) = value.get_mut("default_tags").and_then(|v| v.as_array_mut()) {
+    tags.retain(|t| {
+      t.as_str()
+        .map(|s| !tags_to_remove.iter().any(|r| r.eq_ignore_ascii_case(s)))
+        .unwrap_or(true)
+    });
+  }
 
   let yaml = yaml_serde::to_string(&value).map_err(|e| Error::Config(format!("failed to serialize config: {e}")))?;
   fs::write(path, yaml).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;

@@ -12,14 +12,15 @@ use crate::{
 ///
 /// Views are named filter/display presets stored in the `views` section of your
 /// config file. Use `doing views` to see all defined views, `doing views edit`
-/// to open a view's config in your editor, or `doing views remove` to delete one.
+/// to open a view's config in your editor, or `doing views --remove` to delete one.
 ///
 /// # Examples
 ///
 /// ```text
-/// doing views                # list all views
-/// doing views edit done      # edit the "done" view in your editor
-/// doing views remove color   # remove the "color" view
+/// doing views                    # list all views
+/// doing views edit done          # edit the "done" view in your editor
+/// doing views --remove color     # remove the "color" view
+/// doing views -r color           # same, using short flag
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
@@ -37,14 +38,20 @@ pub struct Command {
   /// Output format (e.g. json)
   #[arg(short = 'o', long, global = true)]
   output: Option<String>,
+
+  /// Remove a view from configuration
+  #[arg(short = 'r', long, value_name = "VIEW")]
+  remove: Option<String>,
 }
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    match &self.action {
-      Some(Action::Edit(args)) => return edit_view(&args.name, ctx),
-      Some(Action::Remove(args)) => return remove_view(&args.name, ctx),
-      None => {}
+    if let Some(Action::Edit(args)) = &self.action {
+      return edit_view(&args.name, ctx);
+    }
+
+    if let Some(ref view_name) = self.remove {
+      return remove_view(view_name, ctx);
     }
 
     // If a name is provided, dump that view's config
@@ -65,22 +72,12 @@ impl Command {
 enum Action {
   /// Open a view's configuration in your editor
   Edit(EditArgs),
-  /// Remove a view from configuration
-  Remove(RemoveArgs),
 }
 
 /// Arguments for the `views edit` subcommand.
 #[derive(Args, Clone, Debug)]
 struct EditArgs {
   /// Name of the view to edit
-  #[arg(index = 1, value_name = "NAME")]
-  name: String,
-}
-
-/// Arguments for the `views remove` subcommand.
-#[derive(Args, Clone, Debug)]
-struct RemoveArgs {
-  /// Name of the view to remove
   #[arg(index = 1, value_name = "NAME")]
   name: String,
 }

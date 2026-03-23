@@ -32,7 +32,10 @@ count = 10
 fn it_removes_view() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 
-  let output = doing.run(["views", "remove", "done"]).output().expect("failed to run");
+  let output = doing
+    .run(["views", "--remove", "done"])
+    .output()
+    .expect("failed to run");
 
   let stderr = String::from_utf8_lossy(&output.stderr);
   assert!(output.status.success(), "expected success exit code, stderr: {stderr}");
@@ -50,7 +53,7 @@ fn it_removes_view() {
 fn it_removes_with_short_flag() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 
-  let output = doing.run(["views", "remove", "color"]).output().expect("failed to run");
+  let output = doing.run(["views", "-r", "color"]).output().expect("failed to run");
 
   let stderr = String::from_utf8_lossy(&output.stderr);
   assert!(output.status.success(), "expected success exit code, stderr: {stderr}");
@@ -61,7 +64,7 @@ fn it_returns_error_for_nonexistent_view() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 
   let output = doing
-    .run(["views", "remove", "nonexistent"])
+    .run(["views", "--remove", "nonexistent"])
     .output()
     .expect("failed to run");
 

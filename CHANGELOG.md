@@ -7,6 +7,30 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.0.1-alpha.7] - 2026-03-23
+
+### Added
+
+- `--auto` flag on `finish` to auto-generate `@done` timestamps based on entry sequence (see [#168])
+- `--from` flag on `now`, `done`, and `finish` supports date range parsing (see [#160])
+- `--template` accepts inline template strings; `--config-template` selects named templates from config (see [#158])
+- Ruby-style `key = value` mapping syntax in autotag configuration (see [#163])
+- `--autotag` flag on `tag` to apply autotag rules from config (see [#205])
+- `show` accepts `@tag` as first positional argument for tag filtering (see [#202])
+- `--case`, `--exact` filter flags and `--bool PATTERN` support on `again` (see [#194], [#195])
+- `--case` flag on `finish` for search case sensitivity (see [#171])
+- `--stdout` global flag to redirect status messages to stdout (see [#155])
+- Config file path included in `--debug` output (see [#153])
+- `MM/DD` short date and US date + time combination parsing (see [#151], [#152])
+- `--no-times` flag on `today`, `yesterday`, `recent`, `since` (see [#204])
+- `changes` alias for changelog command (see [#200])
+- Missing `-c`, `-n`, `-t` short flags on `mark` and `reset` (see [#199])
+
+### Fixed
+
+- `extract_note` matches Ruby doing behavior for multiple parenthetical notes (see [#161])
+- `tags` supports `--no-counts`, `--no-line` flags and silences empty output (see [#208], [#209], [#211])
+
 ## [v0.0.1-alpha.6.1] - 2026-03-23
 
 ### Added
@@ -236,33 +260,54 @@ Initial alpha release
 [#86]: https://github.com/aaronmallen/doing/issues/86
 [#88]: https://github.com/aaronmallen/doing/issues/88
 [#100]: https://github.com/aaronmallen/doing/issues/100
+[#151]: https://github.com/aaronmallen/doing/issues/151
+[#152]: https://github.com/aaronmallen/doing/issues/152
+[#153]: https://github.com/aaronmallen/doing/issues/153
 [#154]: https://github.com/aaronmallen/doing/issues/154
+[#155]: https://github.com/aaronmallen/doing/issues/155
 [#156]: https://github.com/aaronmallen/doing/issues/156
+[#158]: https://github.com/aaronmallen/doing/issues/158
 [#159]: https://github.com/aaronmallen/doing/issues/159
+[#160]: https://github.com/aaronmallen/doing/issues/160
+[#161]: https://github.com/aaronmallen/doing/issues/161
 [#162]: https://github.com/aaronmallen/doing/issues/162
+[#163]: https://github.com/aaronmallen/doing/issues/163
 [#164]: https://github.com/aaronmallen/doing/issues/164
 [#165]: https://github.com/aaronmallen/doing/issues/165
 [#166]: https://github.com/aaronmallen/doing/issues/166
 [#167]: https://github.com/aaronmallen/doing/issues/167
+[#168]: https://github.com/aaronmallen/doing/issues/168
 [#170]: https://github.com/aaronmallen/doing/issues/170
 [#169]: https://github.com/aaronmallen/doing/issues/169
+[#171]: https://github.com/aaronmallen/doing/issues/171
 [#172]: https://github.com/aaronmallen/doing/issues/172
 [#173]: https://github.com/aaronmallen/doing/issues/173
 [#185]: https://github.com/aaronmallen/doing/issues/185
 [#188]: https://github.com/aaronmallen/doing/issues/188
 [#189]: https://github.com/aaronmallen/doing/issues/189
+[#194]: https://github.com/aaronmallen/doing/issues/194
+[#195]: https://github.com/aaronmallen/doing/issues/195
 [#196]: https://github.com/aaronmallen/doing/issues/196
 [#197]: https://github.com/aaronmallen/doing/issues/197
 [#198]: https://github.com/aaronmallen/doing/issues/198
+[#199]: https://github.com/aaronmallen/doing/issues/199
+[#200]: https://github.com/aaronmallen/doing/issues/200
 [#201]: https://github.com/aaronmallen/doing/issues/201
+[#202]: https://github.com/aaronmallen/doing/issues/202
 [#203]: https://github.com/aaronmallen/doing/issues/203
+[#204]: https://github.com/aaronmallen/doing/issues/204
+[#205]: https://github.com/aaronmallen/doing/issues/205
 [#206]: https://github.com/aaronmallen/doing/issues/206
 [#207]: https://github.com/aaronmallen/doing/issues/207
+[#208]: https://github.com/aaronmallen/doing/issues/208
+[#209]: https://github.com/aaronmallen/doing/issues/209
 [#210]: https://github.com/aaronmallen/doing/issues/210
+[#211]: https://github.com/aaronmallen/doing/issues/211
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6.1...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.7...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
 [v0.0.1-alpha.5]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...0.0.1-alpha.5
 [v0.0.1-alpha.6.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...0.0.1-alpha.6.1
+[v0.0.1-alpha.7]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6.1...0.0.1-alpha.7

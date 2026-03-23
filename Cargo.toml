@@ -9,7 +9,7 @@ name = "doing"
 readme = "README.md"
 repository = "https://github.com/aaronmallen/doing"
 rust-version = "1.88.0"
-version = "0.0.1-alpha.6"
+version = "0.0.1-alpha.7"
 
 [package.metadata.binstall]
 bin-dir = "{ bin }{ binary-ext }"

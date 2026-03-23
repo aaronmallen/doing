@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "requires --stdout flag implementation (see #155)"]
 fn it_redirects_info_messages_to_stdout() {
   let doing = DoingCmd::new();
 

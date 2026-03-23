@@ -1,6 +1,5 @@
 use crate::support::helpers::DoingCmd;
 
-#[ignore = "--stdout flag does not yet redirect status messages to stdout (#155)"]
 #[test]
 fn it_combines_info_and_display_on_stdout() {
   let doing = DoingCmd::new();
@@ -17,7 +16,6 @@ fn it_combines_info_and_display_on_stdout() {
   assert!(stderr.is_empty(), "expected empty stderr with --stdout, got: {stderr}");
 }
 
-#[ignore = "--stdout flag does not yet redirect status messages to stdout (#155)"]
 #[test]
 fn it_redirects_info_messages_from_stderr_to_stdout() {
   let doing = DoingCmd::new();
@@ -36,7 +34,6 @@ fn it_redirects_info_messages_from_stderr_to_stdout() {
   assert!(stderr.is_empty(), "expected empty stderr with --stdout, got: {stderr}");
 }
 
-#[ignore = "--stdout flag does not yet redirect status messages to stdout (#155)"]
 #[test]
 fn it_works_with_done_command() {
   let doing = DoingCmd::new();

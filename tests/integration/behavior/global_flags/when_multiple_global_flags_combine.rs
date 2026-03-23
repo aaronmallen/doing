@@ -108,7 +108,6 @@ fn it_applies_quiet_and_no_color_together() {
   );
 }
 
-#[ignore = "--stdout flag does not yet redirect status messages to stdout (#155)"]
 #[test]
 fn it_applies_stdout_and_no_color_together() {
   let doing = DoingCmd::new_with_config(COLOR_TEMPLATE_CONFIG);
@@ -145,7 +144,6 @@ fn it_applies_stdout_and_no_color_together() {
   assert!(stderr.is_empty(), "expected empty stderr with --stdout, got: {stderr}");
 }
 
-#[ignore = "--stdout flag does not yet redirect status messages to stdout (#155)"]
 #[test]
 fn it_applies_stdout_and_quiet_together() {
   let doing = DoingCmd::new();

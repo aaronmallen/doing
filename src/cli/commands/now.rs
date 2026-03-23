@@ -100,7 +100,7 @@ impl Command {
 
     let time_str = date.format("%_I:%M%P").to_string();
     ctx.status(format!(
-      "New entry: added \"{time_str}: {display_title}\" to {section_name}"
+      "New entry: Added \"{time_str}: {display_title}\" to {section_name}"
     ));
     Ok(())
   }

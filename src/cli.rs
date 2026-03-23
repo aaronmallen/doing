@@ -80,7 +80,11 @@ impl AppContext {
   /// Respects `--quiet` — when quiet mode is active, the message is suppressed.
   pub fn status(&self, msg: impl std::fmt::Display) {
     if !self.quiet {
-      eprintln!("{msg}");
+      if self.stdout {
+        println!("{msg}");
+      } else {
+        eprintln!("{msg}");
+      }
     }
   }
 }

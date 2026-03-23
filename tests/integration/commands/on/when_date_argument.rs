@@ -61,7 +61,6 @@ fn it_shows_entries_for_relative_day() {
 }
 
 #[test]
-#[ignore = "date range 'to' does not include end boundary (see #201)"]
 fn it_shows_entries_for_date_range_with_to() {
   let doing = DoingCmd::new();
 

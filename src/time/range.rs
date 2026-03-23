@@ -37,6 +37,12 @@ pub fn parse_range(input: &str) -> Result<(DateTime<Local>, DateTime<Local>)> {
   if parts.len() == 2 {
     let start = chronify(parts[0])?;
     let end = chronify(parts[1])?;
+    // When end is at midnight (date-only expression), extend to end-of-day to make inclusive
+    let end = if end.time() == NaiveTime::from_hms_opt(0, 0, 0).unwrap() {
+      end + Duration::days(1)
+    } else {
+      end
+    };
     return Ok((start, end));
   }
 
@@ -67,7 +73,8 @@ mod test {
       let (start, end) = parse_range("2024-01-01 to 2024-01-31").unwrap();
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
-      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
+      // End boundary is inclusive: 2024-01-31 midnight becomes 2024-02-01 midnight
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());
     }
 
     #[test]
@@ -77,7 +84,8 @@ mod test {
 
       assert_eq!(start.date_naive(), (now - Duration::days(1)).date_naive());
       assert_eq!(start.time(), NaiveTime::from_hms_opt(15, 0, 0).unwrap());
-      assert_eq!(end.date_naive(), now.date_naive());
+      // "today" resolves to midnight, so end boundary becomes tomorrow midnight
+      assert_eq!(end.date_naive(), (now + Duration::days(1)).date_naive());
     }
 
     #[test]
@@ -87,7 +95,8 @@ mod test {
       let expected_start = (now - Duration::days(1)).date_naive();
 
       assert_eq!(start.date_naive(), expected_start);
-      assert_eq!(end.date_naive(), now.date_naive());
+      // End boundary is inclusive: today midnight becomes tomorrow midnight
+      assert_eq!(end.date_naive(), (now + Duration::days(1)).date_naive());
     }
 
     #[test]
@@ -137,7 +146,7 @@ mod test {
       let (start, end) = parse_range("2024-01-01 -- 2024-01-31").unwrap();
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
-      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());
     }
 
     #[test]
@@ -145,7 +154,7 @@ mod test {
       let (start, end) = parse_range("2024-01-01 through 2024-01-31").unwrap();
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
-      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());
     }
 
     #[test]
@@ -153,7 +162,7 @@ mod test {
       let (start, end) = parse_range("2024-01-01 thru 2024-01-31").unwrap();
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
-      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());
     }
 
     #[test]
@@ -161,7 +170,7 @@ mod test {
       let (start, end) = parse_range("2024-01-01 until 2024-01-31").unwrap();
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
-      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 31).unwrap());
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());
     }
   }
 }

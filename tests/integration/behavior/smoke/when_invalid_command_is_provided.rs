@@ -21,7 +21,6 @@ fn it_shows_error_for_unknown_flag() {
 }
 
 #[test]
-#[ignore = "not yet implemented — see #150"]
 fn it_suggests_similar_command() {
   let doing = DoingCmd::new();
   let output = doing.run(["shwo"]).output().expect("failed to run doing");

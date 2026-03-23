@@ -403,7 +403,11 @@ impl Command {
           let title: Vec<String> = args.iter().filter_map(|s| s.to_str().map(String::from)).collect();
           commands::now::Command::call_external(title, ctx)
         } else {
-          Err(crate::errors::Error::Config(format!("unknown command: {name}")))
+          let mut message = format!("unknown command: {name}");
+          if let Some(suggestion) = suggest_subcommand(name) {
+            message.push_str(&format!("\n\n\tDid you mean '{suggestion}'?"));
+          }
+          Err(crate::errors::Error::Config(message))
         }
       }
       Self::Finish(cmd) => cmd.call(ctx),
@@ -445,4 +449,21 @@ pub fn run() -> Result<()> {
 
 fn init_logger(level: log::LevelFilter) {
   env_logger::Builder::new().filter_level(level).init();
+}
+
+fn suggest_subcommand(name: &str) -> Option<String> {
+  let threshold = 0.6;
+  Cli::command()
+    .get_subcommands()
+    .filter_map(|cmd| {
+      let cmd_name = cmd.get_name();
+      let similarity = strsim::jaro_winkler(name, cmd_name);
+      if similarity >= threshold {
+        Some((cmd_name.to_owned(), similarity))
+      } else {
+        None
+      }
+    })
+    .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+    .map(|(name, _)| name)
 }

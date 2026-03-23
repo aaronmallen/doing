@@ -5,7 +5,7 @@ use crate::{
   cli::AppContext,
   config::Config,
   errors::Result,
-  ops::{autotag::autotag, backup::write_with_backup, extract_note::extract_note},
+  ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Entry, Note, Section, Tag, Tags},
   time::{chronify, parse_duration, parse_range},
 };
@@ -205,38 +205,7 @@ impl Command {
   }
 
   fn resolve_title_and_note(&self, config: &Config) -> Result<(String, Note)> {
-    let raw_title = if self.editor {
-      let content = crate::cli::editor::edit("", config)?;
-      content.lines().next().unwrap_or("").trim().to_string()
-    } else {
-      self.title.join(" ")
-    };
-
-    let (title, extracted_note) = extract_note(&raw_title);
-
-    let asked_note = if self.ask {
-      let input: String = dialoguer::Input::new()
-        .with_prompt("Add a note")
-        .allow_empty(true)
-        .interact_text()
-        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
-      if input.is_empty() { None } else { Some(input) }
-    } else {
-      None
-    };
-
-    let parts: Vec<&str> = [self.note.as_deref(), extracted_note.as_deref(), asked_note.as_deref()]
-      .into_iter()
-      .flatten()
-      .collect();
-
-    let note = if parts.is_empty() {
-      Note::new()
-    } else {
-      Note::from_str(&parts.join("\n"))
-    };
-
-    Ok((title, note))
+    crate::cli::title_note::resolve_title_and_note(&self.title, self.note.as_deref(), self.ask, self.editor, config)
   }
 
   fn tag_last_entry(&self, ctx: &mut AppContext, section_name: &str, include_date: bool) -> Result<()> {

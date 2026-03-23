@@ -88,7 +88,8 @@ impl Command {
     let filtered = filter_entries(all_entries, &filter_options);
 
     let template_name = self.resolve_template(&view);
-    let render_options = RenderOptions::from_config(&template_name, &ctx.config);
+    let mut render_options = RenderOptions::from_config(&template_name, &ctx.config);
+    render_options.include_notes = ctx.include_notes;
     let output = format_items(&filtered, &render_options, &ctx.config, self.display.totals);
 
     if !output.is_empty() {

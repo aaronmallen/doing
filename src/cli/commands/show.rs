@@ -83,7 +83,9 @@ impl Command {
       filtered
     };
 
-    let output = self.display.render_entries(&entries, &ctx.config, "default")?;
+    let output = self
+      .display
+      .render_entries(&entries, &ctx.config, "default", ctx.include_notes)?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;

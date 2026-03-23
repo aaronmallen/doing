@@ -16,7 +16,6 @@ order = "asc"
 default = "cat"
 "#;
 
-#[ignore = "--notes does not yet override include_notes=false for display (#154)"]
 #[test]
 fn it_overrides_config_include_notes_false() {
   let doing = DoingCmd::new_with_config(NOTES_DISABLED_CONFIG);
@@ -34,7 +33,6 @@ fn it_overrides_config_include_notes_false() {
   );
 }
 
-#[ignore = "--notes does not yet override include_notes=false for display (#154)"]
 #[test]
 fn it_shows_notes_in_output() {
   let doing = DoingCmd::new_with_config(NOTES_DISABLED_CONFIG);

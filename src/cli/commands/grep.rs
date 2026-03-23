@@ -113,7 +113,9 @@ impl Command {
       return self.action_editor(ctx, &entries);
     }
 
-    let output = self.display.render_entries(&entries, &ctx.config, "default")?;
+    let output = self
+      .display
+      .render_entries(&entries, &ctx.config, "default", ctx.include_notes)?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
@@ -141,7 +143,8 @@ impl Command {
   }
 
   fn action_editor(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
-    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let mut render_options = RenderOptions::from_config("default", &ctx.config);
+    render_options.include_notes = ctx.include_notes;
     let divider = "---";
 
     let content: Vec<String> = entries

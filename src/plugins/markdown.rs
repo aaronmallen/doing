@@ -100,6 +100,7 @@ mod test {
   fn sample_options() -> RenderOptions {
     RenderOptions {
       date_format: "%Y-%m-%d %H:%M".into(),
+      include_notes: true,
       template: String::new(),
       wrap_width: 0,
     }

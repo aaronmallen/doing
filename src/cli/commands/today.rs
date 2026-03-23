@@ -64,7 +64,9 @@ impl Command {
 
     let filtered = filter_entries(all_entries, &options);
 
-    let output = self.display.render_entries(&filtered, &ctx.config, "today")?;
+    let output = self
+      .display
+      .render_entries(&filtered, &ctx.config, "today", ctx.include_notes)?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;

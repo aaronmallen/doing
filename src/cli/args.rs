@@ -115,9 +115,16 @@ impl DisplayArgs {
   ///
   /// Returns an error if `--output` is specified but does not match any registered
   /// export plugin.
-  pub fn render_entries(&self, entries: &[Entry], config: &Config, default_template: &str) -> Result<String> {
+  pub fn render_entries(
+    &self,
+    entries: &[Entry],
+    config: &Config,
+    default_template: &str,
+    include_notes: bool,
+  ) -> Result<String> {
     let template_name = self.template.as_deref().unwrap_or(default_template);
-    let render_options = RenderOptions::from_config(template_name, config);
+    let mut render_options = RenderOptions::from_config(template_name, config);
+    render_options.include_notes = include_notes;
 
     if let Some(ref format) = self.output {
       let registry = default_registry();
@@ -369,7 +376,7 @@ mod test {
         };
         let config = Config::default();
 
-        let result = args.render_entries(&[], &config, "default");
+        let result = args.render_entries(&[], &config, "default", true);
 
         assert!(result.is_ok());
       }
@@ -379,7 +386,7 @@ mod test {
         let args = DisplayArgs::default();
         let config = Config::default();
 
-        let result = args.render_entries(&[], &config, "default");
+        let result = args.render_entries(&[], &config, "default", true);
 
         assert!(result.is_ok());
       }
@@ -392,7 +399,7 @@ mod test {
         };
         let config = Config::default();
 
-        let result = args.render_entries(&[], &config, "default");
+        let result = args.render_entries(&[], &config, "default", true);
 
         assert!(result.is_err());
         let err = result.unwrap_err().to_string();

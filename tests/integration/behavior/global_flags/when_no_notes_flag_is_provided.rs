@@ -16,7 +16,6 @@ order = "asc"
 default = "cat"
 "#;
 
-#[ignore = "--no-notes does not yet suppress note display (#154)"]
 #[test]
 fn it_hides_notes_in_last_output() {
   let doing = DoingCmd::new_with_config(NOTES_CONFIG);
@@ -38,7 +37,6 @@ fn it_hides_notes_in_last_output() {
   );
 }
 
-#[ignore = "--no-notes does not yet suppress note display (#154)"]
 #[test]
 fn it_hides_notes_in_show_output() {
   let doing = DoingCmd::new_with_config(NOTES_CONFIG);
@@ -60,7 +58,6 @@ fn it_hides_notes_in_show_output() {
   );
 }
 
-#[ignore = "--no-notes does not yet suppress note display (#154)"]
 #[test]
 fn it_hides_notes_in_today_output() {
   let doing = DoingCmd::new_with_config(NOTES_CONFIG);

@@ -66,7 +66,9 @@ impl Command {
       return self.action_editor(ctx, &filtered);
     }
 
-    let output = self.display.render_entries(&filtered, &ctx.config, "last")?;
+    let output = self
+      .display
+      .render_entries(&filtered, &ctx.config, "last", ctx.include_notes)?;
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
@@ -87,7 +89,8 @@ impl Command {
 
   fn action_editor(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
     let entry = &entries[0];
-    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let mut render_options = RenderOptions::from_config("default", &ctx.config);
+    render_options.include_notes = ctx.include_notes;
     let initial = format_items(std::slice::from_ref(entry), &render_options, &ctx.config, false);
     let _edited = editor::edit(&initial, &ctx.config)?;
     ctx.status("Edited last entry");

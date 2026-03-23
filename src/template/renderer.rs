@@ -23,6 +23,7 @@ const BUILTIN_TEMPLATE_SIMPLE: &str = "%boldwhite%-10shortdate %boldcyan║ %bol
 #[derive(Clone, Debug)]
 pub struct RenderOptions {
   pub date_format: String,
+  pub include_notes: bool,
   pub template: String,
   pub wrap_width: u32,
 }
@@ -39,13 +40,14 @@ impl RenderOptions {
       .or_else(|| config.templates.get("default"))
       .cloned()
       .unwrap_or_else(|| builtin_template(name));
-    Self::from_template_config(&tc)
+    Self::from_template_config(&tc, config.include_notes)
   }
 
   /// Build render options from a `TemplateConfig`.
-  pub fn from_template_config(tc: &TemplateConfig) -> Self {
+  pub fn from_template_config(tc: &TemplateConfig, include_notes: bool) -> Self {
     Self {
       date_format: tc.date_format.clone(),
+      include_notes,
       template: tc.template.clone(),
       wrap_width: tc.wrap_width,
     }
@@ -219,7 +221,7 @@ fn build_values(entry: &Entry, options: &RenderOptions, config: &Config) -> Hash
 
   // Note variants
   let note = entry.note();
-  if !note.is_empty() {
+  if options.include_notes && !note.is_empty() {
     values.insert(TokenKind::Note, note.to_line(" "));
     values.insert(TokenKind::Chompnote, note.to_line(" "));
 
@@ -368,6 +370,7 @@ mod test {
   fn sample_options() -> RenderOptions {
     RenderOptions {
       date_format: "%Y-%m-%d %H:%M".into(),
+      include_notes: true,
       template: String::new(),
       wrap_width: 0,
     }

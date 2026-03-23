@@ -184,7 +184,8 @@ impl Command {
   }
 
   fn action_editor(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
-    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let mut render_options = RenderOptions::from_config("default", &ctx.config);
+    render_options.include_notes = ctx.include_notes;
     let divider = "---";
 
     let content: Vec<String> = selected
@@ -307,7 +308,8 @@ impl Command {
   }
 
   fn action_output(&self, ctx: &AppContext, selected: &[Entry]) -> Result<()> {
-    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let mut render_options = RenderOptions::from_config("default", &ctx.config);
+    render_options.include_notes = ctx.include_notes;
     let output = if let Some(ref format) = self.output {
       let registry = default_registry();
       if let Some(plugin) = registry.resolve(format) {

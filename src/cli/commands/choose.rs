@@ -221,7 +221,8 @@ impl Command {
   }
 
   fn action_output(&self, ctx: &AppContext, entry: &Entry) -> Result<()> {
-    let render_options = RenderOptions::from_config("default", &ctx.config);
+    let mut render_options = RenderOptions::from_config("default", &ctx.config);
+    render_options.include_notes = ctx.include_notes;
     let entries = std::slice::from_ref(entry);
     let output = if let Some(ref format) = self.output {
       let registry = default_registry();

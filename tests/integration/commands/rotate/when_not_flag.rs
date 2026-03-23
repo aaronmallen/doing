@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "rotate ignores --tag/--not filter, rotates all entries (see #184)"]
 fn it_inverts_filter() {
   let doing = DoingCmd::new();
 

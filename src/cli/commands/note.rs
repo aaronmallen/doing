@@ -1,3 +1,5 @@
+use std::io::IsTerminal;
+
 use clap::Args;
 
 use crate::{
@@ -182,6 +184,16 @@ impl Command {
 
     let mut lines: Vec<String> = self.text.clone();
     lines.extend(self.note_text.clone());
+
+    // Read from stdin if no text provided and stdin is piped
+    if lines.is_empty() && !self.ask && !std::io::stdin().is_terminal() {
+      let mut stdin_content = String::new();
+      std::io::Read::read_to_string(&mut std::io::stdin(), &mut stdin_content)?;
+      let trimmed = stdin_content.trim().to_string();
+      if !trimmed.is_empty() {
+        return Ok(Some(trimmed));
+      }
+    }
 
     if self.ask {
       let input: String = dialoguer::Input::new()

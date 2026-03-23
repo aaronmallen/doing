@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our CLI does not support --only-timed flag for import (see #186)"]
 fn it_imports_only_timed_entries() {
   let doing = DoingCmd::new();
 

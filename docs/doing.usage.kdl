@@ -114,7 +114,14 @@ cmd "commands" help="Manage optional commands" {
   cmd "enable" help="Enable an optional command" {
     arg "<NAME>" help="The command name to enable"
   }
-  cmd "list" help="List optional commands and their enabled/disabled status"
+  cmd "list" help="List optional commands and their enabled/disabled status" {
+    flag "-d --disabled" help="Show only disabled commands"
+    flag "-s --style <STYLE>" help="Output style"
+  }
+  cmd "ls" help="List optional commands (alias for list)" {
+    flag "-d --disabled" help="Show only disabled commands"
+    flag "-s --style <STYLE>" help="Output style"
+  }
   cmd "remove" help="Disable an optional command" {
     arg "<NAME>" help="The command name to disable"
   }
@@ -241,9 +248,15 @@ cmd "grep" help="Search for entries matching a pattern" {
 
 cmd "import" help="Import entries from other sources" {
   arg "<PATH>" help="Path to the file to import"
+  flag "--after <AFTER>" help="Filter imported entries to those after this date"
   flag "--autotag" help="Apply autotagging rules to imported entries"
+  flag "--before <BEFORE>" help="Filter imported entries to those before this date"
+  flag "--case <CASE>" help="Case sensitivity for search filter (sensitive/ignore/smart)"
+  flag "--exact" help="Use exact (literal substring) matching for search filter"
   flag "--from <FROM>" help="Date range filter for imports (e.g. \"last week\", \"2024-01-01 to 2024-03-01\")"
   flag "--no-overlap" help="Skip entries whose time range overlaps with existing entries"
+  flag "--not" help="Negate filter results"
+  flag "--only-timed" help="Only import entries with a recorded time interval"
   flag "--prefix <PREFIX>" help="Prepend text to all imported entry titles"
   flag "--search <SEARCH>" help="Filter which entries to import by search query"
   flag "-s --section <SECTION>" help="Target section for imported entries (default: current section)"
@@ -389,7 +402,10 @@ cmd "open" help="Open the doing file in an editor" {
   flag "-b --backup" help="Open the most recent backup file instead"
 }
 
-cmd "plugins" help="List installed plugins"
+cmd "plugins" help="List installed plugins" {
+  flag "-c --column" help="Display plugins in column format"
+  flag "-t --type <TYPE>" help="Filter plugins by type (import/export)"
+}
 
 cmd "recent" help="Show recent entries" {
   arg "[COUNT]" help="Number of recent entries to show"
@@ -516,6 +532,7 @@ cmd "show" help="Show entries from a section" {
   arg "[SECTION]" help="Section to display entries from (default: current section, \"all\" for every section)"
   arg "[TAGS]..." help="Additional tag filters (e.g. @tag1 @tag2)"
   flag "--duration" help="Show elapsed time on open entries" negate="--no-duration"
+  flag "-m --menu" help="Present a menu of available sections to choose from"
   flag "-i --interactive" help="Interactively select entries to display"
   flag "-o --output <OUTPUT>" help="Output format"
   flag "--save <SAVE>" help="Save the current options as a named view"
@@ -612,8 +629,11 @@ cmd "tag" help="Add or remove tags from entries" {
 }
 
 cmd "tag-dir" help="Set the default tags directory" {
-  arg "<TAGS>..." help="Tags to set as default_tags"
+  arg "[TAGS]..." help="Tags to set as default_tags"
+  flag "--clear" help="Clear all default tags for the directory"
   flag "--dir <DIR>" help="Directory to create the .doingrc in (defaults to current directory)"
+  flag "-e --editor" help="Open the .doingrc file in an editor"
+  flag "-r --remove" help="Remove the specified tags instead of adding"
 }
 
 cmd "tags" help="List all tags in the doing file" {

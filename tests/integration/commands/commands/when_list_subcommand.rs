@@ -19,7 +19,6 @@ fn it_lists_all_enabled_commands() {
 }
 
 #[test]
-#[ignore = "commands command not yet implemented (see #190)"]
 fn it_lists_with_ls_alias() {
   let doing = DoingCmd::new();
 
@@ -44,7 +43,6 @@ fn it_lists_with_ls_alias() {
 }
 
 #[test]
-#[ignore = "commands command not yet implemented (see #190)"]
 fn it_lists_disabled_commands() {
   let doing = DoingCmd::new();
 
@@ -63,7 +61,6 @@ fn it_lists_disabled_commands() {
 }
 
 #[test]
-#[ignore = "commands command not yet implemented (see #190)"]
 fn it_lists_disabled_with_short_flag() {
   let doing = DoingCmd::new();
 
@@ -80,7 +77,6 @@ fn it_lists_disabled_with_short_flag() {
 }
 
 #[test]
-#[ignore = "commands command not yet implemented (see #190)"]
 fn it_applies_style() {
   let doing = DoingCmd::new();
 
@@ -97,7 +93,6 @@ fn it_applies_style() {
 }
 
 #[test]
-#[ignore = "commands command not yet implemented (see #190)"]
 fn it_applies_style_with_short_flag() {
   let doing = DoingCmd::new();
 

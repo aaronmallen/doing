@@ -1,3 +1,5 @@
+use std::io::IsTerminal;
+
 use clap::Args;
 
 use crate::{
@@ -42,6 +44,10 @@ pub struct Command {
   #[arg(short, long)]
   interactive: bool,
 
+  /// Present a menu of available sections to choose from
+  #[arg(short, long)]
+  menu: bool,
+
   /// Use a pager for output
   #[arg(short, long)]
   pager: bool,
@@ -57,6 +63,27 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    // --menu: present a section picker
+    if self.menu && std::io::stdin().is_terminal() {
+      let section_names: Vec<String> = ctx.document.sections().iter().map(|s| s.title().to_string()).collect();
+
+      if section_names.is_empty() {
+        return Err(crate::errors::Error::Config("no sections available".into()));
+      }
+
+      let selection = dialoguer::Select::new()
+        .with_prompt("Select a section")
+        .items(&section_names)
+        .default(0)
+        .interact()
+        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+
+      let mut cmd = self.clone();
+      cmd.menu = false;
+      cmd.section_name = Some(section_names[selection].clone());
+      return cmd.call(ctx);
+    }
+
     // When the first positional arg starts with @, treat it as a tag filter
     let (section_name, extra_tag) = match self.section_name.as_deref() {
       Some(name) if name.starts_with('@') => {
@@ -161,6 +188,7 @@ mod test {
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
       interactive: false,
+      menu: false,
       pager: false,
       section_name: None,
       tags: vec![],

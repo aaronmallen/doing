@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tag-dir command not yet implemented (see #187)"]
 fn it_opens_doingrc_in_editor() {
   let doing = DoingCmd::new();
   let dir = doing.temp_dir_path().to_path_buf();
@@ -25,7 +24,6 @@ fn it_opens_doingrc_in_editor() {
 }
 
 #[test]
-#[ignore = "tag-dir command not yet implemented (see #187)"]
 fn it_opens_with_short_flag() {
   let doing = DoingCmd::new();
   let dir = doing.temp_dir_path().to_path_buf();

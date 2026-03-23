@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our CLI does not support --case flag for import (see #186)"]
 fn it_performs_case_sensitive_filter() {
   let doing = DoingCmd::new();
 

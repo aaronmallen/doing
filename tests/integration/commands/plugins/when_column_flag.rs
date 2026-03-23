@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "plugins command not yet implemented (see #191)"]
 fn it_outputs_in_column_format() {
   let doing = DoingCmd::new();
 
@@ -16,7 +15,6 @@ fn it_outputs_in_column_format() {
 }
 
 #[test]
-#[ignore = "plugins command not yet implemented (see #191)"]
 fn it_outputs_with_short_flag() {
   let doing = DoingCmd::new();
 

@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "plugins command not yet implemented (see #191)"]
 fn it_lists_import_plugins_only() {
   let doing = DoingCmd::new();
 
@@ -19,7 +18,6 @@ fn it_lists_import_plugins_only() {
 }
 
 #[test]
-#[ignore = "plugins command not yet implemented (see #191)"]
 fn it_lists_export_plugins_only() {
   let doing = DoingCmd::new();
 
@@ -37,7 +35,6 @@ fn it_lists_export_plugins_only() {
 }
 
 #[test]
-#[ignore = "plugins command not yet implemented (see #191)"]
 fn it_lists_with_short_flag() {
   let doing = DoingCmd::new();
 

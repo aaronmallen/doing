@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "rotate ignores --search filter, rotates all entries (see #184)"]
 fn it_rotates_matching_entries() {
   let doing = DoingCmd::new();
 

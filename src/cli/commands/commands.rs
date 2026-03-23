@@ -30,7 +30,10 @@ pub struct Command {
 impl Command {
   pub fn call(&self, ctx: &AppContext, app: &clap::Command) -> Result<()> {
     match &self.action {
-      None | Some(Action::List) => list_commands(ctx, app),
+      None => list_commands(ctx, app, false, None),
+      Some(Action::List(args)) | Some(Action::Ls(args)) => {
+        list_commands(ctx, app, args.disabled, args.style.as_deref())
+      }
       Some(Action::Add(args)) => enable_command(&args.name, ctx, app),
       Some(Action::Disable(args)) => disable_command(&args.name, ctx, app),
       Some(Action::Enable(args)) => enable_command(&args.name, ctx, app),
@@ -49,9 +52,23 @@ enum Action {
   /// Enable an optional command
   Enable(NameArg),
   /// List optional commands and their enabled/disabled status
-  List,
+  List(ListArgs),
+  /// List optional commands (alias for list)
+  Ls(ListArgs),
   /// Disable an optional command
   Remove(NameArg),
+}
+
+/// Arguments for the list subcommand.
+#[derive(Args, Clone, Debug)]
+struct ListArgs {
+  /// Show only disabled commands
+  #[arg(short, long)]
+  disabled: bool,
+
+  /// Output style
+  #[arg(short, long)]
+  style: Option<String>,
 }
 
 /// Arguments for enable/disable subcommands.
@@ -100,7 +117,9 @@ fn enable_command(name: &str, ctx: &AppContext, app: &clap::Command) -> Result<(
   Ok(())
 }
 
-fn list_commands(ctx: &AppContext, app: &clap::Command) -> Result<()> {
+fn list_commands(ctx: &AppContext, app: &clap::Command, only_disabled: bool, style: Option<&str>) -> Result<()> {
+  let mut found = false;
+
   for sub in app.get_subcommands() {
     if sub.is_hide_set() {
       continue;
@@ -108,9 +127,23 @@ fn list_commands(ctx: &AppContext, app: &clap::Command) -> Result<()> {
 
     let name = sub.get_name();
     let disabled = ctx.config.disabled_commands.iter().any(|c| c == name);
+
+    if only_disabled && !disabled {
+      continue;
+    }
+
+    found = true;
     let status = if disabled { " (disabled)" } else { "" };
     let about = sub.get_about().map(|s| s.to_string()).unwrap_or_default();
-    println!("{name:20} {about}{status}");
+
+    match style {
+      Some("column") | Some("columns") => println!("{name}"),
+      _ => println!("{name:20} {about}{status}"),
+    }
+  }
+
+  if !found && only_disabled {
+    println!("No disabled commands");
   }
 
   Ok(())
@@ -198,7 +231,7 @@ mod test {
         .subcommand(clap::Command::new("hidden").hide(true));
 
       let ctx = sample_ctx();
-      let result = super::super::list_commands(&ctx, &app);
+      let result = super::super::list_commands(&ctx, &app, false, None);
 
       assert!(result.is_ok());
     }
@@ -210,7 +243,7 @@ mod test {
         .subcommand(clap::Command::new("hidden").hide(true).about("Hidden"));
 
       let ctx = sample_ctx();
-      let result = super::super::list_commands(&ctx, &app);
+      let result = super::super::list_commands(&ctx, &app, false, None);
 
       assert!(result.is_ok());
     }

@@ -1,7 +1,7 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "open command not yet implemented (see #192)"]
+#[ignore = "requires GUI environment"]
 fn it_opens_in_specified_app() {
   let doing = DoingCmd::new();
 
@@ -21,7 +21,7 @@ fn it_opens_in_specified_app() {
 }
 
 #[test]
-#[ignore = "open command not yet implemented (see #192)"]
+#[ignore = "requires GUI environment"]
 fn it_opens_with_short_flag() {
   let doing = DoingCmd::new();
 

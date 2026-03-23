@@ -18,12 +18,24 @@ use crate::errors::{Error, Result};
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Clear all default tags for the directory
+  #[arg(long)]
+  clear: bool,
+
   /// Directory to create the .doingrc in (defaults to current directory)
   #[arg(long)]
   dir: Option<PathBuf>,
 
+  /// Open the .doingrc file in an editor
+  #[arg(short, long)]
+  editor: bool,
+
+  /// Remove the specified tags instead of adding
+  #[arg(short, long)]
+  remove: bool,
+
   /// Tags to set as default_tags
-  #[arg(index = 1, required = true, num_args = 1..)]
+  #[arg(index = 1, num_args = 1..)]
   tags: Vec<String>,
 }
 
@@ -36,6 +48,31 @@ impl Command {
 
     let rc_path = dir.join(".doingrc");
 
+    if self.editor {
+      let editor = ctx.config.editors.default.clone().unwrap_or_else(|| "vi".into());
+      let parts: Vec<&str> = editor.split_whitespace().collect();
+      let (cmd, args) = parts.split_first().expect("editor command must not be empty");
+      let status = std::process::Command::new(cmd).args(args).arg(&rc_path).status()?;
+      if !status.success() {
+        return Err(Error::Config(format!("editor exited with status {status}")));
+      }
+      return Ok(());
+    }
+
+    if self.clear {
+      return clear_tags(&rc_path, ctx);
+    }
+
+    if self.remove {
+      remove_tags(&rc_path, &self.tags)?;
+      ctx.status(format!("Removed tags from {}", rc_path.display()));
+      return Ok(());
+    }
+
+    if self.tags.is_empty() {
+      return Err(Error::Config("no tags specified".into()));
+    }
+
     if rc_path.exists() {
       merge_tags(&rc_path, &self.tags)?;
     } else {
@@ -45,6 +82,60 @@ impl Command {
     ctx.status(format!("Set default tags in {}", rc_path.display()));
     Ok(())
   }
+}
+
+fn clear_tags(rc_path: &PathBuf, ctx: &mut crate::cli::AppContext) -> Result<()> {
+  if !rc_path.exists() {
+    ctx.status("No .doingrc found, nothing to clear");
+    return Ok(());
+  }
+
+  let content =
+    fs::read_to_string(rc_path).map_err(|e| Error::Config(format!("failed to read {}: {e}", rc_path.display())))?;
+
+  let mut value: serde_json::Value = if content.trim().is_empty() {
+    serde_json::Value::Object(serde_json::Map::new())
+  } else {
+    yaml_serde::from_str(&content).map_err(|e| Error::Config(format!("failed to parse {}: {e}", rc_path.display())))?
+  };
+
+  if let Some(obj) = value.as_object_mut() {
+    obj.remove("default_tags");
+  }
+
+  let yaml = yaml_serde::to_string(&value).map_err(|e| Error::Config(format!("failed to serialize config: {e}")))?;
+  fs::write(rc_path, yaml).map_err(|e| Error::Config(format!("failed to write {}: {e}", rc_path.display())))?;
+
+  ctx.status(format!("Cleared default tags in {}", rc_path.display()));
+  Ok(())
+}
+
+fn remove_tags(path: &PathBuf, tags_to_remove: &[String]) -> Result<()> {
+  if !path.exists() {
+    return Ok(());
+  }
+
+  let content =
+    fs::read_to_string(path).map_err(|e| Error::Config(format!("failed to read {}: {e}", path.display())))?;
+
+  let mut value: serde_json::Value = if content.trim().is_empty() {
+    return Ok(());
+  } else {
+    yaml_serde::from_str(&content).map_err(|e| Error::Config(format!("failed to parse {}: {e}", path.display())))?
+  };
+
+  if let Some(tags) = value.get_mut("default_tags").and_then(|v| v.as_array_mut()) {
+    tags.retain(|t| {
+      t.as_str()
+        .map(|s| !tags_to_remove.iter().any(|r| r.eq_ignore_ascii_case(s)))
+        .unwrap_or(true)
+    });
+  }
+
+  let yaml = yaml_serde::to_string(&value).map_err(|e| Error::Config(format!("failed to serialize config: {e}")))?;
+  fs::write(path, yaml).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
+
+  Ok(())
 }
 
 fn merge_tags(path: &PathBuf, new_tags: &[String]) -> Result<()> {

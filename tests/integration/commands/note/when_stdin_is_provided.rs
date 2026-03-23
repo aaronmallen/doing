@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "stdin support not yet implemented (see #193)"]
 fn it_reads_note_from_stdin() {
   let doing = DoingCmd::new();
 

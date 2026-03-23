@@ -14,26 +14,64 @@ use crate::{errors::Result, plugins};
 /// doing plugins                    # list all registered plugins
 /// ```
 #[derive(Args, Clone, Debug)]
-pub struct Command;
+pub struct Command {
+  /// Display plugins in column format
+  #[arg(short, long)]
+  column: bool,
+
+  /// Filter plugins by type (import/export)
+  #[arg(short = 't', long = "type")]
+  plugin_type: Option<String>,
+}
 
 impl Command {
   pub fn call(&self) -> Result<()> {
-    println!("Export Plugins:");
-    let export_registry = plugins::default_registry();
-    for name in export_registry.available_formats() {
-      if let Some(plugin) = export_registry.resolve(name) {
-        let trigger = plugin.settings().trigger;
-        println!("  {name} ({trigger})");
+    let show_export = self
+      .plugin_type
+      .as_ref()
+      .map(|t| t.eq_ignore_ascii_case("export"))
+      .unwrap_or(true);
+    let show_import = self
+      .plugin_type
+      .as_ref()
+      .map(|t| t.eq_ignore_ascii_case("import"))
+      .unwrap_or(true);
+
+    if show_export {
+      if !self.column {
+        println!("Export Plugins:");
+      }
+      let export_registry = plugins::default_registry();
+      for name in export_registry.available_formats() {
+        if let Some(plugin) = export_registry.resolve(name) {
+          if self.column {
+            println!("{name}");
+          } else {
+            let trigger = plugin.settings().trigger;
+            println!("  {name} ({trigger})");
+          }
+        }
       }
     }
 
-    println!();
-    println!("Import Plugins:");
-    let import_registry = plugins::import::default_registry();
-    for name in import_registry.available_formats() {
-      if let Some(plugin) = import_registry.resolve(name) {
-        let trigger = plugin.settings().trigger;
-        println!("  {name} ({trigger})");
+    if show_export && show_import && !self.column {
+      println!();
+    }
+
+    if show_import {
+      if !self.column {
+        println!("Import Plugins:");
+      }
+      let import_registry = plugins::import::default_registry();
+      for name in import_registry.available_formats() {
+        if let Some(plugin) = import_registry.resolve(name) {
+          if self.column {
+            println!("{name}");
+          } else {
+            let trigger = plugin.settings().trigger;
+            println!("  {name} ({trigger})");
+          }
+        }
       }
     }
 
@@ -50,7 +88,10 @@ mod test {
 
     #[test]
     fn it_does_not_error() {
-      let cmd = Command;
+      let cmd = Command {
+        column: false,
+        plugin_type: None,
+      };
 
       let result = cmd.call();
 

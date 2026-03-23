@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our CLI does not support --not flag for import (see #186)"]
 fn it_inverts_filter() {
   let doing = DoingCmd::new();
 

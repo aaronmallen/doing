@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "rotate ignores --search/--case filter, rotates all entries (see #184)"]
 fn it_performs_case_sensitive_search() {
   let doing = DoingCmd::new();
 

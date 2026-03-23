@@ -78,7 +78,6 @@ Currently:
 }
 
 #[test]
-#[ignore = "rotate --keep only applies to Currently section, not all sections (see #184)"]
 fn it_keeps_entries_per_section_independently() {
   let doing = DoingCmd::new();
 

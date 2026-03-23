@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "rotate ignores --search/--exact filter, rotates all entries (see #184)"]
 fn it_uses_exact_matching() {
   let doing = DoingCmd::new();
 
@@ -25,7 +24,6 @@ fn it_uses_exact_matching() {
 }
 
 #[test]
-#[ignore = "rotate ignores --search/-x filter, rotates all entries (see #184)"]
 fn it_uses_exact_matching_with_short_flag() {
   let doing = DoingCmd::new();
 

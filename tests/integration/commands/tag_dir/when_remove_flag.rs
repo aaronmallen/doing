@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "tag-dir command not yet implemented (see #187)"]
 fn it_removes_specific_tags() {
   let doing = DoingCmd::new();
   let dir = doing.temp_dir_path().to_path_buf();
@@ -29,7 +28,6 @@ fn it_removes_specific_tags() {
 }
 
 #[test]
-#[ignore = "tag-dir command not yet implemented (see #187)"]
 fn it_removes_with_short_flag() {
   let doing = DoingCmd::new();
   let dir = doing.temp_dir_path().to_path_buf();
@@ -45,7 +43,6 @@ fn it_removes_with_short_flag() {
 }
 
 #[test]
-#[ignore = "tag-dir command not yet implemented (see #187)"]
 fn it_does_nothing_when_tag_not_present() {
   let doing = DoingCmd::new();
   let dir = doing.temp_dir_path().to_path_buf();

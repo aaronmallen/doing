@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{mem, path::PathBuf};
 
 use clap::Args;
 
@@ -16,9 +16,25 @@ use crate::{
 /// or prefixes, and merges them into the current doing file.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Filter imported entries to those after this date
+  #[arg(long)]
+  after: Option<String>,
+
   /// Apply autotagging rules to imported entries
   #[arg(long)]
   autotag: bool,
+
+  /// Filter imported entries to those before this date
+  #[arg(long)]
+  before: Option<String>,
+
+  /// Case sensitivity for search filter (sensitive/ignore/smart)
+  #[arg(long)]
+  case: Option<String>,
+
+  /// Use exact (literal substring) matching for search filter
+  #[arg(long)]
+  exact: bool,
 
   /// Date range filter for imports (e.g. "last week", "2024-01-01 to 2024-03-01")
   #[arg(long)]
@@ -31,6 +47,14 @@ pub struct Command {
   /// Skip entries whose time range overlaps with existing entries
   #[arg(long)]
   no_overlap: bool,
+
+  /// Negate filter results
+  #[arg(long)]
+  not: bool,
+
+  /// Only import entries with a recorded time interval
+  #[arg(long)]
+  only_timed: bool,
 
   /// Path to the file to import
   path: PathBuf,
@@ -68,8 +92,17 @@ impl Command {
       return Ok(());
     }
 
-    self.apply_search_filter(&mut entries)?;
+    // When advanced filter flags are set, let the filter pipeline handle search
+    let has_advanced_filters =
+      self.after.is_some() || self.before.is_some() || self.case.is_some() || self.exact || self.not || self.only_timed;
+
+    if !has_advanced_filters {
+      self.apply_search_filter(&mut entries)?;
+    }
     self.apply_date_filter(&mut entries)?;
+    if has_advanced_filters {
+      self.apply_filter_flags(&mut entries, ctx)?;
+    }
 
     let section_name = self.section.as_deref().unwrap_or(&ctx.config.current_section);
 
@@ -97,6 +130,30 @@ impl Command {
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
     ctx.status(format!("Imported {imported} entries into {section_name}"));
+    Ok(())
+  }
+
+  fn apply_filter_flags(&self, entries: &mut Vec<Entry>, ctx: &AppContext) -> Result<()> {
+    let has_filters =
+      self.after.is_some() || self.before.is_some() || self.case.is_some() || self.exact || self.not || self.only_timed;
+
+    if !has_filters {
+      return Ok(());
+    }
+
+    let filter_args = crate::cli::args::FilterArgs {
+      after: self.after.clone(),
+      before: self.before.clone(),
+      case: self.case.clone(),
+      exact: self.exact,
+      not: self.not,
+      only_timed: self.only_timed,
+      search: self.search.clone(),
+      ..Default::default()
+    };
+    let options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
+    let filtered = crate::ops::filter::filter_entries(mem::take(entries), &options);
+    *entries = filtered;
     Ok(())
   }
 
@@ -214,10 +271,16 @@ mod test {
       )
       .unwrap();
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("doing".into()),
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: source,
         prefix: Some("[imported]".into()),
         search: None,
@@ -242,10 +305,16 @@ mod test {
       )
       .unwrap();
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("doing".into()),
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: source,
         prefix: None,
         search: None,
@@ -271,10 +340,16 @@ mod test {
       )
       .unwrap();
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("doing".into()),
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: source,
         prefix: None,
         search: None,
@@ -309,10 +384,16 @@ mod test {
       )
       .unwrap();
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("timing".into()),
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: source,
         prefix: None,
         search: None,
@@ -338,10 +419,16 @@ mod test {
       )
       .unwrap();
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("doing".into()),
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: source,
         prefix: None,
         search: None,
@@ -363,10 +450,16 @@ mod test {
       let source = dir.path().join("empty.md");
       fs::write(&source, "").unwrap();
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("doing".into()),
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: source,
         prefix: None,
         search: None,
@@ -415,10 +508,16 @@ mod test {
       )
       .unwrap();
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("doing".into()),
         no_overlap: true,
+        not: false,
+        only_timed: false,
         path: source,
         prefix: None,
         search: None,
@@ -532,10 +631,16 @@ mod test {
     #[test]
     fn it_defaults_to_doing_format() {
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: None,
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: PathBuf::from("other.md"),
         prefix: None,
         search: None,
@@ -549,10 +654,16 @@ mod test {
     #[test]
     fn it_infers_timing_from_json_extension() {
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: None,
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: PathBuf::from("export.json"),
         prefix: None,
         search: None,
@@ -566,10 +677,16 @@ mod test {
     #[test]
     fn it_uses_explicit_type() {
       let cmd = Command {
+        after: None,
         autotag: false,
+        before: None,
+        case: None,
+        exact: false,
         from: None,
         import_type: Some("timing".into()),
         no_overlap: false,
+        not: false,
+        only_timed: false,
         path: PathBuf::from("file.md"),
         prefix: None,
         search: None,

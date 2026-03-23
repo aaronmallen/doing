@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our CLI does not support --before flag for import (see #186)"]
 fn it_imports_entries_before_time() {
   let doing = DoingCmd::new();
 

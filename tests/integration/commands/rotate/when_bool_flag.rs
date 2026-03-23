@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "rotate ignores --tag/--bool filter, rotates all entries (see #184)"]
 fn it_uses_and_boolean() {
   let doing = DoingCmd::new();
 
@@ -32,7 +31,6 @@ fn it_uses_and_boolean() {
 }
 
 #[test]
-#[ignore = "rotate ignores --tag/--bool filter, rotates all entries (see #184)"]
 fn it_uses_or_boolean() {
   let doing = DoingCmd::new();
 

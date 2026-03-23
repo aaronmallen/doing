@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our CLI does not support --exact flag for import (see #186)"]
 fn it_uses_exact_matching() {
   let doing = DoingCmd::new();
 
@@ -30,7 +29,6 @@ fn it_uses_exact_matching() {
 }
 
 #[test]
-#[ignore = "our CLI does not support --exact/-x flag for import (see #186)"]
 fn it_uses_exact_matching_with_short_flag() {
   let doing = DoingCmd::new();
 

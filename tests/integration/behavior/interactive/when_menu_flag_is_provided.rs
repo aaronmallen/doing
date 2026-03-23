@@ -3,7 +3,6 @@ use predicates::prelude::*;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "show --menu not yet implemented (see #157)"]
 fn it_is_accepted_by_show() {
   let doing = DoingCmd::new();
 
@@ -15,7 +14,6 @@ fn it_is_accepted_by_show() {
 }
 
 #[test]
-#[ignore = "show --menu not yet implemented (see #157)"]
 fn it_does_not_crash_in_non_tty() {
   let doing = DoingCmd::new();
 

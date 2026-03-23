@@ -27,24 +27,36 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self
-      .filter
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
+    let archive_path = self.archive_path(&ctx.doing_file);
 
-    let entries_to_rotate = self.find_entries(ctx, &section_name)?;
+    let section_names: Vec<String> = if self.filter.section.is_some() {
+      vec![
+        self
+          .filter
+          .section
+          .clone()
+          .unwrap_or_else(|| ctx.config.current_section.clone()),
+      ]
+    } else {
+      ctx.document.sections().iter().map(|s| s.title().to_string()).collect()
+    };
 
-    if entries_to_rotate.is_empty() {
+    let mut all_entries_to_rotate = Vec::new();
+    for section_name in &section_names {
+      let entries = self.find_entries(ctx, section_name)?;
+      if !entries.is_empty() {
+        self.write_to_archive(&archive_path, &entries, section_name, ctx)?;
+        all_entries_to_rotate.extend(entries);
+      }
+    }
+
+    if all_entries_to_rotate.is_empty() {
       ctx.status("No entries to rotate");
       return Ok(());
     }
 
-    let rotated_count = entries_to_rotate.len();
-    let archive_path = self.archive_path(&ctx.doing_file);
-
-    self.write_to_archive(&archive_path, &entries_to_rotate, &section_name, ctx)?;
-    self.remove_from_source(ctx, &entries_to_rotate)?;
+    let rotated_count = all_entries_to_rotate.len();
+    self.remove_from_source(ctx, &all_entries_to_rotate)?;
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
@@ -80,9 +92,24 @@ impl Command {
       return Ok(Vec::new());
     }
 
-    let mut candidates = if let Some(ref before_str) = self.filter.before {
-      let before_date = crate::time::chronify(before_str)?;
-      all_entries.into_iter().filter(|e| e.date() < before_date).collect()
+    // Apply full filter pipeline
+    let has_filters = self.filter.before.is_some()
+      || self.filter.after.is_some()
+      || self.filter.from.is_some()
+      || self.filter.search.is_some()
+      || !self.filter.tag.is_empty()
+      || !self.filter.val.is_empty()
+      || self.filter.case.is_some()
+      || self.filter.exact
+      || self.filter.not;
+
+    let mut candidates = if has_filters {
+      let filter_args = FilterArgs {
+        section: Some(section_name.to_string()),
+        ..self.filter.clone()
+      };
+      let options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
+      crate::ops::filter::filter_entries(all_entries, &options)
     } else {
       all_entries
     };

@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use chrono::{DateTime, Duration, Local, NaiveDateTime, TimeZone};
 
-use super::{Note, Tags};
+use crate::{Note, Tags};
 
 /// A single time-tracked entry in a TaskPaper doing file.
 ///
@@ -223,7 +223,8 @@ fn no_patterns_match(patterns: &[String], tags: &Tags, section: &str) -> bool {
 mod test {
   use chrono::TimeZone;
 
-  use super::{super::Tag, *};
+  use super::*;
+  use crate::Tag;
 
   fn sample_date() -> DateTime<Local> {
     Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap()

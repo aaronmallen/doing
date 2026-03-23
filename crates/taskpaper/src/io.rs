@@ -1,7 +1,8 @@
 use std::{fs, path::Path};
 
-use super::{Document, serializer};
-use crate::{Error, Result};
+use doing_error::{Error, Result};
+
+use crate::{Document, serializer};
 
 /// Create a new doing file at `path` with a single default section.
 ///
@@ -51,7 +52,7 @@ pub fn write_file(doc: &Document, path: &Path) -> Result<()> {
 #[cfg(test)]
 mod test {
   use super::*;
-  use crate::taskpaper::{Entry, Note, Section, Tags};
+  use crate::{Entry, Note, Section, Tags};
 
   mod create_file {
     use pretty_assertions::assert_eq;

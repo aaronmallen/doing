@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use chrono::{Local, NaiveDateTime, TimeZone};
 use regex::Regex;
 
-use super::{Document, Entry, Note, Section, Tag, Tags};
+use crate::{Document, Entry, Note, Section, Tag, Tags};
 
 static ENTRY_RX: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^\t- (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \| (.*?)(?:\s+<([a-f0-9]{32})>)?\s*$").unwrap());

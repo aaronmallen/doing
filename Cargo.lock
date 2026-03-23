@@ -479,6 +479,7 @@ dependencies = [
  "dir_spec",
  "doing-config",
  "doing-error",
+ "doing-taskpaper",
  "doing-time",
  "env_logger",
  "indexmap",
@@ -523,6 +524,18 @@ name = "doing-error"
 version = "0.1.0"
 dependencies = [
  "thiserror",
+]
+
+[[package]]
+name = "doing-taskpaper"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "doing-error",
+ "md5",
+ "pretty_assertions",
+ "regex",
+ "tempfile",
 ]
 
 [[package]]

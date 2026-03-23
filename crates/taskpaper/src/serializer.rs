@@ -1,5 +1,10 @@
-use super::Document;
-use crate::template::colors::STRIP_ANSI_RE;
+use std::sync::LazyLock;
+
+use regex::Regex;
+
+use crate::Document;
+
+static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9;]*m").unwrap());
 
 /// Serialize a `Document` into the doing file format string.
 ///
@@ -50,7 +55,7 @@ mod test {
   use chrono::{Local, TimeZone};
 
   use super::*;
-  use crate::taskpaper::{Entry, Note, Section, Tag, Tags};
+  use crate::{Entry, Note, Section, Tag, Tags};
 
   fn sample_date(hour: u32, minute: u32) -> chrono::DateTime<Local> {
     Local.with_ymd_and_hms(2024, 3, 17, hour, minute, 0).unwrap()

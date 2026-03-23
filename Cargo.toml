@@ -35,6 +35,7 @@ dialoguer = "0.12"
 dir_spec = "0.5"
 doing-config = { path = "crates/config" }
 doing-error = { path = "crates/error" }
+doing-taskpaper = { path = "crates/taskpaper" }
 doing-time = { path = "crates/time" }
 env_logger = "0.11"
 indexmap = "2"
@@ -70,6 +71,7 @@ dialoguer.workspace = true
 dir_spec.workspace = true
 doing-config.workspace = true
 doing-error.workspace = true
+doing-taskpaper.workspace = true
 doing-time.workspace = true
 env_logger.workspace = true
 indexmap.workspace = true

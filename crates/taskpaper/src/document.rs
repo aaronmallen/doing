@@ -4,8 +4,9 @@ use std::{
   path::Path,
 };
 
-use super::{Entry, Section};
-use crate::Result;
+use doing_error::Result;
+
+use crate::{Entry, Section};
 
 /// A complete TaskPaper doing file represented as an ordered list of sections.
 ///
@@ -24,7 +25,7 @@ impl Document {
   /// If the file already exists and is non-empty, this is a no-op.
   /// Creates parent directories as needed.
   pub fn create_file(path: &Path, default_section: &str) -> Result<()> {
-    super::io::create_file(path, default_section)
+    crate::io::create_file(path, default_section)
   }
 
   /// Create a new empty document.
@@ -38,7 +39,7 @@ impl Document {
 
   /// Parse a doing file string into a structured `Document`.
   pub fn parse(content: &str) -> Self {
-    super::parser::parse(content)
+    crate::parser::parse(content)
   }
 
   /// Add a section to the document. Does nothing if a section with the same name
@@ -208,7 +209,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::{Note, Tags};
 
     #[test]
     fn it_returns_entries_across_all_sections() {
@@ -243,7 +244,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::{Note, Tags};
 
     #[test]
     fn it_removes_duplicate_entries_by_id() {
@@ -325,7 +326,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::{Note, Tags};
 
     #[test]
     fn it_returns_entries_from_named_section() {

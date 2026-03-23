@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
-use super::Entry;
+use crate::Entry;
 
 /// A named section in a TaskPaper doing file containing an ordered list of entries.
 ///
@@ -82,7 +82,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::{Note, Tags};
 
     #[test]
     fn it_formats_empty_section() {
@@ -137,7 +137,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::{Note, Tags};
 
     #[test]
     fn it_returns_true_when_empty() {
@@ -167,7 +167,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::{Note, Tags};
 
     #[test]
     fn it_returns_entry_count() {
@@ -201,7 +201,7 @@ mod test {
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::taskpaper::{Note, Tags};
+    use crate::{Note, Tags};
 
     #[test]
     fn it_removes_matching_entry() {

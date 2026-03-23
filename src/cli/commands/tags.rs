@@ -124,7 +124,7 @@ enum SortArg {
   Time,
 }
 
-fn collect_tags(entries: &[&crate::taskpaper::Entry]) -> Vec<(String, usize)> {
+fn collect_tags(entries: &[&doing_taskpaper::Entry]) -> Vec<(String, usize)> {
   let mut counts: HashMap<String, (String, usize)> = HashMap::new();
 
   for entry in entries {
@@ -162,7 +162,7 @@ fn sort_by_name(tag_counts: &mut [(String, usize)], order: &OrderArg) {
   });
 }
 
-fn sort_by_time(tag_counts: &mut [(String, usize)], entries: &[&crate::taskpaper::Entry], order: &OrderArg) {
+fn sort_by_time(tag_counts: &mut [(String, usize)], entries: &[&doing_taskpaper::Entry], order: &OrderArg) {
   let mut tag_durations: HashMap<String, i64> = HashMap::new();
 
   for entry in entries {
@@ -188,9 +188,9 @@ fn sort_by_time(tag_counts: &mut [(String, usize)], entries: &[&crate::taskpaper
 #[cfg(test)]
 mod test {
   use chrono::{Duration, Local};
+  use doing_taskpaper::{Entry, Note, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Entry, Note, Tag, Tags};
 
   fn make_entry(title: &str, tag_names: &[&str]) -> Entry {
     let mut tags = Tags::new();

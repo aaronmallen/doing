@@ -1,8 +1,8 @@
 use doing_config::Config;
+use doing_taskpaper::Entry;
 
 use crate::{
   plugins::{ExportPlugin, ExportPluginSettings},
-  taskpaper::Entry,
   template::renderer::RenderOptions,
 };
 
@@ -56,9 +56,9 @@ impl ExportPlugin for TaskPaperExport {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Note, Tag, Tags};
 
   fn sample_date(hour: u32, minute: u32) -> chrono::DateTime<Local> {
     Local.with_ymd_and_hms(2024, 3, 17, hour, minute, 0).unwrap()

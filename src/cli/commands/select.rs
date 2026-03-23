@@ -2,6 +2,7 @@ use std::{fs, path::PathBuf};
 
 use clap::Args;
 use doing_config::SortOrder;
+use doing_taskpaper::{Entry, Note, Section, Tag, Tags};
 
 use crate::{
   Result,
@@ -12,7 +13,6 @@ use crate::{
   },
   ops::{backup::write_with_backup, filter::filter_entries},
   plugins::default_registry,
-  taskpaper::{Entry, Note, Section, Tag, Tags},
   template::renderer::{RenderOptions, format_items},
 };
 
@@ -594,9 +594,9 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Note, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Note, Tags};
 
   fn default_cmd() -> Command {
     Command {

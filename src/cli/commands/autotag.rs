@@ -91,9 +91,9 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Entry, Note, Section, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Entry, Note, Section, Tags};
 
   fn default_cmd() -> Command {
     Command {

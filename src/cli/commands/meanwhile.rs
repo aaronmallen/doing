@@ -1,13 +1,13 @@
 use chrono::{DateTime, Local};
 use clap::Args;
 use doing_config::Config;
+use doing_taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 use doing_time::chronify;
 
 use crate::{
   Result,
   cli::AppContext,
   ops::{autotag::autotag, backup::write_with_backup},
-  taskpaper::{Entry, Note, Section, Tag, Tags},
 };
 
 /// Add an entry while finishing the last @meanwhile entry.
@@ -117,7 +117,7 @@ impl Command {
 }
 
 /// Move finished entries (by ID) from any section to the Archive section.
-fn archive_entries(document: &mut crate::taskpaper::Document, entry_ids: &[String]) {
+fn archive_entries(document: &mut Document, entry_ids: &[String]) {
   if !document.has_section("Archive") {
     document.add_section(Section::new("Archive"));
   }
@@ -148,7 +148,7 @@ fn archive_entries(document: &mut crate::taskpaper::Document, entry_ids: &[Strin
 ///
 /// Returns the IDs of entries that were finished.
 fn finish_meanwhile_entries(
-  document: &mut crate::taskpaper::Document,
+  document: &mut Document,
   done_date: DateTime<Local>,
   never_finish: &[String],
   never_time: &[String],
@@ -186,9 +186,9 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::Document;
 
   use super::*;
-  use crate::taskpaper::Document;
 
   fn default_cmd() -> Command {
     Command {

@@ -1,7 +1,6 @@
 mod cli;
 mod ops;
 mod plugins;
-mod taskpaper;
 mod template;
 
 pub use doing_error::{Error, Result};

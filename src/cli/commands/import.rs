@@ -1,13 +1,13 @@
 use std::{mem, path::PathBuf};
 
 use clap::Args;
+use doing_taskpaper::{Entry, Section, Tag};
 
 use crate::{
   Result,
   cli::AppContext,
   ops::{autotag::autotag, backup::write_with_backup},
   plugins::import,
-  taskpaper::{Entry, Section, Tag},
 };
 
 /// Import entries from other doing files or Timing.app JSON exports.
@@ -230,9 +230,9 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   fn sample_ctx(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");

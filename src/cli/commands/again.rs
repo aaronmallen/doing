@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local};
 use clap::Args;
 use doing_config::Config;
+use doing_taskpaper::{Entry, Note, Tag, Tags};
 use doing_time::chronify;
 
 use crate::{
@@ -12,7 +13,6 @@ use crate::{
     filter::{Age, FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},
   },
-  taskpaper::{Entry, Note, Tag, Tags},
 };
 
 /// Repeat the last entry.
@@ -285,9 +285,9 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Section, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Section, Tag, Tags};
 
   fn default_cmd() -> Command {
     Command {
@@ -556,7 +556,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
       std::fs::write(&path, "Currently:\n").unwrap();
-      let mut doc = crate::taskpaper::Document::new();
+      let mut doc = Document::new();
       doc.add_section(Section::new("Currently"));
       let ctx = AppContext {
         config: Config::default(),

@@ -2,12 +2,12 @@ use std::path::{Path, PathBuf};
 
 use chrono::Local;
 use clap::Args;
+use doing_taskpaper::{Document, Entry, Section, io as taskpaper_io};
 
 use crate::{
   Result,
   cli::{AppContext, args::FilterArgs},
   ops::backup::write_with_backup,
-  taskpaper::{Document, Entry, Section, io as taskpaper_io},
 };
 
 /// Move entries to a dated archive file.
@@ -173,12 +173,10 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::{
-    cli::args::FilterArgs,
-    taskpaper::{Note, Tag, Tags},
-  };
+  use crate::cli::args::FilterArgs;
 
   fn default_cmd() -> Command {
     Command {

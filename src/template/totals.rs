@@ -1,9 +1,8 @@
 use std::collections::BTreeMap;
 
 use chrono::Duration;
+use doing_taskpaper::Entry;
 use doing_time::format_tag_total;
-
-use crate::taskpaper::Entry;
 
 /// How tags are sorted in the totals section.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -112,9 +111,9 @@ impl TagTotals {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Note, Tag, Tags};
 
   fn entry_with_tags(tag_names: &[&str], done_value: &str) -> Entry {
     let date = Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap();

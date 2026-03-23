@@ -2,11 +2,11 @@ use std::collections::BTreeMap;
 
 use chrono::Local;
 use doing_config::Config;
+use doing_taskpaper::Entry;
 use serde::Serialize;
 
 use crate::{
   plugins::{ExportPlugin, ExportPluginSettings, helpers},
-  taskpaper::Entry,
   template::renderer::RenderOptions,
 };
 
@@ -198,9 +198,9 @@ fn earliest_date(entries: &[&Entry]) -> String {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Note, Tag, Tags};
 
   fn sample_date(day: u32, hour: u32, minute: u32) -> chrono::DateTime<Local> {
     Local.with_ymd_and_hms(2024, 3, day, hour, minute, 0).unwrap()

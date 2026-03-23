@@ -1,10 +1,9 @@
 use std::sync::LazyLock;
 
 use chrono::{DateTime, Local};
+use doing_taskpaper::Entry;
 use doing_time::{chronify, parse_duration};
 use regex::Regex;
-
-use crate::taskpaper::Entry;
 
 static VALUE_QUERY_RE: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^(!)?@?(\S+)\s+(!?[<>=][=*]?|[$*^]=)\s+(.+)$").unwrap());
@@ -307,9 +306,9 @@ fn wildcard_match(text: &str, pattern: &str) -> bool {
 #[cfg(test)]
 mod test {
   use chrono::{Duration, TimeZone};
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Note, Tag, Tags};
 
   fn entry_with_tag(name: &str, value: Option<&str>) -> Entry {
     Entry::new(

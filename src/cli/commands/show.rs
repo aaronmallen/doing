@@ -178,9 +178,9 @@ fn clean_at_tag(tag_arg: &str) -> String {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   fn default_cmd() -> Command {
     Command {

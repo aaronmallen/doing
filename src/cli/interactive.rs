@@ -3,9 +3,10 @@ use std::{
   process::{Command, Stdio},
 };
 
+use doing_taskpaper::Entry;
 use log::warn;
 
-use crate::{Result, taskpaper::Entry};
+use crate::Result;
 
 /// Choose a single entry from a list using fzf (if available) or a dialoguer fallback.
 pub fn choose_entry(entries: &[Entry]) -> Result<Option<Entry>> {
@@ -89,9 +90,9 @@ mod test {
 
   mod format_entry {
     use chrono::{Local, TimeZone};
+    use doing_taskpaper::{Note, Tag, Tags};
 
     use super::*;
-    use crate::taskpaper::{Note, Tag, Tags};
 
     #[test]
     fn it_formats_entry_without_tags() {

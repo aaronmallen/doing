@@ -10,14 +10,11 @@ use std::{ffi::OsString, io::IsTerminal, path::PathBuf};
 
 use clap::{ArgAction, CommandFactory, Parser, Subcommand};
 use doing_config::Config;
+use doing_taskpaper::{Document, Section, io as taskpaper_io};
 use log::debug;
 use yansi::Condition;
 
-use crate::{
-  Result,
-  taskpaper::{self, Document},
-  template,
-};
+use crate::{Result, template};
 
 /// Shared application context passed to all command handlers.
 #[allow(dead_code)]
@@ -73,7 +70,7 @@ impl AppContext {
       return Ok(false);
     }
 
-    self.document.add_section(taskpaper::Section::new(section_name));
+    self.document.add_section(Section::new(section_name));
     Ok(true)
   }
 
@@ -202,7 +199,7 @@ impl Cli {
     debug!("Using doing file: {}", doing_file.display());
 
     Document::create_file(&doing_file, &config.current_section)?;
-    let document = taskpaper::io::read_file(&doing_file)?;
+    let document = taskpaper_io::read_file(&doing_file)?;
 
     let include_notes = if self.notes {
       true

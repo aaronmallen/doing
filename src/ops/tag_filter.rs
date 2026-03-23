@@ -1,4 +1,4 @@
-use crate::taskpaper::Entry;
+use doing_taskpaper::Entry;
 
 /// How multiple tag conditions are combined.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -132,9 +132,9 @@ fn strip_at(s: &str) -> &str {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Note, Tag, Tags};
 
   fn entry_with_tags(tag_names: &[&str]) -> Entry {
     let tags = Tags::from_iter(tag_names.iter().map(|n| Tag::new(*n, None::<String>)));

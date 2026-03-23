@@ -6,11 +6,9 @@ use std::{
 
 use chrono::Local;
 use doing_config::Config;
+use doing_taskpaper::{Document, io as taskpaper_io};
 
-use crate::{
-  Result,
-  taskpaper::{Document, io as taskpaper_io},
-};
+use crate::Result;
 
 /// Generate a backup prefix that uniquely identifies a source file by its canonical path.
 ///
@@ -123,9 +121,9 @@ fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Ve
 #[cfg(test)]
 mod test {
   use doing_config::SortOrder;
+  use doing_taskpaper::{Entry, Note, Section, Tags};
 
   use super::*;
-  use crate::taskpaper::{Entry, Note, Section, Tags};
 
   fn sample_doc() -> Document {
     let mut doc = Document::new();

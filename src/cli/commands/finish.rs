@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
+use doing_taskpaper::{Entry, Section, Tag};
 use doing_time::{chronify, parse_duration};
 
 use crate::{
@@ -10,7 +11,6 @@ use crate::{
     filter::{Age, FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},
   },
-  taskpaper::{Entry, Section, Tag},
 };
 
 /// Mark the last entry as @done with the current timestamp.
@@ -507,9 +507,9 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::{Config, InteractionConfig};
+  use doing_taskpaper::{Document, Note, Section, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Note, Section, Tags};
 
   fn default_cmd() -> Command {
     Command {

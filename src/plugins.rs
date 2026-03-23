@@ -11,9 +11,10 @@ mod taskpaper;
 mod timeline;
 
 use doing_config::Config;
+use doing_taskpaper::Entry;
 use regex::Regex;
 
-use crate::{taskpaper::Entry, template::renderer::RenderOptions};
+use crate::template::renderer::RenderOptions;
 
 /// The interface that export format plugins must implement.
 ///

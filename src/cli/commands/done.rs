@@ -1,13 +1,13 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
 use doing_config::Config;
+use doing_taskpaper::{Entry, Note, Section, Tag, Tags};
 use doing_time::{chronify, parse_duration, parse_range};
 
 use crate::{
   Result,
   cli::AppContext,
   ops::{autotag::autotag, backup::write_with_backup},
-  taskpaper::{Entry, Note, Section, Tag, Tags},
 };
 
 /// Add a completed item with @done(date).
@@ -274,9 +274,9 @@ mod test {
 
   use chrono::{Duration, Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::Document;
 
   use super::*;
-  use crate::taskpaper::Document;
 
   fn default_cmd() -> Command {
     Command {

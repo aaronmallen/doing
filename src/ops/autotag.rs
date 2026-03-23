@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
 use doing_config::AutotagConfig;
+use doing_taskpaper::{Entry, Tag};
 use regex::Regex;
-
-use crate::taskpaper::{Entry, Tag};
 
 /// Apply automatic tagging to an entry based on configuration rules.
 ///
@@ -193,9 +192,9 @@ fn wildcard_to_word_regex(pattern: &str) -> String {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Note, Tags};
 
   use super::*;
-  use crate::taskpaper::{Note, Tags};
 
   fn default_config() -> AutotagConfig {
     AutotagConfig {

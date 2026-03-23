@@ -124,7 +124,7 @@ impl Command {
     Ok(())
   }
 
-  fn action_delete(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
+  fn action_delete(&self, ctx: &mut AppContext, entries: &[doing_taskpaper::Entry]) -> Result<()> {
     for entry in entries {
       if let Some(section) = ctx.document.section_by_name_mut(entry.section()) {
         section.remove_entry(entry.id());
@@ -142,7 +142,7 @@ impl Command {
     Ok(())
   }
 
-  fn action_editor(&self, ctx: &mut AppContext, entries: &[crate::taskpaper::Entry]) -> Result<()> {
+  fn action_editor(&self, ctx: &mut AppContext, entries: &[doing_taskpaper::Entry]) -> Result<()> {
     let mut render_options = RenderOptions::from_config("default", &ctx.config);
     render_options.include_notes = ctx.include_notes;
     let divider = "---";
@@ -219,9 +219,9 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   fn default_cmd(query: &str) -> Command {
     Command {

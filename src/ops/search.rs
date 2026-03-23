@@ -1,8 +1,7 @@
 use doing_config::SearchConfig;
+use doing_taskpaper::Entry;
 use regex::Regex;
 use sublime_fuzzy::best_match;
-
-use crate::taskpaper::Entry;
 
 /// How text comparisons handle letter case.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -346,9 +345,9 @@ mod test {
 
   mod matches_entry {
     use chrono::{Local, TimeZone};
+    use doing_taskpaper::{Note, Tag, Tags};
 
     use super::*;
-    use crate::taskpaper::{Note, Tag, Tags};
 
     fn sample_entry() -> Entry {
       Entry::new(

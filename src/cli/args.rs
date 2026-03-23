@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local};
 use clap::{Args, ValueEnum};
 use doing_config::{Config, SortOrder};
+use doing_taskpaper::Entry;
 use doing_time::{chronify, parse_range};
 
 use crate::{
@@ -12,7 +13,6 @@ use crate::{
     tag_query::TagQuery,
   },
   plugins::default_registry,
-  taskpaper::Entry,
   template::{
     renderer::{RenderOptions, format_items_with_tag_sort},
     totals::{TagSortField, TagSortOrder},

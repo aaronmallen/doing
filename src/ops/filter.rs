@@ -1,13 +1,11 @@
 use chrono::{DateTime, Local};
 use doing_config::SortOrder;
+use doing_taskpaper::Entry;
 
-use crate::{
-  ops::{
-    search::{self, CaseSensitivity, SearchMode},
-    tag_filter::TagFilter,
-    tag_query::TagQuery,
-  },
-  taskpaper::Entry,
+use crate::ops::{
+  search::{self, CaseSensitivity, SearchMode},
+  tag_filter::TagFilter,
+  tag_query::TagQuery,
 };
 
 /// Which end of the chronological list to keep when applying a count limit.
@@ -197,12 +195,10 @@ fn matches_unfinished(entry: &Entry, options: &FilterOptions) -> bool {
 #[cfg(test)]
 mod test {
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::{
-    ops::tag_filter::BooleanMode,
-    taskpaper::{Note, Tag, Tags},
-  };
+  use crate::ops::tag_filter::BooleanMode;
 
   fn date(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Local> {
     Local.with_ymd_and_hms(year, month, day, hour, min, 0).unwrap()

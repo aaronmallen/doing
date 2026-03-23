@@ -1,13 +1,13 @@
 use chrono::{DateTime, Local};
 use clap::Args;
 use doing_config::Config;
+use doing_taskpaper::{Document, Entry, Note, Tag, Tags};
 use doing_time::{chronify, parse_range};
 
 use crate::{
   Result,
   cli::AppContext,
   ops::{autotag::autotag, backup::write_with_backup},
-  taskpaper::{Document, Entry, Note, Tag, Tags},
 };
 
 /// Add a new entry to the doing file.
@@ -188,9 +188,9 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
+  use doing_taskpaper::Section;
 
   use super::*;
-  use crate::taskpaper::Section;
 
   fn sample_ctx(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");

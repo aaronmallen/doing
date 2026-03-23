@@ -1,11 +1,7 @@
 use clap::{Args, Subcommand};
+use doing_taskpaper::{Entry, Section};
 
-use crate::{
-  Error, Result,
-  cli::AppContext,
-  ops::backup::write_with_backup,
-  taskpaper::{Entry, Section},
-};
+use crate::{Error, Result, cli::AppContext, ops::backup::write_with_backup};
 
 /// List, add, or remove sections in the doing file.
 ///
@@ -139,9 +135,9 @@ fn remove_section(name: &str, archive: bool, ctx: &mut AppContext) -> Result<()>
 #[cfg(test)]
 mod test {
   use doing_config::Config;
+  use doing_taskpaper::{Document, Entry, Note, Section, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Entry, Note, Section, Tags};
 
   fn sample_ctx() -> AppContext {
     let mut doc = Document::new();

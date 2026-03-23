@@ -1,6 +1,7 @@
 use doing_config::Config;
+use doing_taskpaper::Note;
 
-use crate::{Result, ops::extract_note::extract_note, taskpaper::Note};
+use crate::{Result, ops::extract_note::extract_note};
 
 /// Resolve the title and note from command arguments.
 ///

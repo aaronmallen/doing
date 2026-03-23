@@ -1,4 +1,5 @@
 use clap::Args;
+use doing_taskpaper::{Entry, Section, Tag};
 
 use crate::{
   Result,
@@ -8,7 +9,6 @@ use crate::{
     filter::{Age, FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},
   },
-  taskpaper::{Entry, Section, Tag},
 };
 
 /// Mark the last entry as cancelled.
@@ -274,9 +274,9 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Note, Section, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Note, Section, Tags};
 
   fn default_cmd() -> Command {
     Command {

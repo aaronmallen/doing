@@ -128,7 +128,7 @@ mod test {
           ..Config::default()
         },
         default_answer: false,
-        document: crate::taskpaper::Document::new(),
+        document: doing_taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
         include_notes: true,
         no: false,
@@ -152,7 +152,7 @@ mod test {
       let ctx = AppContext {
         config: Config::default(),
         default_answer: false,
-        document: crate::taskpaper::Document::new(),
+        document: doing_taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
         include_notes: true,
         no: false,
@@ -182,7 +182,7 @@ mod test {
           ..Config::default()
         },
         default_answer: false,
-        document: crate::taskpaper::Document::new(),
+        document: doing_taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
         include_notes: true,
         no: false,
@@ -212,7 +212,7 @@ mod test {
           ..Config::default()
         },
         default_answer: false,
-        document: crate::taskpaper::Document::new(),
+        document: doing_taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
         include_notes: true,
         no: false,
@@ -234,7 +234,7 @@ mod test {
       let ctx = AppContext {
         config: Config::default(),
         default_answer: false,
-        document: crate::taskpaper::Document::new(),
+        document: doing_taskpaper::Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
         include_notes: true,
         no: false,

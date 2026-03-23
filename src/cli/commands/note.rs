@@ -1,6 +1,7 @@
 use std::io::IsTerminal;
 
 use clap::Args;
+use doing_taskpaper::{Entry, Note};
 
 use crate::{
   Result,
@@ -9,7 +10,6 @@ use crate::{
     backup::write_with_backup,
     filter::{Age, filter_entries},
   },
-  taskpaper::{Entry, Note},
 };
 
 /// Add or display notes on an entry.
@@ -244,12 +244,10 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Section, Tag, Tags};
 
   use super::*;
-  use crate::{
-    cli::args::FilterArgs,
-    taskpaper::{Document, Section, Tag, Tags},
-  };
+  use crate::cli::args::FilterArgs;
 
   fn default_cmd() -> Command {
     Command {

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use doing_config::{Config, TemplateConfig};
+use doing_taskpaper::Entry;
 use doing_time::{DurationFormat, FormattedDuration, FormattedShortdate};
 
 use super::{
@@ -9,7 +10,6 @@ use super::{
   totals::{TagSortField, TagSortOrder, TagTotals},
   wrap,
 };
-use crate::taskpaper::Entry;
 
 /// Built-in template: full format with section labels, separator, and interval.
 const BUILTIN_TEMPLATE_FULL: &str =
@@ -339,9 +339,9 @@ fn format_value(
 mod test {
   use chrono::{Duration, Local, TimeZone};
   use doing_config::SortOrder;
+  use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Note, Tag, Tags};
 
   fn sample_config() -> Config {
     Config::default()

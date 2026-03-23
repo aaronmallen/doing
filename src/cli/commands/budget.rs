@@ -188,9 +188,9 @@ fn set_budget(tag: &str, amount: &str, quiet: bool) -> Result<()> {
 mod test {
   use chrono::{Duration, Local};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   use super::*;
-  use crate::taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   fn sample_ctx_with_budgets(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");

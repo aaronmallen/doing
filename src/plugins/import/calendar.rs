@@ -1,11 +1,11 @@
 use std::{fs, path::Path};
 
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
+use doing_taskpaper::{Entry, Note, Tag, Tags};
 
 use crate::{
   Result,
   plugins::import::{ImportPlugin, ImportPluginSettings},
-  taskpaper::{Entry, Note, Tag, Tags},
 };
 
 /// Import plugin that reads entries from an iCalendar (ICS) file.

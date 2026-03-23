@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
+use doing_taskpaper::{Entry, Tag};
 use doing_time::{chronify, parse_duration, parse_range};
 
 use crate::{
@@ -9,7 +10,6 @@ use crate::{
     backup::write_with_backup,
     filter::{Age, filter_entries},
   },
-  taskpaper::{Entry, Tag},
 };
 
 /// Reset the start date of the last entry to now.
@@ -242,12 +242,10 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
+  use doing_taskpaper::{Document, Note, Section, Tag, Tags};
 
   use super::*;
-  use crate::{
-    cli::args::FilterArgs,
-    taskpaper::{Document, Note, Section, Tag, Tags},
-  };
+  use crate::cli::args::FilterArgs;
 
   fn default_cmd() -> Command {
     Command {

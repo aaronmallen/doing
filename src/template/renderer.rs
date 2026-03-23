@@ -180,8 +180,9 @@ fn apply_width(raw: &str, width: Option<i32>) -> String {
   match width {
     Some(w) if w > 0 => {
       let w = w as usize;
-      if raw.len() > w {
-        raw[..w].to_string()
+      let char_count = raw.chars().count();
+      if char_count > w {
+        raw.chars().take(w).collect()
       } else {
         format!("{raw:<w$}")
       }

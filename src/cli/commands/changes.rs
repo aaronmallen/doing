@@ -13,7 +13,6 @@ const CHANGELOG: &str = include_str!("../../../CHANGELOG.md");
 /// Change type categories from Keep a Changelog.
 #[derive(Clone, Debug, PartialEq, ValueEnum)]
 pub enum ChangeType {
-  Added,
   Changed,
   Deprecated,
   Fixed,
@@ -38,7 +37,7 @@ impl ChangeType {
 
   fn prefix(&self) -> &'static str {
     match self {
-      Self::Added | Self::New => "NEW",
+      Self::New => "NEW",
       Self::Changed => "CHANGED",
       Self::Deprecated => "DEPRECATED",
       Self::Fixed => "FIXED",
@@ -50,7 +49,7 @@ impl ChangeType {
 
   fn section_name(&self) -> &'static str {
     match self {
-      Self::Added | Self::New => "New",
+      Self::New => "New",
       Self::Changed => "Changed",
       Self::Deprecated => "Deprecated",
       Self::Fixed => "Fixed",
@@ -104,16 +103,16 @@ pub struct Command {
   #[arg(short = 'm', long)]
   markdown: bool,
 
+  /// Filter by change type (comma-separated: changed,new,improved,fixed)
+  #[arg(long, value_delimiter = ',')]
+  only: Vec<ChangeType>,
+
   /// Include change-type prefix on each line (e.g. (NEW), (FIXED))
   #[arg(long, overrides_with = "no_prefix")]
   prefix: bool,
 
   #[arg(long = "no-prefix", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "prefix")]
   no_prefix: bool,
-
-  /// Filter by change type (comma-separated: changed,new,improved,fixed)
-  #[arg(long, value_delimiter = ',')]
-  only: Vec<ChangeType>,
 
   /// Search changelog entries for a pattern
   #[arg(short = 's', long)]

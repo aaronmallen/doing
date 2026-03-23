@@ -1,0 +1,11 @@
+[package]
+description = "Error types for the doing CLI"
+edition.workspace = true
+license.workspace = true
+name = "doing-error"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.0"
+
+[dependencies]
+thiserror.workspace = true

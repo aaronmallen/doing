@@ -251,7 +251,11 @@ impl Command {
       .section_by_name_mut(section_name)
       .ok_or_else(|| crate::errors::Error::Config(format!("section \"{section_name}\" not found")))?;
 
-    let last = section.entries_mut().iter_mut().rev().find(|e| e.unfinished());
+    let last = if self.unfinished {
+      section.entries_mut().iter_mut().rev().find(|e| e.unfinished())
+    } else {
+      section.entries_mut().last_mut()
+    };
 
     let last = match last {
       Some(entry) => entry,

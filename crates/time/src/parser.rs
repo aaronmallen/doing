@@ -1,10 +1,10 @@
 use std::sync::LazyLock;
 
 use chrono::{DateTime, Datelike, Duration, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
+use doing_error::{Error, Result};
 use regex::Regex;
 
-use super::duration::parse_duration;
-use crate::{Error, Result};
+use crate::duration::parse_duration;
 
 static RE_AGO: LazyLock<Regex> = LazyLock::new(|| {
   Regex::new(r"^(\w+)\s*(minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|months?|mo)\s+ago$").unwrap()

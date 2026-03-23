@@ -1,8 +1,7 @@
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 use chrono::{DateTime, Datelike, Local};
-
-use crate::config::ShortdateFormatConfig;
+use serde::{Deserialize, Serialize};
 
 /// Duration display format modes.
 ///
@@ -117,6 +116,27 @@ impl Display for FormattedDuration {
         }
         write!(f, "{}", parts.join(" "))
       }
+    }
+  }
+}
+
+/// Date format strings for relative time display.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(default)]
+pub struct ShortdateFormatConfig {
+  pub older: String,
+  pub this_month: String,
+  pub this_week: String,
+  pub today: String,
+}
+
+impl Default for ShortdateFormatConfig {
+  fn default() -> Self {
+    Self {
+      older: "%m/%d/%y %_I:%M%P".into(),
+      this_month: "%m/%d %_I:%M%P".into(),
+      this_week: "%a %_I:%M%P".into(),
+      today: "%_I:%M%P".into(),
     }
   }
 }

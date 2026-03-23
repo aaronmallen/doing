@@ -11,3 +11,7 @@ version = "0.1.0"
 chrono.workspace = true
 doing-error.workspace = true
 regex.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

@@ -43,7 +43,7 @@ pub struct Command {
   editor: bool,
 
   /// Use exact (literal substring) matching for search
-  #[arg(long)]
+  #[arg(short = 'x', long)]
   exact: bool,
 
   /// Target section for the new entry
@@ -55,7 +55,7 @@ pub struct Command {
   interactive: bool,
 
   /// Skip autotagging and default tags
-  #[arg(short = 'x', long)]
+  #[arg(short = 'X', long)]
   noauto: bool,
 
   /// Negate all filter results

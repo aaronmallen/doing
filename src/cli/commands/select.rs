@@ -60,7 +60,7 @@ pub struct Command {
   editor: bool,
 
   /// Use exact (literal substring) matching for search
-  #[arg(long)]
+  #[arg(short = 'x', long)]
   exact: bool,
 
   /// Finish selected entries (mark @done with timestamp)

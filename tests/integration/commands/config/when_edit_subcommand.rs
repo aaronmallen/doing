@@ -39,13 +39,13 @@ fn it_opens_default_with_short_flag() {
   let doing = DoingCmd::new();
 
   let output = doing
-    .run(["config", "edit", "-x"])
+    .run(["config", "edit", "-X"])
     .output()
-    .expect("failed to run config edit -x");
+    .expect("failed to run config edit -X");
 
   assert!(
     output.status.success(),
-    "expected config edit -x to succeed, stderr: {}",
+    "expected config edit -X to succeed, stderr: {}",
     String::from_utf8_lossy(&output.stderr)
   );
 }

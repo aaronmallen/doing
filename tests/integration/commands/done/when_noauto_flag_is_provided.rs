@@ -35,7 +35,7 @@ default = "cat"
   // With -x, autotag should NOT apply
   let doing2 = DoingCmd::new_with_config(config);
 
-  doing2.run(["done", "-x", "coding session"]).assert().success();
+  doing2.run(["done", "-X", "coding session"]).assert().success();
 
   let contents2 = doing2.read_doing_file();
   assert!(

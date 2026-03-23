@@ -38,7 +38,7 @@ pub struct Command {
   from: Option<String>,
 
   /// Skip autotagging and default tags
-  #[arg(short = 'x', long)]
+  #[arg(short = 'X', long)]
   noauto: bool,
 
   /// Attach a note directly from the command line

@@ -25,7 +25,7 @@ default = "cat"
   let doing = DoingCmd::new_with_config(config);
 
   // With -x flag, autotag rules should not apply
-  doing.run(["now", "-x", "Noauto entry"]).assert().success();
+  doing.run(["now", "-X", "Noauto entry"]).assert().success();
 
   let contents = doing.read_doing_file();
   assert!(

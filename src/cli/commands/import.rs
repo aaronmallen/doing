@@ -33,7 +33,7 @@ pub struct Command {
   case: Option<String>,
 
   /// Use exact (literal substring) matching for search filter
-  #[arg(long)]
+  #[arg(short = 'x', long)]
   exact: bool,
 
   /// Date range filter for imports (e.g. "last week", "2024-01-01 to 2024-03-01")

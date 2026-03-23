@@ -12,7 +12,7 @@ fn it_excludes_auto_tags_and_default_tags() {
   )
   .expect("failed to write doing file");
 
-  doing.run(["again", "-x"]).assert().success();
+  doing.run(["again", "-X"]).assert().success();
 
   let contents = doing.read_doing_file();
 

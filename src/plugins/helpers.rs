@@ -1,3 +1,5 @@
+use indexmap::IndexMap;
+
 use crate::{
   config::Config,
   taskpaper::Entry,
@@ -15,18 +17,11 @@ pub fn format_interval(entry: &Entry, config: &Config) -> Option<String> {
 
 /// Group entries by section name, preserving the order sections are first seen.
 pub fn group_by_section(entries: &[Entry]) -> Vec<(&str, Vec<&Entry>)> {
-  let mut sections: Vec<(&str, Vec<&Entry>)> = Vec::new();
-
+  let mut map: IndexMap<&str, Vec<&Entry>> = IndexMap::new();
   for entry in entries {
-    let section_name = entry.section();
-    if let Some(pos) = sections.iter().position(|(name, _)| *name == section_name) {
-      sections[pos].1.push(entry);
-    } else {
-      sections.push((section_name, vec![entry]));
-    }
+    map.entry(entry.section()).or_default().push(entry);
   }
-
-  sections
+  map.into_iter().collect()
 }
 
 /// Convert an entry's note lines into an HTML unordered list.

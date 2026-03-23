@@ -1,3 +1,5 @@
+use indexmap::IndexMap;
+
 use crate::{
   config::Config,
   plugins::{ExportPlugin, ExportPluginSettings},
@@ -84,18 +86,12 @@ fn format_clock(duration: chrono::Duration) -> String {
 
 /// Group entries by date string (`YYYY-MM-DD`), preserving the order dates are first seen.
 fn group_by_date(entries: &[Entry]) -> Vec<(String, Vec<&Entry>)> {
-  let mut days: Vec<(String, Vec<&Entry>)> = Vec::new();
-
+  let mut map: IndexMap<String, Vec<&Entry>> = IndexMap::new();
   for entry in entries {
     let date = entry.date().format("%Y-%m-%d").to_string();
-    if let Some(pos) = days.iter().position(|(d, _)| *d == date) {
-      days[pos].1.push(entry);
-    } else {
-      days.push((date, vec![entry]));
-    }
+    map.entry(date).or_default().push(entry);
   }
-
-  days
+  map.into_iter().collect()
 }
 
 /// Remove `@done` and `@done(...)` tags from a title string.

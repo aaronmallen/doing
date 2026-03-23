@@ -1,4 +1,7 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::{
+  collections::HashSet,
+  fmt::{Display, Formatter, Result as FmtResult},
+};
 
 use regex::Regex;
 
@@ -84,16 +87,8 @@ impl Tags {
   /// Remove duplicate tags, keeping the first occurrence of each name
   /// (compared case-insensitively).
   pub fn dedup(&mut self) {
-    let mut seen = Vec::new();
-    self.inner.retain(|tag| {
-      let lower = tag.name.to_ascii_lowercase();
-      if seen.contains(&lower) {
-        false
-      } else {
-        seen.push(lower);
-        true
-      }
-    });
+    let mut seen = HashSet::new();
+    self.inner.retain(|tag| seen.insert(tag.name.to_ascii_lowercase()));
   }
 
   /// Check whether a tag with the given name exists (case-insensitive).

@@ -478,6 +478,7 @@ dependencies = [
  "dialoguer",
  "dir_spec",
  "env_logger",
+ "indexmap",
  "json_comments",
  "log",
  "md5",

@@ -95,17 +95,27 @@ pub fn parse(content: &str) -> Document {
 fn parse_tags(title: &str) -> (String, Tags) {
   let tag_rx = Regex::new(r"(?:^| )(@([^\s(]+)(?:\(([^)]+)\))?)").unwrap();
   let mut tags = Vec::new();
-  let mut clean_title = title.to_string();
 
+  // Collect tag match byte ranges so we can build the cleaned title in one pass
+  let mut tag_ranges: Vec<(usize, usize)> = Vec::new();
   for caps in tag_rx.captures_iter(title) {
-    let full_match = &caps[1];
+    let m = caps.get(1).unwrap();
+    tag_ranges.push((m.start(), m.end()));
     let name = &caps[2];
     let value = caps.get(3).map(|m| m.as_str().to_string());
     tags.push(Tag::new(name, value));
-    clean_title = clean_title.replace(full_match, "");
   }
 
-  let clean_title = clean_title.split_whitespace().collect::<Vec<_>>().join(" ");
+  // Build cleaned title by skipping tag ranges
+  let mut clean = String::with_capacity(title.len());
+  let mut pos = 0;
+  for (start, end) in &tag_ranges {
+    clean.push_str(&title[pos..*start]);
+    pos = *end;
+  }
+  clean.push_str(&title[pos..]);
+
+  let clean_title = clean.split_whitespace().collect::<Vec<_>>().join(" ");
   (clean_title, Tags::from_iter(tags))
 }
 

@@ -54,7 +54,7 @@ impl Entry {
   /// Return the parsed `@done` tag timestamp, if present and valid.
   pub fn done_date(&self) -> Option<DateTime<Local>> {
     let value = self.tag_value("done")?;
-    parse_tag_date(&value)
+    parse_tag_date(value)
   }
 
   /// Return elapsed time since the start date.
@@ -169,12 +169,12 @@ impl Entry {
   }
 
   /// Return the value of a tag by name, if present.
-  fn tag_value(&self, name: &str) -> Option<String> {
+  fn tag_value(&self, name: &str) -> Option<&str> {
     self
       .tags
       .iter()
       .find(|t| t.name().eq_ignore_ascii_case(name))
-      .and_then(|t| t.value().map(String::from))
+      .and_then(|t| t.value())
   }
 }
 

@@ -1,0 +1,19 @@
+[package]
+description = "Configuration loading and types for the doing CLI"
+edition.workspace = true
+license.workspace = true
+name = "doing-config"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.0"
+
+[dependencies]
+dir_spec.workspace = true
+doing-error.workspace = true
+doing-time.workspace = true
+json_comments.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+typed-env.workspace = true
+yaml_serde.workspace = true

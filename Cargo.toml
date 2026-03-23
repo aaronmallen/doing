@@ -33,6 +33,7 @@ clap = { features = ["derive", "suggestions"], version = "4" }
 clap_complete = "4"
 dialoguer = "0.12"
 dir_spec = "0.5"
+doing-config = { path = "crates/config" }
 doing-error = { path = "crates/error" }
 doing-time = { path = "crates/time" }
 env_logger = "0.11"
@@ -67,6 +68,7 @@ clap.workspace = true
 clap_complete.workspace = true
 dialoguer.workspace = true
 dir_spec.workspace = true
+doing-config.workspace = true
 doing-error.workspace = true
 doing-time.workspace = true
 env_logger.workspace = true

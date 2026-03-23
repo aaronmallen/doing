@@ -477,6 +477,7 @@ dependencies = [
  "clap_complete",
  "dialoguer",
  "dir_spec",
+ "doing-config",
  "doing-error",
  "doing-time",
  "env_logger",
@@ -501,6 +502,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "doing-config"
+version = "0.1.0"
+dependencies = [
+ "dir_spec",
+ "doing-error",
+ "doing-time",
+ "json_comments",
+ "serde",
+ "serde_json",
+ "toml",
+ "typed-env",
+ "yaml_serde",
+]
+
+[[package]]
 name = "doing-error"
 version = "0.1.0"
 dependencies = [
@@ -509,7 +525,7 @@ dependencies = [
 
 [[package]]
 name = "doing-time"
-version = "0.0.1-alpha.1"
+version = "0.1.0"
 dependencies = [
  "chrono",
  "doing-error",

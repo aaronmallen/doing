@@ -98,6 +98,9 @@ pub struct DisplayArgs {
   #[arg(short = 't', long)]
   pub times: bool,
 
+  #[arg(long = "no-times", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "times")]
+  pub no_times: bool,
+
   /// Show section title in output; accepts an optional custom title string
   #[arg(long, num_args = 0..=1, default_missing_value = "")]
   pub title: Option<String>,

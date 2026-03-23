@@ -16,7 +16,6 @@ fn it_shows_times() {
 }
 
 #[test]
-#[ignore = "our recent command does not support --no-times flag (see #204)"]
 fn it_hides_times() {
   let doing = DoingCmd::new();
 

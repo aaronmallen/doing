@@ -20,6 +20,9 @@ pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ targe
 members = ["crates/*"]
 resolver = "3"
 
+[workspace.metadata.workspaces]
+independent = true
+
 [workspace.package]
 edition = "2024"
 license = "MIT"

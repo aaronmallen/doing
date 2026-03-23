@@ -8,6 +8,9 @@ repository.workspace = true
 rust-version.workspace = true
 version = "0.1.0"
 
+[package.metadata.workspaces]
+independent = true
+
 [dependencies]
 chrono.workspace = true
 doing-config.workspace = true

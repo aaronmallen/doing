@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "--case flag not supported on finish command (see #171)"]
 fn it_respects_case_sensitivity_in_search() {
   let doing = DoingCmd::new();
 

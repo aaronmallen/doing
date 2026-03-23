@@ -50,6 +50,10 @@ pub struct Command {
   /// Section name or @tag to archive (e.g. "Currently" or "@done")
   #[arg(index = 1, value_name = "SECTION_OR_TAG")]
   section_or_tag: Option<String>,
+
+  /// Target section to move entries to (default: Archive)
+  #[arg(long)]
+  to: Option<String>,
 }
 
 impl Command {
@@ -70,14 +74,20 @@ impl Command {
     }
 
     let moved_count = entries_to_move.len();
-    self.move_entries(ctx, entries_to_move)?;
+    let target = self.to.clone().unwrap_or_else(|| "Archive".to_string());
+    self.move_entries(ctx, entries_to_move, &target)?;
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    if moved_count == 1 {
-      ctx.status("Archived 1 entry");
+    let verb = if target.eq_ignore_ascii_case("archive") {
+      "Archived"
     } else {
-      ctx.status(format!("Archived {moved_count} entries"));
+      "Moved"
+    };
+    if moved_count == 1 {
+      ctx.status(format!("{verb} 1 entry"));
+    } else {
+      ctx.status(format!("{verb} {moved_count} entries"));
     }
 
     Ok(())
@@ -131,13 +141,14 @@ impl Command {
     // Sort oldest-first for keep/count logic
     candidates.sort_by_key(|e| e.date());
 
-    // Apply --keep: skip the N newest entries
-    if let Some(keep) = self.keep {
-      if keep >= candidates.len() {
-        return Ok(Vec::new());
+    // Apply --keep: skip the N newest entries (ignored when filters are active)
+    if let Some(keep) = self.keep
+      && !has_filters {
+        if keep >= candidates.len() {
+          return Ok(Vec::new());
+        }
+        candidates.truncate(candidates.len() - keep);
       }
-      candidates.truncate(candidates.len() - keep);
-    }
 
     // Apply --count: limit number of entries to move
     if let Some(count) = self.count {
@@ -147,20 +158,20 @@ impl Command {
     Ok(candidates)
   }
 
-  fn move_entries(&self, ctx: &mut AppContext, entries: Vec<Entry>) -> Result<()> {
-    if !ctx.document.has_section("Archive") {
-      ctx.document.add_section(Section::new("Archive"));
+  fn move_entries(&self, ctx: &mut AppContext, entries: Vec<Entry>, target: &str) -> Result<()> {
+    if !ctx.document.has_section(target) {
+      ctx.document.add_section(Section::new(target));
     }
 
     let ids: Vec<String> = entries.iter().map(|e| e.id().to_string()).collect();
     let sections: Vec<String> = entries.iter().map(|e| e.section().to_string()).collect();
 
-    // Add entries to Archive with optional @from tag
+    // Add entries to target section with optional @from tag
     for (i, mut entry) in entries.into_iter().enumerate() {
       if self.label && !self.no_label {
         entry.tags_mut().add(Tag::new("from", Some(sections[i].clone())));
       }
-      ctx.document.section_by_name_mut("Archive").unwrap().add_entry(entry);
+      ctx.document.section_by_name_mut(target).unwrap().add_entry(entry);
     }
 
     // Remove entries from source sections
@@ -195,6 +206,7 @@ mod test {
       label: true,
       no_label: false,
       section_or_tag: None,
+      to: None,
     }
   }
 

@@ -66,7 +66,6 @@ fn it_archives_nothing_when_keep_exceeds_entry_count() {
 }
 
 #[test]
-#[ignore = "our doing does not ignore --keep when filtering by tag (see #188)"]
 fn it_is_ignored_when_filtering_by_tag() {
   let doing = DoingCmd::new();
 
@@ -97,7 +96,6 @@ Currently:
 }
 
 #[test]
-#[ignore = "our doing does not ignore --keep when filtering by search (see #188)"]
 fn it_is_ignored_when_filtering_by_search() {
   let doing = DoingCmd::new();
 

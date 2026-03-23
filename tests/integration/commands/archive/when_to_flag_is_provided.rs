@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our doing does not support --to flag for archive (see #188)"]
 fn it_moves_entries_to_specified_section() {
   let doing = DoingCmd::new();
 
@@ -19,7 +18,6 @@ fn it_moves_entries_to_specified_section() {
 }
 
 #[test]
-#[ignore = "our doing does not support --to flag for archive (see #188)"]
 fn it_says_moved_instead_of_archived_for_non_archive_target() {
   let doing = DoingCmd::new();
 
@@ -35,7 +33,6 @@ fn it_says_moved_instead_of_archived_for_non_archive_target() {
 }
 
 #[test]
-#[ignore = "our doing does not support --to flag for archive (see #188)"]
 fn it_says_archived_when_target_is_archive() {
   let doing = DoingCmd::new();
 
@@ -54,7 +51,6 @@ fn it_says_archived_when_target_is_archive() {
 }
 
 #[test]
-#[ignore = "our doing does not support --to flag for archive (see #188)"]
 fn it_adds_from_label_regardless_of_target() {
   let doing = DoingCmd::new();
 

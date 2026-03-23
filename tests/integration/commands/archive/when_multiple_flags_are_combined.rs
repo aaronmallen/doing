@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our doing does not support --to flag for archive (see #188)"]
 fn it_combines_tag_and_to_and_no_label() {
   let doing = DoingCmd::new();
 

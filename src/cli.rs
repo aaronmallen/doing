@@ -9,12 +9,12 @@ pub mod title_note;
 use std::{ffi::OsString, io::IsTerminal, path::PathBuf};
 
 use clap::{ArgAction, CommandFactory, Parser, Subcommand};
+use doing_config::Config;
 use log::debug;
 use yansi::Condition;
 
 use crate::{
   Result,
-  config::{self, Config},
   taskpaper::{self, Document},
   template,
 };
@@ -191,7 +191,7 @@ impl Cli {
 
     let config = Config::load()?;
 
-    if let Some(config_path) = config::loader::discover_global_config() {
+    if let Some(config_path) = doing_config::loader::discover_global_config() {
       debug!("Using config file: {}", config_path.display());
     } else {
       debug!("No config file found, using defaults");
@@ -234,7 +234,7 @@ impl Cli {
       config.paginate
     };
 
-    let quiet = self.quiet || config::env::DOING_QUIET.value().unwrap_or(false);
+    let quiet = self.quiet || doing_config::env::DOING_QUIET.value().unwrap_or(false);
 
     let mut ctx = AppContext {
       config,
@@ -256,9 +256,9 @@ impl Cli {
   }
 
   fn log_level(&self) -> log::LevelFilter {
-    let env_debug = config::env::DOING_DEBUG.value().unwrap_or(false);
-    let env_level = config::env::DOING_LOG_LEVEL.value().ok();
-    let env_quiet = config::env::DOING_QUIET.value().unwrap_or(false);
+    let env_debug = doing_config::env::DOING_DEBUG.value().unwrap_or(false);
+    let env_level = doing_config::env::DOING_LOG_LEVEL.value().ok();
+    let env_quiet = doing_config::env::DOING_QUIET.value().unwrap_or(false);
 
     // Quiet always wins, then debug, then env level, then default (info)
     if self.quiet || env_quiet {

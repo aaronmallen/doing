@@ -3,7 +3,7 @@ use std::{
   process::{Command, Stdio},
 };
 
-use crate::config::Config;
+use doing_config::Config;
 
 /// Write output, using the pager when pagination is enabled.
 ///
@@ -54,7 +54,7 @@ fn resolve_pager(config: &Config) -> String {
     return pager.clone();
   }
 
-  if let Ok(pager) = crate::config::env::PAGER.value() {
+  if let Ok(pager) = doing_config::env::PAGER.value() {
     return pager;
   }
 
@@ -93,7 +93,7 @@ mod test {
     #[test]
     fn it_uses_config_pager_when_set() {
       let config = Config {
-        editors: crate::config::EditorsConfig {
+        editors: doing_config::EditorsConfig {
           config: None,
           default: None,
           doing_file: None,

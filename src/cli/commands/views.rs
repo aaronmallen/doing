@@ -1,11 +1,11 @@
 use std::fs;
 
 use clap::{Args, Subcommand};
+use doing_config::loader::resolve_global_config_path;
 
 use crate::{
   Error, Result,
   cli::{AppContext, editor},
-  config::loader::resolve_global_config_path,
 };
 
 /// List, edit, or remove saved views.
@@ -306,11 +306,10 @@ fn remove_view_from_yaml(content: &str, name: &str) -> Option<String> {
 
 #[cfg(test)]
 mod test {
+  use doing_config::{Config, SortOrder, ViewConfig};
+
   use super::*;
-  use crate::{
-    config::{Config, SortOrder, ViewConfig},
-    taskpaper::{Document, Section},
-  };
+  use crate::taskpaper::{Document, Section};
 
   fn sample_ctx() -> AppContext {
     let mut doc = Document::new();

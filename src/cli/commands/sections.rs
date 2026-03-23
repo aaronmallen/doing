@@ -138,11 +138,10 @@ fn remove_section(name: &str, archive: bool, ctx: &mut AppContext) -> Result<()>
 
 #[cfg(test)]
 mod test {
+  use doing_config::Config;
+
   use super::*;
-  use crate::{
-    config::Config,
-    taskpaper::{Document, Entry, Note, Section, Tags},
-  };
+  use crate::taskpaper::{Document, Entry, Note, Section, Tags};
 
   fn sample_ctx() -> AppContext {
     let mut doc = Document::new();

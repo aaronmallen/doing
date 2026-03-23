@@ -1,7 +1,8 @@
+use doing_config::SearchConfig;
 use regex::Regex;
 use sublime_fuzzy::best_match;
 
-use crate::{config::SearchConfig, taskpaper::Entry};
+use crate::taskpaper::Entry;
 
 /// How text comparisons handle letter case.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

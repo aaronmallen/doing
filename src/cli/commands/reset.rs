@@ -241,11 +241,11 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
+  use doing_config::Config;
 
   use super::*;
   use crate::{
     cli::args::FilterArgs,
-    config::Config,
     taskpaper::{Document, Note, Section, Tag, Tags},
   };
 

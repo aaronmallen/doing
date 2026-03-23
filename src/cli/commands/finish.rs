@@ -506,12 +506,10 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
+  use doing_config::{Config, InteractionConfig};
 
   use super::*;
-  use crate::{
-    config::{Config, InteractionConfig},
-    taskpaper::{Document, Note, Section, Tags},
-  };
+  use crate::taskpaper::{Document, Note, Section, Tags};
 
   fn default_cmd() -> Command {
     Command {

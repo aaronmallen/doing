@@ -1,11 +1,9 @@
 use std::collections::HashMap;
 
+use doing_config::AutotagConfig;
 use regex::Regex;
 
-use crate::{
-  config::AutotagConfig,
-  taskpaper::{Entry, Tag},
-};
+use crate::taskpaper::{Entry, Tag};
 
 /// Apply automatic tagging to an entry based on configuration rules.
 ///

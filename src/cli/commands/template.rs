@@ -195,8 +195,9 @@ fn template_source(name: &str, template_dir: &Path) -> &'static str {
 
 #[cfg(test)]
 mod test {
+  use doing_config::Config;
+
   use super::*;
-  use crate::config::Config;
 
   fn sample_ctx() -> AppContext {
     AppContext {

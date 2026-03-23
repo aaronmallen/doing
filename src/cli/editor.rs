@@ -1,8 +1,9 @@
 use std::{fs, io::Write, path::Path, process::Command};
 
+use doing_config::Config;
 use tempfile::NamedTempFile;
 
-use crate::{Error, Result, config::Config};
+use crate::{Error, Result};
 
 /// Launch an editor with the given initial content and return the edited result.
 ///
@@ -38,7 +39,7 @@ pub fn edit(initial_content: &str, config: &Config) -> Result<String> {
 pub fn edit_config(config: &Config) -> Result<()> {
   let editor = config.editors.config.clone().unwrap_or_else(|| resolve_editor(config));
 
-  let config_path = crate::config::loader::resolve_global_config_path();
+  let config_path = doing_config::loader::resolve_global_config_path();
 
   let parts: Vec<&str> = editor.split_whitespace().collect();
   let (cmd, args) = parts.split_first().expect("editor command must not be empty");
@@ -68,7 +69,7 @@ pub fn open_with_bundle_id(bundle_id: &str, file_path: &Path) -> Result<()> {
 ///
 /// Priority: `$DOING_EDITOR` env var → config `editors.default` → `$VISUAL` → `$EDITOR` → `vi`.
 fn resolve_editor(config: &Config) -> String {
-  if let Ok(editor) = crate::config::env::DOING_EDITOR.value() {
+  if let Ok(editor) = doing_config::env::DOING_EDITOR.value() {
     return editor;
   }
 
@@ -76,11 +77,11 @@ fn resolve_editor(config: &Config) -> String {
     return editor.clone();
   }
 
-  if let Ok(editor) = crate::config::env::VISUAL.value() {
+  if let Ok(editor) = doing_config::env::VISUAL.value() {
     return editor;
   }
 
-  if let Ok(editor) = crate::config::env::EDITOR.value() {
+  if let Ok(editor) = doing_config::env::EDITOR.value() {
     return editor;
   }
 
@@ -97,7 +98,7 @@ mod test {
     #[test]
     fn it_falls_back_to_vi() {
       let config = Config {
-        editors: crate::config::EditorsConfig {
+        editors: doing_config::EditorsConfig {
           config: None,
           default: None,
           doing_file: None,
@@ -116,7 +117,7 @@ mod test {
     #[test]
     fn it_uses_config_editor_when_set() {
       let config = Config {
-        editors: crate::config::EditorsConfig {
+        editors: doing_config::EditorsConfig {
           config: None,
           default: Some("custom-editor".into()),
           doing_file: None,
@@ -127,7 +128,7 @@ mod test {
 
       let editor = super::super::resolve_editor(&config);
 
-      if crate::config::env::DOING_EDITOR.value().is_err() {
+      if doing_config::env::DOING_EDITOR.value().is_err() {
         assert_eq!(editor, "custom-editor");
       }
     }

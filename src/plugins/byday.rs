@@ -1,7 +1,7 @@
+use doing_config::Config;
 use indexmap::IndexMap;
 
 use crate::{
-  config::Config,
   plugins::{ExportPlugin, ExportPluginSettings},
   taskpaper::Entry,
   template::renderer::RenderOptions,

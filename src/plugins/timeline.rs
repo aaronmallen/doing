@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local};
+use doing_config::Config;
 
 use crate::{
-  config::Config,
   plugins::{ExportPlugin, ExportPluginSettings, helpers, html::escape_html},
   taskpaper::Entry,
   template::renderer::RenderOptions,

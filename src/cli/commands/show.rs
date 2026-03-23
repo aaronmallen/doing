@@ -1,6 +1,7 @@
 use std::io::IsTerminal;
 
 use clap::Args;
+use doing_config::SortOrder;
 
 use crate::{
   Result,
@@ -9,7 +10,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     pager,
   },
-  config::SortOrder,
   ops::filter::{FilterOptions, filter_entries},
 };
 
@@ -228,7 +228,7 @@ mod test {
     doc.add_section(later);
 
     AppContext {
-      config: crate::config::Config::default(),
+      config: doing_config::Config::default(),
       default_answer: false,
       document: doc,
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),

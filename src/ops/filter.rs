@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local};
+use doing_config::SortOrder;
 
 use crate::{
-  config::SortOrder,
   ops::{
     search::{self, CaseSensitivity, SearchMode},
     tag_filter::TagFilter,

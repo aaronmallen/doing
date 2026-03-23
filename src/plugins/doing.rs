@@ -1,5 +1,6 @@
+use doing_config::Config;
+
 use crate::{
-  config::Config,
   plugins::{ExportPlugin, ExportPluginSettings},
   taskpaper::{Document, Entry, Section},
   template::renderer::RenderOptions,

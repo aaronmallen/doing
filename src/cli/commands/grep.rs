@@ -1,4 +1,5 @@
 use clap::Args;
+use doing_config::SortOrder;
 
 use crate::{
   Result,
@@ -7,7 +8,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     editor, pager,
   },
-  config::SortOrder,
   ops::{
     backup::write_with_backup,
     filter::{FilterOptions, filter_entries},
@@ -189,7 +189,7 @@ impl Command {
       search_config.matching = "regex".into();
     }
 
-    let config_with_overrides = crate::config::Config {
+    let config_with_overrides = doing_config::Config {
       search: search_config,
       ..ctx.config.clone()
     };
@@ -271,7 +271,7 @@ mod test {
     doc.add_section(later);
 
     AppContext {
-      config: crate::config::Config::default(),
+      config: doing_config::Config::default(),
       default_answer: false,
       document: doc,
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),

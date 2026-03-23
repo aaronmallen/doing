@@ -1,12 +1,9 @@
 use std::fs;
 
 use clap::{Args, Subcommand};
+use doing_config::loader::{self as config_loader, ConfigFormat};
 
-use crate::{
-  Error, Result,
-  cli::AppContext,
-  config::loader::{self, ConfigFormat},
-};
+use crate::{Error, Result, cli::AppContext};
 
 /// Manage optional commands.
 ///
@@ -158,7 +155,7 @@ fn validate_command_name(name: &str, app: &clap::Command) -> Result<()> {
 }
 
 fn write_disabled_commands(disabled: &[String]) -> Result<()> {
-  let config_path = loader::resolve_global_config_path();
+  let config_path = config_loader::resolve_global_config_path();
 
   if config_path.exists() {
     match ConfigFormat::from_extension(&config_path) {
@@ -171,7 +168,7 @@ fn write_disabled_commands(disabled: &[String]) -> Result<()> {
 }
 
 fn write_disabled_generic(path: &std::path::Path, disabled: &[String]) -> Result<()> {
-  let mut value = loader::parse_file(path)?;
+  let mut value = config_loader::parse_file(path)?;
   let format = ConfigFormat::from_extension(path);
 
   let arr = disabled.iter().map(|s| serde_json::Value::String(s.clone())).collect();
@@ -247,7 +244,7 @@ mod test {
 
   fn sample_ctx() -> AppContext {
     AppContext {
-      config: crate::config::Config::default(),
+      config: doing_config::Config::default(),
       default_answer: false,
       document: crate::taskpaper::Document::new(),
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),

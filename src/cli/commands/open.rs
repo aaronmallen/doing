@@ -87,7 +87,7 @@ fn resolve_open_editor(app: &Option<String>, editor_flag: &Option<String>, ctx: 
     return editor.clone();
   }
 
-  if let Ok(editor) = crate::config::env::DOING_EDITOR.value() {
+  if let Ok(editor) = doing_config::env::DOING_EDITOR.value() {
     return editor;
   }
 
@@ -95,11 +95,11 @@ fn resolve_open_editor(app: &Option<String>, editor_flag: &Option<String>, ctx: 
     return editor.clone();
   }
 
-  if let Ok(editor) = crate::config::env::VISUAL.value() {
+  if let Ok(editor) = doing_config::env::VISUAL.value() {
     return editor;
   }
 
-  if let Ok(editor) = crate::config::env::EDITOR.value() {
+  if let Ok(editor) = doing_config::env::EDITOR.value() {
     return editor;
   }
 
@@ -108,8 +108,9 @@ fn resolve_open_editor(app: &Option<String>, editor_flag: &Option<String>, ctx: 
 
 #[cfg(test)]
 mod test {
+  use doing_config::{Config, EditorsConfig};
+
   use super::*;
-  use crate::config::{Config, EditorsConfig};
 
   mod resolve_open_editor {
     use super::*;
@@ -139,7 +140,7 @@ mod test {
         yes: false,
       };
 
-      if crate::config::env::DOING_EDITOR.value().is_err() {
+      if doing_config::env::DOING_EDITOR.value().is_err() {
         let editor = super::super::resolve_open_editor(&None, &None, &ctx);
 
         assert_eq!(editor, "default-editor");

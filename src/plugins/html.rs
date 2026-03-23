@@ -1,9 +1,9 @@
 use std::sync::LazyLock;
 
+use doing_config::Config;
 use regex::Regex;
 
 use crate::{
-  config::Config,
   plugins::{ExportPlugin, ExportPluginSettings, helpers},
   taskpaper::Entry,
   template::renderer::RenderOptions,

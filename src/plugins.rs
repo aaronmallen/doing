@@ -10,9 +10,10 @@ mod markdown;
 mod taskpaper;
 mod timeline;
 
+use doing_config::Config;
 use regex::Regex;
 
-use crate::{config::Config, taskpaper::Entry, template::renderer::RenderOptions};
+use crate::{taskpaper::Entry, template::renderer::RenderOptions};
 
 /// The interface that export format plugins must implement.
 ///

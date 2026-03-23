@@ -4,9 +4,10 @@ use std::{
   path::{Path, PathBuf},
 };
 
+use doing_error::{Error, Result};
 use serde_json::Value;
 
-use crate::{Error, Result, config::env::DOING_CONFIG, paths::expand_tilde};
+use crate::{env::DOING_CONFIG, paths::expand_tilde};
 
 /// Supported configuration file formats.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -88,7 +89,7 @@ pub fn discover_global_config() -> Option<PathBuf> {
 /// Discover local `.doingrc` files by walking from `start_dir` upward.
 ///
 /// Returns paths ordered root-to-leaf (outermost ancestor first) so they
-/// can be merged in precedence order — each successive file overrides the
+/// can be merged in precedence order -- each successive file overrides the
 /// previous.
 pub fn discover_local_configs(start_dir: &Path) -> Vec<PathBuf> {
   let global = discover_global_config();

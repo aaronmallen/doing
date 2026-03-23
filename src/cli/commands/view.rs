@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use clap::Args;
+use doing_config::{SortOrder, ViewConfig};
 use log::debug;
 
 use crate::{
@@ -10,7 +11,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     pager,
   },
-  config::{SortOrder, ViewConfig},
   ops::{
     filter::{FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},
@@ -254,7 +254,7 @@ mod test {
     ));
     doc.add_section(later);
 
-    let mut config = crate::config::Config::default();
+    let mut config = doing_config::Config::default();
     config.views.insert(
       "test_view".into(),
       ViewConfig {

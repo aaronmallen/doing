@@ -1,11 +1,11 @@
 use chrono::{DateTime, Local};
 use clap::Args;
+use doing_config::Config;
 use doing_time::chronify;
 
 use crate::{
   Result,
   cli::AppContext,
-  config::Config,
   ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Entry, Note, Section, Tag, Tags},
 };
@@ -185,9 +185,10 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
+  use doing_config::Config;
 
   use super::*;
-  use crate::{config::Config, taskpaper::Document};
+  use crate::taskpaper::Document;
 
   fn default_cmd() -> Command {
     Command {

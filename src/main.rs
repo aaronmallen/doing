@@ -1,7 +1,5 @@
 mod cli;
-mod config;
 mod ops;
-mod paths;
 mod plugins;
 mod taskpaper;
 mod template;

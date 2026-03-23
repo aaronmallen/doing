@@ -1,5 +1,7 @@
+use doing_config::SortOrder;
+
 use super::Document;
-use crate::{config::SortOrder, template::colors::STRIP_ANSI_RE};
+use crate::template::colors::STRIP_ANSI_RE;
 
 /// Serialize a `Document` into the doing file format string.
 ///

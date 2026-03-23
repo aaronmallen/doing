@@ -1,12 +1,12 @@
 use std::{env as std_env, fs, path::Path, process};
 
 use clap::{Args, Subcommand};
+use doing_config::loader::{self as config_loader, ConfigFormat};
 use serde_json::Value;
 
 use crate::{
   Error, Result,
   cli::{AppContext, editor},
-  config::loader::{self, ConfigFormat},
 };
 
 /// View, edit, and manage the doing configuration.
@@ -164,8 +164,8 @@ fn abbreviation_matches(abbr: &str, full: &str) -> bool {
   true
 }
 
-fn edit_config(args: &EditArgs, config: &crate::config::Config) -> Result<()> {
-  let config_path = loader::resolve_global_config_path();
+fn edit_config(args: &EditArgs, config: &doing_config::Config) -> Result<()> {
+  let config_path = config_loader::resolve_global_config_path();
 
   if args.default {
     return reset_config_to_defaults(&config_path);
@@ -221,12 +221,12 @@ fn get_value(args: &GetArgs, ctx: &AppContext) -> Result<()> {
 }
 
 fn list_configs() -> Result<()> {
-  if let Some(global) = loader::discover_global_config() {
+  if let Some(global) = config_loader::discover_global_config() {
     println!("{}", global.display());
   }
 
   let cwd = std_env::current_dir().unwrap_or_default();
-  for path in loader::discover_local_configs(&cwd) {
+  for path in config_loader::discover_local_configs(&cwd) {
     println!("{}", path.display());
   }
 
@@ -263,14 +263,14 @@ fn open_with_editor(config_path: &Path, editor_cmd: &str) -> Result<()> {
 }
 
 fn resolve_backup_dir() -> std::path::PathBuf {
-  crate::config::env::DOING_BACKUP_DIR
+  doing_config::env::DOING_BACKUP_DIR
     .value()
     .map(std::path::PathBuf::from)
-    .unwrap_or_else(|_| crate::config::Config::default().backup_dir)
+    .unwrap_or_else(|_| doing_config::Config::default().backup_dir)
 }
 
 fn undo_config(ctx: &AppContext) -> Result<()> {
-  let config_path = loader::resolve_global_config_path();
+  let config_path = config_loader::resolve_global_config_path();
 
   if !config_path.exists() {
     return Err(Error::Config("no config file found".into()));
@@ -333,7 +333,7 @@ fn remove_value(key: &str, local: bool, quiet: bool) -> Result<()> {
   let config_path = if local {
     resolve_local_config_path()
   } else {
-    loader::resolve_global_config_path()
+    config_loader::resolve_global_config_path()
   };
 
   if !config_path.exists() {
@@ -347,7 +347,7 @@ fn remove_value(key: &str, local: bool, quiet: bool) -> Result<()> {
 }
 
 fn remove_value_generic(path: &Path, key: &str, quiet: bool) -> Result<()> {
-  let mut value = loader::parse_file(path)?;
+  let mut value = config_loader::parse_file(path)?;
   let format = ConfigFormat::from_extension(path);
 
   if !remove_dot_path(&mut value, key)? {
@@ -401,7 +401,7 @@ fn remove_value_toml(path: &Path, key: &str, quiet: bool) -> Result<()> {
 }
 
 fn reset_config_to_defaults(config_path: &Path) -> Result<()> {
-  let default_config = crate::config::Config::default();
+  let default_config = doing_config::Config::default();
   let value = serde_json::to_value(&default_config).map_err(|e| Error::Config(format!("serialization error: {e}")))?;
 
   // Determine format from extension, default to TOML
@@ -469,7 +469,7 @@ fn set_value(key: &str, raw_value: &str, local: bool, quiet: bool) -> Result<()>
   let config_path = if local {
     resolve_local_config_path()
   } else {
-    loader::resolve_global_config_path()
+    config_loader::resolve_global_config_path()
   };
 
   // Create a backup before modifying for `config undo`
@@ -489,7 +489,7 @@ fn set_value(key: &str, raw_value: &str, local: bool, quiet: bool) -> Result<()>
 }
 
 fn set_value_generic(path: &Path, key: &str, raw_value: &str, quiet: bool) -> Result<()> {
-  let mut value = loader::parse_file(path)?;
+  let mut value = config_loader::parse_file(path)?;
   let format = ConfigFormat::from_extension(path);
 
   set_dot_path(&mut value, key, parse_raw_value(raw_value))?;
@@ -564,8 +564,9 @@ fn toml_value(raw: &str) -> toml_edit::Item {
 
 #[cfg(test)]
 mod test {
+  use doing_config::Config;
+
   use super::*;
-  use crate::config::Config;
 
   mod get_value {
     use super::*;

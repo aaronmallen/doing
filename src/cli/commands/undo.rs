@@ -93,10 +93,11 @@ mod test {
   mod call {
     use std::fs;
 
+    use doing_config::Config;
     use pretty_assertions::assert_eq;
 
     use super::*;
-    use crate::{cli::AppContext, config::Config, ops::backup::backup_prefix, taskpaper::Document};
+    use crate::{cli::AppContext, ops::backup::backup_prefix, taskpaper::Document};
 
     #[test]
     fn it_restores_from_most_recent_backup() {

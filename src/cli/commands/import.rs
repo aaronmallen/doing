@@ -229,12 +229,10 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
+  use doing_config::Config;
 
   use super::*;
-  use crate::{
-    config::Config,
-    taskpaper::{Document, Entry, Note, Section, Tag, Tags},
-  };
+  use crate::taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   fn sample_ctx(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");

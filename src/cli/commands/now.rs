@@ -1,11 +1,11 @@
 use chrono::{DateTime, Local};
 use clap::Args;
+use doing_config::Config;
 use doing_time::{chronify, parse_range};
 
 use crate::{
   Result,
   cli::AppContext,
-  config::Config,
   ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Document, Entry, Note, Tag, Tags},
 };

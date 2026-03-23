@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
 use chrono::Local;
+use doing_config::Config;
 use serde::Serialize;
 
 use crate::{
-  config::Config,
   plugins::{ExportPlugin, ExportPluginSettings, helpers},
   taskpaper::Entry,
   template::renderer::RenderOptions,

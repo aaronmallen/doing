@@ -1,10 +1,10 @@
 use chrono::{DateTime, Local};
 use clap::{Args, ValueEnum};
+use doing_config::{Config, SortOrder};
 use doing_time::{chronify, parse_range};
 
 use crate::{
   Result,
-  config::{Config, SortOrder},
   ops::{
     filter::{Age, FilterOptions},
     search,

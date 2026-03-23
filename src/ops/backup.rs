@@ -5,10 +5,10 @@ use std::{
 };
 
 use chrono::Local;
+use doing_config::Config;
 
 use crate::{
   Result,
-  config::Config,
   taskpaper::{Document, io as taskpaper_io},
 };
 
@@ -120,11 +120,10 @@ fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Ve
 
 #[cfg(test)]
 mod test {
+  use doing_config::SortOrder;
+
   use super::*;
-  use crate::{
-    config::SortOrder,
-    taskpaper::{Entry, Note, Section, Tags},
-  };
+  use crate::taskpaper::{Entry, Note, Section, Tags};
 
   fn sample_doc() -> Document {
     let mut doc = Document::new();

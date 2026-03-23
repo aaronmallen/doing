@@ -1,4 +1,5 @@
 use clap::Args;
+use doing_config::SortOrder;
 use doing_time::{chronify, parse_range};
 
 use crate::{
@@ -8,7 +9,6 @@ use crate::{
     args::{DisplayArgs, FilterArgs},
     pager,
   },
-  config::SortOrder,
   ops::filter::filter_entries,
 };
 
@@ -147,7 +147,7 @@ mod test {
     doc.add_section(section);
 
     AppContext {
-      config: crate::config::Config::default(),
+      config: doing_config::Config::default(),
       default_answer: false,
       document: doc,
       doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
@@ -204,7 +204,7 @@ mod test {
     #[test]
     fn it_handles_empty_document() {
       let mut ctx = AppContext {
-        config: crate::config::Config::default(),
+        config: doing_config::Config::default(),
         default_answer: false,
         document: Document::new(),
         doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),

@@ -1,7 +1,9 @@
 use std::{fs, path::Path};
 
+use doing_config::SortOrder;
+
 use super::{Document, serializer};
-use crate::{Error, Result, config::SortOrder};
+use crate::{Error, Result};
 
 /// Create a new doing file at `path` with a single default section.
 ///

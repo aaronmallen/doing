@@ -143,12 +143,13 @@ impl Command {
 
     // Apply --keep: skip the N newest entries (ignored when filters are active)
     if let Some(keep) = self.keep
-      && !has_filters {
-        if keep >= candidates.len() {
-          return Ok(Vec::new());
-        }
-        candidates.truncate(candidates.len() - keep);
+      && !has_filters
+    {
+      if keep >= candidates.len() {
+        return Ok(Vec::new());
       }
+      candidates.truncate(candidates.len() - keep);
+    }
 
     // Apply --count: limit number of entries to move
     if let Some(count) = self.count {

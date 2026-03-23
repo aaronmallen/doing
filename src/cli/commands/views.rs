@@ -25,14 +25,37 @@ use crate::{
 pub struct Command {
   #[command(subcommand)]
   action: Option<Action>,
+
+  /// Output views in column format (names only)
+  #[arg(short = 'c', long, global = true)]
+  column: bool,
+
+  /// View name to display config for
+  #[arg(index = 1, value_name = "NAME")]
+  name: Option<String>,
+
+  /// Output format (e.g. json)
+  #[arg(short = 'o', long, global = true)]
+  output: Option<String>,
 }
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     match &self.action {
-      None => list_views(ctx),
-      Some(Action::Edit(args)) => edit_view(&args.name, ctx),
-      Some(Action::Remove(args)) => remove_view(&args.name, ctx),
+      Some(Action::Edit(args)) => return edit_view(&args.name, ctx),
+      Some(Action::Remove(args)) => return remove_view(&args.name, ctx),
+      None => {}
+    }
+
+    // If a name is provided, dump that view's config
+    if let Some(ref name) = self.name {
+      return dump_view(name, ctx, self.output.as_deref());
+    }
+
+    if self.column {
+      list_views_column(ctx)
+    } else {
+      list_views(ctx)
     }
   }
 }
@@ -62,12 +85,66 @@ struct RemoveArgs {
   name: String,
 }
 
+fn dump_view(name: &str, ctx: &AppContext, output: Option<&str>) -> Result<()> {
+  let view = ctx
+    .config
+    .views
+    .get(name)
+    .ok_or_else(|| Error::Config(format!("view '{name}' not found")))?;
+
+  if output == Some("json") {
+    let json = serde_json::json!({
+      name: {
+        "section": view.section,
+        "count": view.count,
+        "order": format!("{:?}", view.order),
+        "tags": view.tags,
+        "tags_bool": view.tags_bool,
+        "template": view.template,
+      }
+    });
+    println!("{}", serde_json::to_string_pretty(&json).unwrap());
+  } else {
+    println!("{name}:");
+    if !view.section.is_empty() {
+      println!("  section: {}", view.section);
+    }
+    if view.count > 0 {
+      println!("  count: {}", view.count);
+    }
+    if !view.tags.is_empty() {
+      println!("  tags: {}", view.tags);
+    }
+    if !view.tags_bool.is_empty() {
+      println!("  tags_bool: {}", view.tags_bool);
+    }
+  }
+
+  Ok(())
+}
+
 fn edit_view(name: &str, ctx: &AppContext) -> Result<()> {
   if !ctx.config.views.contains_key(name) {
     return Err(Error::Config(format!("view '{name}' not found")));
   }
 
   editor::edit_config(&ctx.config)
+}
+
+fn list_views_column(ctx: &AppContext) -> Result<()> {
+  if ctx.config.views.is_empty() {
+    println!("No views configured.");
+    return Ok(());
+  }
+
+  let mut names: Vec<&String> = ctx.config.views.keys().collect();
+  names.sort();
+
+  for name in names {
+    println!("{name}");
+  }
+
+  Ok(())
 }
 
 fn list_views(ctx: &AppContext) -> Result<()> {
@@ -111,13 +188,57 @@ fn remove_view(name: &str, ctx: &AppContext) -> Result<()> {
   let config_path = resolve_global_config_path();
   let content = fs::read_to_string(&config_path).map_err(|e| Error::Config(format!("failed to read config: {e}")))?;
 
-  let updated = remove_view_from_yaml(&content, name)
-    .ok_or_else(|| Error::Config(format!("could not locate view '{name}' in config file")))?;
+  let ext = config_path.extension().and_then(|e| e.to_str()).unwrap_or("");
+  let updated = match ext {
+    "toml" => remove_view_from_toml(&content, name),
+    _ => remove_view_from_yaml(&content, name),
+  }
+  .ok_or_else(|| Error::Config(format!("could not locate view '{name}' in config file")))?;
 
   fs::write(&config_path, updated).map_err(|e| Error::Config(format!("failed to write config: {e}")))?;
 
   ctx.status(format!("Removed view '{name}'"));
   Ok(())
+}
+
+fn remove_view_from_toml(content: &str, name: &str) -> Option<String> {
+  let header = format!("[views.{name}]");
+  let lines: Vec<&str> = content.lines().collect();
+  let mut result = Vec::new();
+  let mut in_target = false;
+  let mut found = false;
+
+  for line in &lines {
+    let trimmed = line.trim();
+
+    if in_target {
+      // New section header means we've left the target view
+      if trimmed.starts_with('[') {
+        in_target = false;
+        result.push(*line);
+      }
+      // Otherwise skip lines belonging to the target view
+      continue;
+    }
+
+    if trimmed == header {
+      in_target = true;
+      found = true;
+      continue;
+    }
+
+    result.push(*line);
+  }
+
+  if found {
+    // Remove trailing blank lines before final newline
+    while result.last().is_some_and(|l| l.trim().is_empty()) {
+      result.pop();
+    }
+    Some(result.join("\n") + "\n")
+  } else {
+    None
+  }
 }
 
 fn remove_view_from_yaml(content: &str, name: &str) -> Option<String> {

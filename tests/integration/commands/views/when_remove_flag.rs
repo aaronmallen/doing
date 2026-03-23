@@ -29,7 +29,6 @@ count = 10
 "#;
 
 #[test]
-#[ignore = "views remove reads from global config path instead of DOING_CONFIG env var (see #189)"]
 fn it_removes_view() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 
@@ -48,7 +47,6 @@ fn it_removes_view() {
 }
 
 #[test]
-#[ignore = "views remove reads from global config path instead of DOING_CONFIG env var (see #189)"]
 fn it_removes_with_short_flag() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 

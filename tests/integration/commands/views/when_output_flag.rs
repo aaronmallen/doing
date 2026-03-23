@@ -25,7 +25,6 @@ tags_bool = "OR"
 "#;
 
 #[test]
-#[ignore = "our views command does not support --output flag for view config format (see #189)"]
 fn it_outputs_in_specified_format() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 
@@ -45,7 +44,6 @@ fn it_outputs_in_specified_format() {
 }
 
 #[test]
-#[ignore = "our views command does not support -o flag for view config format (see #189)"]
 fn it_outputs_with_short_flag() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 

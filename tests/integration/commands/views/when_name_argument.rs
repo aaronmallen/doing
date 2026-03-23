@@ -25,7 +25,6 @@ tags_bool = "OR"
 "#;
 
 #[test]
-#[ignore = "our views command does not support positional name argument to dump config (see #189)"]
 fn it_dumps_view_config() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 

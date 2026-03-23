@@ -29,7 +29,6 @@ count = 10
 "#;
 
 #[test]
-#[ignore = "our views command does not support --column flag (see #189)"]
 fn it_outputs_in_column_format() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 
@@ -58,7 +57,6 @@ fn it_outputs_in_column_format() {
 }
 
 #[test]
-#[ignore = "our views command does not support -c flag (see #189)"]
 fn it_outputs_with_short_flag() {
   let doing = DoingCmd::new_with_config(CONFIG_WITH_VIEWS);
 

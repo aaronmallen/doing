@@ -1,6 +1,7 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
+#[cfg_attr(not(target_os = "macos"), ignore = "macOS-only: requires `open -b`")]
 fn it_opens_with_bundle_id() {
   let doing = DoingCmd::new();
 
@@ -20,6 +21,7 @@ fn it_opens_with_bundle_id() {
 }
 
 #[test]
+#[cfg_attr(not(target_os = "macos"), ignore = "macOS-only: requires `open -b`")]
 fn it_opens_with_short_flag() {
   let doing = DoingCmd::new();
 

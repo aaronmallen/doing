@@ -51,6 +51,7 @@ fn it_opens_default_with_short_flag() {
 }
 
 #[test]
+#[cfg_attr(not(target_os = "macos"), ignore = "macOS-only: requires `open -a`")]
 fn it_opens_with_app_short_flag() {
   let doing = DoingCmd::new();
 
@@ -67,6 +68,7 @@ fn it_opens_with_app_short_flag() {
 }
 
 #[test]
+#[cfg_attr(not(target_os = "macos"), ignore = "macOS-only: requires `open -b`")]
 fn it_opens_with_bundle_id() {
   let doing = DoingCmd::new();
 
@@ -83,6 +85,7 @@ fn it_opens_with_bundle_id() {
 }
 
 #[test]
+#[cfg_attr(not(target_os = "macos"), ignore = "macOS-only: requires `open -b`")]
 fn it_opens_with_bundle_id_short_flag() {
   let doing = DoingCmd::new();
 
@@ -147,6 +150,7 @@ fn it_opens_with_open_alias() {
 }
 
 #[test]
+#[cfg_attr(not(target_os = "macos"), ignore = "macOS-only: requires `open -a`")]
 fn it_opens_with_specific_app() {
   let doing = DoingCmd::new();
 

@@ -19,7 +19,6 @@ fn it_adds_entry_to_currently_section_with_current_timestamp() {
 }
 
 #[test]
-#[ignore = "multiple parenthetical handling differs from Ruby doing (see #161)"]
 fn it_converts_multiple_parentheticals_as_single_note() {
   let doing = DoingCmd::new();
 

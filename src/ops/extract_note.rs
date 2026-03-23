@@ -1,11 +1,7 @@
-/// Extract a trailing parenthetical note from a title string.
+/// Extract a parenthetical note from a title string.
 ///
-/// Returns `(title, Some(note))` if the title ends with a non-empty parenthetical,
-/// or `(title, None)` if there is no trailing parenthetical to extract.
-///
-/// Only the **last** parenthetical is extracted, and only if it appears at the very
-/// end of the string. Parentheticals that are not trailing (e.g. `"Foo (bar) baz"`)
-/// are left in the title unchanged.
+/// Matches Ruby doing behavior: extracts everything from the **first** `(` to the
+/// **last** `)` as a note, but only when the string ends with `)`.
 ///
 /// Empty parentheticals `()` are ignored and do not produce a note.
 ///
@@ -23,24 +19,8 @@ pub fn extract_note(title: &str) -> (String, Option<String>) {
     return (trimmed.to_string(), None);
   }
 
-  // Find the matching opening paren for the trailing ')'
-  let mut depth = 0;
-  let mut open_pos = None;
-  for (i, ch) in trimmed.char_indices().rev() {
-    match ch {
-      ')' => depth += 1,
-      '(' => {
-        depth -= 1;
-        if depth == 0 {
-          open_pos = Some(i);
-          break;
-        }
-      }
-      _ => {}
-    }
-  }
-
-  let open_pos = match open_pos {
+  // Find the first opening paren
+  let open_pos = match trimmed.find('(') {
     Some(pos) => pos,
     None => return (trimmed.to_string(), None),
   };

@@ -1,9 +1,8 @@
 use crate::{
   config::Config,
-  plugins::{ExportPlugin, ExportPluginSettings},
+  plugins::{ExportPlugin, ExportPluginSettings, helpers},
   taskpaper::Entry,
   template::renderer::RenderOptions,
-  time::{DurationFormat, FormattedDuration},
 };
 
 /// Fixed date format for markdown output matching Ruby doing: `Fri 9:01AM`.
@@ -22,7 +21,7 @@ impl ExportPlugin for MarkdownExport {
   }
 
   fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
-    let sections = group_by_section(entries);
+    let sections = helpers::group_by_section(entries);
     let mut out = String::new();
 
     for (section, items) in &sections {
@@ -37,15 +36,9 @@ impl ExportPlugin for MarkdownExport {
 
         let title = entry.full_title();
 
-        let interval = entry.interval().map(|iv| {
-          let fmt = DurationFormat::from_config(&config.interval_format);
-          FormattedDuration::new(iv, fmt).to_string()
-        });
-
-        let time_str = match &interval {
-          Some(t) if t != "00:00:00" => format!(" [**{t}**]"),
-          _ => String::new(),
-        };
+        let time_str = helpers::format_interval(entry, config)
+          .map(|t| format!(" [**{t}**]"))
+          .unwrap_or_default();
 
         out.push_str(&format!("- [{done}] {date} {title}{time_str}"));
 
@@ -68,22 +61,6 @@ impl ExportPlugin for MarkdownExport {
       trigger: "markdown|mk?d|gfm".into(),
     }
   }
-}
-
-/// Group entries by section name, preserving the order sections are first seen.
-fn group_by_section(entries: &[Entry]) -> Vec<(&str, Vec<&Entry>)> {
-  let mut sections: Vec<(&str, Vec<&Entry>)> = Vec::new();
-
-  for entry in entries {
-    let section_name = entry.section();
-    if let Some(pos) = sections.iter().position(|(name, _)| *name == section_name) {
-      sections[pos].1.push(entry);
-    } else {
-      sections.push((section_name, vec![entry]));
-    }
-  }
-
-  sections
 }
 
 #[cfg(test)]
@@ -140,7 +117,7 @@ mod test {
         ),
       ];
 
-      let groups = super::super::group_by_section(&entries);
+      let groups = crate::plugins::helpers::group_by_section(&entries);
 
       assert_eq!(groups.len(), 2);
       assert_eq!(groups[0].0, "Currently");

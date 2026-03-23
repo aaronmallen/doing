@@ -2,6 +2,7 @@ mod byday;
 mod csv;
 mod dayone;
 mod doing;
+mod helpers;
 pub mod html;
 pub mod import;
 mod json;

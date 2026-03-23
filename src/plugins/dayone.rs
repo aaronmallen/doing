@@ -5,10 +5,9 @@ use serde::Serialize;
 
 use crate::{
   config::Config,
-  plugins::{ExportPlugin, ExportPluginSettings},
+  plugins::{ExportPlugin, ExportPluginSettings, helpers},
   taskpaper::Entry,
   template::renderer::RenderOptions,
-  time::{DurationFormat, FormattedDuration},
 };
 
 /// Date format for Day One entries.
@@ -126,8 +125,7 @@ fn render_day_entry(day: &str, entries: &[&Entry], config: &Config) -> DayoneEnt
   for entry in entries {
     text.push_str(&format!("* **{}**", entry.title()));
 
-    let interval_str = format_interval(entry, config);
-    if !interval_str.is_empty() {
+    if let Some(interval_str) = helpers::format_interval(entry, config) {
       text.push_str(&format!(" ({interval_str})"));
     }
 
@@ -159,8 +157,7 @@ fn render_day_entry(day: &str, entries: &[&Entry], config: &Config) -> DayoneEnt
 fn render_single_entry(entry: &Entry, config: &Config) -> DayoneEntry {
   let mut text = format!("**{}**", entry.title());
 
-  let interval_str = format_interval(entry, config);
-  if !interval_str.is_empty() {
+  if let Some(interval_str) = helpers::format_interval(entry, config) {
     text.push_str(&format!(" ({interval_str})"));
   }
 
@@ -196,22 +193,6 @@ fn earliest_date(entries: &[&Entry]) -> String {
     .unwrap_or_else(Local::now)
     .format(DAYONE_DATE_FORMAT)
     .to_string()
-}
-
-/// Format the interval for an entry, returning empty string if no interval.
-fn format_interval(entry: &Entry, config: &Config) -> String {
-  entry
-    .interval()
-    .map(|iv| {
-      let fmt = DurationFormat::from_config(&config.interval_format);
-      let formatted = FormattedDuration::new(iv, fmt).to_string();
-      if formatted == "00:00:00" {
-        String::new()
-      } else {
-        formatted
-      }
-    })
-    .unwrap_or_default()
 }
 
 #[cfg(test)]

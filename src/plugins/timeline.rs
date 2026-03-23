@@ -2,10 +2,9 @@ use chrono::{DateTime, Local};
 
 use crate::{
   config::Config,
-  plugins::{ExportPlugin, ExportPluginSettings, html::escape_html},
+  plugins::{ExportPlugin, ExportPluginSettings, helpers, html::escape_html},
   taskpaper::Entry,
   template::renderer::RenderOptions,
-  time::{DurationFormat, FormattedDuration},
 };
 
 const TIMELINE_CSS: &str = r#"* { box-sizing: border-box; margin: 0; padding: 0; }
@@ -170,32 +169,16 @@ impl ExportPlugin for TimelineExport {
         " &mdash; ongoing".to_string()
       };
 
-      let duration_html = entry.interval().map_or(String::new(), |iv| {
-        let fmt = DurationFormat::from_config(&config.interval_format);
-        let formatted = FormattedDuration::new(iv, fmt).to_string();
-        if formatted == "00:00:00" {
-          String::new()
-        } else {
-          format!(r#"<span class="duration">{}</span>"#, escape_html(&formatted))
-        }
-      });
+      let duration_html = helpers::format_interval(entry, config)
+        .map(|t| format!(r#"<span class="duration">{}</span>"#, escape_html(&t)))
+        .unwrap_or_default();
 
       let tags_html = render_tags(entry);
 
       let bar_width = compute_bar_width(entry, &time_range);
       let bar_html = format!(r#"<div class="timeline-bar" style="width: {bar_width}%;"></div>"#);
 
-      let note_html = if entry.note().is_empty() {
-        String::new()
-      } else {
-        let items: Vec<String> = entry
-          .note()
-          .lines()
-          .iter()
-          .map(|line| format!("<li>{}</li>", escape_html(line.trim())))
-          .collect();
-        format!(r#"<ul class="timeline-note">{}</ul>"#, items.join(""))
-      };
+      let note_html = helpers::note_to_html_list(entry, "timeline-note", escape_html);
 
       items_html.push_str(&format!(
         concat!(

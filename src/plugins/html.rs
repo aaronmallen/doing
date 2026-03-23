@@ -2,10 +2,9 @@ use regex::Regex;
 
 use crate::{
   config::Config,
-  plugins::{ExportPlugin, ExportPluginSettings},
+  plugins::{ExportPlugin, ExportPluginSettings, helpers},
   taskpaper::Entry,
   template::renderer::RenderOptions,
-  time::{DurationFormat, FormattedDuration},
 };
 
 pub const DEFAULT_CSS: &str = r#"body {
@@ -162,7 +161,7 @@ impl ExportPlugin for HtmlExport {
   }
 
   fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
-    let sections = group_by_section(entries);
+    let sections = helpers::group_by_section(entries);
     let style = DEFAULT_CSS;
     let tag_re = Regex::new(r"(@[^\s(]+(?:\([^)]*\))?)").expect("tag regex is valid");
 
@@ -176,29 +175,11 @@ impl ExportPlugin for HtmlExport {
 
         let date = entry.date().format(&options.date_format).to_string();
 
-        let interval = entry.interval().map(|iv| {
-          let fmt = DurationFormat::from_config(&config.interval_format);
-          FormattedDuration::new(iv, fmt).to_string()
-        });
+        let time_html = helpers::format_interval(entry, config)
+          .map(|t| format!(r#"<span class="time">{}</span>"#, escape_html(&t)))
+          .unwrap_or_default();
 
-        let time_html = match &interval {
-          Some(t) if t != "00:00:00" => {
-            format!(r#"<span class="time">{}</span>"#, escape_html(t))
-          }
-          _ => String::new(),
-        };
-
-        let note_html = if entry.note().is_empty() {
-          String::new()
-        } else {
-          let note_items: Vec<String> = entry
-            .note()
-            .lines()
-            .iter()
-            .map(|line| format!("<li>{}</li>", escape_html(line.trim())))
-            .collect();
-          format!(r#"<ul class="note">{}</ul>"#, note_items.join(""))
-        };
+        let note_html = helpers::note_to_html_list(entry, "note", escape_html);
 
         items_html.push_str(&format!(
           concat!(
@@ -256,22 +237,6 @@ pub fn escape_html(s: &str) -> String {
     .replace('<', "&lt;")
     .replace('>', "&gt;")
     .replace('"', "&quot;")
-}
-
-/// Group entries by section name, preserving the order sections are first seen.
-fn group_by_section(entries: &[Entry]) -> Vec<(&str, Vec<&Entry>)> {
-  let mut sections: Vec<(&str, Vec<&Entry>)> = Vec::new();
-
-  for entry in entries {
-    let section_name = entry.section();
-    if let Some(pos) = sections.iter().position(|(name, _)| *name == section_name) {
-      sections[pos].1.push(entry);
-    } else {
-      sections.push((section_name, vec![entry]));
-    }
-  }
-
-  sections
 }
 
 #[cfg(test)]
@@ -354,7 +319,7 @@ mod test {
         ),
       ];
 
-      let groups = super::super::group_by_section(&entries);
+      let groups = crate::plugins::helpers::group_by_section(&entries);
 
       assert_eq!(groups.len(), 2);
       assert_eq!(groups[0].0, "Currently");
@@ -384,7 +349,7 @@ mod test {
         ),
       ];
 
-      let groups = super::super::group_by_section(&entries);
+      let groups = crate::plugins::helpers::group_by_section(&entries);
 
       assert_eq!(groups[0].0, "Archive");
       assert_eq!(groups[1].0, "Currently");

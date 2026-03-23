@@ -51,7 +51,9 @@ impl Command {
     if self.editor {
       let editor = ctx.config.editors.default.clone().unwrap_or_else(|| "vi".into());
       let parts: Vec<&str> = editor.split_whitespace().collect();
-      let (cmd, args) = parts.split_first().expect("editor command must not be empty");
+      let (cmd, args) = parts
+        .split_first()
+        .ok_or_else(|| Error::Config("editor command must not be empty".into()))?;
       let status = std::process::Command::new(cmd).args(args).arg(&rc_path).status()?;
       if !status.success() {
         return Err(Error::Config(format!("editor exited with status {status}")));

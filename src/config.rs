@@ -123,8 +123,8 @@ pub struct Config {
 
 impl Default for Config {
   fn default() -> Self {
-    let config_dir = dir_spec::config_home().expect("failed to resolve user's config directory");
-    let data_dir = dir_spec::data_home().expect("failed to resolve user's data directory");
+    let config_dir = dir_spec::config_home().unwrap_or_else(|| PathBuf::from(".config"));
+    let data_dir = dir_spec::data_home().unwrap_or_else(|| PathBuf::from(".local/share"));
     Self {
       autotag: AutotagConfig::default(),
       backup_dir: data_dir.join("doing/doing_backup"),
@@ -242,7 +242,7 @@ pub struct PluginsConfig {
 
 impl Default for PluginsConfig {
   fn default() -> Self {
-    let config_dir = dir_spec::config_home().expect("failed to resolve user's config directory");
+    let config_dir = dir_spec::config_home().unwrap_or_else(|| PathBuf::from(".config"));
     Self {
       byday: BydayPluginConfig::default(),
       command_path: config_dir.join("doing/commands"),

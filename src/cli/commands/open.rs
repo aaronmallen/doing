@@ -62,7 +62,9 @@ impl Command {
     let editor = resolve_open_editor(&self.app, &self.editor, ctx);
 
     let parts: Vec<&str> = editor.split_whitespace().collect();
-    let (cmd, args) = parts.split_first().expect("editor command must not be empty");
+    let (cmd, args) = parts
+      .split_first()
+      .ok_or_else(|| Error::Config("editor command must not be empty".into()))?;
 
     let status = process::Command::new(cmd).args(args).arg(&file_path).status()?;
 

@@ -168,7 +168,7 @@ enum ShellArg {
 impl From<ShellArg> for Shell {
   fn from(arg: ShellArg) -> Self {
     match arg {
-      ShellArg::All => unreachable!("'all' is handled before conversion"),
+      ShellArg::All => Shell::Bash,
       ShellArg::Bash => Shell::Bash,
       ShellArg::Fish => Shell::Fish,
       ShellArg::Zsh => Shell::Zsh,

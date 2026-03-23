@@ -76,16 +76,12 @@ pub fn discover_global_config() -> Option<PathBuf> {
     return Some(env_path);
   }
 
-  let xdg_path = dir_spec::config_home()
-    .expect("failed to resolve config directory")
-    .join("doing/config.yml");
+  let xdg_path = dir_spec::config_home()?.join("doing/config.yml");
   if xdg_path.exists() {
     return Some(xdg_path);
   }
 
-  let home_rc = dir_spec::home()
-    .expect("failed to resolve home directory")
-    .join(".doingrc");
+  let home_rc = dir_spec::home()?.join(".doingrc");
   if home_rc.exists() {
     return Some(home_rc);
   }
@@ -156,7 +152,7 @@ pub fn parse_str(content: &str, format: ConfigFormat) -> Result<Value> {
 pub fn resolve_global_config_path() -> PathBuf {
   discover_global_config().unwrap_or_else(|| {
     dir_spec::config_home()
-      .expect("failed to resolve config directory")
+      .unwrap_or_else(|| PathBuf::from(".config"))
       .join("doing/config.toml")
   })
 }

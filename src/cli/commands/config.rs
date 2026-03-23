@@ -263,7 +263,9 @@ fn open_with_bundle_id(config_path: &Path, bundle_id: &str) -> Result<()> {
 
 fn open_with_editor(config_path: &Path, editor_cmd: &str) -> Result<()> {
   let parts: Vec<&str> = editor_cmd.split_whitespace().collect();
-  let (cmd, args) = parts.split_first().expect("editor command must not be empty");
+  let (cmd, args) = parts
+    .split_first()
+    .ok_or_else(|| Error::Config("editor command must not be empty".into()))?;
 
   let status = process::Command::new(cmd).args(args).arg(config_path).status()?;
 

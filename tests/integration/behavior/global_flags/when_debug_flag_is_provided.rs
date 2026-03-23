@@ -14,7 +14,6 @@ fn it_does_not_output_debug_info_to_stdout() {
   );
 }
 
-#[ignore = "debug output does not yet include config path (#153)"]
 #[test]
 fn it_includes_config_path_in_debug_output() {
   let doing = DoingCmd::new();

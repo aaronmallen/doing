@@ -184,6 +184,13 @@ impl Cli {
     debug!("CLI parsed successfully");
 
     let config = Config::load()?;
+
+    if let Some(config_path) = config::loader::discover_global_config() {
+      debug!("Using config file: {}", config_path.display());
+    } else {
+      debug!("No config file found, using defaults");
+    }
+
     let doing_file = self.doing_file.clone().unwrap_or_else(|| config.doing_file.clone());
 
     debug!("Using doing file: {}", doing_file.display());

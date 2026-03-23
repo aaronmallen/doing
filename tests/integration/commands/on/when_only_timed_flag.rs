@@ -6,9 +6,16 @@ fn it_shows_only_timed_entries() {
 
   let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
-  // Create a done entry (has time interval)
+  // Create a done entry with an explicit duration so the interval is always > 0
   doing
-    .run(["done", "--back", &format!("{today} 09:00"), "Finished task"])
+    .run([
+      "done",
+      "--back",
+      &format!("{today} 09:00"),
+      "--took",
+      "1h",
+      "Finished task",
+    ])
     .assert()
     .success();
 

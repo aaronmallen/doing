@@ -182,11 +182,12 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    let count = entries.len();
-    if count == 1 {
-      ctx.status("Marked 1 entry as @done");
-    } else {
-      ctx.status(format!("Marked {} entries as @done", count));
+    // Build status messages matching Ruby format
+    for entry_id in &entries {
+      if let Some(entry) = self.find_entry_by_id(ctx, entry_id) {
+        let title = entry.full_title();
+        ctx.status(format!("Tagged: added tag @done to {title}"));
+      }
     }
 
     Ok(())
@@ -214,7 +215,8 @@ impl Command {
       .retain(|e| !entry_ids.contains(&e.id().to_string()));
 
     let archive = ctx.document.section_by_name_mut("Archive").unwrap();
-    for entry in to_move {
+    for mut entry in to_move {
+      entry.tags_mut().add(Tag::new("from", Some(section_name)));
       archive.add_entry(entry);
     }
 

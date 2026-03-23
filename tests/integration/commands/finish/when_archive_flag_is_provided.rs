@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "finish --archive does not add @from(Section) tag (see #169)"]
 fn it_finishes_and_archives_entry() {
   let doing = DoingCmd::new();
 

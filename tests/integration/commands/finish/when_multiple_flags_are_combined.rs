@@ -28,7 +28,6 @@ fn it_combines_at_and_took() {
 }
 
 #[test]
-#[ignore = "finish --archive does not add @from(Section) tag (see #169)"]
 fn it_combines_tag_and_archive() {
   let doing = DoingCmd::new();
 

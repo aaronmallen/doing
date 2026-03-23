@@ -31,7 +31,6 @@ fn it_marks_last_entry_as_done_with_current_time() {
 }
 
 #[test]
-#[ignore = "finish stderr message format differs from Ruby (see #164)"]
 fn it_outputs_status_to_stderr() {
   let doing = DoingCmd::new();
 

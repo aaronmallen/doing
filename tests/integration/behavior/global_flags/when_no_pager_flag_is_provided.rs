@@ -1,14 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-fn it_accepts_short_form_flag() {
-  let doing = DoingCmd::new();
-  doing.run(["now", "Pager short flag test"]).assert().success();
-
-  doing.run(["-p", "show"]).assert().success();
-}
-
-#[test]
 fn it_sends_output_directly_to_stdout() {
   let doing = DoingCmd::new();
   doing.run(["now", "No pager test"]).assert().success();

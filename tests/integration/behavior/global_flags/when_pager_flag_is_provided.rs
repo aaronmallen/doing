@@ -7,3 +7,11 @@ fn it_accepts_pager_flag_without_error() {
 
   doing.run(["--pager", "show"]).assert().success();
 }
+
+#[test]
+fn it_accepts_short_form_flag() {
+  let doing = DoingCmd::new();
+  doing.run(["now", "Pager short flag test"]).assert().success();
+
+  doing.run(["-p", "show"]).assert().success();
+}

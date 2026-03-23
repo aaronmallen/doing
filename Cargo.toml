@@ -1,20 +1,30 @@
+
 [package]
 categories = ["command-line-utilities"]
 description = "A command line tool for remembering what you were doing and tracking what you've done"
-edition = "2024"
+edition.workspace = true
 include = ["/CHANGELOG.md", "/LICENSE", "/README.md", "/src/"]
 keywords = ["cli", "time-tracking", "productivity", "todo"]
-license = "MIT"
+license.workspace = true
 name = "doing"
 readme = "README.md"
-repository = "https://github.com/aaronmallen/doing"
-rust-version = "1.88.0"
+repository.workspace = true
+rust-version.workspace = true
 version = "0.0.1-alpha.7"
 
 [package.metadata.binstall]
 bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "tgz"
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ target }.tar.gz"
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/aaronmallen/doing"
+rust-version = "1.88.0"
 
 [dependencies]
 chrono = { features = ["serde"], version = "0.4" }

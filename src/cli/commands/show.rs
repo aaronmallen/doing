@@ -57,11 +57,19 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self
-      .section_name
-      .as_deref()
-      .or(self.filter.section.as_deref())
-      .unwrap_or(&ctx.config.current_section);
+    // When the first positional arg starts with @, treat it as a tag filter
+    let (section_name, extra_tag) = match self.section_name.as_deref() {
+      Some(name) if name.starts_with('@') => {
+        let section = self.filter.section.as_deref().unwrap_or(&ctx.config.current_section);
+        (section, Some(name))
+      }
+      other => {
+        let section = other
+          .or(self.filter.section.as_deref())
+          .unwrap_or(&ctx.config.current_section);
+        (section, None)
+      }
+    };
 
     let all_entries: Vec<_> = ctx
       .document
@@ -70,7 +78,7 @@ impl Command {
       .cloned()
       .collect();
 
-    let mut filter_options = self.build_filter_options(ctx, section_name)?;
+    let mut filter_options = self.build_filter_options(ctx, section_name, extra_tag)?;
 
     let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));
     filter_options.sort = sort_order;
@@ -94,17 +102,34 @@ impl Command {
     Ok(())
   }
 
-  fn build_filter_options(&self, ctx: &AppContext, section_name: &str) -> Result<FilterOptions> {
+  fn build_filter_options(
+    &self,
+    ctx: &AppContext,
+    section_name: &str,
+    extra_tag: Option<&str>,
+  ) -> Result<FilterOptions> {
     let mut combined_tags = self.filter.tag.clone();
-    for tag_arg in &self.tags {
-      let cleaned = tag_arg.strip_prefix('@').unwrap_or(tag_arg);
-      if !cleaned.is_empty() {
-        combined_tags.push(cleaned.to_string());
-      }
+
+    // Add tag from first positional arg when it starts with @
+    if let Some(tag_arg) = extra_tag {
+      combined_tags.push(clean_at_tag(tag_arg));
     }
+
+    for tag_arg in &self.tags {
+      combined_tags.push(clean_at_tag(tag_arg));
+    }
+
+    // Auto-detect pattern mode when +/- prefixes are present
+    let has_pattern_syntax = combined_tags.iter().any(|t| t.starts_with('+') || t.starts_with('-'));
+    let bool_op = if has_pattern_syntax && self.filter.bool_op.is_none() {
+      Some(crate::cli::args::BoolArg::Pattern)
+    } else {
+      self.filter.bool_op
+    };
 
     let filter_with_tags = FilterArgs {
       tag: combined_tags,
+      bool_op,
       ..self.filter.clone()
     };
 
@@ -113,6 +138,14 @@ impl Command {
     options.section = Some(section_name.to_string());
     Ok(options)
   }
+}
+
+/// Clean `@` prefix from tag arguments, preserving `+`/`-` pattern prefixes.
+///
+/// `@tag` → `tag`, `@+tag` → `+tag`, `@-tag` → `-tag`, `tag` → `tag`
+fn clean_at_tag(tag_arg: &str) -> String {
+  let s = tag_arg.strip_prefix('@').unwrap_or(tag_arg);
+  s.to_string()
 }
 
 #[cfg(test)]
@@ -199,7 +232,7 @@ mod test {
         ..default_cmd()
       };
 
-      let options = cmd.build_filter_options(&ctx, "Currently").unwrap();
+      let options = cmd.build_filter_options(&ctx, "Currently", None).unwrap();
 
       assert!(options.tag_filter.is_some());
     }
@@ -209,7 +242,7 @@ mod test {
       let ctx = sample_ctx();
       let cmd = default_cmd();
 
-      let options = cmd.build_filter_options(&ctx, "Later").unwrap();
+      let options = cmd.build_filter_options(&ctx, "Later", None).unwrap();
 
       assert_eq!(options.section.as_deref(), Some("Later"));
     }
@@ -222,7 +255,7 @@ mod test {
         ..default_cmd()
       };
 
-      let options = cmd.build_filter_options(&ctx, "Currently").unwrap();
+      let options = cmd.build_filter_options(&ctx, "Currently", None).unwrap();
 
       assert!(options.tag_filter.is_some());
     }

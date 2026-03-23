@@ -10,7 +10,6 @@ Currently:
 ";
 
 #[test]
-#[ignore = "our CLI treats @tag as section name when given as first positional arg (see #202)"]
 fn it_filters_by_at_tag() {
   let doing = DoingCmd::new();
 
@@ -28,7 +27,6 @@ fn it_filters_by_at_tag() {
 }
 
 #[test]
-#[ignore = "our CLI does not support @+/@- pattern syntax as positional arguments (see #202)"]
 fn it_supports_plus_minus_pattern_syntax() {
   let doing = DoingCmd::new();
 

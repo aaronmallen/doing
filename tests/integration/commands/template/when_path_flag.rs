@@ -20,7 +20,6 @@ fn it_saves_to_specified_directory() {
 }
 
 #[test]
-#[ignore = "template command not yet implemented (see #203)"]
 fn it_saves_with_short_flag() {
   let doing = DoingCmd::new();
   let dir = doing.temp_dir_path().join("templates");

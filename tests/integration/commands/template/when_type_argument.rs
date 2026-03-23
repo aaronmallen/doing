@@ -34,7 +34,6 @@ fn it_outputs_css_template() {
 }
 
 #[test]
-#[ignore = "template command not yet implemented (see #203)"]
 fn it_outputs_markdown_template() {
   let doing = DoingCmd::new();
 

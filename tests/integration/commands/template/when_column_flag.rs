@@ -29,7 +29,6 @@ fn it_outputs_with_short_flag() {
 }
 
 #[test]
-#[ignore = "template command not yet implemented (see #203)"]
 fn it_disables_column_format() {
   let doing = DoingCmd::new();
 

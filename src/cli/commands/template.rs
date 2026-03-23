@@ -21,12 +21,15 @@ use crate::{cli::AppContext, errors::Result, plugins::default_registry};
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Output in a single column (for scripting)
-  #[arg(short, long)]
+  #[arg(short, long, action = clap::ArgAction::SetTrue, overrides_with = "no_column")]
   column: bool,
 
   /// List available export template names
   #[arg(short, long)]
   list: bool,
+
+  #[arg(long = "no-column", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "column")]
+  no_column: bool,
 
   /// Template name to display
   #[arg(index = 1, value_name = "NAME")]
@@ -51,15 +54,17 @@ impl Command {
       return save_template(name, ctx);
     }
 
+    let use_column = self.column && !self.no_column;
+
     if self.list || self.name.is_none() {
-      return list_templates(self.column, ctx);
+      return list_templates(use_column, ctx);
     }
 
     if let Some(ref name) = self.name {
       return show_template(name, ctx);
     }
 
-    list_templates(self.column, ctx)
+    list_templates(use_column, ctx)
   }
 }
 
@@ -140,8 +145,10 @@ fn show_template(name: &str, ctx: &AppContext) -> Result<()> {
     if candidate.is_file() {
       let content = fs::read_to_string(candidate)
         .map_err(|e| crate::errors::Error::Config(format!("failed to read template \"{name}\": {e}")))?;
-      print!("{content}");
-      return Ok(());
+      if !content.is_empty() {
+        print!("{content}");
+        return Ok(());
+      }
     }
   }
 
@@ -217,6 +224,7 @@ mod test {
         column: false,
         list: false,
         name: None,
+        no_column: false,
         path: false,
         save: None,
       };
@@ -233,6 +241,7 @@ mod test {
         column: false,
         list: true,
         name: None,
+        no_column: false,
         path: false,
         save: None,
       };
@@ -249,6 +258,7 @@ mod test {
         column: false,
         list: false,
         name: Some("css".into()),
+        no_column: false,
         path: false,
         save: None,
       };
@@ -265,6 +275,7 @@ mod test {
         column: false,
         list: false,
         name: None,
+        no_column: false,
         path: true,
         save: None,
       };

@@ -6,6 +6,7 @@ mod when_bool_flag_is_and;
 mod when_bool_flag_is_not;
 mod when_case_flag_is_provided;
 mod when_count_argument_is_provided;
+mod when_exact_flag;
 mod when_from_flag_is_provided;
 mod when_multiple_flags_are_combined;
 mod when_no_date_flag_is_provided;

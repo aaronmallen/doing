@@ -53,6 +53,10 @@ pub struct Command {
   #[arg(short, long, default_value_t = 1)]
   count: usize,
 
+  /// Use exact (literal substring) matching for search
+  #[arg(short = 'x', long)]
+  exact: bool,
+
   /// Include date in @done tag
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_date", default_value_t = true)]
   date: bool,
@@ -265,6 +269,9 @@ impl Command {
       let mut search_config = ctx.config.search.clone();
       if let Some(ref case_override) = self.case {
         search_config.case = case_override.clone();
+      }
+      if self.exact {
+        search_config.matching = "exact".into();
       }
 
       let search = self
@@ -519,9 +526,10 @@ mod test {
       case: None,
       count: 1,
       date: true,
-      no_date: false,
+      exact: false,
       from: None,
       interactive: false,
+      no_date: false,
       not: false,
       remove: false,
       search: None,

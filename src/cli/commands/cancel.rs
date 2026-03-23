@@ -39,6 +39,10 @@ pub struct Command {
   #[arg(short, long, default_value_t = 1)]
   count: usize,
 
+  /// Use exact (literal substring) matching for search
+  #[arg(short = 'x', long)]
+  exact: bool,
+
   /// Interactively select entries to cancel
   #[arg(short, long)]
   interactive: bool,
@@ -188,6 +192,9 @@ impl Command {
       if let Some(ref case_override) = self.case {
         search_config.case = case_override.clone();
       }
+      if self.exact {
+        search_config.matching = "exact".into();
+      }
 
       let search = self
         .search
@@ -280,6 +287,7 @@ mod test {
       bool_op: None,
       case: None,
       count: 1,
+      exact: false,
       interactive: false,
       not: false,
       search: None,

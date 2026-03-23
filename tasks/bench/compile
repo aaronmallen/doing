@@ -1,0 +1,34 @@
+#!/usr/bin/env sh
+#MISE description="Benchmark compile times using hyperfine"
+
+set -e
+
+RUNS="${RUNS:-3}"
+INCREMENTAL_RUNS="${INCREMENTAL_RUNS:-5}"
+
+echo "=== Compile Time Benchmark ==="
+echo ""
+echo "System: $(uname -ms)"
+echo "Toolchain: $(rustc --version)"
+echo "Runs: ${RUNS} (clean), ${INCREMENTAL_RUNS} (incremental)"
+echo ""
+
+echo "--- Clean builds ---"
+hyperfine \
+  --warmup 1 \
+  --runs "$RUNS" \
+  --prepare 'cargo clean' \
+  --command-name 'cargo check' 'cargo check' \
+  --command-name 'cargo build' 'cargo build' \
+  --command-name 'cargo test --no-run' 'cargo test --no-run' \
+  --command-name 'cargo build --release' 'cargo build --release'
+
+echo ""
+echo "--- Incremental builds (touch src/main.rs) ---"
+cargo build 2>/dev/null
+hyperfine \
+  --warmup 1 \
+  --runs "$INCREMENTAL_RUNS" \
+  --prepare 'touch src/main.rs' \
+  --command-name 'cargo build' 'cargo build' \
+  --command-name 'cargo build --release' 'cargo build --release'

@@ -12,7 +12,7 @@ fn it_filters_by_tag_value() {
   )
   .expect("failed to write doing file");
 
-  doing.run(["mark", "--val", "@project == clientA"]).assert().success();
+  doing.run(["mark", "--val", "project == clientA"]).assert().success();
 
   let contents = doing.read_doing_file();
   let task_a_line = contents

@@ -64,6 +64,10 @@ impl TagQuery {
   ///
   /// Format: `[!][@]property operator value`
   ///
+  /// The `@` prefix on the property name is optional and stripped during
+  /// parsing, so `"project == clientA"` and `"@project == clientA"` are
+  /// equivalent.
+  ///
   /// Operators: `<`, `<=`, `>`, `>=`, `==`, `=`, `!=`, `*=`, `^=`, `$=`
   pub fn parse(input: &str) -> Option<Self> {
     let re = Regex::new(r"^(!)?@?(\S+)\s+(!?[<>=][=*]?|[$*^]=)\s+(.+)$").ok()?;

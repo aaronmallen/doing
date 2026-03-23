@@ -12,7 +12,7 @@ fn it_cancels_entries_matching_tag_value() {
   )
   .expect("failed to write doing file");
 
-  doing.run(["cancel", "--val", "@progress > 60"]).assert().success();
+  doing.run(["cancel", "--val", "progress > 60"]).assert().success();
 
   let contents = doing.read_doing_file();
   let task_a_line = contents

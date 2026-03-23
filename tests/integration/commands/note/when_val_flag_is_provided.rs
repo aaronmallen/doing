@@ -13,7 +13,7 @@ fn it_adds_note_to_entries_matching_tag_value() {
   .expect("failed to write doing file");
 
   doing
-    .run(["note", "--val", "@progress > 60", "High progress note"])
+    .run(["note", "--val", "progress > 60", "High progress note"])
     .assert()
     .success();
 

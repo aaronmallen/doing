@@ -13,7 +13,7 @@ fn it_filters_by_tag_value() {
   .expect("failed to write doing file");
 
   let output = doing
-    .run(["show", "--val", "@progress > 60"])
+    .run(["show", "--val", "progress > 60"])
     .output()
     .expect("failed to run");
 

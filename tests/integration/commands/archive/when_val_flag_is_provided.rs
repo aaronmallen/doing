@@ -16,7 +16,7 @@ Currently:
   )
   .expect("failed to write doing file");
 
-  doing.run(["archive", "--val", "@progress > 60"]).assert().success();
+  doing.run(["archive", "--val", "progress > 60"]).assert().success();
 
   let contents = doing.read_doing_file();
   let currently_section = contents.split("Archive:").next().unwrap_or("");

@@ -13,7 +13,7 @@ fn it_tags_entries_matching_tag_value() {
   .expect("failed to write doing file");
 
   doing
-    .run(["tag", "--val", "@progress > 60", "newtag"])
+    .run(["tag", "--val", "progress > 60", "newtag"])
     .assert()
     .success();
 

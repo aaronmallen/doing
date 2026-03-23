@@ -12,7 +12,7 @@ fn it_finishes_entries_matching_tag_value() {
   )
   .expect("failed to write doing file");
 
-  doing.run(["finish", "--val", "@progress > 60", "5"]).assert().success();
+  doing.run(["finish", "--val", "progress > 60", "5"]).assert().success();
 
   let contents = doing.read_doing_file();
 

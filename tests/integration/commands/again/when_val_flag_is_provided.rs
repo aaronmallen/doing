@@ -16,7 +16,7 @@ Currently:
   )
   .expect("failed to write doing file");
 
-  doing.run(["again", "--val", "@progress > 60"]).assert().success();
+  doing.run(["again", "--val", "progress > 60"]).assert().success();
 
   let contents = doing.read_doing_file();
 
@@ -41,7 +41,7 @@ Currently:
   .expect("failed to write doing file");
 
   let output = doing
-    .run(["again", "--val", "@progress > 90"])
+    .run(["again", "--val", "progress > 90"])
     .output()
     .expect("failed to run");
 

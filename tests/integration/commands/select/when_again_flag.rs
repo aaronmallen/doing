@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --again flag (see #180)"]
 fn it_resumes_selected_entries() {
   let doing = DoingCmd::new();
 
@@ -27,7 +26,6 @@ fn it_resumes_selected_entries() {
 }
 
 #[test]
-#[ignore = "our select command does not support --resume flag (see #180)"]
 fn it_resumes_with_resume_alias() {
   let doing = DoingCmd::new();
 

@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --force flag, uses --no-menu instead (see DEV-0008)"]
 fn it_skips_confirmation() {
   let doing = DoingCmd::new();
 

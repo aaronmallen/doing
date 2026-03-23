@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --remove flag (see #180)"]
 fn it_removes_tag_from_selected_entries() {
   let doing = DoingCmd::new();
 
@@ -26,7 +25,6 @@ fn it_removes_tag_from_selected_entries() {
 }
 
 #[test]
-#[ignore = "our select command does not support --remove flag (see #180)"]
 fn it_removes_with_short_flag() {
   let doing = DoingCmd::new();
 

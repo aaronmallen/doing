@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --case flag (see #178)"]
 fn it_performs_case_sensitive_search() {
   let doing = DoingCmd::new();
 

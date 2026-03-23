@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --from flag (see #179)"]
 fn it_limits_to_time_range() {
   let doing = DoingCmd::new();
 

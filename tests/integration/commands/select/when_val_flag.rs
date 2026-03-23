@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --val flag (see #178)"]
 fn it_filters_by_tag_value() {
   let doing = DoingCmd::new();
 

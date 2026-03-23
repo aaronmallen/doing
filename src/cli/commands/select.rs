@@ -12,7 +12,7 @@ use crate::{
   errors::Result,
   ops::{backup::write_with_backup, filter::filter_entries},
   plugins::default_registry,
-  taskpaper::{Entry, Section, Tag},
+  taskpaper::{Entry, Note, Section, Tag, Tags},
   template::renderer::{RenderOptions, format_items},
 };
 
@@ -23,9 +23,21 @@ use crate::{
 /// or output in a given format. Use `--no-menu` for non-interactive batch mode.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
+  /// Date range start (e.g. "yesterday", "2024-01-10 14:00")
+  #[arg(long)]
+  after: Option<String>,
+
+  /// Duplicate selected entries with a new timestamp
+  #[arg(long, alias = "resume")]
+  again: bool,
+
   /// Archive selected entries
   #[arg(short, long)]
   archive: bool,
+
+  /// Upper bound for entry date
+  #[arg(long)]
+  before: Option<String>,
 
   /// Boolean operator for combining tag filters
   #[arg(long = "bool", value_enum, ignore_case = true)]
@@ -35,6 +47,10 @@ pub struct Command {
   #[arg(short, long)]
   cancel: bool,
 
+  /// Case sensitivity for search (sensitive/ignore/smart)
+  #[arg(long)]
+  case: Option<String>,
+
   /// Delete selected entries
   #[arg(short, long)]
   delete: bool,
@@ -42,6 +58,10 @@ pub struct Command {
   /// Open selected entries in an editor for batch editing
   #[arg(short, long)]
   editor: bool,
+
+  /// Use exact (literal substring) matching for search
+  #[arg(long)]
+  exact: bool,
 
   /// Finish selected entries (mark @done with timestamp)
   #[arg(short = 'F', long)]
@@ -51,6 +71,14 @@ pub struct Command {
   #[arg(long)]
   flag: bool,
 
+  /// Skip confirmation prompts
+  #[arg(long)]
+  force: bool,
+
+  /// Date range expression (e.g. "monday to friday")
+  #[arg(long)]
+  from: Option<String>,
+
   /// Move selected entries to a section
   #[arg(short, long, value_name = "SECTION")]
   r#move: Option<String>,
@@ -59,6 +87,10 @@ pub struct Command {
   #[arg(long)]
   no_menu: bool,
 
+  /// Negate all filter results
+  #[arg(long)]
+  not: bool,
+
   /// Output selected entries in a given format
   #[arg(short, long, value_name = "FORMAT")]
   output: Option<String>,
@@ -66,6 +98,10 @@ pub struct Command {
   /// Pre-filter the list before presenting the menu
   #[arg(long)]
   query: Option<String>,
+
+  /// Remove tags from selected entries instead of adding
+  #[arg(short, long)]
+  remove: bool,
 
   /// Save selected entries to a file
   #[arg(long, value_name = "FILE")]
@@ -79,13 +115,17 @@ pub struct Command {
   #[arg(short, long)]
   section: Option<String>,
 
-  /// Add tags to selected entries (comma-separated)
+  /// Add/remove tags on selected entries (comma-separated)
   #[arg(short, long, value_name = "TAGS")]
   tag: Option<String>,
 
   /// Filter by tags (can be repeated)
   #[arg(long = "tagged")]
   tagged: Vec<String>,
+
+  /// Tag value queries (e.g. "progress > 50")
+  #[arg(long)]
+  val: Vec<String>,
 }
 
 impl Command {
@@ -97,7 +137,7 @@ impl Command {
       return Ok(());
     }
 
-    let selected = if self.no_menu {
+    let selected = if self.no_menu || self.force {
       entries
     } else {
       self.present_menu(&entries)?
@@ -109,6 +149,43 @@ impl Command {
     }
 
     self.apply_action(ctx, &selected)
+  }
+
+  fn action_again(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    let now = chrono::Local::now();
+    let section_name = self
+      .section
+      .clone()
+      .unwrap_or_else(|| ctx.config.current_section.clone());
+
+    if !ctx.document.has_section(&section_name) {
+      ctx.document.add_section(Section::new(&section_name));
+    }
+
+    for entry in selected {
+      let new_entry = Entry::new(
+        now,
+        entry.title(),
+        Tags::new(),
+        Note::new(),
+        &section_name,
+        None::<String>,
+      );
+      ctx
+        .document
+        .section_by_name_mut(&section_name)
+        .unwrap()
+        .add_entry(new_entry);
+    }
+
+    let count = selected.len();
+    if count == 1 {
+      ctx.status("Resumed 1 entry");
+    } else {
+      ctx.status(format!("Resumed {count} entries"));
+    }
+
+    Ok(())
   }
 
   fn action_archive(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
@@ -331,6 +408,34 @@ impl Command {
     Ok(())
   }
 
+  fn action_remove_tag(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    let tag_str = self.tag.as_deref().unwrap_or("");
+    let tag_names: Vec<&str> = tag_str.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
+
+    if tag_names.is_empty() {
+      return Err(crate::errors::Error::Config("no tags specified".into()));
+    }
+
+    for entry in selected {
+      if let Some(section) = ctx.document.section_by_name_mut(entry.section())
+        && let Some(e) = section.entries_mut().iter_mut().find(|e| e.id() == entry.id())
+      {
+        for name in &tag_names {
+          e.tags_mut().remove(name);
+        }
+      }
+    }
+
+    let count = selected.len();
+    if count == 1 {
+      ctx.status("Removed tags from 1 entry");
+    } else {
+      ctx.status(format!("Removed tags from {count} entries"));
+    }
+
+    Ok(())
+  }
+
   fn action_tag(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
     let tag_str = self.tag.as_deref().unwrap_or("");
     let tag_names: Vec<&str> = tag_str.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
@@ -360,7 +465,9 @@ impl Command {
   }
 
   fn apply_action(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
-    if self.archive {
+    if self.again {
+      self.action_again(ctx, selected)?;
+    } else if self.archive {
       self.action_archive(ctx, selected)?;
     } else if self.cancel {
       self.action_cancel(ctx, selected)?;
@@ -374,6 +481,8 @@ impl Command {
       self.action_flag(ctx, selected)?;
     } else if let Some(ref section) = self.r#move {
       self.action_move(ctx, selected, section)?;
+    } else if self.remove && self.tag.is_some() {
+      self.action_remove_tag(ctx, selected)?;
     } else if self.tag.is_some() {
       self.action_tag(ctx, selected)?;
     } else {
@@ -397,7 +506,16 @@ impl Command {
       .cloned()
       .collect();
 
-    let has_filters = !self.tagged.is_empty() || self.search.is_some() || self.query.is_some();
+    let has_filters = !self.tagged.is_empty()
+      || self.search.is_some()
+      || self.query.is_some()
+      || self.after.is_some()
+      || self.before.is_some()
+      || self.from.is_some()
+      || self.case.is_some()
+      || self.exact
+      || self.not
+      || !self.val.is_empty();
 
     if !has_filters {
       return Ok(all_entries);
@@ -405,11 +523,25 @@ impl Command {
 
     let search_text = self.query.as_deref().or(self.search.as_deref());
 
+    // When --val is used with --tag but no --tagged, use --tag for filtering
+    let filter_tags = if self.tagged.is_empty() && !self.val.is_empty() {
+      self.tag.iter().map(|t| t.to_string()).collect()
+    } else {
+      self.tagged.clone()
+    };
+
     let filter_args = FilterArgs {
+      after: self.after.clone(),
+      before: self.before.clone(),
       bool_op: self.bool_op,
+      case: self.case.clone(),
+      exact: self.exact,
+      from: self.from.clone(),
+      not: self.not,
       search: search_text.map(String::from),
       section: Some(section_name),
-      tag: self.tagged.clone(),
+      tag: filter_tags,
+      val: self.val.clone(),
       ..Default::default()
     };
 
@@ -470,22 +602,32 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      after: None,
+      again: false,
       archive: false,
+      before: None,
       bool_op: None,
       cancel: false,
+      case: None,
       delete: false,
       editor: false,
+      exact: false,
       finish: false,
       flag: false,
+      force: false,
+      from: None,
       no_menu: false,
+      not: false,
       output: None,
       query: None,
       r#move: None,
+      remove: false,
       save_to: None,
       search: None,
       section: None,
       tag: None,
       tagged: vec![],
+      val: vec![],
     }
   }
 

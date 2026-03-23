@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --not flag (see #178)"]
 fn it_inverts_filter() {
   let doing = DoingCmd::new();
 

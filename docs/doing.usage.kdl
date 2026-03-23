@@ -473,24 +473,36 @@ cmd "sections" help="List available sections" {
 }
 
 cmd "select" help="Interactively select entries to act on" {
+  flag "--after <AFTER>" help="Date range start (e.g. \"yesterday\", \"2024-01-10 14:00\")"
+  flag "--again" help="Duplicate selected entries with a new timestamp" {
+    alias "resume"
+  }
   flag "-a --archive" help="Archive selected entries"
+  flag "--before <BEFORE>" help="Upper bound for entry date"
   flag "--bool <BOOL>" help="Boolean operator for combining tag filters" default="pattern" {
     choices "and" "not" "or" "pattern"
   }
   flag "-c --cancel" help="Cancel selected entries (mark @done without timestamp)"
+  flag "--case <CASE>" help="Case sensitivity for search (sensitive/ignore/smart)"
   flag "-d --delete" help="Delete selected entries"
   flag "-e --editor" help="Open selected entries in an editor for batch editing"
+  flag "--exact" help="Use exact (literal substring) matching for search"
   flag "-F --finish" help="Finish selected entries (mark @done with timestamp)"
   flag "--flag" help="Toggle the marker tag on selected entries"
+  flag "--force" help="Skip confirmation prompts"
+  flag "--from <FROM>" help="Date range expression (e.g. \"monday to friday\")"
   flag "-m --move <SECTION>" help="Move selected entries to a section"
   flag "--no-menu" help="Non-interactive batch mode — apply action to all matching entries"
+  flag "--not" help="Negate all filter results"
   flag "-o --output <FORMAT>" help="Output selected entries in a given format"
   flag "--query <QUERY>" help="Pre-filter the list before presenting the menu"
+  flag "-r --remove" help="Remove tags from selected entries instead of adding"
   flag "--save-to <FILE>" help="Save selected entries to a file"
   flag "--search <SEARCH>" help="Text search query to filter entries"
   flag "-s --section <SECTION>" help="Section to select entries from"
-  flag "-t --tag <TAGS>" help="Add tags to selected entries (comma-separated)"
+  flag "-t --tag <TAGS>" help="Add/remove tags on selected entries (comma-separated)"
   flag "--tagged <TAG>" help="Filter by tags (can be repeated)" var=#true
+  flag "--val <VAL>" help="Tag value queries (e.g. \"progress > 50\")" var=#true
 }
 
 cmd "show" help="Show entries from a section" {

@@ -3,7 +3,6 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "our select command does not support --after flag (see #179)"]
 fn it_filters_entries_after_time() {
   let doing = DoingCmd::new();
 

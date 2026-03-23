@@ -249,7 +249,7 @@ impl Command {
       Some(entry) => entry,
       None => {
         if section.entries().is_empty() {
-          return Err(crate::errors::Error::Config("no entries in section".into()));
+          return Err(crate::errors::Error::Config("no items matched your search".into()));
         }
         ctx.status("All entries already @done");
         return Ok(());

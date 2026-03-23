@@ -32,7 +32,6 @@ fn it_marks_last_entry_as_done_with_current_timestamp() {
 }
 
 #[test]
-#[ignore = "error message differs from Ruby doing (see #162)"]
 fn it_exits_with_error_when_section_is_empty() {
   let doing = DoingCmd::new();
 

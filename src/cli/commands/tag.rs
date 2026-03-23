@@ -4,6 +4,7 @@ use crate::{
   cli::{AppContext, args::FilterArgs},
   errors::Result,
   ops::{
+    autotag::autotag,
     backup::write_with_backup,
     filter::{Age, filter_entries},
   },
@@ -20,6 +21,10 @@ pub struct Command {
   /// Tags to add or remove (comma-separated)
   #[arg(value_name = "TAGS")]
   tags: Vec<String>,
+
+  /// Apply autotag rules from config to matching entries
+  #[arg(short = 'a', long)]
+  autotag: bool,
 
   /// Maximum number of entries to tag
   #[arg(short = 'c', long)]
@@ -69,7 +74,9 @@ impl Command {
       return Err(crate::errors::Error::Config("no matching entries found".into()));
     }
 
-    if !self.rename.is_empty() {
+    if self.autotag {
+      self.apply_autotags(ctx, &entries)?;
+    } else if !self.rename.is_empty() {
       self.rename_tags(ctx, &entries)?;
     } else if self.remove {
       self.remove_tags(ctx, &entries)?;
@@ -94,6 +101,16 @@ impl Command {
       ctx.status(format!("{action} {count} entries"));
     }
 
+    Ok(())
+  }
+
+  fn apply_autotags(&self, ctx: &mut AppContext, entry_ids: &[EntryLocation]) -> Result<()> {
+    let autotag_config = ctx.config.autotag.clone();
+    let default_tags = ctx.config.default_tags.clone();
+    for loc in entry_ids {
+      let entry = self.find_entry_mut(ctx, loc)?;
+      autotag(entry, &autotag_config, &default_tags);
+    }
     Ok(())
   }
 
@@ -287,6 +304,7 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
+      autotag: false,
       count: None,
       date: false,
       filter: FilterArgs::default(),

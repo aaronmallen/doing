@@ -26,7 +26,6 @@ template = "%date | %title"
 "#;
 
 #[test]
-#[ignore = "our CLI does not support --hilite flag for view (see #206)"]
 fn it_highlights_search_matches() {
   let doing = DoingCmd::new_with_config(VIEW_CONFIG);
 

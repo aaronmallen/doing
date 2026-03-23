@@ -15,6 +15,7 @@ use crate::{
     filter::{FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},
   },
+  plugins::default_registry,
   template::renderer::{RenderOptions, format_items},
 };
 
@@ -44,6 +45,10 @@ pub struct Command {
   #[command(flatten)]
   filter: FilterArgs,
 
+  /// Highlight search matches in output
+  #[arg(long)]
+  hilite: bool,
+
   /// View name from configuration
   #[arg(index = 1, value_name = "NAME")]
   name: String,
@@ -60,6 +65,7 @@ impl Command {
       count: None,
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
+      hilite: false,
       name: name.to_string(),
       pager: false,
     };
@@ -90,7 +96,21 @@ impl Command {
     let template_name = self.resolve_template(&view);
     let mut render_options = RenderOptions::from_config(&template_name, &ctx.config);
     render_options.include_notes = ctx.include_notes;
-    let output = format_items(&filtered, &render_options, &ctx.config, self.display.totals);
+
+    let output_format = self.display.output.as_deref();
+    let output = if let Some(format) = output_format {
+      let registry = default_registry();
+      if let Some(plugin) = registry.resolve(format) {
+        plugin.render(&filtered, &render_options, &ctx.config)
+      } else {
+        let valid = registry.available_formats().join(", ");
+        return Err(Error::Config(format!(
+          "\"{format}\" is not a recognized output format. Valid formats: {valid}"
+        )));
+      }
+    } else {
+      format_items(&filtered, &render_options, &ctx.config, self.display.totals)
+    };
 
     if !output.is_empty() {
       pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
@@ -196,6 +216,7 @@ mod test {
       count: None,
       display: DisplayArgs::default(),
       filter: FilterArgs::default(),
+      hilite: false,
       name: "test_view".into(),
       pager: false,
     }

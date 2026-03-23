@@ -26,7 +26,6 @@ template = "%date | %title"
 "#;
 
 #[test]
-#[ignore = "view --output json does not produce JSON output (see #206)"]
 fn it_overrides_output_format() {
   let doing = DoingCmd::new_with_config(VIEW_CONFIG);
 
@@ -48,7 +47,6 @@ fn it_overrides_output_format() {
 }
 
 #[test]
-#[ignore = "view -o json does not produce JSON output (see #206)"]
 fn it_overrides_with_short_flag() {
   let doing = DoingCmd::new_with_config(VIEW_CONFIG);
 

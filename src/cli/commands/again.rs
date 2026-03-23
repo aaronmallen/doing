@@ -79,9 +79,21 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let date = self.resolve_date()?;
     let source = if self.interactive {
-      self.choose_source_entry(ctx)?
+      match self.choose_source_entry(ctx) {
+        Ok(entry) => entry,
+        Err(_) => {
+          ctx.status("Skipped: No previous entry found");
+          return Ok(());
+        }
+      }
     } else {
-      self.find_source_entry(ctx)?
+      match self.find_source_entry(ctx) {
+        Ok(entry) => entry,
+        Err(_) => {
+          ctx.status("Skipped: No previous entry found");
+          return Ok(());
+        }
+      }
     };
     let source_id = source.id().to_string();
     let source_section = source.section().to_string();

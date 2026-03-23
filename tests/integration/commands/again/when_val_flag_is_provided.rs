@@ -28,7 +28,6 @@ Currently:
 }
 
 #[test]
-#[ignore = "our again exits with error when no entries match, Ruby exits 0 (see #196)"]
 fn it_skips_when_no_entries_match_value_query() {
   let doing = DoingCmd::new();
 

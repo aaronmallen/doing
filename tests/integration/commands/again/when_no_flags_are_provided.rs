@@ -108,7 +108,6 @@ fn it_does_not_double_done_tag_on_already_done_entry() {
 }
 
 #[test]
-#[ignore = "our again exits with error when no entries, Ruby exits 0 (see #196)"]
 fn it_skips_when_no_entries_exist() {
   let doing = DoingCmd::new();
 

@@ -283,6 +283,7 @@ enum Command {
   /// Mark the last entry as cancelled
   Cancel(commands::cancel::Command),
   /// List recent changes in Doing
+  #[command(visible_alias = "changelog")]
   Changes(commands::changes::Command),
   /// Fuzzy select an entry to act on
   Choose(commands::choose::Command),

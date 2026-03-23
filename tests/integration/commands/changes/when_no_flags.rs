@@ -24,7 +24,6 @@ fn it_shows_latest_version_changes() {
 }
 
 #[test]
-#[ignore = "changelog alias not implemented (see #200)"]
 fn it_is_accessible_via_changelog_alias() {
   let doing = DoingCmd::new();
 

@@ -1,13 +1,13 @@
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
     editor, pager,
   },
   config::SortOrder,
-  errors::Result,
   ops::{
     backup::write_with_backup,
     filter::{FilterOptions, filter_entries},
@@ -158,7 +158,7 @@ impl Command {
     let parts: Vec<&str> = edited.split(divider).collect();
 
     if parts.len() != entries.len() {
-      return Err(crate::errors::Error::Config(format!(
+      return Err(crate::Error::Config(format!(
         "expected {} entries separated by '---' dividers, got {}",
         entries.len(),
         parts.len()

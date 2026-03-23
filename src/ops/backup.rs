@@ -7,8 +7,8 @@ use std::{
 use chrono::Local;
 
 use crate::{
+  Result,
   config::Config,
-  errors::Result,
   taskpaper::{Document, io as taskpaper_io},
 };
 

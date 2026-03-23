@@ -6,7 +6,7 @@ use std::{
 use chrono::Local;
 
 use crate::{
-  errors::{Error, Result},
+  Error, Result,
   ops::backup::{self, backup_prefix},
 };
 

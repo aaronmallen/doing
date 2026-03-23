@@ -1,8 +1,8 @@
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{AppContext, args::FilterArgs},
-  errors::Result,
   ops::{
     backup::write_with_backup,
     filter::{Age, filter_entries},

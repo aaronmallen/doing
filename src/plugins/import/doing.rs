@@ -1,7 +1,7 @@
 use std::{fs, path::Path};
 
 use crate::{
-  errors,
+  Result,
   plugins::import::{ImportPlugin, ImportPluginSettings},
   taskpaper::{Document, Entry},
 };
@@ -13,7 +13,7 @@ use crate::{
 pub struct DoingImport;
 
 impl ImportPlugin for DoingImport {
-  fn import(&self, path: &Path) -> errors::Result<Vec<Entry>> {
+  fn import(&self, path: &Path) -> Result<Vec<Entry>> {
     let content = fs::read_to_string(path)?;
     let doc = Document::parse(&content);
     let entries: Vec<Entry> = doc

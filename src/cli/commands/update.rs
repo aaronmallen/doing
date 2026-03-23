@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 
 use clap::Args;
 
-use crate::errors::Result;
+use crate::Result;
 
 const REPO_OWNER: &str = "aaronmallen";
 const REPO_NAME: &str = "doing";
@@ -38,7 +38,7 @@ impl Command {
       .with_prompt("Do you want to update?")
       .default(true)
       .interact()
-      .map_err(|e| crate::errors::Error::Config(e.to_string()))?;
+      .map_err(|e| crate::Error::Config(e.to_string()))?;
 
     if !confirm {
       eprintln!("Update cancelled.");
@@ -77,13 +77,13 @@ fn fetch_latest_version() -> Result<String> {
     .repo_owner(REPO_OWNER)
     .repo_name(REPO_NAME)
     .build()
-    .map_err(|e| crate::errors::Error::Update(e.to_string()))?
+    .map_err(|e| crate::Error::Update(e.to_string()))?
     .fetch()
-    .map_err(|e| crate::errors::Error::Update(e.to_string()))?;
+    .map_err(|e| crate::Error::Update(e.to_string()))?;
 
   let latest = releases
     .first()
-    .ok_or_else(|| crate::errors::Error::Update("no releases found".to_string()))?;
+    .ok_or_else(|| crate::Error::Update("no releases found".to_string()))?;
 
   Ok(latest.version.clone())
 }
@@ -98,9 +98,9 @@ fn perform_update(target_version: &str) -> Result<()> {
     .show_download_progress(true)
     .no_confirm(true)
     .build()
-    .map_err(|e| crate::errors::Error::Update(e.to_string()))?
+    .map_err(|e| crate::Error::Update(e.to_string()))?
     .update()
-    .map_err(|e| crate::errors::Error::Update(e.to_string()))?;
+    .map_err(|e| crate::Error::Update(e.to_string()))?;
 
   Ok(())
 }

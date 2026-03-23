@@ -1,8 +1,8 @@
 use clap::Args;
 
 use crate::{
+  Result,
   cli::AppContext,
-  errors::Result,
   ops::{autotag, backup::write_with_backup},
 };
 
@@ -32,7 +32,7 @@ impl Command {
     let entry_ids = self.find_entries(ctx, &section_name)?;
 
     if entry_ids.is_empty() {
-      return Err(crate::errors::Error::Config("no matching entries found".into()));
+      return Err(crate::Error::Config("no matching entries found".into()));
     }
 
     for (id, section) in &entry_ids {
@@ -58,13 +58,13 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
 
     let entry = section
       .entries_mut()
       .iter_mut()
       .find(|e| e.id() == entry_id)
-      .ok_or_else(|| crate::errors::Error::Config("entry not found".into()))?;
+      .ok_or_else(|| crate::Error::Config("entry not found".into()))?;
 
     autotag::autotag(entry, &autotag_config, &default_tags);
 

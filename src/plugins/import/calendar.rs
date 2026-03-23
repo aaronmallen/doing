@@ -3,7 +3,7 @@ use std::{fs, path::Path};
 use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 
 use crate::{
-  errors,
+  Result,
   plugins::import::{ImportPlugin, ImportPluginSettings},
   taskpaper::{Entry, Note, Tag, Tags},
 };
@@ -15,7 +15,7 @@ use crate::{
 pub struct CalendarImport;
 
 impl ImportPlugin for CalendarImport {
-  fn import(&self, path: &Path) -> errors::Result<Vec<Entry>> {
+  fn import(&self, path: &Path) -> Result<Vec<Entry>> {
     let content = fs::read_to_string(path)?;
     let events = parse_ics(&content);
     let mut entries = Vec::new();

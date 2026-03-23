@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::errors::Result;
+use crate::Result;
 
 /// List commands that accept a given option.
 ///

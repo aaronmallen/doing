@@ -4,13 +4,13 @@ use clap::Args;
 use log::debug;
 
 use crate::{
+  Error, Result,
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
     pager,
   },
   config::{SortOrder, ViewConfig},
-  errors::{Error, Result},
   ops::{
     filter::{FilterOptions, filter_entries},
     tag_filter::{BooleanMode, TagFilter},

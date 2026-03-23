@@ -3,13 +3,13 @@ use std::io::IsTerminal;
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
     pager,
   },
   config::SortOrder,
-  errors::Result,
   ops::filter::{FilterOptions, filter_entries},
 };
 
@@ -68,7 +68,7 @@ impl Command {
       let section_names: Vec<String> = ctx.document.sections().iter().map(|s| s.title().to_string()).collect();
 
       if section_names.is_empty() {
-        return Err(crate::errors::Error::Config("no sections available".into()));
+        return Err(crate::Error::Config("no sections available".into()));
       }
 
       let selection = dialoguer::Select::new()
@@ -76,7 +76,7 @@ impl Command {
         .items(&section_names)
         .default(0)
         .interact()
-        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+        .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
       let mut cmd = self.clone();
       cmd.menu = false;

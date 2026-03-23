@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use clap::Args;
 
 use crate::{
+  Error, Result,
   cli::AppContext,
-  errors::{Error, Result},
   time::{DurationFormat, FormattedDuration, parse_duration},
 };
 

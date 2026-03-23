@@ -3,8 +3,8 @@ use std::io::IsTerminal;
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
-  errors::Result,
   ops::{
     backup::write_with_backup,
     filter::{Age, filter_entries},
@@ -60,7 +60,7 @@ impl Command {
     };
 
     if entries.is_empty() {
-      return Err(crate::errors::Error::Config("no matching entries found".into()));
+      return Err(crate::Error::Config("no matching entries found".into()));
     }
 
     let mut titles = Vec::new();
@@ -131,13 +131,13 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(&loc.section)
-      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{}\" not found", loc.section)))?;
+      .ok_or_else(|| crate::Error::Config(format!("section \"{}\" not found", loc.section)))?;
 
     section
       .entries_mut()
       .iter_mut()
       .find(|e| e.id() == loc.id)
-      .ok_or_else(|| crate::errors::Error::Config("entry not found".into()))
+      .ok_or_else(|| crate::Error::Config("entry not found".into()))
   }
 
   fn interactive_select(&self, ctx: &AppContext) -> Result<Vec<EntryLocation>> {
@@ -200,7 +200,7 @@ impl Command {
         .with_prompt("Add a note")
         .allow_empty(true)
         .interact_text()
-        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+        .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
       if !input.is_empty() {
         lines.push(input);
       }

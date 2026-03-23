@@ -1,13 +1,13 @@
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
     pager,
   },
   config::SortOrder,
-  errors::Result,
   ops::filter::{Age, filter_entries},
 };
 

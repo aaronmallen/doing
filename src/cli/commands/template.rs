@@ -2,7 +2,7 @@ use std::{fs, path::Path};
 
 use clap::Args;
 
-use crate::{cli::AppContext, errors::Result, plugins::default_registry};
+use crate::{Result, cli::AppContext, plugins::default_registry};
 
 /// Manage export format templates.
 ///
@@ -112,7 +112,7 @@ fn list_templates(column: bool, ctx: &AppContext) -> Result<()> {
 fn save_template(name: &str, ctx: &AppContext) -> Result<()> {
   let template_dir = &ctx.config.template_path;
   fs::create_dir_all(template_dir)
-    .map_err(|e| crate::errors::Error::Config(format!("failed to create templates directory: {e}")))?;
+    .map_err(|e| crate::Error::Config(format!("failed to create templates directory: {e}")))?;
 
   let dest = template_dir.join(name);
   if dest.exists() {
@@ -121,7 +121,7 @@ fn save_template(name: &str, ctx: &AppContext) -> Result<()> {
   }
 
   // Write a placeholder template file
-  fs::write(&dest, "").map_err(|e| crate::errors::Error::Config(format!("failed to save template \"{name}\": {e}")))?;
+  fs::write(&dest, "").map_err(|e| crate::Error::Config(format!("failed to save template \"{name}\": {e}")))?;
 
   ctx.status(format!("Saved template to {}", dest.display()));
   Ok(())
@@ -144,7 +144,7 @@ fn show_template(name: &str, ctx: &AppContext) -> Result<()> {
   for candidate in &candidates {
     if candidate.is_file() {
       let content = fs::read_to_string(candidate)
-        .map_err(|e| crate::errors::Error::Config(format!("failed to read template \"{name}\": {e}")))?;
+        .map_err(|e| crate::Error::Config(format!("failed to read template \"{name}\": {e}")))?;
       if !content.is_empty() {
         print!("{content}");
         return Ok(());
@@ -163,7 +163,7 @@ fn show_template(name: &str, ctx: &AppContext) -> Result<()> {
         println!("Built-in export format: {name}");
         println!("No editable template file. Use --save {name} to create one.");
       } else {
-        return Err(crate::errors::Error::Config(format!("unknown template: \"{name}\"")));
+        return Err(crate::Error::Config(format!("unknown template: \"{name}\"")));
       }
     }
   }

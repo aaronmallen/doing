@@ -3,7 +3,7 @@ use std::{fs, io, path::PathBuf};
 use clap::{Args, CommandFactory, Subcommand, ValueEnum};
 use clap_complete::Shell;
 
-use crate::errors::Result;
+use crate::Result;
 
 /// Generate or install shell completion scripts.
 ///
@@ -91,16 +91,15 @@ impl InstallCommand {
   }
 
   fn install_path(&self) -> Result<PathBuf> {
-    let home =
-      dir_spec::home().ok_or_else(|| crate::errors::Error::Config("could not determine home directory".into()))?;
+    let home = dir_spec::home().ok_or_else(|| crate::Error::Config("could not determine home directory".into()))?;
 
     let path = match self.shell {
       InstallShellArg::Bash => home.join(".bash_completion.d").join("doing"),
       InstallShellArg::Fish => dir_spec::config_home()
-        .ok_or_else(|| crate::errors::Error::Config("could not determine config directory".into()))?
+        .ok_or_else(|| crate::Error::Config("could not determine config directory".into()))?
         .join("fish/completions/doing.fish"),
       InstallShellArg::Zsh => dir_spec::data_home()
-        .ok_or_else(|| crate::errors::Error::Config("could not determine data directory".into()))?
+        .ok_or_else(|| crate::Error::Config("could not determine data directory".into()))?
         .join("zsh/site-functions/_doing"),
     };
 

@@ -2,9 +2,9 @@ use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
 
 use crate::{
+  Result,
   cli::AppContext,
   config::Config,
-  errors::Result,
   ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Entry, Note, Section, Tag, Tags},
   time::{chronify, parse_duration, parse_range},
@@ -100,7 +100,7 @@ impl Command {
     let (title, note) = self.resolve_title_and_note(&ctx.config)?;
 
     if title.is_empty() {
-      return Err(crate::errors::Error::Config("no entry title provided".into()));
+      return Err(crate::Error::Config("no entry title provided".into()));
     }
 
     let target_section = if self.archive { "Archive" } else { section_name };
@@ -123,7 +123,7 @@ impl Command {
     let display_title = entry.full_title();
 
     if !ctx.ensure_section(target_section)? {
-      return Err(crate::errors::Error::Config(format!(
+      return Err(crate::Error::Config(format!(
         "section \"{target_section}\" creation declined"
       )));
     }
@@ -143,12 +143,12 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
 
     let last = section
       .entries_mut()
       .last_mut()
-      .ok_or_else(|| crate::errors::Error::Config("no entries in section".into()))?;
+      .ok_or_else(|| crate::Error::Config("no entries in section".into()))?;
 
     let display_title = last.full_title();
     last.tags_mut().remove("done");
@@ -216,7 +216,7 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
 
     let last = if self.unfinished {
       section.entries_mut().iter_mut().rev().find(|e| e.unfinished())
@@ -228,7 +228,7 @@ impl Command {
       Some(entry) => entry,
       None => {
         if section.entries().is_empty() {
-          return Err(crate::errors::Error::Config("no items matched your search".into()));
+          return Err(crate::Error::Config("no items matched your search".into()));
         }
         ctx.status("All entries already @done");
         return Ok(());

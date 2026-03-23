@@ -7,7 +7,7 @@ use std::path::Path;
 
 use regex::Regex;
 
-use crate::{errors, taskpaper::Entry};
+use crate::{Result, taskpaper::Entry};
 
 /// The interface that import format plugins must implement.
 ///
@@ -15,7 +15,7 @@ use crate::{errors, taskpaper::Entry};
 /// and an import method that reads entries from a file path.
 pub trait ImportPlugin {
   /// Import entries from the file at `path`.
-  fn import(&self, path: &Path) -> errors::Result<Vec<Entry>>;
+  fn import(&self, path: &Path) -> Result<Vec<Entry>>;
 
   /// Return the canonical name of this import format.
   fn name(&self) -> &str;
@@ -131,7 +131,7 @@ mod test {
   }
 
   impl ImportPlugin for MockPlugin {
-    fn import(&self, _path: &Path) -> errors::Result<Vec<Entry>> {
+    fn import(&self, _path: &Path) -> Result<Vec<Entry>> {
       Ok(Vec::new())
     }
 

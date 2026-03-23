@@ -1,4 +1,4 @@
-use crate::{config::Config, errors::Result, ops::extract_note::extract_note, taskpaper::Note};
+use crate::{Result, config::Config, ops::extract_note::extract_note, taskpaper::Note};
 
 /// Resolve the title and note from command arguments.
 ///
@@ -25,7 +25,7 @@ pub fn resolve_title_and_note(
       .with_prompt("Add a note")
       .allow_empty(true)
       .interact_text()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
     if input.is_empty() { None } else { Some(input) }
   } else {
     None

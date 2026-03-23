@@ -1,8 +1,8 @@
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{AppContext, args::BoolArg},
-  errors::Result,
   ops::{
     backup::write_with_backup,
     filter::{Age, FilterOptions, filter_entries},
@@ -86,7 +86,7 @@ impl Command {
     };
 
     if entries.is_empty() {
-      return Err(crate::errors::Error::Config("no matching entries found".into()));
+      return Err(crate::Error::Config("no matching entries found".into()));
     }
 
     for entry_id in &entries {
@@ -117,7 +117,7 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
 
     let to_move: Vec<Entry> = section
       .entries_mut()
@@ -142,13 +142,13 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
 
     let entry = section
       .entries_mut()
       .iter_mut()
       .find(|e| e.id() == entry_id)
-      .ok_or_else(|| crate::errors::Error::Config("entry not found".into()))?;
+      .ok_or_else(|| crate::Error::Config("entry not found".into()))?;
 
     if entry.finished() {
       return Ok(());
@@ -210,12 +210,12 @@ impl Command {
           } else if !expanded_tags.is_empty() {
             let tag_name = &expanded_tags[0];
             crate::ops::tag_query::TagQuery::parse(&format!("{tag_name} == {v}"))
-              .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+              .ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
           } else {
-            Err(crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+            Err(crate::Error::Parse(format!("invalid tag query: {v}")))
           }
         })
-        .collect::<crate::errors::Result<Vec<_>>>()?;
+        .collect::<crate::Result<Vec<_>>>()?;
 
       let options = FilterOptions {
         age: Some(Age::Newest),

@@ -2,10 +2,7 @@ use std::{fs, io::Write, path::Path, process::Command};
 
 use tempfile::NamedTempFile;
 
-use crate::{
-  config::Config,
-  errors::{Error, Result},
-};
+use crate::{Error, Result, config::Config};
 
 /// Launch an editor with the given initial content and return the edited result.
 ///
@@ -26,7 +23,7 @@ pub fn edit(initial_content: &str, config: &Config) -> Result<String> {
   let status = Command::new(cmd).args(args).arg(&path).status()?;
 
   if !status.success() {
-    return Err(crate::errors::Error::Io(std::io::Error::other(format!(
+    return Err(crate::Error::Io(std::io::Error::other(format!(
       "editor exited with status {status}"
     ))));
   }
@@ -49,7 +46,7 @@ pub fn edit_config(config: &Config) -> Result<()> {
   let status = Command::new(cmd).args(args).arg(&config_path).status()?;
 
   if !status.success() {
-    return Err(crate::errors::Error::Io(std::io::Error::other(format!(
+    return Err(crate::Error::Io(std::io::Error::other(format!(
       "editor exited with status {status}"
     ))));
   }

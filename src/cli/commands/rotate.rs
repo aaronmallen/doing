@@ -4,8 +4,8 @@ use chrono::Local;
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{AppContext, args::FilterArgs},
-  errors::Result,
   ops::backup::write_with_backup,
   taskpaper::{Document, Entry, Section, io as taskpaper_io},
 };

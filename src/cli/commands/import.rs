@@ -3,8 +3,8 @@ use std::{mem, path::PathBuf};
 use clap::Args;
 
 use crate::{
+  Result,
   cli::AppContext,
-  errors::Result,
   ops::{autotag::autotag, backup::write_with_backup},
   plugins::import,
   taskpaper::{Entry, Section, Tag},
@@ -82,7 +82,7 @@ impl Command {
     let format = self.resolve_format()?;
     let plugin = registry.resolve(&format).ok_or_else(|| {
       let available = registry.available_formats().join(", ");
-      crate::errors::Error::Plugin(format!("unknown import format \"{format}\". Available: {available}"))
+      crate::Error::Plugin(format!("unknown import format \"{format}\". Available: {available}"))
     })?;
 
     let mut entries = plugin.import(&self.path)?;
@@ -185,7 +185,7 @@ impl Command {
   fn apply_search_filter(&self, entries: &mut Vec<Entry>) -> Result<()> {
     if let Some(ref query) = self.search {
       let (mode, case) = crate::ops::search::parse_query(query, &Default::default())
-        .ok_or_else(|| crate::errors::Error::Parse(format!("invalid search query: {query}")))?;
+        .ok_or_else(|| crate::Error::Parse(format!("invalid search query: {query}")))?;
       entries.retain(|e| crate::ops::search::matches_entry(e, &mode, case, true));
     }
     Ok(())

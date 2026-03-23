@@ -4,7 +4,7 @@ use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use serde::Deserialize;
 
 use crate::{
-  errors,
+  Error, Result,
   plugins::import::{ImportPlugin, ImportPluginSettings},
   taskpaper::{Entry, Note, Tag, Tags},
 };
@@ -16,10 +16,10 @@ use crate::{
 pub struct TimingImport;
 
 impl ImportPlugin for TimingImport {
-  fn import(&self, path: &Path) -> errors::Result<Vec<Entry>> {
+  fn import(&self, path: &Path) -> Result<Vec<Entry>> {
     let content = fs::read_to_string(path)?;
     let raw_entries: Vec<TimingEntry> =
-      serde_json::from_str(&content).map_err(|e| errors::Error::Plugin(format!("invalid Timing.app JSON: {e}")))?;
+      serde_json::from_str(&content).map_err(|e| Error::Plugin(format!("invalid Timing.app JSON: {e}")))?;
 
     let mut entries = Vec::new();
     for raw in &raw_entries {

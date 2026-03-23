@@ -2,9 +2,9 @@ use chrono::{DateTime, Local};
 use clap::Args;
 
 use crate::{
+  Result,
   cli::AppContext,
   config::Config,
-  errors::Result,
   ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Document, Entry, Note, Tag, Tags},
   time::{chronify, parse_range},
@@ -88,7 +88,7 @@ impl Command {
     let display_title = entry.full_title();
 
     if !ctx.ensure_section(&section_name)? {
-      return Err(crate::errors::Error::Config(format!(
+      return Err(crate::Error::Config(format!(
         "section \"{section_name}\" creation declined"
       )));
     }

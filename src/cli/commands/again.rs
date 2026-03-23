@@ -2,9 +2,9 @@ use chrono::{DateTime, Local};
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{AppContext, args::BoolArg},
   config::Config,
-  errors::Result,
   ops::{
     autotag::autotag,
     backup::write_with_backup,
@@ -130,13 +130,13 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(&source_section)
-      .ok_or_else(|| crate::errors::Error::Config(format!("section \"{source_section}\" not found")))?;
+      .ok_or_else(|| crate::Error::Config(format!("section \"{source_section}\" not found")))?;
     if let Some(src) = section.entries_mut().iter_mut().find(|e| e.id() == source_id) {
       src.tags_mut().add(Tag::new("done", done_value));
     }
 
     if !ctx.ensure_section(&target_section)? {
-      return Err(crate::errors::Error::Config(format!(
+      return Err(crate::Error::Config(format!(
         "section \"{target_section}\" creation declined"
       )));
     }
@@ -156,12 +156,12 @@ impl Command {
     let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
 
     if all_entries.is_empty() {
-      return Err(crate::errors::Error::Config("no entries found".into()));
+      return Err(crate::Error::Config("no entries found".into()));
     }
 
     let selected = crate::cli::interactive::choose_entry(&all_entries)?;
 
-    selected.ok_or_else(|| crate::errors::Error::Config("no entry selected".into()))
+    selected.ok_or_else(|| crate::Error::Config("no entry selected".into()))
   }
 
   fn find_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
@@ -198,10 +198,9 @@ impl Command {
       .val
       .iter()
       .map(|v| {
-        crate::ops::tag_query::TagQuery::parse(v)
-          .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+        crate::ops::tag_query::TagQuery::parse(v).ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
       })
-      .collect::<crate::errors::Result<Vec<_>>>()?;
+      .collect::<crate::Result<Vec<_>>>()?;
 
     let options = FilterOptions {
       age: Some(Age::Newest),
@@ -227,7 +226,7 @@ impl Command {
       return Ok(entry);
     }
 
-    Err(crate::errors::Error::Config("no matching entry found to repeat".into()))
+    Err(crate::Error::Config("no matching entry found to repeat".into()))
   }
 
   fn resolve_date(&self) -> Result<DateTime<Local>> {
@@ -243,7 +242,7 @@ impl Command {
         .with_prompt("Add a note")
         .allow_empty(true)
         .interact_text()
-        .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+        .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
       if input.is_empty() { None } else { Some(input) }
     } else {
       None

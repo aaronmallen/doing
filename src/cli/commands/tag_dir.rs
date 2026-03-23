@@ -2,7 +2,7 @@ use std::{env, fs, path::PathBuf};
 
 use clap::Args;
 
-use crate::errors::{Error, Result};
+use crate::{Error, Result};
 
 /// Set default tags for the current directory.
 ///

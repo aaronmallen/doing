@@ -11,7 +11,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::{errors::Result, paths::expand_tilde};
+use crate::{Result, paths::expand_tilde};
 
 /// Autotag configuration for automatic tag assignment.
 ///
@@ -190,8 +190,8 @@ impl Config {
 
     merged = apply_env_overrides(merged);
 
-    let mut config: Config = serde_json::from_value(merged)
-      .map_err(|e| crate::errors::Error::Config(format!("deserialization error: {e}")))?;
+    let mut config: Config =
+      serde_json::from_value(merged).map_err(|e| crate::Error::Config(format!("deserialization error: {e}")))?;
 
     config.expand_paths();
     Ok(config)

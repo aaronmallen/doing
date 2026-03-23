@@ -3,10 +3,7 @@ use std::sync::LazyLock;
 use chrono::{DateTime, Duration, Local, NaiveTime, TimeZone};
 use regex::Regex;
 
-use crate::{
-  errors::{Error, Result},
-  time::parser::chronify,
-};
+use crate::{Error, Result, time::parser::chronify};
 
 pub static RANGE_SEPARATOR_RE: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+").unwrap());

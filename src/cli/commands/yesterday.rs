@@ -2,13 +2,13 @@ use chrono::{Duration, Local, NaiveTime};
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
     pager,
   },
   config::SortOrder,
-  errors::Result,
   ops::filter::filter_entries,
 };
 

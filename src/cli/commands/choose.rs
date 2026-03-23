@@ -3,13 +3,13 @@ use std::{fs, path::PathBuf};
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{
     AppContext,
     args::{BoolArg, FilterArgs},
     pager,
   },
   config::SortOrder,
-  errors::Result,
   ops::{backup::write_with_backup, filter::filter_entries},
   plugins::default_registry,
   taskpaper::{Entry, Section, Tag},
@@ -175,14 +175,14 @@ impl Command {
       .collect();
 
     if sections.is_empty() {
-      return Err(crate::errors::Error::Config("no other sections available".into()));
+      return Err(crate::Error::Config("no other sections available".into()));
     }
 
     let selection = dialoguer::Select::new()
       .with_prompt("Move to section")
       .items(&sections)
       .interact()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
     let target = &sections[selection];
 
@@ -238,12 +238,12 @@ impl Command {
     let input: String = dialoguer::Input::new()
       .with_prompt("Tags (comma-separated)")
       .interact_text()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
     let tag_names: Vec<&str> = input.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
 
     if tag_names.is_empty() {
-      return Err(crate::errors::Error::Config("no tags specified".into()));
+      return Err(crate::Error::Config("no tags specified".into()));
     }
 
     if let Some(section) = ctx.document.section_by_name_mut(entry.section())
@@ -318,7 +318,7 @@ impl Command {
       .with_prompt("Action")
       .items(ACTIONS)
       .interact()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
     Ok(ACTIONS[selection].to_string())
   }

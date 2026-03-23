@@ -4,8 +4,8 @@ use clap::{Args, ValueEnum};
 use regex::Regex;
 
 use crate::{
+  Error, Result,
   cli::{AppContext, pager},
-  errors::{Error, Result},
 };
 
 const CHANGELOG: &str = include_str!("../../../CHANGELOG.md");

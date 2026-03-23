@@ -2,8 +2,8 @@ use chrono::{DateTime, Local};
 use clap::{Args, ValueEnum};
 
 use crate::{
+  Result,
   config::{Config, SortOrder},
-  errors::Result,
   ops::{
     filter::{Age, FilterOptions},
     search,
@@ -132,9 +132,7 @@ impl DisplayArgs {
     if let Some(ref name) = self.config_template
       && !config.templates.contains_key(name.as_str())
     {
-      return Err(crate::errors::Error::Config(format!(
-        "template \"{name}\" not found in config"
-      )));
+      return Err(crate::Error::Config(format!("template \"{name}\" not found in config")));
     }
 
     let template_name = self.config_template.as_deref().or(self.template.as_deref());
@@ -155,7 +153,7 @@ impl DisplayArgs {
         return Ok(plugin.render(entries, &render_options, config));
       }
       let valid = registry.available_formats().join(", ");
-      return Err(crate::errors::Error::Plugin(format!(
+      return Err(crate::Error::Plugin(format!(
         "\"{format}\" is not a recognized output format. Valid formats: {valid}"
       )));
     }
@@ -288,9 +286,9 @@ impl FilterArgs {
           // Bare value: treat as equality check against the first --tag
           let tag_name = &expanded_tags[0];
           TagQuery::parse(&format!("{tag_name} == {v}"))
-            .ok_or_else(|| crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+            .ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
         } else {
-          Err(crate::errors::Error::Parse(format!("invalid tag query: {v}")))
+          Err(crate::Error::Parse(format!("invalid tag query: {v}")))
         }
       })
       .collect::<Result<Vec<_>>>()?;

@@ -3,9 +3,9 @@ use std::fs;
 use clap::{Args, Subcommand};
 
 use crate::{
+  Error, Result,
   cli::{AppContext, editor},
   config::loader::resolve_global_config_path,
-  errors::{Error, Result},
 };
 
 /// List, edit, or remove saved views.

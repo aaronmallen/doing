@@ -1,10 +1,7 @@
 use std::{fs, path::Path};
 
 use super::{Document, serializer};
-use crate::{
-  config::SortOrder,
-  errors::{Error, Result},
-};
+use crate::{Error, Result, config::SortOrder};
 
 /// Create a new doing file at `path` with a single default section.
 ///

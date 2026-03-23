@@ -3,13 +3,13 @@ use std::{fs, path::PathBuf};
 use clap::Args;
 
 use crate::{
+  Result,
   cli::{
     AppContext,
     args::{BoolArg, FilterArgs},
     editor, pager,
   },
   config::SortOrder,
-  errors::Result,
   ops::{backup::write_with_backup, filter::filter_entries},
   plugins::default_registry,
   taskpaper::{Entry, Note, Section, Tag, Tags},
@@ -277,7 +277,7 @@ impl Command {
     let parts: Vec<&str> = edited.split(divider).collect();
 
     if parts.len() != selected.len() {
-      return Err(crate::errors::Error::Config(format!(
+      return Err(crate::Error::Config(format!(
         "expected {} entries separated by '---' dividers, got {}",
         selected.len(),
         parts.len()
@@ -413,7 +413,7 @@ impl Command {
     let tag_names: Vec<&str> = tag_str.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
 
     if tag_names.is_empty() {
-      return Err(crate::errors::Error::Config("no tags specified".into()));
+      return Err(crate::Error::Config("no tags specified".into()));
     }
 
     for entry in selected {
@@ -441,7 +441,7 @@ impl Command {
     let tag_names: Vec<&str> = tag_str.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
 
     if tag_names.is_empty() {
-      return Err(crate::errors::Error::Config("no tags specified".into()));
+      return Err(crate::Error::Config("no tags specified".into()));
     }
 
     for entry in selected {
@@ -582,7 +582,7 @@ impl Command {
       .with_prompt("Select entries")
       .items(&items)
       .interact()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
     Ok(selections.into_iter().map(|i| entries[i].clone()).collect())
   }

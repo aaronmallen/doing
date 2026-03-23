@@ -2,11 +2,7 @@ use std::process;
 
 use clap::Args;
 
-use crate::{
-  cli::AppContext,
-  errors::{Error, Result},
-  ops::backup::list_backups,
-};
+use crate::{Error, Result, cli::AppContext, ops::backup::list_backups};
 
 /// Open the doing file in an editor.
 ///

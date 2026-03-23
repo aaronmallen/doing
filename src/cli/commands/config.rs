@@ -4,9 +4,9 @@ use clap::{Args, Subcommand};
 use serde_json::Value;
 
 use crate::{
+  Error, Result,
   cli::{AppContext, editor},
   config::loader::{self, ConfigFormat},
-  errors::{Error, Result},
 };
 
 /// View, edit, and manage the doing configuration.

@@ -3,9 +3,9 @@ use std::fs;
 use clap::{Args, Subcommand};
 
 use crate::{
+  Error, Result,
   cli::AppContext,
   config::loader::{self, ConfigFormat},
-  errors::{Error, Result},
 };
 
 /// Manage optional commands.

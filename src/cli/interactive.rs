@@ -5,7 +5,7 @@ use std::{
 
 use log::warn;
 
-use crate::{errors::Result, taskpaper::Entry};
+use crate::{Result, taskpaper::Entry};
 
 /// Choose a single entry from a list using fzf (if available) or a dialoguer fallback.
 pub fn choose_entry(entries: &[Entry]) -> Result<Option<Entry>> {
@@ -25,7 +25,7 @@ pub fn select_entries(entries: &[Entry]) -> Result<Vec<Entry>> {
     .with_prompt("Select entries")
     .items(&items)
     .interact()
-    .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+    .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
   Ok(selections.into_iter().map(|i| entries[i].clone()).collect())
 }
@@ -37,7 +37,7 @@ fn choose_dialoguer(entries: &[Entry]) -> Result<Option<Entry>> {
     .with_prompt("Choose an entry")
     .items(&items)
     .interact_opt()
-    .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+    .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
   Ok(selection.map(|i| entries[i].clone()))
 }
@@ -52,13 +52,13 @@ fn choose_fzf(entries: &[Entry]) -> Result<Option<Entry>> {
     .stdout(Stdio::piped())
     .stderr(Stdio::inherit())
     .spawn()
-    .map_err(crate::errors::Error::Io)?;
+    .map_err(crate::Error::Io)?;
 
   if let Some(mut stdin) = child.stdin.take() {
-    stdin.write_all(input.as_bytes()).map_err(crate::errors::Error::Io)?;
+    stdin.write_all(input.as_bytes()).map_err(crate::Error::Io)?;
   }
 
-  let output = child.wait_with_output().map_err(crate::errors::Error::Io)?;
+  let output = child.wait_with_output().map_err(crate::Error::Io)?;
 
   if !output.status.success() {
     return Ok(None);

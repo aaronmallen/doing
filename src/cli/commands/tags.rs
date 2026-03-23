@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use clap::{Args, ValueEnum};
 
 use crate::{
+  Result,
   cli::{AppContext, args::FilterArgs},
-  errors::Result,
   ops::filter::filter_entries,
 };
 

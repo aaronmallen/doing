@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use chrono::Duration;
 use regex::Regex;
 
-use crate::errors::{Error, Result};
+use crate::{Error, Result};
 
 static RE_CLOCK: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d+):(\d{2})(?::(\d{2}))?$").unwrap());
 static RE_COMPACT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(?:(\d+)d)? *(?:(\d+)h)? *(?:(\d+)m)?$").unwrap());

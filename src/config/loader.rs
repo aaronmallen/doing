@@ -6,11 +6,7 @@ use std::{
 
 use serde_json::Value;
 
-use crate::{
-  config::env::DOING_CONFIG,
-  errors::{Error, Result},
-  paths::expand_tilde,
-};
+use crate::{Error, Result, config::env::DOING_CONFIG, paths::expand_tilde};
 
 /// Supported configuration file formats.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

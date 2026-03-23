@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Args;
 
-use crate::{cli::AppContext, errors::Result, ops};
+use crate::{Result, cli::AppContext, ops};
 
 /// Redo the last undone change.
 ///
@@ -47,7 +47,7 @@ impl Command {
     let backups = ops::backup::list_undone(target, backup_dir)?;
 
     if backups.is_empty() {
-      return Err(crate::errors::Error::HistoryLimit("end of redo history".into()));
+      return Err(crate::Error::HistoryLimit("end of redo history".into()));
     }
 
     let items: Vec<String> = backups
@@ -60,7 +60,7 @@ impl Command {
       .items(&items)
       .default(0)
       .interact()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
     Ok(selection + 1)
   }

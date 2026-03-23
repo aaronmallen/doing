@@ -5,7 +5,7 @@ use std::{
 };
 
 use super::{Entry, Section};
-use crate::errors;
+use crate::Result;
 
 /// A complete TaskPaper doing file represented as an ordered list of sections.
 ///
@@ -23,7 +23,7 @@ impl Document {
   ///
   /// If the file already exists and is non-empty, this is a no-op.
   /// Creates parent directories as needed.
-  pub fn create_file(path: &Path, default_section: &str) -> errors::Result<()> {
+  pub fn create_file(path: &Path, default_section: &str) -> Result<()> {
     super::io::create_file(path, default_section)
   }
 

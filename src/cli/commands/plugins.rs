@@ -1,6 +1,6 @@
 use clap::Args;
 
-use crate::{errors::Result, plugins};
+use crate::{Result, plugins};
 
 /// List all registered export and import plugins.
 ///

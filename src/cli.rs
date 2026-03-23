@@ -13,8 +13,8 @@ use log::debug;
 use yansi::Condition;
 
 use crate::{
+  Result,
   config::{self, Config},
-  errors::Result,
   taskpaper::{self, Document},
   template,
 };
@@ -57,7 +57,7 @@ impl AppContext {
       .with_prompt(format!("Section \"{section_name}\" does not exist. Create it?"))
       .default(true)
       .interact()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))
   }
 
   /// Ensure a section exists in the document, prompting for confirmation if needed.
@@ -409,7 +409,7 @@ impl Command {
           if let Some(suggestion) = suggest_subcommand(name) {
             message.push_str(&format!("\n\n\tDid you mean '{suggestion}'?"));
           }
-          Err(crate::errors::Error::Config(message))
+          Err(crate::Error::Config(message))
         }
       }
       Self::Finish(cmd) => cmd.call(ctx),

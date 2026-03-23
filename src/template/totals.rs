@@ -1,8 +1,9 @@
 use std::collections::BTreeMap;
 
 use chrono::Duration;
+use doing_time::format_tag_total;
 
-use crate::{taskpaper::Entry, time::format_tag_total};
+use crate::taskpaper::Entry;
 
 /// How tags are sorted in the totals section.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]

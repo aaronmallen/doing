@@ -1,10 +1,7 @@
+use doing_time::{DurationFormat, FormattedDuration};
 use indexmap::IndexMap;
 
-use crate::{
-  config::Config,
-  taskpaper::Entry,
-  time::{DurationFormat, FormattedDuration},
-};
+use crate::{config::Config, taskpaper::Entry};
 
 /// Format an entry's interval duration as a string, returning `None` if zero or absent.
 pub fn format_interval(entry: &Entry, config: &Config) -> Option<String> {

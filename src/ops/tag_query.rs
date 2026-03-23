@@ -1,12 +1,10 @@
 use std::sync::LazyLock;
 
 use chrono::{DateTime, Local};
+use doing_time::{chronify, parse_duration};
 use regex::Regex;
 
-use crate::{
-  taskpaper::Entry,
-  time::{chronify, parse_duration},
-};
+use crate::taskpaper::Entry;
 
 static VALUE_QUERY_RE: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^(!)?@?(\S+)\s+(!?[<>=][=*]?|[$*^]=)\s+(.+)$").unwrap());

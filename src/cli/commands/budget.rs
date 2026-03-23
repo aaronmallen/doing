@@ -1,12 +1,9 @@
 use std::collections::HashMap;
 
 use clap::Args;
+use doing_time::{DurationFormat, FormattedDuration, parse_duration};
 
-use crate::{
-  Error, Result,
-  cli::AppContext,
-  time::{DurationFormat, FormattedDuration, parse_duration},
-};
+use crate::{Error, Result, cli::AppContext};
 
 /// Manage simple time budgets for tags.
 ///

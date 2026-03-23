@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
+use doing_time::{chronify, parse_duration, parse_range};
 
 use crate::{
   Result,
@@ -9,7 +10,6 @@ use crate::{
     filter::{Age, filter_entries},
   },
   taskpaper::{Entry, Tag},
-  time::{chronify, parse_duration, parse_range},
 };
 
 /// Reset the start date of the last entry to now.
@@ -222,7 +222,7 @@ fn parse_range_or_durations(input: &str) -> Result<(DateTime<Local>, DateTime<Lo
     return Ok(result);
   }
 
-  let parts: Vec<&str> = crate::time::range::RANGE_SEPARATOR_RE.splitn(input, 2).collect();
+  let parts: Vec<&str> = doing_time::range::RANGE_SEPARATOR_RE.splitn(input, 2).collect();
   if parts.len() != 2 {
     return Err(crate::Error::InvalidTimeExpression(format!(
       "no range separator found in: {input:?}"

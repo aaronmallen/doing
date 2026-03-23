@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
+use doing_time::{chronify, parse_duration};
 
 use crate::{
   Result,
@@ -10,7 +11,6 @@ use crate::{
     tag_filter::{BooleanMode, TagFilter},
   },
   taskpaper::{Entry, Section, Tag},
-  time::{chronify, parse_duration},
 };
 
 /// Mark the last entry as @done with the current timestamp.
@@ -452,7 +452,7 @@ impl Command {
     let now = Local::now();
 
     if let Some(ref from_str) = self.from {
-      use crate::time::parse_range;
+      use doing_time::parse_range;
       if let Ok((start, end)) = parse_range(from_str) {
         return Ok((end, Some(start)));
       }

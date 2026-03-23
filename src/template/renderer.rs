@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use doing_time::{DurationFormat, FormattedDuration, FormattedShortdate};
+
 use super::{
   colors,
   parser::{self, Indent, IndentChar, Token, TokenKind},
@@ -9,7 +11,6 @@ use super::{
 use crate::{
   config::{Config, TemplateConfig},
   taskpaper::Entry,
-  time::{DurationFormat, FormattedDuration, FormattedShortdate},
 };
 
 /// Built-in template: full format with section labels, separator, and interval.

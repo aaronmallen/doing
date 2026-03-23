@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::{Args, ValueEnum};
+use doing_time::{chronify, parse_range};
 
 use crate::{
   Result,
@@ -16,7 +17,6 @@ use crate::{
     renderer::{RenderOptions, format_items_with_tag_sort},
     totals::{TagSortField, TagSortOrder},
   },
-  time::{chronify, parse_range},
 };
 
 /// Which end of the chronological list to keep.

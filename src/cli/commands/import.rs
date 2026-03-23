@@ -135,7 +135,7 @@ impl Command {
 
   fn apply_date_filter(&self, entries: &mut Vec<Entry>) -> Result<()> {
     if let Some(ref from) = self.from {
-      let (after, before) = crate::time::parse_range(from)?;
+      let (after, before) = doing_time::parse_range(from)?;
       entries.retain(|e| {
         let date = e.date();
         date >= after && date <= before

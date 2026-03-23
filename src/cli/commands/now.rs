@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::Args;
+use doing_time::{chronify, parse_range};
 
 use crate::{
   Result,
@@ -7,7 +8,6 @@ use crate::{
   config::Config,
   ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Document, Entry, Note, Tag, Tags},
-  time::{chronify, parse_range},
 };
 
 /// Add a new entry to the doing file.
@@ -130,7 +130,7 @@ impl Command {
     }
     if let Some(ref from) = self.from {
       // Check for range separator before trying parse_range
-      let has_separator = crate::time::range::RANGE_SEPARATOR_RE.is_match(from);
+      let has_separator = doing_time::range::RANGE_SEPARATOR_RE.is_match(from);
 
       if has_separator && let Ok((start, end)) = parse_range(from) {
         return Ok((start, Some(end)));

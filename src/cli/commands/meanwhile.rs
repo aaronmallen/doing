@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::Args;
+use doing_time::chronify;
 
 use crate::{
   Result,
@@ -7,7 +8,6 @@ use crate::{
   config::Config,
   ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Entry, Note, Section, Tag, Tags},
-  time::chronify,
 };
 
 /// Add an entry while finishing the last @meanwhile entry.

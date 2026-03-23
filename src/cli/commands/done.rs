@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::{ArgAction, Args};
+use doing_time::{chronify, parse_duration, parse_range};
 
 use crate::{
   Result,
@@ -7,7 +8,6 @@ use crate::{
   config::Config,
   ops::{autotag::autotag, backup::write_with_backup},
   taskpaper::{Entry, Note, Section, Tag, Tags},
-  time::{chronify, parse_duration, parse_range},
 };
 
 /// Add a completed item with @done(date).
@@ -164,7 +164,7 @@ impl Command {
 
     if let Some(ref from_str) = self.from {
       // Check for range separator before trying parse_range
-      let has_separator = crate::time::range::RANGE_SEPARATOR_RE.is_match(from_str);
+      let has_separator = doing_time::range::RANGE_SEPARATOR_RE.is_match(from_str);
 
       if has_separator && let Ok((start, end)) = parse_range(from_str) {
         return Ok((start, end));

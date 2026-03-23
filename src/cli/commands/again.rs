@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use clap::Args;
+use doing_time::chronify;
 
 use crate::{
   Result,
@@ -12,7 +13,6 @@ use crate::{
     tag_filter::{BooleanMode, TagFilter},
   },
   taskpaper::{Entry, Note, Tag, Tags},
-  time::chronify,
 };
 
 /// Repeat the last entry.

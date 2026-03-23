@@ -5,7 +5,6 @@ mod paths;
 mod plugins;
 mod taskpaper;
 mod template;
-mod time;
 
 pub use doing_error::{Error, Result};
 

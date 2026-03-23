@@ -7,6 +7,31 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.0.1-alpha.6] - 2026-03-23
+
+### Added
+
+- `--hilite` flag on display commands for search match highlighting (see [#206])
+- `--column`/`-c` and `--output`/`-o` flags on `views`, positional name argument to dump view config (see [#189])
+- `--to` flag on `archive` to move entries to a specified section instead of Archive (see [#188])
+- Status message on `now` matches Ruby doing format (see [#159])
+
+### Fixed
+
+- `--output json` on `view` uses export plugin pipeline instead of template rendering (see [#206])
+- `show_template` falls through to built-in handling when template file is empty; `--no-column` flag disables column format
+  (see [#203])
+- `on` date range `to` boundary is now inclusive for date-only expressions (see [#201])
+- `note --remove` with text replaces the note instead of clearing it (see [#198])
+- `tags --val` flag now functional (see [#210])
+- `archive --keep` ignored when tag or search filters are active (see [#188])
+- `cancel --case` flag controls search case sensitivity (see [#197])
+- `again` exits 0 with a message when no entries match instead of erroring (see [#196])
+- `finish` status message matches Ruby format; `--archive` adds `@from(Section)` tag (see [#164], [#169], [#172])
+- `done` outputs "no items matched your search" when no entries to tag (see [#162])
+- `--noauto` short flag changed from `-X` to `-x` to match Ruby doing (see [#156])
+- `--notes`/`--no-notes` flags control note display in output (see [#154])
+
 ## [v0.0.1-alpha.5] - 2026-03-22
 
 ### Fixed
@@ -211,16 +236,33 @@ Initial alpha release
 [#86]: https://github.com/aaronmallen/doing/issues/86
 [#88]: https://github.com/aaronmallen/doing/issues/88
 [#100]: https://github.com/aaronmallen/doing/issues/100
+[#154]: https://github.com/aaronmallen/doing/issues/154
+[#156]: https://github.com/aaronmallen/doing/issues/156
+[#159]: https://github.com/aaronmallen/doing/issues/159
+[#162]: https://github.com/aaronmallen/doing/issues/162
+[#164]: https://github.com/aaronmallen/doing/issues/164
 [#165]: https://github.com/aaronmallen/doing/issues/165
 [#166]: https://github.com/aaronmallen/doing/issues/166
 [#167]: https://github.com/aaronmallen/doing/issues/167
 [#170]: https://github.com/aaronmallen/doing/issues/170
+[#169]: https://github.com/aaronmallen/doing/issues/169
+[#172]: https://github.com/aaronmallen/doing/issues/172
 [#173]: https://github.com/aaronmallen/doing/issues/173
 [#185]: https://github.com/aaronmallen/doing/issues/185
+[#188]: https://github.com/aaronmallen/doing/issues/188
+[#189]: https://github.com/aaronmallen/doing/issues/189
+[#196]: https://github.com/aaronmallen/doing/issues/196
+[#197]: https://github.com/aaronmallen/doing/issues/197
+[#198]: https://github.com/aaronmallen/doing/issues/198
+[#201]: https://github.com/aaronmallen/doing/issues/201
+[#203]: https://github.com/aaronmallen/doing/issues/203
+[#206]: https://github.com/aaronmallen/doing/issues/206
 [#207]: https://github.com/aaronmallen/doing/issues/207
+[#210]: https://github.com/aaronmallen/doing/issues/210
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
 [v0.0.1-alpha.5]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...0.0.1-alpha.5
+[v0.0.1-alpha.6]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...0.0.1-alpha.6

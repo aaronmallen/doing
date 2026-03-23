@@ -1,12 +1,6 @@
-use std::{
-  fs,
-  io::Write,
-  path::PathBuf,
-  process::{Command as Process, Stdio},
-};
+use std::{fs, path::PathBuf};
 
 use clap::Args;
-use log::warn;
 
 use crate::{
   cli::{
@@ -63,11 +57,6 @@ pub struct Command {
 }
 
 impl Command {
-  fn format_entry(entry: &Entry) -> String {
-    let date = entry.date().format("%Y-%m-%d %H:%M");
-    format!("{date} | {}", entry.full_title())
-  }
-
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let entries = self.find_entries(ctx)?;
 
@@ -320,53 +309,8 @@ impl Command {
     Ok(filter_entries(all_entries, &options))
   }
 
-  fn present_dialoguer(&self, entries: &[Entry]) -> Result<Option<Entry>> {
-    let items: Vec<String> = entries.iter().map(Self::format_entry).collect();
-
-    let selection = dialoguer::Select::new()
-      .with_prompt("Choose an entry")
-      .items(&items)
-      .interact_opt()
-      .map_err(|e| crate::errors::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
-
-    Ok(selection.map(|i| entries[i].clone()))
-  }
-
-  fn present_fzf(&self, entries: &[Entry]) -> Result<Option<Entry>> {
-    let items: Vec<String> = entries.iter().map(Self::format_entry).collect();
-    let input = items.join("\n");
-
-    let mut child = Process::new("fzf")
-      .arg("--select-1")
-      .stdin(Stdio::piped())
-      .stdout(Stdio::piped())
-      .stderr(Stdio::inherit())
-      .spawn()
-      .map_err(crate::errors::Error::Io)?;
-
-    if let Some(mut stdin) = child.stdin.take() {
-      stdin.write_all(input.as_bytes()).map_err(crate::errors::Error::Io)?;
-    }
-
-    let output = child.wait_with_output().map_err(crate::errors::Error::Io)?;
-
-    if !output.status.success() {
-      return Ok(None);
-    }
-
-    let chosen = String::from_utf8_lossy(&output.stdout).trim().to_string();
-
-    let index = items.iter().position(|item| *item == chosen);
-    Ok(index.map(|i| entries[i].clone()))
-  }
-
   fn present_menu(&self, entries: &[Entry]) -> Result<Option<Entry>> {
-    if has_fzf() {
-      self.present_fzf(entries)
-    } else {
-      warn!("fzf not found on $PATH, falling back to built-in menu");
-      self.present_dialoguer(entries)
-    }
+    crate::cli::interactive::choose_entry(entries)
   }
 
   fn prompt_action(&self) -> Result<String> {
@@ -378,15 +322,6 @@ impl Command {
 
     Ok(ACTIONS[selection].to_string())
   }
-}
-
-fn has_fzf() -> bool {
-  Process::new("fzf")
-    .arg("--version")
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
-    .status()
-    .is_ok_and(|s| s.success())
 }
 
 #[cfg(test)]
@@ -753,55 +688,6 @@ mod test {
 
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Third task");
-    }
-  }
-
-  mod format_entry {
-    use super::*;
-
-    #[test]
-    fn it_formats_entry_without_tags() {
-      let dir = tempfile::tempdir().unwrap();
-      let ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
-
-      let formatted = Command::format_entry(&entries[0]);
-
-      assert!(formatted.contains("First task"));
-      assert!(formatted.contains("2024-03-17"));
-      assert!(!formatted.contains("@"));
-    }
-
-    #[test]
-    fn it_formats_entry_with_tags() {
-      let dir = tempfile::tempdir().unwrap();
-      let ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
-
-      let formatted = Command::format_entry(&entries[1]);
-
-      assert!(formatted.contains("Second task"));
-      assert!(formatted.contains("@project"));
-    }
-  }
-
-  mod has_fzf {
-    use super::*;
-
-    #[test]
-    fn it_returns_a_bool() {
-      // Just verify it doesn't panic — result depends on environment
-      let _ = has_fzf();
     }
   }
 }

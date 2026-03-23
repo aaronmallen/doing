@@ -74,7 +74,7 @@ fn format_entry(entry: &Entry) -> String {
   format!("{date} | {}", entry.full_title())
 }
 
-fn has_fzf() -> bool {
+pub fn has_fzf() -> bool {
   Command::new("fzf")
     .arg("--version")
     .stdout(Stdio::null())

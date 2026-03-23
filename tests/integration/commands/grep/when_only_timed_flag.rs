@@ -1,16 +1,16 @@
+use std::fs;
+
 use crate::support::helpers::DoingCmd;
 
 #[test]
 fn it_shows_only_timed_entries() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-
-  doing
-    .run(["done", "--back", &format!("{today} 09:00"), "Finished grep task"])
-    .assert()
-    .success();
-  doing.run(["now", "Open grep task"]).assert().success();
+  fs::write(
+    doing.doing_file_path(),
+    "Currently:\n\t- 2024-01-15 09:00 | Finished grep task @done(2024-01-15 10:00)\n\t- 2024-01-15 11:00 | Open grep task\n",
+  )
+  .expect("failed to write doing file");
 
   let output = doing
     .run(["grep", "grep task", "--only-timed"])

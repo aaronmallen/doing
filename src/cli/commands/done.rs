@@ -72,7 +72,7 @@ pub struct Command {
   title: Vec<String>,
 
   /// Specify duration (e.g. "1h30m") to calculate start time from now
-  #[arg(long, visible_alias = "for")]
+  #[arg(short = 't', long, visible_alias = "for")]
   took: Option<String>,
 
   /// Finish last entry not already marked @done

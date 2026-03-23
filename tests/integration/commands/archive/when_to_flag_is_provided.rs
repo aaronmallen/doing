@@ -51,6 +51,20 @@ fn it_says_archived_when_target_is_archive() {
 }
 
 #[test]
+fn it_accepts_short_flag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Task to move"]).assert().success();
+  doing.run(["archive", "-t", "Later"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  assert!(
+    contents.contains("Later:") && contents.contains("Task to move"),
+    "expected entry moved to Later section with -t, got: {contents}"
+  );
+}
+
+#[test]
 fn it_adds_from_label_regardless_of_target() {
   let doing = DoingCmd::new();
 

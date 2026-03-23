@@ -52,7 +52,7 @@ pub struct Command {
   section_or_tag: Option<String>,
 
   /// Target section to move entries to (default: Archive)
-  #[arg(long)]
+  #[arg(short = 't', long)]
   to: Option<String>,
 }
 

@@ -96,7 +96,7 @@ pub struct Command {
   output: Option<String>,
 
   /// Pre-filter the list before presenting the menu
-  #[arg(long)]
+  #[arg(short = 'q', long)]
   query: Option<String>,
 
   /// Remove tags from selected entries instead of adding

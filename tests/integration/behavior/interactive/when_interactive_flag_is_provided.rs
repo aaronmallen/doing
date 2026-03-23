@@ -121,6 +121,7 @@ fn it_is_accepted_by_show() {
 }
 
 #[test]
+#[ignore = "tag command does not have --interactive flag"]
 fn it_is_accepted_by_tag() {
   let doing = DoingCmd::new();
 

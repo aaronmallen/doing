@@ -168,7 +168,7 @@ struct Cli {
   pager: bool,
 
   /// Silence status messages
-  #[arg(short = 'q', long, global = true)]
+  #[arg(long, global = true)]
   quiet: bool,
 
   /// Send results report to STDOUT instead of STDERR

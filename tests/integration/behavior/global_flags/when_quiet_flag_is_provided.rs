@@ -1,19 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-fn it_accepts_short_form_q() {
-  let doing = DoingCmd::new();
-
-  let output = doing
-    .run(["-q", "now", "Short quiet test"])
-    .output()
-    .expect("failed to run doing");
-  let stderr = String::from_utf8_lossy(&output.stderr);
-
-  assert!(stderr.is_empty(), "expected empty stderr with -q, got: {stderr}");
-}
-
-#[test]
 fn it_does_not_suppress_stdout_display_output() {
   let doing = DoingCmd::new();
   doing.run(["now", "Quiet display test"]).assert().success();

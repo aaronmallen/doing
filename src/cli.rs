@@ -101,7 +101,7 @@ impl AppContext {
   name = "doing",
   version = env!("CARGO_PKG_VERSION"),
 )]
-struct Cli {
+pub(crate) struct Cli {
   /// Colored output
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_color", global = true)]
   color: bool,
@@ -306,7 +306,7 @@ enum Command {
   #[command(hide = true)]
   CommandsAccepting(commands::commands_accepting::Command),
   /// Generate shell completions
-  Completion,
+  Completion(commands::completion::Command),
   /// View, edit, and manage configuration
   Config(commands::config::Command),
   /// Add a completed entry
@@ -392,7 +392,7 @@ impl Command {
       Self::Colors(cmd) => cmd.call(),
       Self::Commands(cmd) => cmd.call(ctx, &Cli::command()),
       Self::CommandsAccepting(cmd) => cmd.call(&Cli::command()),
-      Self::Completion => todo!(),
+      Self::Completion(cmd) => cmd.call(),
       Self::Config(cmd) => cmd.call(ctx),
       Self::Done(cmd) => cmd.call(ctx),
       Self::External(args) => {

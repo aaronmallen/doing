@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
 fn it_generates_zsh_completions() {
   let doing = DoingCmd::new();
 
@@ -16,7 +15,6 @@ fn it_generates_zsh_completions() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
 fn it_generates_bash_completions() {
   let doing = DoingCmd::new();
 
@@ -31,7 +29,6 @@ fn it_generates_bash_completions() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
 fn it_generates_fish_completions() {
   let doing = DoingCmd::new();
 
@@ -46,7 +43,6 @@ fn it_generates_fish_completions() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
 fn it_generates_all_completions() {
   let doing = DoingCmd::new();
 
@@ -61,7 +57,6 @@ fn it_generates_all_completions() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
 fn it_generates_to_file() {
   let doing = DoingCmd::new();
   let output_path = doing.temp_dir_path().join("completions.zsh");
@@ -79,7 +74,7 @@ fn it_generates_to_file() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
+#[ignore = "-f conflicts with global --doing-file (see DEV-0013)"]
 fn it_generates_to_file_with_short_flag() {
   let doing = DoingCmd::new();
   let output_path = doing.temp_dir_path().join("completions.zsh");
@@ -97,7 +92,6 @@ fn it_generates_to_file_with_short_flag() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
 fn it_defaults_to_generate_subcommand() {
   let doing = DoingCmd::new();
 

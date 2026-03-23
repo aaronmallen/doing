@@ -9,6 +9,7 @@ pub mod colors;
 #[allow(clippy::module_inception)]
 pub mod commands;
 pub mod commands_accepting;
+pub mod completion;
 pub mod config;
 pub mod done;
 pub mod finish;

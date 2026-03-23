@@ -19,6 +19,7 @@ pkg-url = "{ repo }/releases/download/v{ version }/{ name }-v{ version }-{ targe
 [dependencies]
 chrono = { features = ["serde"], version = "0.4" }
 clap = { features = ["derive"], version = "4" }
+clap_complete = "4"
 dialoguer = "0.12"
 dir_spec = "0.5"
 env_logger = "0.11"

@@ -1,7 +1,7 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
+
 fn it_installs_zsh_completions() {
   let doing = DoingCmd::new();
 
@@ -18,7 +18,7 @@ fn it_installs_zsh_completions() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
+
 fn it_installs_bash_completions() {
   let doing = DoingCmd::new();
 
@@ -35,7 +35,7 @@ fn it_installs_bash_completions() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
+
 fn it_installs_fish_completions() {
   let doing = DoingCmd::new();
 

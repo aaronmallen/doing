@@ -1,7 +1,7 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
+
 fn it_outputs_to_stdout() {
   let doing = DoingCmd::new();
 
@@ -16,7 +16,7 @@ fn it_outputs_to_stdout() {
 }
 
 #[test]
-#[ignore = "completion command not yet implemented (see #60)"]
+
 fn it_contains_valid_completion_content() {
   let doing = DoingCmd::new();
 

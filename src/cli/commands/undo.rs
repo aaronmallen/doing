@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Args;
 
 use crate::{cli::AppContext, errors::Result, ops};
@@ -13,26 +15,56 @@ pub struct Command {
   #[arg(default_value = "1")]
   count: usize,
 
+  /// Target a specific doing file
+  #[arg(long)]
+  file: Option<PathBuf>,
+
   /// Interactively select a backup to restore
   #[arg(short, long)]
   interactive: bool,
+
+  /// Remove old backups beyond the configured history size
+  #[arg(long)]
+  prune: bool,
+
+  /// Redo the last undo (same as `doing redo`)
+  #[arg(long, action = clap::ArgAction::SetTrue, overrides_with = "no_redo")]
+  redo: bool,
+
+  /// Do not redo (default behavior)
+  #[arg(long = "no-redo", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "redo")]
+  no_redo: bool,
 }
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    let target = self.file.as_deref().unwrap_or(&ctx.doing_file);
+
+    if self.prune {
+      ops::backup::prune_backups(target, &ctx.config.backup_dir, ctx.config.history_size)?;
+      ctx.status("Pruned old backups");
+      return Ok(());
+    }
+
+    if self.redo {
+      ops::undo::redo(target, &ctx.config.backup_dir, 1)?;
+      ctx.status("Restored from redo backup");
+      return Ok(());
+    }
+
     let count = if self.interactive {
-      self.select_backup(ctx)?
+      self.select_backup(target, &ctx.config.backup_dir)?
     } else {
       self.count
     };
 
-    ops::undo::undo(&ctx.doing_file, &ctx.config.backup_dir, count)?;
+    ops::undo::undo(target, &ctx.config.backup_dir, count)?;
     ctx.status(format!("Undid {count} step(s)"));
     Ok(())
   }
 
-  fn select_backup(&self, ctx: &AppContext) -> Result<usize> {
-    let backups = ops::backup::list_backups(&ctx.doing_file, &ctx.config.backup_dir)?;
+  fn select_backup(&self, target: &std::path::Path, backup_dir: &std::path::Path) -> Result<usize> {
+    let backups = ops::backup::list_backups(target, backup_dir)?;
 
     if backups.is_empty() {
       return Err(crate::errors::Error::HistoryLimit("end of undo history".into()));
@@ -95,7 +127,11 @@ mod test {
       };
       let cmd = Command {
         count: 1,
+        file: None,
         interactive: false,
+        prune: false,
+        redo: false,
+        no_redo: false,
       };
 
       cmd.call(&mut ctx).unwrap();
@@ -134,7 +170,11 @@ mod test {
       };
       let cmd = Command {
         count: 2,
+        file: None,
         interactive: false,
+        prune: false,
+        redo: false,
+        no_redo: false,
       };
 
       cmd.call(&mut ctx).unwrap();
@@ -169,7 +209,11 @@ mod test {
       };
       let cmd = Command {
         count: 1,
+        file: None,
         interactive: false,
+        prune: false,
+        redo: false,
+        no_redo: false,
       };
 
       let result = cmd.call(&mut ctx);

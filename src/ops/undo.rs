@@ -7,20 +7,23 @@ use chrono::Local;
 
 use crate::{
   errors::{Error, Result},
-  ops::backup::backup_prefix,
+  ops::backup::{self, backup_prefix},
 };
 
-/// Restore the most recent consumed (`.undone`) backup, reversing the last undo.
+/// Restore from the Nth most recent consumed (`.undone`) backup (1-indexed),
+/// reversing the last N undo operations.
 ///
 /// After restoration all consumed backups are converted back to `.bak`,
 /// fully resetting the undo state.
-pub fn redo(source: &Path, backup_dir: &Path) -> Result<()> {
-  let undone = list_undone_files(source, backup_dir)?;
-  let newest = undone
-    .first()
-    .ok_or_else(|| Error::HistoryLimit("end of redo history".into()))?;
+pub fn redo(source: &Path, backup_dir: &Path, count: usize) -> Result<()> {
+  let undone = backup::list_undone(source, backup_dir)?;
+  let count = if count == 0 { 1 } else { count };
 
-  fs::copy(newest, source)?;
+  if count > undone.len() {
+    return Err(Error::HistoryLimit("end of redo history".into()));
+  }
+
+  fs::copy(&undone[count - 1], source)?;
   unconsume_all(source, backup_dir)?;
   Ok(())
 }
@@ -33,7 +36,7 @@ pub fn redo(source: &Path, backup_dir: &Path) -> Result<()> {
 /// subsequent calls walk backwards through history. Returns an error if fewer
 /// than `count` unconsumed backups exist.
 pub fn undo(source: &Path, backup_dir: &Path, count: usize) -> Result<()> {
-  let backups = list_backups(source, backup_dir)?;
+  let backups = backup::list_backups(source, backup_dir)?;
   if count == 0 || count > backups.len() {
     return Err(Error::HistoryLimit("end of undo history".into()));
   }
@@ -71,43 +74,9 @@ fn create_undone(source: &Path, backup_dir: &Path) -> Result<PathBuf> {
   Ok(path)
 }
 
-/// List `.bak` backups for `source` in `backup_dir`, sorted newest-first.
-fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
-  list_files_with_ext(source, backup_dir, ".bak")
-}
-
-/// List files matching `{prefix}*.{ext}` in `backup_dir`, sorted newest-first.
-fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {
-  if !backup_dir.exists() {
-    return Ok(Vec::new());
-  }
-
-  let prefix = backup_prefix(source);
-
-  let mut files: Vec<PathBuf> = fs::read_dir(backup_dir)?
-    .filter_map(|entry| entry.ok())
-    .map(|entry| entry.path())
-    .filter(|path| {
-      path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .map(|n| n.starts_with(&prefix) && n.ends_with(ext))
-        .unwrap_or(false)
-    })
-    .collect();
-
-  files.sort_by(|a, b| b.cmp(a));
-  Ok(files)
-}
-
-/// List `.undone` files for `source` in `backup_dir`, sorted newest-first.
-fn list_undone_files(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
-  list_files_with_ext(source, backup_dir, ".undone")
-}
-
 /// Rename all `.undone` files back to `.bak`, restoring them as available backups.
 fn unconsume_all(source: &Path, backup_dir: &Path) -> Result<()> {
-  for undone in list_undone_files(source, backup_dir)? {
+  for undone in backup::list_undone(source, backup_dir)? {
     let bak = undone.with_extension("bak");
     fs::rename(undone, bak)?;
   }
@@ -137,12 +106,12 @@ mod test {
       fs::write(backup_dir.join(format!("{prefix}20240101_000002.undone")), "newer").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.undone")), "older").unwrap();
 
-      redo(&source, &backup_dir).unwrap();
+      redo(&source, &backup_dir, 1).unwrap();
 
-      let undone = list_undone_files(&source, &backup_dir).unwrap();
+      let undone = backup::list_undone(&source, &backup_dir).unwrap();
       assert!(undone.is_empty());
 
-      let bak = list_backups(&source, &backup_dir).unwrap();
+      let bak = backup::list_backups(&source, &backup_dir).unwrap();
       assert_eq!(bak.len(), 2);
     }
 
@@ -166,7 +135,7 @@ mod test {
       )
       .unwrap();
 
-      redo(&source, &backup_dir).unwrap();
+      redo(&source, &backup_dir, 1).unwrap();
 
       assert_eq!(fs::read_to_string(&source).unwrap(), "newest undone");
     }
@@ -178,7 +147,7 @@ mod test {
       let backup_dir = dir.path().join("backups");
       fs::create_dir_all(&backup_dir).unwrap();
 
-      let result = redo(&source, &backup_dir);
+      let result = redo(&source, &backup_dir, 1);
 
       assert!(result.is_err());
       assert!(result.unwrap_err().to_string().contains("redo history"));
@@ -203,10 +172,10 @@ mod test {
 
       undo(&source, &backup_dir, 1).unwrap();
 
-      let remaining_bak = list_backups(&source, &backup_dir).unwrap();
+      let remaining_bak = backup::list_backups(&source, &backup_dir).unwrap();
       assert!(remaining_bak.is_empty());
 
-      let undone = list_undone_files(&source, &backup_dir).unwrap();
+      let undone = backup::list_undone(&source, &backup_dir).unwrap();
       assert_eq!(undone.len(), 2);
     }
 
@@ -223,7 +192,7 @@ mod test {
 
       undo(&source, &backup_dir, 1).unwrap();
 
-      let undone = list_undone_files(&source, &backup_dir).unwrap();
+      let undone = backup::list_undone(&source, &backup_dir).unwrap();
       let newest_undone = &undone[0];
       assert_eq!(fs::read_to_string(newest_undone).unwrap(), "current state");
     }

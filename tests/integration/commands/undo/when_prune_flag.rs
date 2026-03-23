@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "--prune flag not yet implemented (see #175)"]
 fn it_removes_old_backups() {
   let doing = DoingCmd::new();
 
@@ -21,17 +20,19 @@ fn it_removes_old_backups() {
 }
 
 #[test]
-#[ignore = "--prune flag not yet implemented (see #175)"]
-fn it_prunes_with_short_flag() {
+fn it_prunes_with_long_flag() {
   let doing = DoingCmd::new();
 
   doing.run(["now", "Test entry"]).assert().success();
 
-  let output = doing.run(["undo", "-p"]).output().expect("failed to run undo -p");
+  let output = doing
+    .run(["undo", "--prune"])
+    .output()
+    .expect("failed to run undo --prune");
 
   assert!(
     output.status.success(),
-    "expected undo -p to succeed, stderr: {}",
+    "expected undo --prune to succeed, stderr: {}",
     String::from_utf8_lossy(&output.stderr)
   );
 }

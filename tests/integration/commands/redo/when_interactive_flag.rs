@@ -1,7 +1,6 @@
 use crate::support::helpers::DoingCmd;
 
 #[test]
-#[ignore = "redo command not yet implemented (see #177)"]
 fn it_presents_interactive_menu() {
   let doing = DoingCmd::new();
 
@@ -23,7 +22,6 @@ fn it_presents_interactive_menu() {
 }
 
 #[test]
-#[ignore = "redo command not yet implemented (see #177)"]
 fn it_presents_with_short_flag() {
   let doing = DoingCmd::new();
 
@@ -40,7 +38,6 @@ fn it_presents_with_short_flag() {
 }
 
 #[test]
-#[ignore = "redo command not yet implemented (see #177)"]
 fn it_disables_interactive_mode() {
   let doing = DoingCmd::new();
 

@@ -55,6 +55,19 @@ pub fn create_backup(source: &Path, backup_dir: &Path) -> Result<PathBuf> {
 
 /// List backups for `source` in `backup_dir`, sorted newest-first.
 pub fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
+  list_files_with_ext(source, backup_dir, ".bak")
+}
+
+/// List undone (consumed) backups for `source` in `backup_dir`, sorted newest-first.
+pub fn list_undone(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
+  list_files_with_ext(source, backup_dir, ".undone")
+}
+
+fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {
+  if !backup_dir.exists() {
+    return Ok(Vec::new());
+  }
+
   let prefix = backup_prefix(source);
   let mut backups: Vec<PathBuf> = fs::read_dir(backup_dir)?
     .filter_map(|entry| entry.ok())
@@ -63,7 +76,7 @@ pub fn list_backups(source: &Path, backup_dir: &Path) -> Result<Vec<PathBuf>> {
       path
         .file_name()
         .and_then(|n| n.to_str())
-        .map(|n| n.starts_with(&prefix) && n.ends_with(".bak"))
+        .map(|n| n.starts_with(&prefix) && n.ends_with(ext))
         .unwrap_or(false)
     })
     .collect();

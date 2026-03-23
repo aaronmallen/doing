@@ -415,7 +415,11 @@ cmd "recent" help="Show recent entries" {
   flag "-p --pager" help="Use a pager for output"
 }
 
-cmd "redo" help="Redo the last undone change"
+cmd "redo" help="Redo the last undone change" {
+  arg "[COUNT]" help="Number of steps to redo (default: 1)" default="1"
+  flag "--file <FILE>" help="Target a specific doing file"
+  flag "-i --interactive" help="Interactively select a redo backup to restore"
+}
 
 cmd "reset" help="Reset the start date of the last entry" {
   alias "begin"
@@ -641,7 +645,10 @@ cmd "today" help="Show entries from today" {
 
 cmd "undo" help="Undo the last change" {
   arg "[COUNT]" help="Number of steps to undo (default: 1)" default="1"
+  flag "--file <FILE>" help="Target a specific doing file"
   flag "-i --interactive" help="Interactively select a backup to restore"
+  flag "--prune" help="Remove old backups beyond the configured history size"
+  flag "--redo" help="Redo the last undo (same as doing redo)" negate="--no-redo"
 }
 
 cmd "view" help="Display a custom view" {

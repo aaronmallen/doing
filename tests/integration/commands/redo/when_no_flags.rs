@@ -28,7 +28,6 @@ fn it_reverses_last_undo() {
 }
 
 #[test]
-#[ignore = "redo command not yet implemented (see #177)"]
 fn it_redoes_multiple_with_count() {
   let doing = DoingCmd::new();
 

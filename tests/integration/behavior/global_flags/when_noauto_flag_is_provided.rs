@@ -23,7 +23,6 @@ order = "asc"
 default = "cat"
 "#;
 
-#[ignore = "--noauto short flag is -X instead of -x (#156)"]
 #[test]
 fn it_accepts_short_form_x() {
   let doing = DoingCmd::new_with_config(AUTOTAG_CONFIG);
@@ -42,7 +41,7 @@ fn it_excludes_autotag_matches() {
   let doing = DoingCmd::new_with_config(AUTOTAG_CONFIG);
 
   doing
-    .run(["now", "-X", "Working on project feature"])
+    .run(["now", "-x", "Working on project feature"])
     .assert()
     .success();
 
@@ -57,7 +56,7 @@ fn it_excludes_autotag_matches() {
 fn it_excludes_default_tags() {
   let doing = DoingCmd::new_with_config(AUTOTAG_CONFIG);
 
-  doing.run(["now", "-X", "No default tags entry"]).assert().success();
+  doing.run(["now", "-x", "No default tags entry"]).assert().success();
 
   let contents = doing.read_doing_file();
   assert!(
@@ -70,7 +69,7 @@ fn it_excludes_default_tags() {
 fn it_preserves_explicitly_typed_tags() {
   let doing = DoingCmd::new_with_config(AUTOTAG_CONFIG);
 
-  doing.run(["now", "-X", "Entry with @manual tag"]).assert().success();
+  doing.run(["now", "-x", "Entry with @manual tag"]).assert().success();
 
   let contents = doing.read_doing_file();
   assert!(

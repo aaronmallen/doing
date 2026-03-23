@@ -70,7 +70,7 @@ fn it_applies_noauto_and_doing_file_together() {
     .arg("-f")
     .arg(&custom)
     .arg("now")
-    .arg("-X")
+    .arg("-x")
     .arg("Combined noauto file test")
     .assert()
     .success();

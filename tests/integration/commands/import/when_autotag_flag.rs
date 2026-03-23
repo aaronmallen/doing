@@ -52,9 +52,9 @@ fn it_skips_autotags() {
   let source_path = doing.temp_dir_path().join("source.md");
   fs::write(&source_path, source_content).expect("failed to write source file");
 
-  // Use -X / --noauto to skip autotags (matching our CLI's flag)
+  // Use -x / --noauto to skip autotags (matching our CLI's flag)
   doing
-    .run(["import", "-X", source_path.to_str().unwrap()])
+    .run(["import", "-x", source_path.to_str().unwrap()])
     .assert()
     .success();
 

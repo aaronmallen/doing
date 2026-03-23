@@ -69,7 +69,7 @@ default = "cat"
 
   let doing = DoingCmd::new_with_config(config);
 
-  doing.run(["meanwhile", "-X", "MW with X flag"]).assert().success();
+  doing.run(["meanwhile", "-x", "MW with X flag"]).assert().success();
 
   let contents = doing.read_doing_file();
   assert!(

@@ -52,7 +52,7 @@ pub struct Command {
   no_date: bool,
 
   /// Skip autotagging and default tags
-  #[arg(short = 'X', long)]
+  #[arg(short = 'x', long)]
   noauto: bool,
 
   /// Attach a note directly from the command line

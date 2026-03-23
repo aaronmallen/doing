@@ -69,7 +69,7 @@ struct EditArgs {
   #[arg(short = 'b', long)]
   bundle_id: Option<String>,
   /// Reset the config file to default values
-  #[arg(short = 'x', long)]
+  #[arg(long)]
   default: bool,
   /// Open config with the specified editor
   #[arg(short = 'e', long)]

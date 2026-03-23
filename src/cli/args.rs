@@ -182,7 +182,7 @@ pub struct FilterArgs {
   pub case: Option<String>,
 
   /// Use exact (literal substring) matching for search
-  #[arg(short = 'x', long)]
+  #[arg(long)]
   pub exact: bool,
 
   /// Date range expression (e.g. "monday to friday")

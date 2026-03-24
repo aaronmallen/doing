@@ -50,7 +50,12 @@ fn it_includes_interval_for_finished_entries_with_custom_template() {
     .to_string();
 
   doing
-    .run(["now", "--from", &format!("{yesterday} 10:00"), "Yesterday finished entry"])
+    .run([
+      "now",
+      "--from",
+      &format!("{yesterday} 10:00"),
+      "Yesterday finished entry",
+    ])
     .assert()
     .success();
   doing

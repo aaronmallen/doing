@@ -10,7 +10,12 @@ fn it_shows_tag_time_totals() {
     .to_string();
 
   doing
-    .run(["now", "--from", &format!("{yesterday} 10:00"), "Yesterday tagged @project"])
+    .run([
+      "now",
+      "--from",
+      &format!("{yesterday} 10:00"),
+      "Yesterday tagged @project",
+    ])
     .assert()
     .success();
   doing

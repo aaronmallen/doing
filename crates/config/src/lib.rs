@@ -1,3 +1,25 @@
+//! Configuration loading and types for the doing CLI.
+//!
+//! This crate handles discovering, parsing, merging, and deserializing the
+//! doing configuration from multiple sources:
+//!
+//! 1. **Global config** — `$DOING_CONFIG`, XDG config home, or `~/.doingrc`.
+//! 2. **Local configs** — `.doingrc` files walked from filesystem root to `$CWD`
+//!    (each layer deep-merges over the previous).
+//! 3. **Environment variables** — `DOING_FILE`, `DOING_BACKUP_DIR`, `DOING_EDITOR`,
+//!    and others override individual fields (see [`env`]).
+//!
+//! Config files may be YAML, TOML, or JSON (with comments). The merged result is
+//! deserialized into [`Config`], which provides typed access to all settings with
+//! sensible defaults.
+//!
+//! # Usage
+//!
+//! ```no_run
+//! let config = doing_config::Config::load().unwrap();
+//! println!("doing file: {}", config.doing_file.display());
+//! ```
+
 pub mod env;
 pub mod loader;
 pub mod paths;

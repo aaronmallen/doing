@@ -1,4 +1,21 @@
 //! Export and import plugins for the doing CLI.
+//!
+//! This crate implements the `--output FORMAT` export system and the `import`
+//! subcommand's format readers. Each export format implements the [`ExportPlugin`]
+//! trait and registers itself with an [`ExportRegistry`] via a trigger pattern
+//! (a regex matched against the user's `--output` value).
+//!
+//! # Built-in export formats
+//!
+//! `byday`, `csv`, `dayone`, `dayone-days`, `dayone-entries`, `doing`, `html`,
+//! `json`, `markdown`, `taskpaper`, `timeline`.
+//!
+//! Use [`default_registry`] to get a registry pre-loaded with all built-in plugins.
+//!
+//! # Import formats
+//!
+//! The [`import`] module provides readers for `json`, `doing`, `calendar` (ICS),
+//! and `timing` (Timing.app JSON) files.
 
 mod byday;
 mod csv;

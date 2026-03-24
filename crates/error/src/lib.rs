@@ -1,4 +1,20 @@
-//! doing-error crate.
+//! Shared error types for the doing workspace.
+//!
+//! This crate defines the [`Error`] enum and [`Result`] type alias used across all
+//! `doing-*` crates. It sits at the bottom of the dependency graph so every crate
+//! can return a uniform error type without pulling in heavy dependencies.
+//!
+//! # Error variants
+//!
+//! | Variant                    | Produced by                                      |
+//! |----------------------------|--------------------------------------------------|
+//! | [`Error::Config`]          | Configuration parsing and validation              |
+//! | [`Error::HistoryLimit`]    | Undo/redo when no further history is available    |
+//! | [`Error::InvalidTimeExpression`] | Natural-language time parsing failures      |
+//! | [`Error::Io`]              | Filesystem and I/O operations (via `From<io::Error>`) |
+//! | [`Error::Parse`]           | General input parsing (tags, queries, documents)  |
+//! | [`Error::Plugin`]          | Export/import plugin failures                     |
+//! | [`Error::Update`]          | Self-update mechanism failures                    |
 
 use std::io;
 

@@ -336,6 +336,15 @@ pub enum SortArg {
   Desc,
 }
 
+impl From<SortArg> for SortOrder {
+  fn from(value: SortArg) -> Self {
+    match value {
+      SortArg::Asc => Self::Asc,
+      SortArg::Desc => Self::Desc,
+    }
+  }
+}
+
 /// How tags are sorted in the totals section.
 #[derive(Clone, Copy, Debug, Default, ValueEnum)]
 pub enum TagSortArg {
@@ -344,15 +353,6 @@ pub enum TagSortArg {
   Name,
   /// Sort tags by total time.
   Time,
-}
-
-impl From<SortArg> for SortOrder {
-  fn from(value: SortArg) -> Self {
-    match value {
-      SortArg::Asc => Self::Asc,
-      SortArg::Desc => Self::Desc,
-    }
-  }
 }
 
 type DateRange = (Option<DateTime<Local>>, Option<DateTime<Local>>);

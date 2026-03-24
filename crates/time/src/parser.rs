@@ -618,22 +618,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn it_parses_full_day_names() {
-      for name in &[
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-      ] {
-        let result = parse_day_of_week(name);
-        assert!(result.is_some(), "parse_day_of_week should parse full name: {name}");
-      }
-    }
-
-    #[test]
     fn it_parses_abbreviations() {
       for abbr in &["mon", "tue", "wed", "thu", "fri", "sat", "sun"] {
         let result = parse_day_of_week(abbr);
@@ -649,6 +633,22 @@ mod test {
           result.is_some(),
           "parse_day_of_week should parse alternate abbreviation: {abbr}"
         );
+      }
+    }
+
+    #[test]
+    fn it_parses_full_day_names() {
+      for name in &[
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+      ] {
+        let result = parse_day_of_week(name);
+        assert!(result.is_some(), "parse_day_of_week should parse full name: {name}");
       }
     }
 
@@ -933,5 +933,4 @@ mod test {
       assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 10).unwrap());
     }
   }
-
 }

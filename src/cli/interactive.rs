@@ -18,6 +18,15 @@ pub fn choose_entry(entries: &[Entry]) -> Result<Option<Entry>> {
   }
 }
 
+pub fn has_fzf() -> bool {
+  Command::new("fzf")
+    .arg("--version")
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .status()
+    .is_ok_and(|s| s.success())
+}
+
 /// Select multiple entries from a list using a dialoguer multi-select menu.
 pub fn select_entries(entries: &[Entry]) -> Result<Vec<Entry>> {
   let items: Vec<String> = entries.iter().map(format_entry).collect();
@@ -29,15 +38,6 @@ pub fn select_entries(entries: &[Entry]) -> Result<Vec<Entry>> {
     .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
   Ok(selections.into_iter().map(|i| entries[i].clone()).collect())
-}
-
-pub fn has_fzf() -> bool {
-  Command::new("fzf")
-    .arg("--version")
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
-    .status()
-    .is_ok_and(|s| s.success())
 }
 
 fn choose_dialoguer(entries: &[Entry]) -> Result<Option<Entry>> {

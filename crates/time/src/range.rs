@@ -100,13 +100,6 @@ mod test {
     }
 
     #[test]
-    fn it_rejects_empty_input() {
-      let err = parse_range("").unwrap_err();
-
-      assert!(matches!(err, Error::InvalidTimeExpression(_)));
-    }
-
-    #[test]
     fn it_parses_single_absolute_date() {
       let (start, end) = parse_range("2024-01-15").unwrap();
 
@@ -125,6 +118,13 @@ mod test {
       assert_eq!(start.date_naive(), expected_date);
       assert_eq!(start.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
       assert_eq!(end, start + Duration::days(1));
+    }
+
+    #[test]
+    fn it_rejects_empty_input() {
+      let err = parse_range("").unwrap_err();
+
+      assert!(matches!(err, Error::InvalidTimeExpression(_)));
     }
 
     #[test]

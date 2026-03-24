@@ -442,12 +442,12 @@ impl Command {
   }
 }
 
-pub fn run() -> Result<()> {
-  Cli::parse().call()
-}
-
 fn init_logger(level: log::LevelFilter) {
   env_logger::Builder::new().filter_level(level).init();
+}
+
+pub fn run() -> Result<()> {
+  Cli::parse().call()
 }
 
 fn suggest_subcommand(name: &str) -> Option<String> {

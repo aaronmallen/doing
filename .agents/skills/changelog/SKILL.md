@@ -41,7 +41,7 @@ git log <latest-tag>..HEAD --format="%H %s" --reverse
 Ignore commits with type `docs`, `chore`, `style`, `ci`, `build`, or `revert` — these are housekeeping
 and should not appear in user-facing changelogs. Also ignore merge commits.
 
-### 3. Correlate with GitHub Issues
+### 3. Correlate with GitHub Issues & Identify Authors
 
 For each commit that references an issue (e.g. `Closes #42` in footer, or issue number in the branch),
 look up the issue title to write a user-friendly description.
@@ -49,6 +49,15 @@ look up the issue title to write a user-friendly description.
 For commits tied to a GitHub Issue, append the issue as a parenthetical at the end of the entry
 (e.g. `(see [#42])`), where `[#42]` is a reference-style link to the GitHub issue.
 For commits **not** tied to an issue, do not add a reference.
+
+For each commit, look up the author's GitHub username. Use the commit SHA to query:
+
+```sh
+gh api repos/{owner}/{repo}/commits/{sha} --jq '.author.login'
+```
+
+If the author is **not** the repository owner, add `by @username` attribution to the entry (see step 5).
+Commits by the repository owner do not need attribution.
 
 ### 4. Classify Changes
 
@@ -75,11 +84,14 @@ Each entry should be:
   single entry rather than listing each commit separately.
 - **Linked to issues** — append `(see [#N])` at the end when an issue exists, where `[#N]` is a
   reference-style link to the GitHub issue.
+- **Attributed to contributors** — if the commit author is not the repository owner, add `by @username`
+  before any issue reference. Omit attribution for commits by the repository owner.
 
 **Good:**
 
 ```markdown
-- `--back` flag on `finish` command to backdate `@done` timestamp using natural language (see [#42])
+- `--back` flag on `finish` command to backdate `@done` timestamp using natural language by @contributor (see [#42])
+- Timezone detection now respects `TZ` environment variable (see [#58])
 ```
 
 **Bad:**

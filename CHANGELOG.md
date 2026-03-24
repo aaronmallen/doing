@@ -7,6 +7,39 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.0] - 2026-03-23
+
+### Added
+
+- `completion` command for shell completion generation (see [#273])
+- `man` subcommand generates man pages (see [#274])
+- "Did you mean?" suggestions for unknown subcommands (see [#276])
+- `--exact`/`-x` flag on `finish` and `cancel` for exact string matching (see [#279])
+- Missing short flags to match Ruby CLI: `archive -t`, `done -t`, `redo -f`, `select -q`, filter `-a` (see [#281])
+- `undo` gains `--file`, `--prune`, and `--redo` flags; `redo` gains count argument and `--interactive` (see [#174], [#175], [#176], [#177])
+- `select` gains `--case`, `--exact`, `--not`, `--val` filter flags, `--after`/`--before`/`--from` date filters, and `--again`/`--remove`/`--force` action flags (see [#178], [#179], [#180])
+- `config dump`/`open` aliases, `--output json/yaml` on `config get`, `config undo` subcommand, and fuzzy key path matching (see [#181], [#182], [#183])
+- `rotate` applies full filter pipeline and per-section `--keep` (see [#184])
+- `import` gains `--after`, `--before`, `--case`, `--exact`, `--not`, `--only-timed` filter flags (see [#186])
+- `tag-dir` gains `--remove`, `--clear`, `--editor` flags (see [#187])
+- `commands` gains `ls` alias, `--disabled`, `--style` flags (see [#190])
+- `plugins` gains `--type` and `--column` flags (see [#191])
+- `note` supports reading note text from stdin (see [#193])
+- `show --menu`/`-m` flag for interactive section selection (see [#157])
+
+### Changed
+
+- Codebase restructured into Cargo workspace with independent crates (see [#214])
+- Improved performance for tag lookups, title parsing, dedup, and group-by operations (see [#292])
+
+### Fixed
+
+- Graceful error handling replaces panics on invalid editor paths, missing HOME, and completions (see [#293])
+- UTF-8 multibyte characters no longer cause truncation panics in template rendering (see [#294])
+- `views remove` changed from subcommand to `--remove`/`-r` flag to match Ruby interface (see [#280])
+- `done` targets the most recent entry regardless of `@done` status, matching Ruby behavior (see [#278])
+- `-X` (uppercase) restored for `--noauto`, `-x` (lowercase) consistently available for `--exact` (see [#277])
+
 ## [v0.0.1-alpha.7] - 2026-03-23
 
 ### Added
@@ -266,6 +299,7 @@ Initial alpha release
 [#154]: https://github.com/aaronmallen/doing/issues/154
 [#155]: https://github.com/aaronmallen/doing/issues/155
 [#156]: https://github.com/aaronmallen/doing/issues/156
+[#157]: https://github.com/aaronmallen/doing/issues/157
 [#158]: https://github.com/aaronmallen/doing/issues/158
 [#159]: https://github.com/aaronmallen/doing/issues/159
 [#160]: https://github.com/aaronmallen/doing/issues/160
@@ -277,14 +311,30 @@ Initial alpha release
 [#166]: https://github.com/aaronmallen/doing/issues/166
 [#167]: https://github.com/aaronmallen/doing/issues/167
 [#168]: https://github.com/aaronmallen/doing/issues/168
-[#170]: https://github.com/aaronmallen/doing/issues/170
 [#169]: https://github.com/aaronmallen/doing/issues/169
+[#170]: https://github.com/aaronmallen/doing/issues/170
 [#171]: https://github.com/aaronmallen/doing/issues/171
 [#172]: https://github.com/aaronmallen/doing/issues/172
 [#173]: https://github.com/aaronmallen/doing/issues/173
+[#174]: https://github.com/aaronmallen/doing/issues/174
+[#175]: https://github.com/aaronmallen/doing/issues/175
+[#176]: https://github.com/aaronmallen/doing/issues/176
+[#177]: https://github.com/aaronmallen/doing/issues/177
+[#178]: https://github.com/aaronmallen/doing/issues/178
+[#179]: https://github.com/aaronmallen/doing/issues/179
+[#180]: https://github.com/aaronmallen/doing/issues/180
+[#181]: https://github.com/aaronmallen/doing/issues/181
+[#182]: https://github.com/aaronmallen/doing/issues/182
+[#183]: https://github.com/aaronmallen/doing/issues/183
+[#184]: https://github.com/aaronmallen/doing/issues/184
 [#185]: https://github.com/aaronmallen/doing/issues/185
+[#186]: https://github.com/aaronmallen/doing/issues/186
+[#187]: https://github.com/aaronmallen/doing/issues/187
 [#188]: https://github.com/aaronmallen/doing/issues/188
 [#189]: https://github.com/aaronmallen/doing/issues/189
+[#190]: https://github.com/aaronmallen/doing/issues/190
+[#191]: https://github.com/aaronmallen/doing/issues/191
+[#193]: https://github.com/aaronmallen/doing/issues/193
 [#194]: https://github.com/aaronmallen/doing/issues/194
 [#195]: https://github.com/aaronmallen/doing/issues/195
 [#196]: https://github.com/aaronmallen/doing/issues/196
@@ -303,11 +353,24 @@ Initial alpha release
 [#209]: https://github.com/aaronmallen/doing/issues/209
 [#210]: https://github.com/aaronmallen/doing/issues/210
 [#211]: https://github.com/aaronmallen/doing/issues/211
+[#214]: https://github.com/aaronmallen/doing/issues/214
+[#273]: https://github.com/aaronmallen/doing/issues/273
+[#274]: https://github.com/aaronmallen/doing/issues/274
+[#276]: https://github.com/aaronmallen/doing/issues/276
+[#277]: https://github.com/aaronmallen/doing/issues/277
+[#278]: https://github.com/aaronmallen/doing/issues/278
+[#279]: https://github.com/aaronmallen/doing/issues/279
+[#280]: https://github.com/aaronmallen/doing/issues/280
+[#281]: https://github.com/aaronmallen/doing/issues/281
+[#292]: https://github.com/aaronmallen/doing/issues/292
+[#293]: https://github.com/aaronmallen/doing/issues/293
+[#294]: https://github.com/aaronmallen/doing/issues/294
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.7...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.0...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
 [v0.0.1-alpha.5]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...0.0.1-alpha.5
 [v0.0.1-alpha.6.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...0.0.1-alpha.6.1
 [v0.0.1-alpha.7]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6.1...0.0.1-alpha.7
+[v0.1.0]: https://github.com/aaronmallen/doing/compare/v0.0.1-alpha.7...v0.1.0

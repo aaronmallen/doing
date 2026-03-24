@@ -44,11 +44,19 @@ fn it_hides_duration() {
 fn it_includes_interval_for_finished_entries_with_custom_template() {
   let doing = DoingCmd::new();
 
+  // Use absolute times on yesterday to avoid midnight timezone flakes on CI.
+  let yesterday = (chrono::Local::now() - chrono::Duration::days(1))
+    .format("%Y-%m-%d")
+    .to_string();
+
   doing
-    .run(["now", "--back", "25h", "Yesterday finished entry"])
+    .run(["now", "--from", &format!("{yesterday} 10:00"), "Yesterday finished entry"])
     .assert()
     .success();
-  doing.run(["done", "--back", "24h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 11:00")])
+    .assert()
+    .success();
 
   let output = doing
     .run(["yesterday", "--duration", "--template", "%title %interval"])

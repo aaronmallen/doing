@@ -4,23 +4,37 @@ use crate::support::helpers::DoingCmd;
 fn it_orders_tags() {
   let doing = DoingCmd::new();
 
-  doing
-    .run(["now", "--back", "27h", "First task @zebra"])
-    .assert()
-    .success();
-  doing.run(["done", "--back", "26h"]).assert().success();
+  // Use absolute times on yesterday to avoid midnight timezone flakes on CI.
+  let yesterday = (chrono::Local::now() - chrono::Duration::days(1))
+    .format("%Y-%m-%d")
+    .to_string();
 
   doing
-    .run(["now", "--back", "26h", "Second task @alpha"])
+    .run(["now", "--from", &format!("{yesterday} 10:00"), "First task @zebra"])
     .assert()
     .success();
-  doing.run(["done", "--back", "25h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 11:00")])
+    .assert()
+    .success();
 
   doing
-    .run(["now", "--back", "25h", "Third task @middle"])
+    .run(["now", "--from", &format!("{yesterday} 11:00"), "Second task @alpha"])
     .assert()
     .success();
-  doing.run(["done", "--back", "24h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 12:00")])
+    .assert()
+    .success();
+
+  doing
+    .run(["now", "--from", &format!("{yesterday} 12:00"), "Third task @middle"])
+    .assert()
+    .success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 13:00")])
+    .assert()
+    .success();
 
   let output = doing
     .run(["yesterday", "--totals", "--tag-order", "asc"])
@@ -48,23 +62,37 @@ fn it_orders_tags() {
 fn it_orders_tags_descending() {
   let doing = DoingCmd::new();
 
-  doing
-    .run(["now", "--back", "27h", "First task @zebra"])
-    .assert()
-    .success();
-  doing.run(["done", "--back", "26h"]).assert().success();
+  // Use absolute times on yesterday to avoid midnight timezone flakes on CI.
+  let yesterday = (chrono::Local::now() - chrono::Duration::days(1))
+    .format("%Y-%m-%d")
+    .to_string();
 
   doing
-    .run(["now", "--back", "26h", "Second task @alpha"])
+    .run(["now", "--from", &format!("{yesterday} 10:00"), "First task @zebra"])
     .assert()
     .success();
-  doing.run(["done", "--back", "25h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 11:00")])
+    .assert()
+    .success();
 
   doing
-    .run(["now", "--back", "25h", "Third task @middle"])
+    .run(["now", "--from", &format!("{yesterday} 11:00"), "Second task @alpha"])
     .assert()
     .success();
-  doing.run(["done", "--back", "24h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 12:00")])
+    .assert()
+    .success();
+
+  doing
+    .run(["now", "--from", &format!("{yesterday} 12:00"), "Third task @middle"])
+    .assert()
+    .success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 13:00")])
+    .assert()
+    .success();
 
   let output = doing
     .run(["yesterday", "--totals", "--tag-order", "desc"])

@@ -4,11 +4,19 @@ use crate::support::helpers::DoingCmd;
 fn it_shows_times() {
   let doing = DoingCmd::new();
 
+  // Use absolute times on yesterday to avoid midnight timezone flakes on CI.
+  let yesterday = (chrono::Local::now() - chrono::Duration::days(1))
+    .format("%Y-%m-%d")
+    .to_string();
+
   doing
-    .run(["now", "--back", "25h", "Yesterday times"])
+    .run(["now", "--from", &format!("{yesterday} 10:00"), "Yesterday times"])
     .assert()
     .success();
-  doing.run(["done", "--back", "24h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 11:00")])
+    .assert()
+    .success();
 
   let output = doing.run(["yesterday", "--times"]).output().expect("failed to run");
 
@@ -25,11 +33,19 @@ fn it_shows_times() {
 fn it_hides_times() {
   let doing = DoingCmd::new();
 
+  // Use absolute times on yesterday to avoid midnight timezone flakes on CI.
+  let yesterday = (chrono::Local::now() - chrono::Duration::days(1))
+    .format("%Y-%m-%d")
+    .to_string();
+
   doing
-    .run(["now", "--back", "25h", "Yesterday no times"])
+    .run(["now", "--from", &format!("{yesterday} 10:00"), "Yesterday no times"])
     .assert()
     .success();
-  doing.run(["done", "--back", "24h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 11:00")])
+    .assert()
+    .success();
 
   let output = doing.run(["yesterday", "--no-times"]).output().expect("failed to run");
 
@@ -40,11 +56,19 @@ fn it_hides_times() {
 fn it_uses_short_flag() {
   let doing = DoingCmd::new();
 
+  // Use absolute times on yesterday to avoid midnight timezone flakes on CI.
+  let yesterday = (chrono::Local::now() - chrono::Duration::days(1))
+    .format("%Y-%m-%d")
+    .to_string();
+
   doing
-    .run(["now", "--back", "25h", "Yesterday short times"])
+    .run(["now", "--from", &format!("{yesterday} 10:00"), "Yesterday short times"])
     .assert()
     .success();
-  doing.run(["done", "--back", "24h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{yesterday} 11:00")])
+    .assert()
+    .success();
 
   let output = doing.run(["yesterday", "-t"]).output().expect("failed to run");
 

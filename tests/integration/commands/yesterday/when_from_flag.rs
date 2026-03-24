@@ -4,19 +4,28 @@ use crate::support::helpers::DoingCmd;
 fn it_limits_to_time_range() {
   let doing = DoingCmd::new();
 
+  // Use absolute times on yesterday to avoid midnight timezone flakes on CI.
+  let yesterday = (chrono::Local::now() - chrono::Duration::days(1))
+    .format("%Y-%m-%d")
+    .to_string();
+
   // Create two entries at different times yesterday
   doing
-    .run(["now", "--back", "30h", "Early yesterday entry"])
+    .run(["now", "--from", &format!("{yesterday} 09:00"), "Early yesterday entry"])
     .assert()
     .success();
   doing
-    .run(["now", "--back", "25h", "Late yesterday entry"])
+    .run(["now", "--from", &format!("{yesterday} 15:00"), "Late yesterday entry"])
     .assert()
     .success();
 
-  // Use a relative time range that includes only the late entry
+  // Use a time range that includes only the late entry
   let output = doing
-    .run(["yesterday", "--from", "26h ago to 24h ago"])
+    .run([
+      "yesterday",
+      "--from",
+      &format!("{yesterday} 12:00 to {yesterday} 18:00"),
+    ])
     .output()
     .expect("failed to run");
 

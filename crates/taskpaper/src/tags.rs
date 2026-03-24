@@ -1,6 +1,7 @@
 use std::{
   collections::HashSet,
   fmt::{Display, Formatter, Result as FmtResult},
+  hash::{Hash, Hasher},
 };
 
 use regex::Regex;
@@ -45,6 +46,15 @@ impl Display for Tag {
       Some(v) => write!(f, "@{}({})", self.name, v),
       None => write!(f, "@{}", self.name),
     }
+  }
+}
+
+impl Hash for Tag {
+  fn hash<H: Hasher>(&self, state: &mut H) {
+    for b in self.name.bytes() {
+      state.write_u8(b.to_ascii_lowercase());
+    }
+    self.value.hash(state);
   }
 }
 
@@ -252,6 +262,36 @@ mod test {
         let tag = Tag::new("done", Some("2024-03-17 14:00"));
 
         assert_eq!(tag.to_string(), "@done(2024-03-17 14:00)");
+      }
+    }
+
+    mod hash {
+      use std::hash::{DefaultHasher, Hash, Hasher};
+
+      use super::super::super::*;
+
+      fn compute_hash(tag: &Tag) -> u64 {
+        let mut hasher = DefaultHasher::new();
+        tag.hash(&mut hasher);
+        hasher.finish()
+      }
+
+      #[test]
+      fn it_produces_same_hash_for_case_insensitive_names() {
+        let a = Tag::new("Done", Some("value"));
+        let b = Tag::new("done", Some("value"));
+
+        assert_eq!(compute_hash(&a), compute_hash(&b));
+      }
+
+      #[test]
+      fn it_deduplicates_case_insensitive_names_in_hashset() {
+        let mut set = HashSet::new();
+        set.insert(Tag::new("Done", None::<String>));
+        set.insert(Tag::new("done", None::<String>));
+        set.insert(Tag::new("DONE", None::<String>));
+
+        assert_eq!(set.len(), 1);
       }
     }
 

@@ -4,13 +4,15 @@ use crate::support::helpers::DoingCmd;
 fn it_shows_time_intervals() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+  // Use the backdated time's date for the `on` query to avoid flakes near midnight.
+  let back_time = chrono::Local::now() - chrono::Duration::hours(1);
+  let entry_date = back_time.format("%Y-%m-%d").to_string();
 
   doing.run(["now", "--back", "1h", "Completed task"]).assert().success();
   doing.run(["done"]).assert().success();
 
   let output = doing
-    .run(["on", &today, "--times", "--template", "%title %interval"])
+    .run(["on", &entry_date, "--times", "--template", "%title %interval"])
     .output()
     .expect("failed to run");
 
@@ -34,17 +36,19 @@ fn it_shows_time_intervals() {
 fn it_shows_with_short_flag() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+  // Use the backdated time's date for the `on` query to avoid flakes near midnight.
+  let back_time = chrono::Local::now() - chrono::Duration::hours(1);
+  let entry_date = back_time.format("%Y-%m-%d").to_string();
 
   doing.run(["now", "--back", "1h", "Completed task"]).assert().success();
   doing.run(["done"]).assert().success();
 
   let long_output = doing
-    .run(["on", &today, "--times", "--template", "%title %interval"])
+    .run(["on", &entry_date, "--times", "--template", "%title %interval"])
     .output()
     .expect("failed to run");
   let short_output = doing
-    .run(["on", &today, "-t", "--template", "%title %interval"])
+    .run(["on", &entry_date, "-t", "--template", "%title %interval"])
     .output()
     .expect("failed to run");
 
@@ -61,17 +65,19 @@ fn it_shows_with_short_flag() {
 fn it_shows_time_info_not_present_without_flag() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+  // Use the backdated time's date for the `on` query to avoid flakes near midnight.
+  let back_time = chrono::Local::now() - chrono::Duration::hours(1);
+  let entry_date = back_time.format("%Y-%m-%d").to_string();
 
   doing.run(["now", "--back", "1h", "No times task"]).assert().success();
   doing.run(["done"]).assert().success();
 
   let with_times = doing
-    .run(["on", &today, "--times", "--template", "%title %interval"])
+    .run(["on", &entry_date, "--times", "--template", "%title %interval"])
     .output()
     .expect("failed to run");
   let without_times = doing
-    .run(["on", &today, "--template", "%title"])
+    .run(["on", &entry_date, "--template", "%title"])
     .output()
     .expect("failed to run");
 

@@ -4,7 +4,9 @@ use crate::support::helpers::DoingCmd;
 fn it_shows_tag_time_totals() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+  // Use the backdated time's date for the `on` query to avoid flakes near midnight.
+  let back_time = chrono::Local::now() - chrono::Duration::hours(1);
+  let entry_date = back_time.format("%Y-%m-%d").to_string();
 
   doing
     .run(["now", "--back", "1h", "Completed task @project"])
@@ -12,7 +14,10 @@ fn it_shows_tag_time_totals() {
     .success();
   doing.run(["done"]).assert().success();
 
-  let output = doing.run(["on", &today, "--totals"]).output().expect("failed to run");
+  let output = doing
+    .run(["on", &entry_date, "--totals"])
+    .output()
+    .expect("failed to run");
 
   assert!(output.status.success(), "expected success exit code");
 
@@ -33,7 +38,9 @@ fn it_shows_tag_time_totals() {
 fn it_does_not_show_totals_without_flag() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+  // Use the backdated time's date for the `on` query to avoid flakes near midnight.
+  let back_time = chrono::Local::now() - chrono::Duration::hours(1);
+  let entry_date = back_time.format("%Y-%m-%d").to_string();
 
   doing
     .run(["now", "--back", "1h", "No totals task @project"])
@@ -41,8 +48,11 @@ fn it_does_not_show_totals_without_flag() {
     .success();
   doing.run(["done"]).assert().success();
 
-  let with_totals = doing.run(["on", &today, "--totals"]).output().expect("failed to run");
-  let without_totals = doing.run(["on", &today]).output().expect("failed to run");
+  let with_totals = doing
+    .run(["on", &entry_date, "--totals"])
+    .output()
+    .expect("failed to run");
+  let without_totals = doing.run(["on", &entry_date]).output().expect("failed to run");
 
   let with_stdout = String::from_utf8_lossy(&with_totals.stdout);
   let without_stdout = String::from_utf8_lossy(&without_totals.stdout);

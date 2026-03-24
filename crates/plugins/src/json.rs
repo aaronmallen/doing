@@ -1,8 +1,7 @@
-use std::collections::BTreeMap;
-
 use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
+use indexmap::IndexMap;
 use serde::Serialize;
 
 use crate::{ExportPlugin, ExportPluginSettings};
@@ -19,7 +18,7 @@ impl ExportPlugin for JsonExport {
   }
 
   fn render(&self, entries: &[Entry], _options: &RenderOptions, _config: &Config) -> String {
-    let mut sections: BTreeMap<String, Vec<JsonItem>> = BTreeMap::new();
+    let mut sections: IndexMap<String, Vec<JsonItem>> = IndexMap::new();
     for entry in entries {
       sections
         .entry(entry.section().to_string())
@@ -261,10 +260,52 @@ mod test {
       let sections = parsed.as_array().unwrap();
 
       assert_eq!(sections.len(), 2);
-      assert_eq!(sections[0]["section"], "Archive");
-      assert_eq!(sections[0]["items"].as_array().unwrap().len(), 1);
-      assert_eq!(sections[1]["section"], "Currently");
-      assert_eq!(sections[1]["items"].as_array().unwrap().len(), 2);
+      // IndexMap preserves insertion order (document order), not alphabetical
+      assert_eq!(sections[0]["section"], "Currently");
+      assert_eq!(sections[0]["items"].as_array().unwrap().len(), 2);
+      assert_eq!(sections[1]["section"], "Archive");
+      assert_eq!(sections[1]["items"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn it_preserves_section_order() {
+      let config = Config::default();
+      let options = sample_options();
+      let entries = vec![
+        Entry::new(
+          sample_date(14, 0),
+          "Z task",
+          Tags::new(),
+          Note::new(),
+          "Zebra",
+          None::<String>,
+        ),
+        Entry::new(
+          sample_date(13, 0),
+          "A task",
+          Tags::new(),
+          Note::new(),
+          "Alpha",
+          None::<String>,
+        ),
+        Entry::new(
+          sample_date(12, 0),
+          "M task",
+          Tags::new(),
+          Note::new(),
+          "Middle",
+          None::<String>,
+        ),
+      ];
+
+      let output = JsonExport.render(&entries, &options, &config);
+      let parsed: serde_json::Value = serde_json::from_str(&output).unwrap();
+      let sections = parsed.as_array().unwrap();
+
+      // Sections appear in document (insertion) order, not alphabetical
+      assert_eq!(sections[0]["section"], "Zebra");
+      assert_eq!(sections[1]["section"], "Alpha");
+      assert_eq!(sections[2]["section"], "Middle");
     }
 
     #[test]

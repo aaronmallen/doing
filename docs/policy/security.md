@@ -75,18 +75,9 @@ We follow responsible disclosure practices:
 
 ## Supported Versions
 
-| Version | Support |
-|:-------:|:-------:|
-|  0.1.0  |   🚧    |
-
-### Key
-
-| Symbol | Meaning        |
-|--------|----------------|
-| ✅     | Supported      |
-| ❌     | Not Supported  |
-| 🧪     | Experimental   |
-| 🚧     | In Development |
+| Version | Support        |
+|:-------:|:--------------:|
+|  0.1.x  | Supported      |
 
 ## Security Best Practices
 

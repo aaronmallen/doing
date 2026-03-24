@@ -7,6 +7,20 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.1] - 2026-03-24
+
+### Fixed
+
+- Entries with DST-ambiguous timestamps (spring-forward gaps and fall-back folds) are preserved instead of
+  silently dropped by @havenwood (see [#299], [#300])
+- `beginning_of_day` no longer panics when midnight and 1 AM both fall in a DST gap (see [#302])
+- Duplicate section headers in a doing file are merged instead of silently discarding entries (see [#301])
+- `grep --editor` now persists edits back to the doing file (see [#303])
+- Empty or whitespace-only `EDITOR` variable returns a clear error instead of panicking (see [#304])
+- ICS calendar import preserves long SUMMARY and DESCRIPTION values with RFC 5545 continuation lines (see [#305])
+- CJK characters and emoji no longer misalign columns in template output (see [#306])
+- Backup file discovery is stable across Rust toolchain upgrades (see [#311])
+
 ## [v0.1.0] - 2026-03-23
 
 ### Added
@@ -369,8 +383,17 @@ Initial alpha release
 [#292]: https://github.com/aaronmallen/doing/issues/292
 [#293]: https://github.com/aaronmallen/doing/issues/293
 [#294]: https://github.com/aaronmallen/doing/issues/294
+[#299]: https://github.com/aaronmallen/doing/issues/299
+[#300]: https://github.com/aaronmallen/doing/issues/300
+[#301]: https://github.com/aaronmallen/doing/issues/301
+[#302]: https://github.com/aaronmallen/doing/issues/302
+[#303]: https://github.com/aaronmallen/doing/issues/303
+[#304]: https://github.com/aaronmallen/doing/issues/304
+[#305]: https://github.com/aaronmallen/doing/issues/305
+[#306]: https://github.com/aaronmallen/doing/issues/306
+[#311]: https://github.com/aaronmallen/doing/issues/311
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.0...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.1...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -378,3 +401,4 @@ Initial alpha release
 [v0.0.1-alpha.6.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...0.0.1-alpha.6.1
 [v0.0.1-alpha.7]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6.1...0.0.1-alpha.7
 [v0.1.0]: https://github.com/aaronmallen/doing/compare/v0.0.1-alpha.7...v0.1.0
+[v0.1.1]: https://github.com/aaronmallen/doing/compare/v0.1.0...v0.1.1

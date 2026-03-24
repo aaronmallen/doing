@@ -132,6 +132,11 @@ impl Entry {
     self.date = date;
   }
 
+  /// Set the title.
+  pub fn set_title(&mut self, title: impl Into<String>) {
+    self.title = title.into();
+  }
+
   /// Check whether the entry should receive a `@done` tag.
   ///
   /// Returns `false` if any pattern in `never_finish` matches this entry's

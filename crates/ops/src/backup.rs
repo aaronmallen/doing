@@ -112,7 +112,8 @@ fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Ve
 
   let prefix = backup_prefix(source);
   let mut backups: Vec<PathBuf> = fs::read_dir(backup_dir)?
-    .filter_map(|entry| entry.ok())
+    .collect::<std::result::Result<Vec<_>, _>>()?
+    .into_iter()
     .map(|entry| entry.path())
     .filter(|path| {
       path

@@ -101,12 +101,28 @@ fn strip_done_tag(title: &str) -> &str {
   }
 }
 
-/// Truncate a string to `width` characters and pad with spaces.
+/// Truncate a string to `width` display columns and pad with spaces.
 fn truncate_and_pad(s: &str, width: usize) -> String {
-  if s.len() > width {
-    format!("{:.width$}", s)
+  use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
+
+  let display_width = UnicodeWidthStr::width(s);
+  if display_width > width {
+    let mut result = String::new();
+    let mut current = 0;
+    for ch in s.chars() {
+      let ch_width = UnicodeWidthChar::width(ch).unwrap_or(0);
+      if current + ch_width > width {
+        break;
+      }
+      result.push(ch);
+      current += ch_width;
+    }
+    let padding = width.saturating_sub(current);
+    result.push_str(&" ".repeat(padding));
+    result
   } else {
-    format!("{:<width$}", s)
+    let padding = width - display_width;
+    format!("{s}{}", " ".repeat(padding))
   }
 }
 

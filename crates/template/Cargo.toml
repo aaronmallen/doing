@@ -20,6 +20,7 @@ doing-error.workspace = true
 doing-taskpaper.workspace = true
 doing-time.workspace = true
 regex.workspace = true
+unicode-width.workspace = true
 yansi.workspace = true
 
 [dev-dependencies]

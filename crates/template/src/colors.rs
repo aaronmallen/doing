@@ -324,9 +324,11 @@ pub fn validate_color(s: &str) -> Option<String> {
   valid
 }
 
-/// Return the visible (non-ANSI) length of a string.
+/// Return the visible (non-ANSI) display width of a string.
+///
+/// Uses Unicode display widths so CJK characters count as 2 and emoji count as 2.
 pub fn visible_len(s: &str) -> usize {
-  strip_ansi(s).len()
+  unicode_width::UnicodeWidthStr::width(strip_ansi(s).as_str())
 }
 
 /// Return a sorted list of all supported color names.
@@ -657,6 +659,18 @@ mod test {
     #[test]
     fn it_counts_plain_text() {
       assert_eq!(visible_len("hello"), 5);
+    }
+
+    #[test]
+    fn it_counts_cjk_characters_as_double_width() {
+      // CJK characters are 2 display columns each
+      assert_eq!(visible_len("日本語"), 6);
+    }
+
+    #[test]
+    fn it_counts_emoji_as_double_width() {
+      // Most emoji are 2 display columns
+      assert_eq!(visible_len("🎉"), 2);
     }
 
     #[test]

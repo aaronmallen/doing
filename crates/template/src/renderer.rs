@@ -176,22 +176,48 @@ pub fn render(entry: &Entry, options: &RenderOptions, config: &Config) -> String
 }
 
 fn apply_width(raw: &str, width: Option<i32>) -> String {
+  use unicode_width::UnicodeWidthStr;
+
   match width {
     Some(w) if w > 0 => {
       let w = w as usize;
-      let char_count = raw.chars().count();
-      if char_count > w {
-        raw.chars().take(w).collect()
+      let display_width = UnicodeWidthStr::width(raw);
+      if display_width > w {
+        truncate_to_width(raw, w)
       } else {
-        format!("{raw:<w$}")
+        let padding = w - display_width;
+        format!("{raw}{}", " ".repeat(padding))
       }
     }
     Some(w) if w < 0 => {
       let w = w.unsigned_abs() as usize;
-      format!("{raw:>w$}")
+      let display_width = UnicodeWidthStr::width(raw);
+      if display_width >= w {
+        raw.to_string()
+      } else {
+        let padding = w - display_width;
+        format!("{}{raw}", " ".repeat(padding))
+      }
     }
     _ => raw.to_string(),
   }
+}
+
+/// Truncate a string to fit within `max_width` display columns.
+fn truncate_to_width(s: &str, max_width: usize) -> String {
+  use unicode_width::UnicodeWidthChar;
+
+  let mut result = String::new();
+  let mut current_width = 0;
+  for ch in s.chars() {
+    let ch_width = UnicodeWidthChar::width(ch).unwrap_or(0);
+    if current_width + ch_width > max_width {
+      break;
+    }
+    result.push(ch);
+    current_width += ch_width;
+  }
+  result
 }
 
 fn build_indent(indent: &Indent) -> String {

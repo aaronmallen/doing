@@ -64,6 +64,7 @@ pub struct Tags {
 
 impl Tags {
   /// Build a tag collection from an iterator of tags.
+  #[allow(clippy::should_implement_trait)]
   pub fn from_iter(iter: impl IntoIterator<Item = Tag>) -> Self {
     Self {
       inner: iter.into_iter().collect(),

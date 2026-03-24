@@ -18,6 +18,7 @@ impl Note {
   }
 
   /// Create a note by splitting a single string on newlines.
+  #[allow(clippy::should_implement_trait)]
   pub fn from_str(text: &str) -> Self {
     Self {
       lines: text.lines().map(String::from).collect(),

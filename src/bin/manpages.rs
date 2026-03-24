@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+  fs,
+  path::{Path, PathBuf},
+};
 
 use clap::CommandFactory;
 use clap_mangen::Man;
@@ -19,7 +22,7 @@ fn main() {
   }
 }
 
-fn generate_manpage(cmd: &clap::Command, name: &str, out_dir: &PathBuf) {
+fn generate_manpage(cmd: &clap::Command, name: &str, out_dir: &Path) {
   let man = Man::new(cmd.clone());
   let mut buf = Vec::new();
   man.render(&mut buf).expect("failed to render man page");

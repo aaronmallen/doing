@@ -18,7 +18,7 @@ use crate::Result;
 
 /// Shared application context passed to all command handlers.
 #[allow(dead_code)]
-pub(crate) struct AppContext {
+pub struct AppContext {
   pub config: Config,
   pub default_answer: bool,
   pub document: Document,

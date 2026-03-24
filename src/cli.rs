@@ -100,7 +100,7 @@ impl AppContext {
   name = "doing",
   version = env!("CARGO_PKG_VERSION"),
 )]
-pub(crate) struct Cli {
+pub struct Cli {
   /// Colored output
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_color", global = true)]
   color: bool,

@@ -1,6 +1,4 @@
-mod cli;
-
-pub use doing_error::{Error, Result};
+use doing::cli;
 
 fn main() {
   if let Err(e) = cli::run() {

@@ -34,6 +34,7 @@ assert_cmd = "2"
 chrono = { features = ["serde"], version = "0.4" }
 clap = { features = ["derive", "suggestions"], version = "4" }
 clap_complete = "4"
+clap_mangen = "0.2"
 dialoguer = "0.12"
 dir_spec = "0.5"
 doing-config = { path = "crates/config" }
@@ -73,6 +74,7 @@ yansi = { features = ["detect-env", "detect-tty", "hyperlink"], version = "1" }
 chrono.workspace = true
 clap.workspace = true
 clap_complete.workspace = true
+clap_mangen.workspace = true
 dialoguer.workspace = true
 dir_spec.workspace = true
 doing-config.workspace = true

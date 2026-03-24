@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Generate man pages from clap definitions"
+
+set -e
+
+cargo run --bin manpages -- target/man
+echo "Man pages generated in target/man/"

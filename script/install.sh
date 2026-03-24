@@ -20,7 +20,7 @@ main() {
   version="$(resolve_version)"
 
   archive="doing-v${version}-${target}.tar.gz"
-  checksum_file="${archive}.sha256"
+  checksum_file="doing-v${version}-${target}.sha256"
   base_url="https://github.com/${REPO}/releases/download/${version}"
 
   tmpdir="$(mktemp -d)"

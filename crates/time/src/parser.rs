@@ -329,25 +329,29 @@ fn resolve_weekday(now: DateTime<Local>, target: Weekday, direction: Option<&str
   let current_num = current.num_days_from_monday() as i64;
   let target_num = target.num_days_from_monday() as i64;
 
-  let diff = match direction {
+  match direction {
     Some("next") => {
       let d = target_num - current_num;
-      if d <= 0 { d + 7 } else { d }
+      let diff = if d <= 0 { d + 7 } else { d };
+      now + Duration::days(diff)
     }
-    Some("last") => {
-      let d = current_num - target_num;
-      if d <= 0 { d + 7 } else { d }
+    Some("this") => {
+      // "this <weekday>" resolves to the current week's instance (Mon-Sun).
+      // Same day returns today; other days may be in the past or future.
+      let d = target_num - current_num;
+      if d >= 0 {
+        now + Duration::days(d)
+      } else {
+        now - Duration::days(-d)
+      }
     }
     _ => {
-      // Default to past (same as "last", but same day = 7 days ago)
+      // "last" and bare weekday both resolve to the most recent past occurrence.
+      // Same day = 7 days ago.
       let d = current_num - target_num;
-      if d <= 0 { d + 7 } else { d }
+      let diff = if d <= 0 { d + 7 } else { d };
+      now - Duration::days(diff)
     }
-  };
-
-  match direction {
-    Some("next") => now + Duration::days(diff),
-    _ => now - Duration::days(diff),
   }
 }
 
@@ -864,6 +868,41 @@ mod test {
       let result = resolve_weekday(now, Weekday::Tue, Some("next"));
 
       assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 24).unwrap());
+    }
+
+    #[test]
+    fn it_resolves_this_same_day_to_today() {
+      let now = Local.with_ymd_and_hms(2026, 3, 17, 12, 0, 0).unwrap(); // Tuesday
+      let result = resolve_weekday(now, Weekday::Tue, Some("this"));
+
+      assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 17).unwrap());
+    }
+
+    #[test]
+    fn it_resolves_this_past_day_to_current_week() {
+      let now = Local.with_ymd_and_hms(2026, 3, 19, 12, 0, 0).unwrap(); // Thursday
+      let result = resolve_weekday(now, Weekday::Mon, Some("this"));
+
+      // "this monday" on a Thursday resolves to the Monday of the current week
+      assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 16).unwrap());
+    }
+
+    #[test]
+    fn it_resolves_this_future_day_to_current_week() {
+      let now = Local.with_ymd_and_hms(2026, 3, 17, 12, 0, 0).unwrap(); // Tuesday
+      let result = resolve_weekday(now, Weekday::Fri, Some("this"));
+
+      // "this friday" on a Tuesday resolves to the Friday of the current week
+      assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 20).unwrap());
+    }
+
+    #[test]
+    fn it_resolves_bare_same_day_to_one_week_ago() {
+      let now = Local.with_ymd_and_hms(2026, 3, 17, 12, 0, 0).unwrap(); // Tuesday
+      let result = resolve_weekday(now, Weekday::Tue, None);
+
+      // Bare "tuesday" on a Tuesday resolves to 7 days ago (past-biased)
+      assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 10).unwrap());
     }
   }
 

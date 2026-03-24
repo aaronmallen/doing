@@ -4,7 +4,7 @@ use clap::Args;
 use doing_config::SortOrder;
 use doing_ops::{backup::write_with_backup, filter::filter_entries};
 use doing_plugins::default_registry;
-use doing_taskpaper::{Entry, Note, Section, Tag, Tags};
+use doing_taskpaper::{Entry, Section, Tag};
 use doing_template::renderer::{RenderOptions, format_items};
 
 use crate::{
@@ -163,11 +163,13 @@ impl Command {
     }
 
     for entry in selected {
+      let mut tags = entry.tags().clone();
+      tags.remove("done");
       let new_entry = Entry::new(
         now,
         entry.title(),
-        Tags::new(),
-        Note::new(),
+        tags,
+        entry.note().clone(),
         &section_name,
         None::<String>,
       );

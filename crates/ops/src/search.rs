@@ -53,10 +53,8 @@ pub fn matches_entry(entry: &Entry, mode: &SearchMode, case: CaseSensitivity, in
     return true;
   }
 
-  let tag_names: Vec<&str> = entry.tags().iter().map(|t| t.name()).collect();
-  if !tag_names.is_empty() {
-    let tag_text = tag_names.join(" ");
-    if matches(&tag_text, mode, case) {
+  for tag in entry.tags().iter() {
+    if matches(tag.name(), mode, case) {
       return true;
     }
   }
@@ -403,6 +401,48 @@ mod test {
         &mode,
         CaseSensitivity::Ignore,
         true,
+      ));
+    }
+
+    #[test]
+    fn it_does_not_match_across_tag_boundaries() {
+      // Tags ["co", "ding"] should not match "co ding" since they are separate tags.
+      let entry = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "Some task",
+        Tags::from_iter(vec![Tag::new("co", None::<String>), Tag::new("ding", None::<String>)]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("co ding".into())]);
+
+      assert!(!super::super::matches_entry(
+        &entry,
+        &mode,
+        CaseSensitivity::Ignore,
+        false
+      ));
+    }
+
+    #[test]
+    fn it_does_not_match_tag_spanning_two_tags() {
+      // Searching for "coding" should not match tags ["co", "ding"]
+      let entry = Entry::new(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
+        "Some task",
+        Tags::from_iter(vec![Tag::new("co", None::<String>), Tag::new("ding", None::<String>)]),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("coding".into())]);
+
+      assert!(!super::super::matches_entry(
+        &entry,
+        &mode,
+        CaseSensitivity::Ignore,
+        false
       ));
     }
 

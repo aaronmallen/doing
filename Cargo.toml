@@ -32,6 +32,7 @@ rust-version = "1.88.0"
 [workspace.dependencies]
 assert_cmd = "2"
 chrono = { features = ["serde"], version = "0.4" }
+chrono-tz = "0.10"
 clap = { features = ["derive", "suggestions"], version = "4" }
 clap_complete = "4"
 clap_mangen = "0.2"

@@ -40,7 +40,9 @@ impl ImportPlugin for CalendarImport {
 struct IcsEvent {
   description: Option<String>,
   dtend: Option<String>,
+  dtend_tzid: Option<String>,
   dtstart: Option<String>,
+  dtstart_tzid: Option<String>,
   summary: Option<String>,
 }
 
@@ -68,7 +70,9 @@ fn parse_ics(content: &str) -> Vec<IcsEvent> {
   let mut current = IcsEvent {
     description: None,
     dtend: None,
+    dtend_tzid: None,
     dtstart: None,
+    dtstart_tzid: None,
     summary: None,
   };
 
@@ -79,7 +83,9 @@ fn parse_ics(content: &str) -> Vec<IcsEvent> {
       current = IcsEvent {
         description: None,
         dtend: None,
+        dtend_tzid: None,
         dtstart: None,
+        dtstart_tzid: None,
         summary: None,
       };
     } else if line == "END:VEVENT" {
@@ -88,7 +94,9 @@ fn parse_ics(content: &str) -> Vec<IcsEvent> {
         current = IcsEvent {
           description: None,
           dtend: None,
+          dtend_tzid: None,
           dtstart: None,
+          dtstart_tzid: None,
           summary: None,
         };
       }
@@ -101,12 +109,14 @@ fn parse_ics(content: &str) -> Vec<IcsEvent> {
       } else if let Some(value) = line.strip_prefix("DTSTART;") {
         // Handle DTSTART;TZID=...:value or DTSTART;VALUE=DATE:value
         if let Some(pos) = value.find(':') {
+          current.dtstart_tzid = extract_tzid(&value[..pos]);
           current.dtstart = Some(value[pos + 1..].to_string());
         }
       } else if let Some(value) = line.strip_prefix("DTEND:") {
         current.dtend = Some(value.to_string());
       } else if let Some(value) = line.strip_prefix("DTEND;") {
         if let Some(pos) = value.find(':') {
+          current.dtend_tzid = extract_tzid(&value[..pos]);
           current.dtend = Some(value[pos + 1..].to_string());
         }
       } else if let Some(value) = line.strip_prefix("DESCRIPTION:") {
@@ -121,7 +131,7 @@ fn parse_ics(content: &str) -> Vec<IcsEvent> {
 /// Convert an ICS event to a doing entry.
 fn convert_event(event: &IcsEvent) -> Option<Entry> {
   let start_str = event.dtstart.as_deref()?;
-  let start = parse_ics_date(start_str)?;
+  let start = parse_ics_date(start_str, event.dtstart_tzid.as_deref())?;
 
   let summary = event.summary.as_deref().unwrap_or("Calendar event");
   let title = format!("[Calendar] {summary}");
@@ -129,7 +139,7 @@ fn convert_event(event: &IcsEvent) -> Option<Entry> {
   let mut tags = Tags::new();
 
   if let Some(ref end_str) = event.dtend
-    && let Some(end) = parse_ics_date(end_str)
+    && let Some(end) = parse_ics_date(end_str, event.dtend_tzid.as_deref())
   {
     let end_formatted = end.format("%Y-%m-%d %H:%M").to_string();
     tags.add(Tag::new("done", Some(end_formatted)));
@@ -145,10 +155,20 @@ fn convert_event(event: &IcsEvent) -> Option<Entry> {
   Some(Entry::new(start, title, tags, note, "Currently", None::<String>))
 }
 
-/// Parse an ICS date string.
+/// Extract TZID value from ICS property parameters (e.g. "TZID=America/New_York").
+fn extract_tzid(params: &str) -> Option<String> {
+  for param in params.split(';') {
+    if let Some(value) = param.strip_prefix("TZID=") {
+      return Some(value.to_string());
+    }
+  }
+  None
+}
+
+/// Parse an ICS date string, optionally using a TZID for timezone conversion.
 ///
 /// Supports formats: `20240317T143000Z`, `20240317T143000`, `20240317`.
-fn parse_ics_date(s: &str) -> Option<DateTime<Local>> {
+fn parse_ics_date(s: &str, tzid: Option<&str>) -> Option<DateTime<Local>> {
   let s = s.trim();
 
   // UTC format: 20240317T143000Z
@@ -156,6 +176,18 @@ fn parse_ics_date(s: &str) -> Option<DateTime<Local>> {
     let s = s.trim_end_matches('Z');
     let naive = NaiveDateTime::parse_from_str(s, "%Y%m%dT%H%M%S").ok()?;
     return chrono::Utc.from_utc_datetime(&naive).with_timezone(&Local).into();
+  }
+
+  // TZID-aware datetime: parse in the specified timezone and convert to local
+  if let Some(tzid) = tzid
+    && s.contains('T')
+  {
+    let naive = NaiveDateTime::parse_from_str(s, "%Y%m%dT%H%M%S").ok()?;
+    let tz: chrono_tz::Tz = tzid.parse().ok()?;
+    return tz
+      .from_local_datetime(&naive)
+      .single()
+      .map(|dt| dt.with_timezone(&Local));
   }
 
   // Local datetime: 20240317T143000
@@ -175,7 +207,11 @@ fn parse_ics_date(s: &str) -> Option<DateTime<Local>> {
 
 /// Unescape ICS text values (basic escaping).
 fn unescape_ics(s: &str) -> String {
-  s.replace("\\n", "\n").replace("\\,", ",").replace("\\\\", "\\")
+  s.replace("\\n", "\n")
+    .replace("\\N", "\n")
+    .replace("\\,", ",")
+    .replace("\\;", ";")
+    .replace("\\\\", "\\")
 }
 
 #[cfg(test)]
@@ -257,6 +293,20 @@ mod test {
     }
 
     #[test]
+    fn it_imports_event_with_tzid() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("cal.ics");
+      let ics = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:NYC Meeting\r\nDTSTART;TZID=America/New_York:20240315T090000\r\nDTEND;TZID=America/New_York:20240315T100000\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+      fs::write(&path, ics).unwrap();
+
+      let entries = CalendarImport.import(&path).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "[Calendar] NYC Meeting");
+      assert!(entries[0].finished());
+    }
+
+    #[test]
     fn it_imports_event_with_description() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("cal.ics");
@@ -295,30 +345,44 @@ mod test {
   }
 
   mod parse_ics_date {
+    use chrono::Datelike;
+
     #[test]
     fn it_parses_utc_datetime() {
-      let result = super::super::parse_ics_date("20240317T143000Z");
+      let result = super::super::parse_ics_date("20240317T143000Z", None);
 
       assert!(result.is_some());
     }
 
     #[test]
     fn it_parses_local_datetime() {
-      let result = super::super::parse_ics_date("20240317T143000");
+      let result = super::super::parse_ics_date("20240317T143000", None);
 
       assert!(result.is_some());
     }
 
     #[test]
     fn it_parses_date_only() {
-      let result = super::super::parse_ics_date("20240317");
+      let result = super::super::parse_ics_date("20240317", None);
 
       assert!(result.is_some());
     }
 
     #[test]
+    fn it_parses_datetime_with_tzid() {
+      let result = super::super::parse_ics_date("20240315T090000", Some("America/New_York"));
+
+      let dt = result.unwrap();
+      assert_eq!(dt.date_naive().year(), 2024);
+      assert_eq!(dt.date_naive().month(), 3);
+      assert_eq!(dt.date_naive().day(), 15);
+      // 09:00 EDT = 13:00 UTC; the local time depends on the test machine's timezone,
+      // so just verify parsing succeeded and the date is correct.
+    }
+
+    #[test]
     fn it_returns_none_for_invalid() {
-      assert!(super::super::parse_ics_date("not a date").is_none());
+      assert!(super::super::parse_ics_date("not a date", None).is_none());
     }
   }
 
@@ -340,6 +404,16 @@ mod test {
     #[test]
     fn it_unescapes_backslashes() {
       assert_eq!(unescape_ics("back\\\\slash"), "back\\slash");
+    }
+
+    #[test]
+    fn it_unescapes_semicolons() {
+      assert_eq!(unescape_ics("hello\\; world"), "hello; world");
+    }
+
+    #[test]
+    fn it_unescapes_uppercase_newlines() {
+      assert_eq!(unescape_ics("line1\\Nline2"), "line1\nline2");
     }
   }
 }

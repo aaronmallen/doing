@@ -15,6 +15,7 @@ independent = true
 
 [dependencies]
 chrono.workspace = true
+chrono-tz.workspace = true
 doing-config.workspace = true
 doing-error.workspace = true
 doing-taskpaper.workspace = true

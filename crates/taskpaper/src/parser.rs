@@ -66,7 +66,12 @@ pub fn parse(content: &str) -> Document {
         .unwrap_or_default();
 
       if let Ok(naive) = NaiveDateTime::parse_from_str(date_str, "%Y-%m-%d %H:%M")
-        && let Some(date) = Local.from_local_datetime(&naive).single()
+        && let Some(date) = Local
+          .from_local_datetime(&naive)
+          .single()
+          .or_else(|| Local.from_local_datetime(&naive).earliest())
+          .or_else(|| Local.from_local_datetime(&naive).latest())
+          .or_else(|| Some(naive.and_utc().with_timezone(&Local)))
       {
         let (title, tags) = parse_tags(raw_title);
         let entry = Entry::new(date, title, tags, Note::new(), &section_name, id);
@@ -292,6 +297,25 @@ Currently:
         output,
         "# My Doing File\n\nCurrently:\n\t- 2024-03-17 14:30 | Task A <aaaabbbbccccddddeeeeffffaaaabbbb>"
       );
+    }
+
+    #[test]
+    fn it_preserves_entries_with_dst_ambiguous_timestamps() {
+      // 2024-03-10 02:30 falls in the US spring-forward DST gap (2:00 AM → 3:00 AM).
+      // 2024-11-03 01:30 falls in the US fall-back DST fold (1:00 AM occurs twice).
+      // Regardless of the test machine's timezone, these entries must never be dropped.
+      let content = "\
+Currently:
+\t- 2024-03-10 02:30 | Spring forward task
+\t- 2024-11-03 01:30 | Fall back task
+\t- 2024-06-15 14:00 | Normal task";
+      let doc = parse(content);
+
+      let entries = doc.entries_in_section("Currently");
+      assert_eq!(entries.len(), 3);
+      assert_eq!(entries[0].title(), "Spring forward task");
+      assert_eq!(entries[1].title(), "Fall back task");
+      assert_eq!(entries[2].title(), "Normal task");
     }
 
     #[test]

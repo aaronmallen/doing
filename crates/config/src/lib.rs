@@ -180,16 +180,17 @@ impl Config {
     let mut config: Config =
       serde_json::from_value(merged).map_err(|e| Error::Config(format!("deserialization error: {e}")))?;
 
-    config.expand_paths();
+    config.expand_paths()?;
     Ok(config)
   }
 
-  fn expand_paths(&mut self) {
-    self.backup_dir = expand_tilde(&self.backup_dir);
-    self.doing_file = expand_tilde(&self.doing_file);
-    self.plugins.command_path = expand_tilde(&self.plugins.command_path);
-    self.plugins.plugin_path = expand_tilde(&self.plugins.plugin_path);
-    self.template_path = expand_tilde(&self.template_path);
+  fn expand_paths(&mut self) -> Result<()> {
+    self.backup_dir = expand_tilde(&self.backup_dir)?;
+    self.doing_file = expand_tilde(&self.doing_file)?;
+    self.plugins.command_path = expand_tilde(&self.plugins.command_path)?;
+    self.plugins.plugin_path = expand_tilde(&self.plugins.plugin_path)?;
+    self.template_path = expand_tilde(&self.template_path)?;
+    Ok(())
   }
 }
 

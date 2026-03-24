@@ -156,7 +156,7 @@ pub fn resolve_global_config_path() -> PathBuf {
 
 fn env_config_path() -> Option<PathBuf> {
   let raw = DOING_CONFIG.value().ok()?;
-  let path = expand_tilde(Path::new(&raw));
+  let path = expand_tilde(Path::new(&raw)).ok()?;
   if path.exists() { Some(path) } else { None }
 }
 

@@ -24,16 +24,18 @@ fn it_shows_duration_on_entries() {
 fn it_includes_interval_for_finished_entries() {
   let doing = DoingCmd::new();
 
+  // Use the backdated time's date for the `on` query to avoid flakes near midnight.
+  let back_time = chrono::Local::now() - chrono::Duration::hours(1);
+  let entry_date = back_time.format("%Y-%m-%d").to_string();
+
   doing
     .run(["now", "--back", "1h", "Finished interval entry"])
     .assert()
     .success();
   doing.run(["done"]).assert().success();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-
   let output = doing
-    .run(["on", &today, "--duration", "--template", "%title %interval"])
+    .run(["on", &entry_date, "--duration", "--template", "%title %interval"])
     .output()
     .expect("failed to run");
 

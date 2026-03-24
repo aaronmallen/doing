@@ -10,6 +10,7 @@ use crate::Entry;
 pub struct Section {
   entries: Vec<Entry>,
   title: String,
+  trailing_content: Vec<String>,
 }
 
 impl Section {
@@ -18,6 +19,7 @@ impl Section {
     Self {
       entries: Vec::new(),
       title: title.into(),
+      trailing_content: Vec::new(),
     }
   }
 
@@ -62,6 +64,16 @@ impl Section {
   pub fn title(&self) -> &str {
     &self.title
   }
+
+  /// Return a slice of trailing content lines (non-entry lines after entries).
+  pub fn trailing_content(&self) -> &[String] {
+    &self.trailing_content
+  }
+
+  /// Return a mutable reference to trailing content lines.
+  pub fn trailing_content_mut(&mut self) -> &mut Vec<String> {
+    &mut self.trailing_content
+  }
 }
 
 impl Display for Section {
@@ -73,6 +85,9 @@ impl Display for Section {
       if !entry.note().is_empty() {
         write!(f, "\n{}", entry.note())?;
       }
+    }
+    for line in &self.trailing_content {
+      write!(f, "\n{line}")?;
     }
     Ok(())
   }

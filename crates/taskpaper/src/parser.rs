@@ -89,7 +89,9 @@ pub fn parse(content: &str) -> Document {
 
     if !found_first_section {
       doc.other_content_top_mut().push(line.to_string());
-    } else if current_section.is_none() && current_entry.is_none() {
+    } else if let Some(section) = current_section.as_mut() {
+      section.trailing_content_mut().push(line.to_string());
+    } else {
       doc.other_content_bottom_mut().push(line.to_string());
     }
   }
@@ -329,6 +331,47 @@ Currently:
       assert_eq!(entries[0].title(), "Spring forward task");
       assert_eq!(entries[1].title(), "Fall back task");
       assert_eq!(entries[2].title(), "Normal task");
+    }
+
+    #[test]
+    fn it_preserves_inter_section_content_position() {
+      let content = "\
+Currently:
+\t- 2024-03-17 14:30 | Task A <aaaabbbbccccddddeeeeffffaaaabbbb>
+# A comment between sections
+Archive:
+\t- 2024-03-16 10:00 | Task B <bbbbccccddddeeeeffffaaaabbbbcccc>";
+      let doc = parse(content);
+
+      let currently = &doc.sections()[0];
+      assert_eq!(currently.trailing_content(), &["# A comment between sections"]);
+      assert!(doc.other_content_bottom().is_empty());
+    }
+
+    #[test]
+    fn it_round_trips_document_with_comments_between_sections() {
+      let content = "\
+Currently:
+\t- 2024-03-17 14:30 | Task A <aaaabbbbccccddddeeeeffffaaaabbbb>
+# A comment between sections
+Archive:
+\t- 2024-03-16 10:00 | Task B <bbbbccccddddeeeeffffaaaabbbbcccc>";
+      let doc = parse(content);
+      let output = format!("{doc}");
+
+      assert_eq!(output, content);
+    }
+
+    #[test]
+    fn it_only_puts_actual_bottom_content_in_other_content_bottom() {
+      let content = "\
+Currently:
+\t- 2024-03-17 14:30 | Task A <aaaabbbbccccddddeeeeffffaaaabbbb>
+Archive:
+\t- 2024-03-16 10:00 | Task B <bbbbccccddddeeeeffffaaaabbbbcccc>";
+      let doc = parse(content);
+
+      assert!(doc.other_content_bottom().is_empty());
     }
 
     #[test]

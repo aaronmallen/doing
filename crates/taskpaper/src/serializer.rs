@@ -35,6 +35,11 @@ pub fn serialize(doc: &Document) -> String {
         out.push_str(&format!("\n{}", entry.note()));
       }
     }
+
+    for line in section.trailing_content() {
+      out.push('\n');
+      out.push_str(line);
+    }
   }
 
   for line in doc.other_content_bottom() {

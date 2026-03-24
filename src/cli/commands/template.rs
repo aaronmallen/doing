@@ -25,12 +25,12 @@ pub struct Command {
   #[arg(short, long, action = clap::ArgAction::SetTrue, overrides_with = "no_column")]
   column: bool,
 
+  #[arg(long = "no-column", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "column")]
+  no_column: bool,
+
   /// List available export template names
   #[arg(short, long)]
   list: bool,
-
-  #[arg(long = "no-column", action = clap::ArgAction::SetTrue, hide = true, overrides_with = "column")]
-  no_column: bool,
 
   /// Template name to display
   #[arg(index = 1, value_name = "NAME")]

@@ -113,6 +113,40 @@ struct SetArgs {
   remove: bool,
 }
 
+/// Check if `abbr` is an abbreviation of `full` — each character of `abbr`
+/// appears in `full` in order (case-insensitive).
+fn abbreviation_matches(abbr: &str, full: &str) -> bool {
+  let mut full_chars = full.chars();
+  for ac in abbr.chars() {
+    if !full_chars.any(|fc| fc.eq_ignore_ascii_case(&ac)) {
+      return false;
+    }
+  }
+  true
+}
+
+fn edit_config(args: &EditArgs, config: &doing_config::Config) -> Result<()> {
+  let config_path = config_loader::resolve_global_config_path();
+
+  if args.default {
+    return reset_config_to_defaults(&config_path);
+  }
+
+  if let Some(ref app) = args.app {
+    return open_with_app(&config_path, app);
+  }
+
+  if let Some(ref bundle_id) = args.bundle_id {
+    return crate::cli::editor::open_with_bundle_id(bundle_id, &config_path);
+  }
+
+  if let Some(ref ed) = args.editor {
+    return open_with_editor(&config_path, ed);
+  }
+
+  editor::edit_config(config)
+}
+
 /// Attempt to fuzzy-match a dot-path against a JSON value tree.
 ///
 /// Each segment is matched against keys at that level using:
@@ -150,40 +184,6 @@ fn fuzzy_resolve_dot_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value>
     }
   }
   Some(current)
-}
-
-/// Check if `abbr` is an abbreviation of `full` — each character of `abbr`
-/// appears in `full` in order (case-insensitive).
-fn abbreviation_matches(abbr: &str, full: &str) -> bool {
-  let mut full_chars = full.chars();
-  for ac in abbr.chars() {
-    if !full_chars.any(|fc| fc.eq_ignore_ascii_case(&ac)) {
-      return false;
-    }
-  }
-  true
-}
-
-fn edit_config(args: &EditArgs, config: &doing_config::Config) -> Result<()> {
-  let config_path = config_loader::resolve_global_config_path();
-
-  if args.default {
-    return reset_config_to_defaults(&config_path);
-  }
-
-  if let Some(ref app) = args.app {
-    return open_with_app(&config_path, app);
-  }
-
-  if let Some(ref bundle_id) = args.bundle_id {
-    return crate::cli::editor::open_with_bundle_id(bundle_id, &config_path);
-  }
-
-  if let Some(ref ed) = args.editor {
-    return open_with_editor(&config_path, ed);
-  }
-
-  editor::edit_config(config)
 }
 
 fn get_value(args: &GetArgs, ctx: &AppContext) -> Result<()> {
@@ -259,35 +259,6 @@ fn open_with_editor(config_path: &Path, editor_cmd: &str) -> Result<()> {
       "editor '{editor_cmd}' exited with non-zero status"
     )));
   }
-  Ok(())
-}
-
-fn resolve_backup_dir() -> std::path::PathBuf {
-  doing_config::env::DOING_BACKUP_DIR
-    .value()
-    .map(std::path::PathBuf::from)
-    .unwrap_or_else(|_| doing_config::Config::default().backup_dir)
-}
-
-fn undo_config(ctx: &AppContext) -> Result<()> {
-  let config_path = config_loader::resolve_global_config_path();
-
-  if !config_path.exists() {
-    return Err(Error::Config("no config file found".into()));
-  }
-
-  let backup_dir = resolve_backup_dir();
-  let backups = doing_ops::backup::list_backups(&config_path, &backup_dir)?;
-  let backup = backups
-    .first()
-    .ok_or_else(|| Error::Config("no config backups available".into()))?;
-
-  fs::copy(backup, &config_path)?;
-
-  if !ctx.quiet {
-    eprintln!("Config restored from backup");
-  }
-
   Ok(())
 }
 
@@ -427,6 +398,13 @@ fn reset_config_to_defaults(config_path: &Path) -> Result<()> {
   Ok(())
 }
 
+fn resolve_backup_dir() -> std::path::PathBuf {
+  doing_config::env::DOING_BACKUP_DIR
+    .value()
+    .map(std::path::PathBuf::from)
+    .unwrap_or_else(|_| doing_config::Config::default().backup_dir)
+}
+
 fn resolve_dot_path<'a>(value: &'a Value, path: &str) -> Option<&'a Value> {
   let mut current = value;
   for key in path.split('.') {
@@ -560,6 +538,28 @@ fn toml_value(raw: &str) -> toml_edit::Item {
     return toml_edit::value(f);
   }
   toml_edit::value(raw)
+}
+
+fn undo_config(ctx: &AppContext) -> Result<()> {
+  let config_path = config_loader::resolve_global_config_path();
+
+  if !config_path.exists() {
+    return Err(Error::Config("no config file found".into()));
+  }
+
+  let backup_dir = resolve_backup_dir();
+  let backups = doing_ops::backup::list_backups(&config_path, &backup_dir)?;
+  let backup = backups
+    .first()
+    .ok_or_else(|| Error::Config("no config backups available".into()))?;
+
+  fs::copy(backup, &config_path)?;
+
+  if !ctx.quiet {
+    eprintln!("Config restored from backup");
+  }
+
+  Ok(())
 }
 
 #[cfg(test)]

@@ -105,6 +105,9 @@ pub struct Cli {
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_color", global = true)]
   color: bool,
 
+  #[arg(long = "no-color", action = ArgAction::SetTrue, hide = true, overrides_with = "color", global = true)]
+  no_color: bool,
+
   #[command(subcommand)]
   command: Option<Command>,
 
@@ -124,8 +127,9 @@ pub struct Cli {
   #[arg(long, global = true)]
   no: bool,
 
-  #[arg(long = "no-color", action = ArgAction::SetTrue, hide = true, overrides_with = "color", global = true)]
-  no_color: bool,
+  /// Exclude auto tags and default tags
+  #[arg(short = 'X', long, action = ArgAction::SetTrue, overrides_with = "no_noauto", global = true)]
+  noauto: bool,
 
   #[arg(
     long = "no-noauto",
@@ -136,6 +140,10 @@ pub struct Cli {
   )]
   no_noauto: bool,
 
+  /// Output notes if included in the template
+  #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_notes", global = true)]
+  notes: bool,
+
   #[arg(
     long = "no-notes",
     action = ArgAction::SetTrue,
@@ -145,6 +153,10 @@ pub struct Cli {
   )]
   no_notes: bool,
 
+  /// Use a pager when output is longer than screen
+  #[arg(short = 'p', long, action = ArgAction::SetTrue, overrides_with = "no_pager", global = true)]
+  pager: bool,
+
   #[arg(
     long = "no-pager",
     action = ArgAction::SetTrue,
@@ -153,18 +165,6 @@ pub struct Cli {
     global = true
   )]
   no_pager: bool,
-
-  /// Exclude auto tags and default tags
-  #[arg(short = 'X', long, action = ArgAction::SetTrue, overrides_with = "no_noauto", global = true)]
-  noauto: bool,
-
-  /// Output notes if included in the template
-  #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_notes", global = true)]
-  notes: bool,
-
-  /// Use a pager when output is longer than screen
-  #[arg(short = 'p', long, action = ArgAction::SetTrue, overrides_with = "no_pager", global = true)]
-  pager: bool,
 
   /// Silence status messages
   #[arg(long, global = true)]

@@ -53,16 +53,16 @@ pub struct Command {
   #[arg(short, long, default_value_t = 1)]
   count: usize,
 
-  /// Use exact (literal substring) matching for search
-  #[arg(short = 'x', long)]
-  exact: bool,
-
   /// Include date in @done tag
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_date", default_value_t = true)]
   date: bool,
 
   #[arg(long = "no-date", action = ArgAction::SetTrue, hide = true, overrides_with = "date")]
   no_date: bool,
+
+  /// Use exact (literal substring) matching for search
+  #[arg(short = 'x', long)]
+  exact: bool,
 
   /// Date range for start and done times (e.g. "1pm to 3pm")
   #[arg(long)]

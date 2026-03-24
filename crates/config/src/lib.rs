@@ -146,44 +146,6 @@ pub struct Config {
   pub views: HashMap<String, ViewConfig>,
 }
 
-impl Default for Config {
-  fn default() -> Self {
-    let config_dir = dir_spec::config_home().unwrap_or_else(|| PathBuf::from(".config"));
-    let data_dir = dir_spec::data_home().unwrap_or_else(|| PathBuf::from(".local/share"));
-    Self {
-      autotag: AutotagConfig::default(),
-      backup_dir: data_dir.join("doing/doing_backup"),
-      budgets: HashMap::new(),
-      current_section: "Currently".into(),
-      date_tags: vec!["done".into(), "defer(?:red)?".into(), "waiting".into()],
-      default_tags: Vec::new(),
-      disabled_commands: Vec::new(),
-      doing_file: data_dir.join("doing/what_was_i_doing.md"),
-      doing_file_sort: SortOrder::Desc,
-      editors: EditorsConfig::default(),
-      export_templates: HashMap::new(),
-      history_size: 15,
-      include_notes: true,
-      interaction: InteractionConfig::default(),
-      interval_format: "clock".into(),
-      marker_color: "red".into(),
-      marker_tag: "flagged".into(),
-      never_finish: Vec::new(),
-      never_time: Vec::new(),
-      order: SortOrder::Asc,
-      paginate: false,
-      plugins: PluginsConfig::default(),
-      search: SearchConfig::default(),
-      shortdate_format: ShortdateFormatConfig::default(),
-      tag_sort: "name".into(),
-      template_path: config_dir.join("doing/templates"),
-      templates: HashMap::new(),
-      timer_format: "text".into(),
-      views: HashMap::new(),
-    }
-  }
-}
-
 impl Config {
   /// Load the fully resolved configuration.
   ///
@@ -228,6 +190,44 @@ impl Config {
     self.plugins.command_path = expand_tilde(&self.plugins.command_path);
     self.plugins.plugin_path = expand_tilde(&self.plugins.plugin_path);
     self.template_path = expand_tilde(&self.template_path);
+  }
+}
+
+impl Default for Config {
+  fn default() -> Self {
+    let config_dir = dir_spec::config_home().unwrap_or_else(|| PathBuf::from(".config"));
+    let data_dir = dir_spec::data_home().unwrap_or_else(|| PathBuf::from(".local/share"));
+    Self {
+      autotag: AutotagConfig::default(),
+      backup_dir: data_dir.join("doing/doing_backup"),
+      budgets: HashMap::new(),
+      current_section: "Currently".into(),
+      date_tags: vec!["done".into(), "defer(?:red)?".into(), "waiting".into()],
+      default_tags: Vec::new(),
+      disabled_commands: Vec::new(),
+      doing_file: data_dir.join("doing/what_was_i_doing.md"),
+      doing_file_sort: SortOrder::Desc,
+      editors: EditorsConfig::default(),
+      export_templates: HashMap::new(),
+      history_size: 15,
+      include_notes: true,
+      interaction: InteractionConfig::default(),
+      interval_format: "clock".into(),
+      marker_color: "red".into(),
+      marker_tag: "flagged".into(),
+      never_finish: Vec::new(),
+      never_time: Vec::new(),
+      order: SortOrder::Asc,
+      paginate: false,
+      plugins: PluginsConfig::default(),
+      search: SearchConfig::default(),
+      shortdate_format: ShortdateFormatConfig::default(),
+      tag_sort: "name".into(),
+      template_path: config_dir.join("doing/templates"),
+      templates: HashMap::new(),
+      timer_format: "text".into(),
+      views: HashMap::new(),
+    }
   }
 }
 

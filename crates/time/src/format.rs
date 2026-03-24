@@ -120,27 +120,6 @@ impl Display for FormattedDuration {
   }
 }
 
-/// Date format strings for relative time display.
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(default)]
-pub struct ShortdateFormatConfig {
-  pub older: String,
-  pub this_month: String,
-  pub this_week: String,
-  pub today: String,
-}
-
-impl Default for ShortdateFormatConfig {
-  fn default() -> Self {
-    Self {
-      older: "%m/%d/%y %_I:%M%P".into(),
-      this_month: "%m/%d %_I:%M%P".into(),
-      this_week: "%a %_I:%M%P".into(),
-      today: "%_I:%M%P".into(),
-    }
-  }
-}
-
 /// A formatted short date that implements [`Display`].
 #[derive(Clone, Debug)]
 pub struct FormattedShortdate {
@@ -178,6 +157,27 @@ impl FormattedShortdate {
 impl Display for FormattedShortdate {
   fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
     write!(f, "{}", self.formatted)
+  }
+}
+
+/// Date format strings for relative time display.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(default)]
+pub struct ShortdateFormatConfig {
+  pub older: String,
+  pub this_month: String,
+  pub this_week: String,
+  pub today: String,
+}
+
+impl Default for ShortdateFormatConfig {
+  fn default() -> Self {
+    Self {
+      older: "%m/%d/%y %_I:%M%P".into(),
+      this_month: "%m/%d %_I:%M%P".into(),
+      this_week: "%a %_I:%M%P".into(),
+      today: "%_I:%M%P".into(),
+    }
   }
 }
 

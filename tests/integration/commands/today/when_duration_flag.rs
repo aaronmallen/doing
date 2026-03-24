@@ -1,10 +1,23 @@
+use chrono::Timelike;
+
 use crate::support::helpers::DoingCmd;
+
+/// Compute a safe `--back` argument that stays within today.
+///
+/// Uses the minutes elapsed since midnight (capped at 60) so that
+/// `doing now --back <arg>` never crosses into yesterday.
+fn safe_back_arg() -> String {
+  let now = chrono::Local::now();
+  let mins_today = (now.hour() * 60 + now.minute()).max(1);
+  format!("{}m", mins_today.min(60))
+}
 
 #[test]
 fn it_shows_duration() {
   let doing = DoingCmd::new();
+  let back = safe_back_arg();
 
-  doing.run(["now", "--back", "1h", "Duration test"]).assert().success();
+  doing.run(["now", "--back", &back, "Duration test"]).assert().success();
 
   let output = doing.run(["today", "--duration"]).output().expect("failed to run");
 
@@ -20,9 +33,10 @@ fn it_shows_duration() {
 #[test]
 fn it_hides_duration() {
   let doing = DoingCmd::new();
+  let back = safe_back_arg();
 
   doing
-    .run(["now", "--back", "1h", "No duration test"])
+    .run(["now", "--back", &back, "No duration test"])
     .assert()
     .success();
 
@@ -40,9 +54,10 @@ fn it_hides_duration() {
 #[test]
 fn it_includes_interval_for_finished_entries() {
   let doing = DoingCmd::new();
+  let back = safe_back_arg();
 
   doing
-    .run(["now", "--back", "1h", "Finished today entry"])
+    .run(["now", "--back", &back, "Finished today entry"])
     .assert()
     .success();
   doing.run(["done"]).assert().success();

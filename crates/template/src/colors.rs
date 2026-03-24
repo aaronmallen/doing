@@ -116,8 +116,8 @@ pub enum NamedColor {
   Underscore,
   White,
   Whiteboard,
-  Yellow,
   Yeller,
+  Yellow,
 }
 
 impl NamedColor {
@@ -259,8 +259,8 @@ impl NamedColor {
       Self::Underline | Self::Underscore => Style::new().underline(),
       Self::White => Style::new().white(),
       Self::Whiteboard => Style::new().black().on_white().bold(),
-      Self::Yellow => Style::new().yellow(),
       Self::Yeller => Style::new().white().on_yellow().bold(),
+      Self::Yellow => Style::new().yellow(),
     }
   }
 }
@@ -277,6 +277,56 @@ impl Display for NamedColor {
 /// detection via [`yansi`]. When output is piped or redirected, colors are suppressed.
 pub fn init() {
   yansi::whenever(Condition::TTY_AND_COLOR);
+}
+
+/// Strip all ANSI escape sequences from a string.
+pub fn strip_ansi(s: &str) -> String {
+  STRIP_ANSI_RE.replace_all(s, "").into_owned()
+}
+
+/// Validate a color name string, returning the longest valid prefix.
+///
+/// This allows color tokens to bleed into adjacent text, e.g. `%greensomething`
+/// still matches `green`.
+pub fn validate_color(s: &str) -> Option<String> {
+  let normalized = s.replace('_', "").replace("bright", "bold");
+  let normalized = if normalized.starts_with("bgbold") {
+    normalized.replacen("bgbold", "boldbg", 1)
+  } else {
+    normalized
+  };
+
+  // Check for hex color
+  if let Some(rest) = normalized.strip_prefix('#')
+    && rest.len() >= 6
+    && rest[..6].chars().all(|c| c.is_ascii_hexdigit())
+  {
+    return Some(format!("#{}", &rest[..6]));
+  }
+  for prefix in ["fg#", "bg#", "f#", "b#"] {
+    if let Some(rest) = normalized.strip_prefix(prefix)
+      && rest.len() >= 6
+      && rest[..6].chars().all(|c| c.is_ascii_hexdigit())
+    {
+      return Some(format!("{prefix}{}", &rest[..6]));
+    }
+  }
+
+  // Find longest matching named color
+  let mut valid = None;
+  let mut compiled = String::new();
+  for ch in normalized.chars() {
+    compiled.push(ch);
+    if NamedColor::parse(&compiled).is_some() {
+      valid = Some(compiled.clone());
+    }
+  }
+  valid
+}
+
+/// Return the visible (non-ANSI) length of a string.
+pub fn visible_len(s: &str) -> usize {
+  strip_ansi(s).len()
 }
 
 /// Return a sorted list of all supported color names.
@@ -345,56 +395,6 @@ fn available_colors() -> Vec<&'static str> {
     "yeller",
     "yellow",
   ]
-}
-
-/// Strip all ANSI escape sequences from a string.
-pub fn strip_ansi(s: &str) -> String {
-  STRIP_ANSI_RE.replace_all(s, "").into_owned()
-}
-
-/// Validate a color name string, returning the longest valid prefix.
-///
-/// This allows color tokens to bleed into adjacent text, e.g. `%greensomething`
-/// still matches `green`.
-pub fn validate_color(s: &str) -> Option<String> {
-  let normalized = s.replace('_', "").replace("bright", "bold");
-  let normalized = if normalized.starts_with("bgbold") {
-    normalized.replacen("bgbold", "boldbg", 1)
-  } else {
-    normalized
-  };
-
-  // Check for hex color
-  if let Some(rest) = normalized.strip_prefix('#')
-    && rest.len() >= 6
-    && rest[..6].chars().all(|c| c.is_ascii_hexdigit())
-  {
-    return Some(format!("#{}", &rest[..6]));
-  }
-  for prefix in ["fg#", "bg#", "f#", "b#"] {
-    if let Some(rest) = normalized.strip_prefix(prefix)
-      && rest.len() >= 6
-      && rest[..6].chars().all(|c| c.is_ascii_hexdigit())
-    {
-      return Some(format!("{prefix}{}", &rest[..6]));
-    }
-  }
-
-  // Find longest matching named color
-  let mut valid = None;
-  let mut compiled = String::new();
-  for ch in normalized.chars() {
-    compiled.push(ch);
-    if NamedColor::parse(&compiled).is_some() {
-      valid = Some(compiled.clone());
-    }
-  }
-  valid
-}
-
-/// Return the visible (non-ANSI) length of a string.
-pub fn visible_len(s: &str) -> usize {
-  strip_ansi(s).len()
 }
 
 fn parse_hex(s: &str) -> Option<Color> {

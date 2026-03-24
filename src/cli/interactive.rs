@@ -31,6 +31,15 @@ pub fn select_entries(entries: &[Entry]) -> Result<Vec<Entry>> {
   Ok(selections.into_iter().map(|i| entries[i].clone()).collect())
 }
 
+pub fn has_fzf() -> bool {
+  Command::new("fzf")
+    .arg("--version")
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .status()
+    .is_ok_and(|s| s.success())
+}
+
 fn choose_dialoguer(entries: &[Entry]) -> Result<Option<Entry>> {
   let items: Vec<String> = entries.iter().map(format_entry).collect();
 
@@ -73,15 +82,6 @@ fn choose_fzf(entries: &[Entry]) -> Result<Option<Entry>> {
 fn format_entry(entry: &Entry) -> String {
   let date = entry.date().format("%Y-%m-%d %H:%M");
   format!("{date} | {}", entry.full_title())
-}
-
-pub fn has_fzf() -> bool {
-  Command::new("fzf")
-    .arg("--version")
-    .stdout(Stdio::null())
-    .stderr(Stdio::null())
-    .status()
-    .is_ok_and(|s| s.success())
 }
 
 #[cfg(test)]

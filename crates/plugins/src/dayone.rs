@@ -14,37 +14,6 @@ const DAYONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
 /// Day format for grouping entries by day.
 const DAY_GROUP_FORMAT: &str = "%Y-%m-%d";
 
-/// Export plugin that renders entries in Day One journal format, one entry per day.
-///
-/// Entries are grouped by date and rendered as a single journal entry per day,
-/// matching the behavior of Ruby doing's `dayone` output.
-pub struct DayoneExport;
-
-impl ExportPlugin for DayoneExport {
-  fn name(&self) -> &str {
-    "dayone"
-  }
-
-  fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
-    let grouped = group_by_day(entries);
-    let dayone_entries: Vec<DayoneEntry> = grouped
-      .into_iter()
-      .map(|(day, items)| render_day_entry(&day, &items, config))
-      .collect();
-
-    serde_json::to_string_pretty(&DayoneExportData {
-      entries: dayone_entries,
-    })
-    .unwrap_or_else(|_| "{}".into())
-  }
-
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
-      trigger: "dayone$|day_?one$".into(),
-    }
-  }
-}
-
 /// Export plugin that renders entries in Day One format, grouped by day.
 ///
 /// Same behavior as `dayone` — one journal entry per day.
@@ -86,6 +55,37 @@ impl ExportPlugin for DayoneEntriesExport {
   fn settings(&self) -> ExportPluginSettings {
     ExportPluginSettings {
       trigger: "dayone[_-]?entr(?:y|ies)".into(),
+    }
+  }
+}
+
+/// Export plugin that renders entries in Day One journal format, one entry per day.
+///
+/// Entries are grouped by date and rendered as a single journal entry per day,
+/// matching the behavior of Ruby doing's `dayone` output.
+pub struct DayoneExport;
+
+impl ExportPlugin for DayoneExport {
+  fn name(&self) -> &str {
+    "dayone"
+  }
+
+  fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
+    let grouped = group_by_day(entries);
+    let dayone_entries: Vec<DayoneEntry> = grouped
+      .into_iter()
+      .map(|(day, items)| render_day_entry(&day, &items, config))
+      .collect();
+
+    serde_json::to_string_pretty(&DayoneExportData {
+      entries: dayone_entries,
+    })
+    .unwrap_or_else(|_| "{}".into())
+  }
+
+  fn settings(&self) -> ExportPluginSettings {
+    ExportPluginSettings {
+      trigger: "dayone$|day_?one$".into(),
     }
   }
 }

@@ -265,6 +265,26 @@ mod test {
       }
     }
 
+    mod eq {
+      use super::super::super::*;
+
+      #[test]
+      fn it_matches_case_insensitively() {
+        let a = Tag::new("Done", Some("value"));
+        let b = Tag::new("done", Some("value"));
+
+        assert_eq!(a, b);
+      }
+
+      #[test]
+      fn it_does_not_match_different_values() {
+        let a = Tag::new("done", Some("a"));
+        let b = Tag::new("done", Some("b"));
+
+        assert_ne!(a, b);
+      }
+    }
+
     mod hash {
       use std::hash::{DefaultHasher, Hash, Hasher};
 
@@ -292,26 +312,6 @@ mod test {
         set.insert(Tag::new("DONE", None::<String>));
 
         assert_eq!(set.len(), 1);
-      }
-    }
-
-    mod eq {
-      use super::super::super::*;
-
-      #[test]
-      fn it_matches_case_insensitively() {
-        let a = Tag::new("Done", Some("value"));
-        let b = Tag::new("done", Some("value"));
-
-        assert_eq!(a, b);
-      }
-
-      #[test]
-      fn it_does_not_match_different_values() {
-        let a = Tag::new("done", Some("a"));
-        let b = Tag::new("done", Some("b"));
-
-        assert_ne!(a, b);
       }
     }
 

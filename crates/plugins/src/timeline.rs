@@ -234,6 +234,23 @@ impl ExportPlugin for TimelineExport {
   }
 }
 
+/// Compute bar width as a percentage of the total time range.
+fn compute_bar_width(entry: &Entry, time_range: &Option<(DateTime<Local>, DateTime<Local>)>) -> f64 {
+  let Some((min_start, max_end)) = time_range else {
+    return 50.0;
+  };
+
+  let total_span = (*max_end - *min_start).num_seconds() as f64;
+  if total_span <= 0.0 {
+    return 50.0;
+  }
+
+  let entry_end = entry.end_date().unwrap_or(Local::now());
+  let entry_span = (entry_end - entry.date()).num_seconds() as f64;
+  let pct = (entry_span / total_span) * 100.0;
+  pct.clamp(2.0, 100.0)
+}
+
 /// Compute the time range spanned by all entries (earliest start to latest end).
 ///
 /// Returns `(min_start, max_end)` used for proportional bar width calculation.
@@ -251,23 +268,6 @@ fn compute_time_range(entries: &[Entry]) -> Option<(DateTime<Local>, DateTime<Lo
   }
 
   Some((min_start, max_end))
-}
-
-/// Compute bar width as a percentage of the total time range.
-fn compute_bar_width(entry: &Entry, time_range: &Option<(DateTime<Local>, DateTime<Local>)>) -> f64 {
-  let Some((min_start, max_end)) = time_range else {
-    return 50.0;
-  };
-
-  let total_span = (*max_end - *min_start).num_seconds() as f64;
-  if total_span <= 0.0 {
-    return 50.0;
-  }
-
-  let entry_end = entry.end_date().unwrap_or(Local::now());
-  let entry_span = (entry_end - entry.date()).num_seconds() as f64;
-  let pct = (entry_span / total_span) * 100.0;
-  pct.clamp(2.0, 100.0)
 }
 
 /// Render non-done tags as HTML spans.

@@ -304,42 +304,6 @@ mod test {
     ctx
   }
 
-  mod action_editor {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn it_persists_edited_titles() {
-      let dir = tempfile::tempdir().unwrap();
-      let mut ctx = sample_ctx_with_dir(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
-
-      // Simulate the edit loop from action_editor: update title and write back
-      for original in &entries {
-        if let Some(section) = ctx.document.section_by_name_mut(original.section()) {
-          if let Some(entry) = section.entries_mut().iter_mut().find(|e| e.id() == original.id()) {
-            entry.set_title("Edited title");
-          }
-        }
-      }
-      write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config).unwrap();
-
-      let content = fs::read_to_string(&ctx.doing_file).unwrap();
-      let reloaded = Document::parse(&content);
-      let reloaded_entries = reloaded.entries_in_section("Currently");
-
-      assert_eq!(reloaded_entries.len(), 2);
-      assert_eq!(reloaded_entries[0].title(), "Edited title");
-      assert_eq!(reloaded_entries[1].title(), "Edited title");
-    }
-  }
-
   mod action_delete {
     use pretty_assertions::assert_eq;
 
@@ -381,6 +345,42 @@ mod test {
         ctx.document.entries_in_section("Currently")[0].title(),
         "Meeting with team"
       );
+    }
+  }
+
+  mod action_editor {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_persists_edited_titles() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_dir(dir.path());
+      let entries: Vec<Entry> = ctx
+        .document
+        .entries_in_section("Currently")
+        .into_iter()
+        .cloned()
+        .collect();
+
+      // Simulate the edit loop from action_editor: update title and write back
+      for original in &entries {
+        if let Some(section) = ctx.document.section_by_name_mut(original.section()) {
+          if let Some(entry) = section.entries_mut().iter_mut().find(|e| e.id() == original.id()) {
+            entry.set_title("Edited title");
+          }
+        }
+      }
+      write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config).unwrap();
+
+      let content = fs::read_to_string(&ctx.doing_file).unwrap();
+      let reloaded = Document::parse(&content);
+      let reloaded_entries = reloaded.entries_in_section("Currently");
+
+      assert_eq!(reloaded_entries.len(), 2);
+      assert_eq!(reloaded_entries[0].title(), "Edited title");
+      assert_eq!(reloaded_entries[1].title(), "Edited title");
     }
   }
 

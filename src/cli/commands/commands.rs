@@ -214,6 +214,23 @@ fn write_disabled_toml(path: &std::path::Path, disabled: &[String]) -> Result<()
 mod test {
   use super::*;
 
+  fn sample_ctx() -> AppContext {
+    AppContext {
+      config: doing_config::Config::default(),
+      default_answer: false,
+      document: doing_taskpaper::Document::new(),
+      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
   mod list_commands {
     use super::*;
 
@@ -239,23 +256,6 @@ mod test {
       let result = super::super::list_commands(&ctx, &app, false, None);
 
       assert!(result.is_ok());
-    }
-  }
-
-  fn sample_ctx() -> AppContext {
-    AppContext {
-      config: doing_config::Config::default(),
-      default_answer: false,
-      document: doing_taskpaper::Document::new(),
-      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
     }
   }
 

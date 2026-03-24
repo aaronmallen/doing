@@ -203,23 +203,6 @@ fn apply_width(raw: &str, width: Option<i32>) -> String {
   }
 }
 
-/// Truncate a string to fit within `max_width` display columns.
-fn truncate_to_width(s: &str, max_width: usize) -> String {
-  use unicode_width::UnicodeWidthChar;
-
-  let mut result = String::new();
-  let mut current_width = 0;
-  for ch in s.chars() {
-    let ch_width = UnicodeWidthChar::width(ch).unwrap_or(0);
-    if current_width + ch_width > max_width {
-      break;
-    }
-    result.push(ch);
-    current_width += ch_width;
-  }
-  result
-}
-
 fn build_indent(indent: &Indent) -> String {
   let ch = match indent.kind {
     IndentChar::Custom(c) => c,
@@ -359,6 +342,23 @@ fn format_value(
     return wrap::wrap(raw, wrap_width as usize);
   }
   sized
+}
+
+/// Truncate a string to fit within `max_width` display columns.
+fn truncate_to_width(s: &str, max_width: usize) -> String {
+  use unicode_width::UnicodeWidthChar;
+
+  let mut result = String::new();
+  let mut current_width = 0;
+  for ch in s.chars() {
+    let ch_width = UnicodeWidthChar::width(ch).unwrap_or(0);
+    if current_width + ch_width > max_width {
+      break;
+    }
+    result.push(ch);
+    current_width += ch_width;
+  }
+  result
 }
 
 #[cfg(test)]

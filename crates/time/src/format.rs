@@ -280,6 +280,16 @@ mod test {
     use super::*;
 
     #[test]
+    fn it_defaults_unknown_to_text() {
+      assert_eq!(DurationFormat::from_config("unknown"), DurationFormat::Text);
+    }
+
+    #[test]
+    fn it_is_case_insensitive() {
+      assert_eq!(DurationFormat::from_config("CLOCK"), DurationFormat::Clock);
+    }
+
+    #[test]
     fn it_parses_clock_from_config() {
       assert_eq!(DurationFormat::from_config("clock"), DurationFormat::Clock);
     }
@@ -307,16 +317,6 @@ mod test {
     #[test]
     fn it_parses_text_from_config() {
       assert_eq!(DurationFormat::from_config("text"), DurationFormat::Text);
-    }
-
-    #[test]
-    fn it_defaults_unknown_to_text() {
-      assert_eq!(DurationFormat::from_config("unknown"), DurationFormat::Text);
-    }
-
-    #[test]
-    fn it_is_case_insensitive() {
-      assert_eq!(DurationFormat::from_config("CLOCK"), DurationFormat::Clock);
     }
   }
 
@@ -405,6 +405,34 @@ mod test {
     }
 
     #[test]
+    fn it_formats_natural_about_hours() {
+      let fd = FormattedDuration::new(Duration::hours(3), DurationFormat::Natural);
+
+      assert_eq!(fd.to_string(), "about 3 hours");
+    }
+
+    #[test]
+    fn it_formats_natural_few_minutes() {
+      let fd = FormattedDuration::new(Duration::minutes(3), DurationFormat::Natural);
+
+      assert_eq!(fd.to_string(), "a few minutes");
+    }
+
+    #[test]
+    fn it_formats_natural_half_hour() {
+      let fd = FormattedDuration::new(Duration::minutes(30), DurationFormat::Natural);
+
+      assert_eq!(fd.to_string(), "about half an hour");
+    }
+
+    #[test]
+    fn it_formats_natural_hour_and_half() {
+      let fd = FormattedDuration::new(Duration::minutes(90), DurationFormat::Natural);
+
+      assert_eq!(fd.to_string(), "about an hour and a half");
+    }
+
+    #[test]
     fn it_formats_text() {
       let fd = FormattedDuration::new(Duration::seconds(5400), DurationFormat::Text);
 
@@ -431,34 +459,6 @@ mod test {
 
       assert_eq!(fd.to_string(), "0 minutes");
     }
-
-    #[test]
-    fn it_formats_natural_half_hour() {
-      let fd = FormattedDuration::new(Duration::minutes(30), DurationFormat::Natural);
-
-      assert_eq!(fd.to_string(), "about half an hour");
-    }
-
-    #[test]
-    fn it_formats_natural_hour_and_half() {
-      let fd = FormattedDuration::new(Duration::minutes(90), DurationFormat::Natural);
-
-      assert_eq!(fd.to_string(), "about an hour and a half");
-    }
-
-    #[test]
-    fn it_formats_natural_few_minutes() {
-      let fd = FormattedDuration::new(Duration::minutes(3), DurationFormat::Natural);
-
-      assert_eq!(fd.to_string(), "a few minutes");
-    }
-
-    #[test]
-    fn it_formats_natural_about_hours() {
-      let fd = FormattedDuration::new(Duration::hours(3), DurationFormat::Natural);
-
-      assert_eq!(fd.to_string(), "about 3 hours");
-    }
   }
 
   mod formatted_shortdate {
@@ -477,28 +477,12 @@ mod test {
     }
 
     #[test]
-    fn it_formats_today() {
-      let now = Local::now();
-      let datetime = Local
-        .with_ymd_and_hms(now.year(), now.month(), now.day(), 14, 30, 0)
-        .unwrap();
+    fn it_formats_older() {
+      let datetime = Local.with_ymd_and_hms(2020, 6, 15, 14, 30, 0).unwrap();
 
       let result = FormattedShortdate::new(datetime, &config());
 
-      assert_eq!(result.to_string(), "14:30");
-    }
-
-    #[test]
-    fn it_formats_this_week() {
-      let yesterday = Local::now() - Duration::days(2);
-      let datetime = Local
-        .with_ymd_and_hms(yesterday.year(), yesterday.month(), yesterday.day(), 14, 30, 0)
-        .unwrap();
-
-      let result = FormattedShortdate::new(datetime, &config());
-
-      let expected = datetime.format("%a %H:%M").to_string();
-      assert_eq!(result.to_string(), expected);
+      assert_eq!(result.to_string(), "06/15/20 14:30");
     }
 
     #[test]
@@ -515,12 +499,28 @@ mod test {
     }
 
     #[test]
-    fn it_formats_older() {
-      let datetime = Local.with_ymd_and_hms(2020, 6, 15, 14, 30, 0).unwrap();
+    fn it_formats_this_week() {
+      let yesterday = Local::now() - Duration::days(2);
+      let datetime = Local
+        .with_ymd_and_hms(yesterday.year(), yesterday.month(), yesterday.day(), 14, 30, 0)
+        .unwrap();
 
       let result = FormattedShortdate::new(datetime, &config());
 
-      assert_eq!(result.to_string(), "06/15/20 14:30");
+      let expected = datetime.format("%a %H:%M").to_string();
+      assert_eq!(result.to_string(), expected);
+    }
+
+    #[test]
+    fn it_formats_today() {
+      let now = Local::now();
+      let datetime = Local
+        .with_ymd_and_hms(now.year(), now.month(), now.day(), 14, 30, 0)
+        .unwrap();
+
+      let result = FormattedShortdate::new(datetime, &config());
+
+      assert_eq!(result.to_string(), "14:30");
     }
   }
 }

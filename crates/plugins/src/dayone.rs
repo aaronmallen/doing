@@ -8,11 +8,11 @@ use serde::Serialize;
 
 use crate::{ExportPlugin, ExportPluginSettings, helpers};
 
-/// Date format for Day One entries.
-const DAYONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
-
 /// Day format for grouping entries by day.
 const DAY_GROUP_FORMAT: &str = "%Y-%m-%d";
+
+/// Date format for Day One entries.
+const DAYONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
 
 /// Export plugin that renders entries in Day One format, grouped by day.
 ///
@@ -90,12 +90,6 @@ impl ExportPlugin for DayoneExport {
   }
 }
 
-/// Top-level Day One export structure.
-#[derive(Serialize)]
-struct DayoneExportData {
-  entries: Vec<DayoneEntry>,
-}
-
 /// A single Day One journal entry.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -103,6 +97,23 @@ struct DayoneEntry {
   creation_date: String,
   tags: Vec<String>,
   text: String,
+}
+
+/// Top-level Day One export structure.
+#[derive(Serialize)]
+struct DayoneExportData {
+  entries: Vec<DayoneEntry>,
+}
+
+/// Get the earliest date from a list of entries.
+fn earliest_date(entries: &[&Entry]) -> String {
+  entries
+    .iter()
+    .map(|e| e.date())
+    .min()
+    .unwrap_or_else(Local::now)
+    .format(DAYONE_DATE_FORMAT)
+    .to_string()
 }
 
 /// Group entries by their date (day portion).
@@ -180,17 +191,6 @@ fn render_single_entry(entry: &Entry, config: &Config) -> DayoneEntry {
     tags,
     text,
   }
-}
-
-/// Get the earliest date from a list of entries.
-fn earliest_date(entries: &[&Entry]) -> String {
-  entries
-    .iter()
-    .map(|e| e.date())
-    .min()
-    .unwrap_or_else(Local::now)
-    .format(DAYONE_DATE_FORMAT)
-    .to_string()
 }
 
 #[cfg(test)]

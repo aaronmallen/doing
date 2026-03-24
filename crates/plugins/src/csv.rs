@@ -259,27 +259,6 @@ mod test {
     }
   }
 
-  mod quote_field {
-    use pretty_assertions::assert_eq;
-
-    use super::super::quote_field;
-
-    #[test]
-    fn it_quotes_empty_value() {
-      assert_eq!(quote_field(""), "\"\"");
-    }
-
-    #[test]
-    fn it_passes_through_already_quoted_value() {
-      assert_eq!(quote_field("\"hello\""), "\"hello\"");
-    }
-
-    #[test]
-    fn it_wraps_plain_value_in_quotes() {
-      assert_eq!(quote_field("hello"), "\"hello\"");
-    }
-  }
-
   mod escape_csv {
     use pretty_assertions::assert_eq;
 
@@ -303,6 +282,27 @@ mod test {
     #[test]
     fn it_wraps_value_with_newline_in_quotes() {
       assert_eq!(escape_csv("line1\nline2"), "\"line1\nline2\"");
+    }
+  }
+
+  mod quote_field {
+    use pretty_assertions::assert_eq;
+
+    use super::super::quote_field;
+
+    #[test]
+    fn it_quotes_empty_value() {
+      assert_eq!(quote_field(""), "\"\"");
+    }
+
+    #[test]
+    fn it_passes_through_already_quoted_value() {
+      assert_eq!(quote_field("\"hello\""), "\"hello\"");
+    }
+
+    #[test]
+    fn it_wraps_plain_value_in_quotes() {
+      assert_eq!(quote_field("hello"), "\"hello\"");
     }
   }
 }

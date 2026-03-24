@@ -46,21 +46,41 @@ struct IcsEvent {
   summary: Option<String>,
 }
 
-/// Unfold RFC 5545 content lines: join continuation lines (starting with a space or tab)
-/// to the previous line.
-fn unfold_lines(content: &str) -> Vec<String> {
-  let mut lines: Vec<String> = Vec::new();
-  for raw in content.lines() {
-    let raw = raw.trim_end_matches('\r');
-    if (raw.starts_with(' ') || raw.starts_with('\t'))
-      && let Some(prev) = lines.last_mut()
-    {
-      prev.push_str(&raw[1..]);
-      continue;
-    }
-    lines.push(raw.to_string());
+/// Convert an ICS event to a doing entry.
+fn convert_event(event: &IcsEvent) -> Option<Entry> {
+  let start_str = event.dtstart.as_deref()?;
+  let start = parse_ics_date(start_str, event.dtstart_tzid.as_deref())?;
+
+  let summary = event.summary.as_deref().unwrap_or("Calendar event");
+  let title = format!("[Calendar] {summary}");
+
+  let mut tags = Tags::new();
+
+  if let Some(ref end_str) = event.dtend
+    && let Some(end) = parse_ics_date(end_str, event.dtend_tzid.as_deref())
+  {
+    let end_formatted = end.format("%Y-%m-%d %H:%M").to_string();
+    tags.add(Tag::new("done", Some(end_formatted)));
   }
-  lines
+
+  let note = event
+    .description
+    .as_deref()
+    .filter(|d| !d.is_empty())
+    .map(Note::from_str)
+    .unwrap_or_default();
+
+  Some(Entry::new(start, title, tags, note, "Currently", None::<String>))
+}
+
+/// Extract TZID value from ICS property parameters (e.g. "TZID=America/New_York").
+fn extract_tzid(params: &str) -> Option<String> {
+  for param in params.split(';') {
+    if let Some(value) = param.strip_prefix("TZID=") {
+      return Some(value.to_string());
+    }
+  }
+  None
 }
 
 /// Parse VEVENT components from ICS content.
@@ -128,43 +148,6 @@ fn parse_ics(content: &str) -> Vec<IcsEvent> {
   events
 }
 
-/// Convert an ICS event to a doing entry.
-fn convert_event(event: &IcsEvent) -> Option<Entry> {
-  let start_str = event.dtstart.as_deref()?;
-  let start = parse_ics_date(start_str, event.dtstart_tzid.as_deref())?;
-
-  let summary = event.summary.as_deref().unwrap_or("Calendar event");
-  let title = format!("[Calendar] {summary}");
-
-  let mut tags = Tags::new();
-
-  if let Some(ref end_str) = event.dtend
-    && let Some(end) = parse_ics_date(end_str, event.dtend_tzid.as_deref())
-  {
-    let end_formatted = end.format("%Y-%m-%d %H:%M").to_string();
-    tags.add(Tag::new("done", Some(end_formatted)));
-  }
-
-  let note = event
-    .description
-    .as_deref()
-    .filter(|d| !d.is_empty())
-    .map(Note::from_str)
-    .unwrap_or_default();
-
-  Some(Entry::new(start, title, tags, note, "Currently", None::<String>))
-}
-
-/// Extract TZID value from ICS property parameters (e.g. "TZID=America/New_York").
-fn extract_tzid(params: &str) -> Option<String> {
-  for param in params.split(';') {
-    if let Some(value) = param.strip_prefix("TZID=") {
-      return Some(value.to_string());
-    }
-  }
-  None
-}
-
 /// Parse an ICS date string, optionally using a TZID for timezone conversion.
 ///
 /// Supports formats: `20240317T143000Z`, `20240317T143000`, `20240317`.
@@ -212,6 +195,23 @@ fn unescape_ics(s: &str) -> String {
     .replace("\\,", ",")
     .replace("\\;", ";")
     .replace("\\\\", "\\")
+}
+
+/// Unfold RFC 5545 content lines: join continuation lines (starting with a space or tab)
+/// to the previous line.
+fn unfold_lines(content: &str) -> Vec<String> {
+  let mut lines: Vec<String> = Vec::new();
+  for raw in content.lines() {
+    let raw = raw.trim_end_matches('\r');
+    if (raw.starts_with(' ') || raw.starts_with('\t'))
+      && let Some(prev) = lines.last_mut()
+    {
+      prev.push_str(&raw[1..]);
+      continue;
+    }
+    lines.push(raw.to_string());
+  }
+  lines
 }
 
 #[cfg(test)]

@@ -150,20 +150,6 @@ mod test {
     doc
   }
 
-  mod fnv1a_hash {
-    use pretty_assertions::assert_eq;
-
-    use super::super::fnv1a_hash;
-
-    #[test]
-    fn it_produces_known_output_for_known_input() {
-      // FNV-1a of "hello" is a well-known value
-      let hash = fnv1a_hash(b"hello");
-
-      assert_eq!(hash, 0xa430d84680aabd0b);
-    }
-  }
-
   mod backup_prefix {
     use pretty_assertions::assert_eq;
 
@@ -179,6 +165,20 @@ mod test {
       let prefix2 = backup_prefix(&source);
 
       assert_eq!(prefix1, prefix2);
+    }
+  }
+
+  mod fnv1a_hash {
+    use pretty_assertions::assert_eq;
+
+    use super::super::fnv1a_hash;
+
+    #[test]
+    fn it_produces_known_output_for_known_input() {
+      // FNV-1a of "hello" is a well-known value
+      let hash = fnv1a_hash(b"hello");
+
+      assert_eq!(hash, 0xa430d84680aabd0b);
     }
   }
 

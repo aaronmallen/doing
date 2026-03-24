@@ -200,6 +200,24 @@ mod test {
     }
 
     #[test]
+    fn it_restores_atomically_without_temp_file_residue() {
+      let dir = tempfile::tempdir().unwrap();
+      let source = dir.path().join("doing.md");
+      let backup_dir = dir.path().join("backups");
+      fs::create_dir_all(&backup_dir).unwrap();
+      fs::write(&source, "current").unwrap();
+
+      let prefix = backup_prefix(&source);
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup").unwrap();
+
+      undo(&source, &backup_dir, 1).unwrap();
+
+      // Source should be restored and no temp file should remain
+      assert_eq!(fs::read_to_string(&source).unwrap(), "backup");
+      assert!(!source.with_extension("tmp").exists());
+    }
+
+    #[test]
     fn it_restores_from_most_recent_by_default() {
       let dir = tempfile::tempdir().unwrap();
       let source = dir.path().join("doing.md");
@@ -265,24 +283,6 @@ mod test {
       let result = undo(&source, &backup_dir, 0);
 
       assert!(result.is_err());
-    }
-
-    #[test]
-    fn it_restores_atomically_without_temp_file_residue() {
-      let dir = tempfile::tempdir().unwrap();
-      let source = dir.path().join("doing.md");
-      let backup_dir = dir.path().join("backups");
-      fs::create_dir_all(&backup_dir).unwrap();
-      fs::write(&source, "current").unwrap();
-
-      let prefix = backup_prefix(&source);
-      fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup").unwrap();
-
-      undo(&source, &backup_dir, 1).unwrap();
-
-      // Source should be restored and no temp file should remain
-      assert_eq!(fs::read_to_string(&source).unwrap(), "backup");
-      assert!(!source.with_extension("tmp").exists());
     }
 
     #[test]

@@ -173,19 +173,19 @@ mod test {
     }
 
     #[test]
-    fn it_wraps_at_word_boundaries() {
-      let result = wrap("the quick brown fox jumps over", 16);
-
-      assert_eq!(result, "the quick brown\nfox jumps over");
-    }
-
-    #[test]
     fn it_handles_control_characters_in_input() {
       // Entries containing old sentinel characters (\x02) should
       // wrap correctly now that we use PUA codepoints.
       let result = wrap("hello \x02 world", 40);
 
       assert_eq!(result, "hello \x02 world");
+    }
+
+    #[test]
+    fn it_wraps_at_word_boundaries() {
+      let result = wrap("the quick brown fox jumps over", 16);
+
+      assert_eq!(result, "the quick brown\nfox jumps over");
     }
 
     #[test]

@@ -18,9 +18,6 @@
 
 use std::io;
 
-/// A type alias for `Result<T, doing::Error>`.
-pub type Result<T> = std::result::Result<T, Error>;
-
 /// Errors that can occur within the doing crate.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -52,6 +49,9 @@ pub enum Error {
   #[error("update error: {0}")]
   Update(String),
 }
+
+/// A type alias for `Result<T, doing::Error>`.
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[cfg(test)]
 mod test {

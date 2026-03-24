@@ -128,22 +128,6 @@ fn edit_view(name: &str, ctx: &AppContext) -> Result<()> {
   editor::edit_config(&ctx.config)
 }
 
-fn list_views_column(ctx: &AppContext) -> Result<()> {
-  if ctx.config.views.is_empty() {
-    println!("No views configured.");
-    return Ok(());
-  }
-
-  let mut names: Vec<&String> = ctx.config.views.keys().collect();
-  names.sort();
-
-  for name in names {
-    println!("{name}");
-  }
-
-  Ok(())
-}
-
 fn list_views(ctx: &AppContext) -> Result<()> {
   if ctx.config.views.is_empty() {
     println!("No views configured.");
@@ -172,6 +156,22 @@ fn list_views(ctx: &AppContext) -> Result<()> {
     } else {
       println!("{name} ({})", details.join(", "));
     }
+  }
+
+  Ok(())
+}
+
+fn list_views_column(ctx: &AppContext) -> Result<()> {
+  if ctx.config.views.is_empty() {
+    println!("No views configured.");
+    return Ok(());
+  }
+
+  let mut names: Vec<&String> = ctx.config.views.keys().collect();
+  names.sort();
+
+  for name in names {
+    println!("{name}");
   }
 
   Ok(())

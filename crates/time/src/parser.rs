@@ -359,6 +359,34 @@ fn resolve_weekday(now: DateTime<Local>, target: Weekday, direction: Option<&str
 mod test {
   use super::*;
 
+  mod beginning_of_day {
+    use super::*;
+
+    #[test]
+    fn it_does_not_panic_on_dst_gap_dates() {
+      // 2024-03-10 is US spring-forward; 2024-10-06 is Brazil spring-forward.
+      // At least one of these may have a midnight DST gap depending on the
+      // test machine's timezone. The function must not panic for any date.
+      let dates = [
+        NaiveDate::from_ymd_opt(2024, 3, 10).unwrap(),
+        NaiveDate::from_ymd_opt(2024, 10, 6).unwrap(),
+        NaiveDate::from_ymd_opt(2019, 11, 3).unwrap(),
+      ];
+      for date in &dates {
+        let result = beginning_of_day(*date);
+        assert_eq!(result.date_naive(), *date);
+      }
+    }
+
+    #[test]
+    fn it_returns_midnight_for_normal_dates() {
+      let date = NaiveDate::from_ymd_opt(2024, 6, 15).unwrap();
+      let result = beginning_of_day(date);
+
+      assert_eq!(result.date_naive(), date);
+    }
+  }
+
   mod chronify {
     use pretty_assertions::assert_eq;
 
@@ -906,31 +934,4 @@ mod test {
     }
   }
 
-  mod beginning_of_day {
-    use super::*;
-
-    #[test]
-    fn it_returns_midnight_for_normal_dates() {
-      let date = NaiveDate::from_ymd_opt(2024, 6, 15).unwrap();
-      let result = beginning_of_day(date);
-
-      assert_eq!(result.date_naive(), date);
-    }
-
-    #[test]
-    fn it_does_not_panic_on_dst_gap_dates() {
-      // 2024-03-10 is US spring-forward; 2024-10-06 is Brazil spring-forward.
-      // At least one of these may have a midnight DST gap depending on the
-      // test machine's timezone. The function must not panic for any date.
-      let dates = [
-        NaiveDate::from_ymd_opt(2024, 3, 10).unwrap(),
-        NaiveDate::from_ymd_opt(2024, 10, 6).unwrap(),
-        NaiveDate::from_ymd_opt(2019, 11, 3).unwrap(),
-      ];
-      for date in &dates {
-        let result = beginning_of_day(*date);
-        assert_eq!(result.date_naive(), *date);
-      }
-    }
-  }
 }

@@ -568,6 +568,23 @@ mod test {
 
   use super::*;
 
+  fn sample_ctx() -> AppContext {
+    AppContext {
+      config: Config::default(),
+      default_answer: false,
+      document: doing_taskpaper::Document::new(),
+      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
   mod get_value {
     use super::*;
 
@@ -831,23 +848,6 @@ mod test {
       let result = super::super::resolve_dot_path(&value, "search.missing");
 
       assert_eq!(result, None);
-    }
-  }
-
-  fn sample_ctx() -> AppContext {
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doing_taskpaper::Document::new(),
-      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
     }
   }
 

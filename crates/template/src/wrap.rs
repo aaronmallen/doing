@@ -6,7 +6,7 @@ use crate::colors;
 
 static TAG_VALUE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"@\S+\(.*?\)").unwrap());
 
-const TAG_VALUE_SENTINEL: &str = "\x02\x02\x02\x02";
+const TAG_VALUE_SENTINEL: &str = "\u{E001}";
 
 /// Wrap text at word boundaries, respecting tag values.
 ///
@@ -177,6 +177,15 @@ mod test {
       let result = wrap("the quick brown fox jumps over", 16);
 
       assert_eq!(result, "the quick brown\nfox jumps over");
+    }
+
+    #[test]
+    fn it_handles_control_characters_in_input() {
+      // Entries containing old sentinel characters (\x02) should
+      // wrap correctly now that we use PUA codepoints.
+      let result = wrap("hello \x02 world", 40);
+
+      assert_eq!(result, "hello \x02 world");
     }
 
     #[test]

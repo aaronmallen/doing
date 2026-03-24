@@ -17,7 +17,7 @@ static PLACEHOLDER_RE: LazyLock<Regex> = LazyLock::new(|| {
   .unwrap()
 });
 
-const ESCAPE_SENTINEL: &str = "\x01";
+const ESCAPE_SENTINEL: &str = "\u{E000}";
 
 /// Indentation specification for wrapped/continuation lines.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -519,6 +519,15 @@ mod test {
           width: None,
         }]
       );
+    }
+
+    #[test]
+    fn it_handles_control_characters_in_input() {
+      // Entries containing old sentinel characters (\x01, \x02) should
+      // render correctly without corruption now that we use PUA codepoints.
+      let tokens = parse("hello \x01 and \x02 world");
+
+      assert_eq!(tokens, vec![Token::Literal("hello \x01 and \x02 world".into())]);
     }
 
     #[test]

@@ -19,7 +19,9 @@ pub fn edit(initial_content: &str, config: &Config) -> Result<String> {
   let path = tmp.path().to_path_buf();
 
   let parts: Vec<&str> = editor.split_whitespace().collect();
-  let (cmd, args) = parts.split_first().expect("editor command must not be empty");
+  let (cmd, args) = parts
+    .split_first()
+    .ok_or_else(|| crate::Error::Config("editor command must not be empty".into()))?;
 
   let status = Command::new(cmd).args(args).arg(&path).status()?;
 
@@ -42,7 +44,9 @@ pub fn edit_config(config: &Config) -> Result<()> {
   let config_path = doing_config::loader::resolve_global_config_path();
 
   let parts: Vec<&str> = editor.split_whitespace().collect();
-  let (cmd, args) = parts.split_first().expect("editor command must not be empty");
+  let (cmd, args) = parts
+    .split_first()
+    .ok_or_else(|| crate::Error::Config("editor command must not be empty".into()))?;
 
   let status = Command::new(cmd).args(args).arg(&config_path).status()?;
 
@@ -91,6 +95,32 @@ fn resolve_editor(config: &Config) -> String {
 #[cfg(test)]
 mod test {
   use super::*;
+
+  mod edit {
+    use super::*;
+
+    #[test]
+    fn it_returns_config_error_for_whitespace_editor() {
+      let config = Config {
+        editors: doing_config::EditorsConfig {
+          config: None,
+          default: Some("   ".into()),
+          doing_file: None,
+          pager: None,
+        },
+        ..Config::default()
+      };
+
+      // Only test when DOING_EDITOR is not set, otherwise resolve_editor
+      // would use that instead of the whitespace config value.
+      if doing_config::env::DOING_EDITOR.value().is_err() {
+        let result = edit("test content", &config);
+        assert!(result.is_err());
+        let err = result.unwrap_err().to_string();
+        assert!(err.contains("editor command must not be empty"), "got: {err}");
+      }
+    }
+  }
 
   mod resolve_editor {
     use super::*;

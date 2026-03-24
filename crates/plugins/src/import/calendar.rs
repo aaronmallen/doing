@@ -44,6 +44,23 @@ struct IcsEvent {
   summary: Option<String>,
 }
 
+/// Unfold RFC 5545 content lines: join continuation lines (starting with a space or tab)
+/// to the previous line.
+fn unfold_lines(content: &str) -> Vec<String> {
+  let mut lines: Vec<String> = Vec::new();
+  for raw in content.lines() {
+    let raw = raw.trim_end_matches('\r');
+    if (raw.starts_with(' ') || raw.starts_with('\t'))
+      && let Some(prev) = lines.last_mut()
+    {
+      prev.push_str(&raw[1..]);
+      continue;
+    }
+    lines.push(raw.to_string());
+  }
+  lines
+}
+
 /// Parse VEVENT components from ICS content.
 fn parse_ics(content: &str) -> Vec<IcsEvent> {
   let mut events = Vec::new();
@@ -55,8 +72,8 @@ fn parse_ics(content: &str) -> Vec<IcsEvent> {
     summary: None,
   };
 
-  for line in content.lines() {
-    let line = line.trim_end_matches('\r');
+  for line in unfold_lines(content) {
+    let line = line.as_str();
     if line == "BEGIN:VEVENT" {
       in_event = true;
       current = IcsEvent {
@@ -223,6 +240,20 @@ mod test {
       let entries = CalendarImport.import(&path).unwrap();
 
       assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn it_imports_event_with_folded_summary() {
+      let dir = tempfile::tempdir().unwrap();
+      let path = dir.path().join("cal.ics");
+      // RFC 5545 line folding: continuation lines start with a space
+      let ics = "BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nSUMMARY:Very Long Meet\r\n ing Title That Was Folded\r\nDTSTART:20240317T143000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+      fs::write(&path, ics).unwrap();
+
+      let entries = CalendarImport.import(&path).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "[Calendar] Very Long Meeting Title That Was Folded");
     }
 
     #[test]

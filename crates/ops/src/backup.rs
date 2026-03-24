@@ -1,6 +1,5 @@
 use std::{
   fs,
-  hash::{DefaultHasher, Hash, Hasher},
   path::{Path, PathBuf},
 };
 
@@ -27,9 +26,7 @@ pub fn backup_prefix(source: &Path) -> String {
     })
     .unwrap_or_else(|_| source.to_path_buf());
 
-  let mut hasher = DefaultHasher::new();
-  canonical.hash(&mut hasher);
-  let hash = hasher.finish();
+  let hash = fnv1a_hash(canonical.to_string_lossy().as_bytes());
 
   format!("{stem}_{hash:016x}_")
 }
@@ -95,6 +92,19 @@ pub fn write_with_backup(doc: &Document, path: &Path, config: &Config) -> Result
   taskpaper_io::write_file(&doc, path)
 }
 
+/// FNV-1a hash producing a stable 64-bit value regardless of Rust version.
+fn fnv1a_hash(bytes: &[u8]) -> u64 {
+  const FNV_OFFSET: u64 = 0xcbf29ce484222325;
+  const FNV_PRIME: u64 = 0x00000100000001B3;
+
+  let mut hash = FNV_OFFSET;
+  for &byte in bytes {
+    hash ^= byte as u64;
+    hash = hash.wrapping_mul(FNV_PRIME);
+  }
+  hash
+}
+
 fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Vec<PathBuf>> {
   if !backup_dir.exists() {
     return Ok(Vec::new());
@@ -137,6 +147,38 @@ mod test {
     ));
     doc.add_section(section);
     doc
+  }
+
+  mod fnv1a_hash {
+    use pretty_assertions::assert_eq;
+
+    use super::super::fnv1a_hash;
+
+    #[test]
+    fn it_produces_known_output_for_known_input() {
+      // FNV-1a of "hello" is a well-known value
+      let hash = fnv1a_hash(b"hello");
+
+      assert_eq!(hash, 0xa430d84680aabd0b);
+    }
+  }
+
+  mod backup_prefix {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_produces_deterministic_hash() {
+      let dir = tempfile::tempdir().unwrap();
+      let source = dir.path().join("test.md");
+      fs::write(&source, "").unwrap();
+
+      let prefix1 = backup_prefix(&source);
+      let prefix2 = backup_prefix(&source);
+
+      assert_eq!(prefix1, prefix2);
+    }
   }
 
   mod create_backup {

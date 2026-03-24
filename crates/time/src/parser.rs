@@ -62,18 +62,23 @@ pub fn chronify(input: &str) -> Result<DateTime<Local>> {
   Err(Error::InvalidTimeExpression(format!("{input:?}")))
 }
 
-/// Apply a `NaiveTime` to a date, returning a `DateTime<Local>`.
-fn apply_time_to_date(dt: DateTime<Local>, time: NaiveTime) -> DateTime<Local> {
-  Local.from_local_datetime(&dt.date_naive().and_time(time)).unwrap()
+/// Apply a `NaiveTime` to a date, returning a `DateTime<Local>` or `None` for DST gaps.
+fn apply_time_to_date(dt: DateTime<Local>, time: NaiveTime) -> Option<DateTime<Local>> {
+  Local.from_local_datetime(&dt.date_naive().and_time(time)).earliest()
 }
 
-/// Set a `DateTime` to the beginning of its day (midnight).
-fn beginning_of_day(dt: DateTime<Local>) -> DateTime<Local> {
-  dt.date_naive()
-    .and_hms_opt(0, 0, 0)
-    .unwrap()
-    .and_local_timezone(Local)
-    .unwrap()
+/// Set a date to the beginning of its day (midnight), falling back to 1 AM when midnight
+/// lands in a DST gap.
+fn beginning_of_day(date: NaiveDate) -> DateTime<Local> {
+  Local
+    .from_local_datetime(&date.and_time(NaiveTime::MIN))
+    .earliest()
+    .unwrap_or_else(|| {
+      Local
+        .from_local_datetime(&date.and_hms_opt(1, 0, 0).unwrap())
+        .earliest()
+        .unwrap()
+    })
 }
 
 /// Parse absolute date expressions: `YYYY-MM-DD`, `YYYY-MM-DD HH:MM`,
@@ -89,7 +94,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
 
     let date = NaiveDate::from_ymd_opt(year, month, day)?;
     let time = NaiveTime::from_hms_opt(hour, min, 0)?;
-    return Some(Local.from_local_datetime(&date.and_time(time)).unwrap());
+    return Local.from_local_datetime(&date.and_time(time)).earliest();
   }
 
   // YYYY-MM-DD
@@ -99,9 +104,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
     let day: u32 = caps[3].parse().ok()?;
 
     let date = NaiveDate::from_ymd_opt(year, month, day)?;
-    return Some(beginning_of_day(
-      Local.from_local_datetime(&date.and_hms_opt(0, 0, 0)?).unwrap(),
-    ));
+    return Some(beginning_of_day(date));
   }
 
   // MM/DD/YYYY
@@ -111,9 +114,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
     let year: i32 = caps[3].parse().ok()?;
 
     let date = NaiveDate::from_ymd_opt(year, month, day)?;
-    return Some(beginning_of_day(
-      Local.from_local_datetime(&date.and_hms_opt(0, 0, 0)?).unwrap(),
-    ));
+    return Some(beginning_of_day(date));
   }
 
   // MM/DD/YY
@@ -124,9 +125,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
     let year = 2000 + short_year;
 
     let date = NaiveDate::from_ymd_opt(year, month, day)?;
-    return Some(beginning_of_day(
-      Local.from_local_datetime(&date.and_hms_opt(0, 0, 0)?).unwrap(),
-    ));
+    return Some(beginning_of_day(date));
   }
 
   // MM/DD (short US date, no year — resolve to current year or most recent past)
@@ -143,9 +142,7 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
     } else {
       date
     };
-    return Some(beginning_of_day(
-      Local.from_local_datetime(&date.and_hms_opt(0, 0, 0)?).unwrap(),
-    ));
+    return Some(beginning_of_day(date));
   }
 
   None
@@ -197,7 +194,7 @@ fn parse_combined(input: &str) -> Option<DateTime<Local>> {
     return None;
   };
 
-  Some(apply_time_to_date(base_date, time))
+  apply_time_to_date(base_date, time)
 }
 
 /// Parse day-of-week expressions: `monday`, `last tuesday`, `next friday`.
@@ -209,7 +206,7 @@ fn parse_day_of_week(input: &str) -> Option<DateTime<Local>> {
   let direction = caps.get(1).map(|m| m.as_str());
   let weekday = parse_weekday(&caps[2])?;
 
-  Some(beginning_of_day(resolve_weekday(now, weekday, direction)))
+  Some(beginning_of_day(resolve_weekday(now, weekday, direction).date_naive()))
 }
 
 /// Parse a word or digit string as an integer. Supports written-out numbers
@@ -239,9 +236,9 @@ fn parse_relative(input: &str) -> Option<DateTime<Local>> {
 
   match input {
     "now" => return Some(now),
-    "today" => return Some(beginning_of_day(now)),
-    "yesterday" => return Some(beginning_of_day(now - Duration::days(1))),
-    "tomorrow" => return Some(beginning_of_day(now + Duration::days(1))),
+    "today" => return Some(beginning_of_day(now.date_naive())),
+    "yesterday" => return Some(beginning_of_day((now - Duration::days(1)).date_naive())),
+    "tomorrow" => return Some(beginning_of_day((now + Duration::days(1)).date_naive())),
     _ => {}
   }
 
@@ -261,7 +258,7 @@ fn parse_shorthand_duration(input: &str) -> Option<DateTime<Local>> {
 fn parse_time_only(input: &str) -> Option<DateTime<Local>> {
   let time = resolve_time_expression(input)?;
   let now = Local::now();
-  Some(apply_time_to_date(now, time))
+  apply_time_to_date(now, time)
 }
 
 /// Convert a weekday abbreviation to a `chrono::Weekday`.

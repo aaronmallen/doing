@@ -7,7 +7,7 @@ use regex::Regex;
 use crate::parser::chronify;
 
 pub static RANGE_SEPARATOR_RE: LazyLock<Regex> =
-  LazyLock::new(|| Regex::new(r"(?i)\s+(?:to|through|thru|until|til|-{1,})\s+").unwrap());
+  LazyLock::new(|| Regex::new(r"(?i)\s+(?:to|through|thru|until|til)\s+|\s+--+\s+|\s+-\s+").unwrap());
 
 /// Parse a date range expression into a `(start, end)` tuple of `DateTime<Local>`.
 ///
@@ -144,6 +144,14 @@ mod test {
     #[test]
     fn it_supports_dash_separator() {
       let (start, end) = parse_range("2024-01-01 -- 2024-01-31").unwrap();
+
+      assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());
+    }
+
+    #[test]
+    fn it_supports_single_dash_with_iso_dates() {
+      let (start, end) = parse_range("2024-01-01 - 2024-01-31").unwrap();
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
       assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());

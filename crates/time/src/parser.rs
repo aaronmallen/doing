@@ -67,18 +67,22 @@ fn apply_time_to_date(dt: DateTime<Local>, time: NaiveTime) -> Option<DateTime<L
   Local.from_local_datetime(&dt.date_naive().and_time(time)).earliest()
 }
 
-/// Set a date to the beginning of its day (midnight), falling back to 1 AM when midnight
-/// lands in a DST gap.
+/// Set a date to the beginning of its day (midnight), falling back to progressively later
+/// hours when midnight lands in a DST gap.
 fn beginning_of_day(date: NaiveDate) -> DateTime<Local> {
-  Local
-    .from_local_datetime(&date.and_time(NaiveTime::MIN))
-    .earliest()
-    .unwrap_or_else(|| {
-      Local
-        .from_local_datetime(&date.and_hms_opt(1, 0, 0).unwrap())
-        .earliest()
-        .unwrap()
-    })
+  if let Some(dt) = Local.from_local_datetime(&date.and_time(NaiveTime::MIN)).earliest() {
+    return dt;
+  }
+  for hour in 1..=12 {
+    if let Some(dt) = Local
+      .from_local_datetime(&date.and_hms_opt(hour, 0, 0).unwrap())
+      .earliest()
+    {
+      return dt;
+    }
+  }
+  // Final fallback: interpret as UTC and convert to local
+  date.and_time(NaiveTime::MIN).and_utc().with_timezone(&Local)
 }
 
 /// Parse absolute date expressions: `YYYY-MM-DD`, `YYYY-MM-DD HH:MM`,
@@ -860,6 +864,34 @@ mod test {
       let result = resolve_weekday(now, Weekday::Tue, Some("next"));
 
       assert_eq!(result.date_naive(), NaiveDate::from_ymd_opt(2026, 3, 24).unwrap());
+    }
+  }
+
+  mod beginning_of_day {
+    use super::*;
+
+    #[test]
+    fn it_returns_midnight_for_normal_dates() {
+      let date = NaiveDate::from_ymd_opt(2024, 6, 15).unwrap();
+      let result = beginning_of_day(date);
+
+      assert_eq!(result.date_naive(), date);
+    }
+
+    #[test]
+    fn it_does_not_panic_on_dst_gap_dates() {
+      // 2024-03-10 is US spring-forward; 2024-10-06 is Brazil spring-forward.
+      // At least one of these may have a midnight DST gap depending on the
+      // test machine's timezone. The function must not panic for any date.
+      let dates = [
+        NaiveDate::from_ymd_opt(2024, 3, 10).unwrap(),
+        NaiveDate::from_ymd_opt(2024, 10, 6).unwrap(),
+        NaiveDate::from_ymd_opt(2019, 11, 3).unwrap(),
+      ];
+      for date in &dates {
+        let result = beginning_of_day(*date);
+        assert_eq!(result.date_naive(), *date);
+      }
     }
   }
 }

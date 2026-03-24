@@ -37,13 +37,13 @@ clap_complete = "4"
 clap_mangen = "0.2"
 dialoguer = "0.12"
 dir_spec = "0.5"
-doing-config = { path = "crates/config" }
-doing-error = { path = "crates/error" }
-doing-ops = { path = "crates/ops" }
-doing-plugins = { path = "crates/plugins" }
-doing-taskpaper = { path = "crates/taskpaper" }
-doing-template = { path = "crates/template" }
-doing-time = { path = "crates/time" }
+doing-config = { path = "crates/config", version = "0.1.0" }
+doing-error = { path = "crates/error", version = "0.1.0" }
+doing-ops = { path = "crates/ops", version = "0.1.0" }
+doing-plugins = { path = "crates/plugins", version = "0.1.0" }
+doing-taskpaper = { path = "crates/taskpaper", version = "0.1.0" }
+doing-template = { path = "crates/template", version = "0.1.0" }
+doing-time = { path = "crates/time", version = "0.1.0" }
 env_logger = "0.11"
 indexmap = "2"
 json_comments = "0.2"

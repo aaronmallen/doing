@@ -17,7 +17,11 @@ pub fn resolve_title_and_note(
 ) -> Result<(String, Note)> {
   let raw_title = if editor {
     let content = crate::cli::editor::edit("", config)?;
-    content.lines().next().unwrap_or("").trim().to_string()
+    let title = content.lines().next().unwrap_or("").trim().to_string();
+    if title.is_empty() {
+      return Err(crate::Error::Config("editor returned empty title".into()));
+    }
+    title
   } else {
     title_words.join(" ")
   };

@@ -7,8 +7,8 @@ A Rust clone of [doing] by Brett Terpstra — a command line tool for rememberin
 you've done.
 
 > [!WARNING]
-> This project is under active development and is not yet ready for everyday use. Expect breaking changes, missing
-> features, and rough edges.
+> This project is under active development. It is usable today, but expect missing features and rough edges as we work
+> toward full compatibility with the original.
 
 ## Installation
 

@@ -36,6 +36,11 @@ impl Section {
     &mut self.entries
   }
 
+  /// Consume the section and return its entries.
+  pub fn into_entries(self) -> Vec<Entry> {
+    self.entries
+  }
+
   /// Return `true` if this section contains no entries.
   pub fn is_empty(&self) -> bool {
     self.entries.is_empty()

@@ -300,6 +300,19 @@ Currently:
     }
 
     #[test]
+    fn it_merges_duplicate_section_headers() {
+      let content = "\
+Archive:
+\t- 2024-03-16 10:00 | Old task @done(2024-03-16 11:00)
+Archive:
+\t- 2024-03-17 09:00 | Another old task @done(2024-03-17 10:00)";
+      let doc = parse(content);
+
+      assert_eq!(doc.len(), 1);
+      assert_eq!(doc.entries_in_section("Archive").len(), 2);
+    }
+
+    #[test]
     fn it_preserves_entries_with_dst_ambiguous_timestamps() {
       // 2024-03-10 02:30 falls in the US spring-forward DST gap (2:00 AM → 3:00 AM).
       // 2024-11-03 01:30 falls in the US fall-back DST fold (1:00 AM occurs twice).

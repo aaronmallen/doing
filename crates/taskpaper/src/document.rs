@@ -42,10 +42,14 @@ impl Document {
     crate::parser::parse(content)
   }
 
-  /// Add a section to the document. Does nothing if a section with the same name
-  /// (case-insensitive) already exists.
+  /// Add a section to the document. If a section with the same name (case-insensitive)
+  /// already exists, merge entries from the new section into the existing one.
   pub fn add_section(&mut self, section: Section) {
-    if !self.has_section(section.title()) {
+    if let Some(existing) = self.section_by_name_mut(section.title()) {
+      for entry in section.into_entries() {
+        existing.add_entry(entry);
+      }
+    } else {
       self.sections.push(section);
     }
   }
@@ -182,9 +186,11 @@ mod test {
   use super::*;
 
   mod add_section {
+    use chrono::Local;
     use pretty_assertions::assert_eq;
 
     use super::*;
+    use crate::{Note, Tags};
 
     #[test]
     fn it_adds_a_section() {
@@ -195,7 +201,35 @@ mod test {
     }
 
     #[test]
-    fn it_ignores_duplicate_section_names() {
+    fn it_merges_duplicate_section_entries() {
+      let mut doc = Document::new();
+      let mut s1 = Section::new("Archive");
+      s1.add_entry(Entry::new(
+        Local::now(),
+        "Task A",
+        Tags::new(),
+        Note::new(),
+        "Archive",
+        None::<String>,
+      ));
+      let mut s2 = Section::new("Archive");
+      s2.add_entry(Entry::new(
+        Local::now(),
+        "Task B",
+        Tags::new(),
+        Note::new(),
+        "Archive",
+        None::<String>,
+      ));
+      doc.add_section(s1);
+      doc.add_section(s2);
+
+      assert_eq!(doc.len(), 1);
+      assert_eq!(doc.section_by_name("Archive").unwrap().len(), 2);
+    }
+
+    #[test]
+    fn it_merges_duplicate_section_names_case_insensitively() {
       let mut doc = Document::new();
       doc.add_section(Section::new("Currently"));
       doc.add_section(Section::new("currently"));

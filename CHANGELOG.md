@@ -16,9 +16,13 @@ and this project adheres to [Break Versioning].
 - "Did you mean?" suggestions for unknown subcommands (see [#276])
 - `--exact`/`-x` flag on `finish` and `cancel` for exact string matching (see [#279])
 - Missing short flags to match Ruby CLI: `archive -t`, `done -t`, `redo -f`, `select -q`, filter `-a` (see [#281])
-- `undo` gains `--file`, `--prune`, and `--redo` flags; `redo` gains count argument and `--interactive` (see [#174], [#175], [#176], [#177])
-- `select` gains `--case`, `--exact`, `--not`, `--val` filter flags, `--after`/`--before`/`--from` date filters, and `--again`/`--remove`/`--force` action flags (see [#178], [#179], [#180])
-- `config dump`/`open` aliases, `--output json/yaml` on `config get`, `config undo` subcommand, and fuzzy key path matching (see [#181], [#182], [#183])
+- `undo` gains `--file`, `--prune`, and `--redo` flags; `redo` gains count argument and `--interactive`
+  (see [#174], [#175], [#176], [#177])
+- `select` gains filter flags (`--case`, `--exact`, `--not`, `--val`), date filters
+  (`--after`/`--before`/`--from`), and action flags (`--again`/`--remove`/`--force`)
+  (see [#178], [#179], [#180])
+- `config dump`/`open` aliases, `--output json/yaml` on `config get`, `config undo` subcommand, and
+  fuzzy key path matching (see [#181], [#182], [#183])
 - `rotate` applies full filter pipeline and per-section `--keep` (see [#184])
 - `import` gains `--after`, `--before`, `--case`, `--exact`, `--not`, `--only-timed` filter flags (see [#186])
 - `tag-dir` gains `--remove`, `--clear`, `--editor` flags (see [#187])

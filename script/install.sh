@@ -70,7 +70,7 @@ build_target() {
 
 resolve_version() {
   if [ -n "${DOING_VERSION:-}" ]; then
-    echo "${DOING_VERSION}"
+    echo "${DOING_VERSION#v}"
     return
   fi
 
@@ -87,7 +87,7 @@ resolve_version() {
     err "could not determine latest version"
   fi
 
-  echo "$version"
+  echo "${version#v}"
 }
 
 download() {

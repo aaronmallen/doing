@@ -4,9 +4,18 @@ use crate::support::helpers::DoingCmd;
 fn it_shows_only_timed_entries() {
   let doing = DoingCmd::new();
 
-  // Create a timed entry (started 1h ago, then done)
-  doing.run(["now", "--back", "1h", "Timed entry"]).assert().success();
-  doing.run(["done"]).assert().success();
+  // Use absolute times firmly within today to avoid midnight timezone flakes on CI.
+  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+  // Create a timed entry (started at 10:00, done at 11:00)
+  doing
+    .run(["now", "--from", &format!("{today} 10:00"), "Timed entry"])
+    .assert()
+    .success();
+  doing
+    .run(["done", "--at", &format!("{today} 11:00")])
+    .assert()
+    .success();
 
   // Create an open entry (no @done, so no time interval)
   doing.run(["now", "Open entry"]).assert().success();

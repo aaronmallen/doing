@@ -4,23 +4,35 @@ use crate::support::helpers::DoingCmd;
 fn it_orders_tags() {
   let doing = DoingCmd::new();
 
-  doing
-    .run(["now", "--back", "3h", "First task @zebra"])
-    .assert()
-    .success();
-  doing.run(["done", "--back", "2h"]).assert().success();
+  // Use absolute times firmly within today to avoid midnight timezone flakes on CI.
+  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
   doing
-    .run(["now", "--back", "2h", "Second task @alpha"])
+    .run(["now", "--from", &format!("{today} 10:00"), "First task @zebra"])
     .assert()
     .success();
-  doing.run(["done", "--back", "1h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{today} 11:00")])
+    .assert()
+    .success();
 
   doing
-    .run(["now", "--back", "1h", "Third task @middle"])
+    .run(["now", "--from", &format!("{today} 11:00"), "Second task @alpha"])
     .assert()
     .success();
-  doing.run(["done"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{today} 12:00")])
+    .assert()
+    .success();
+
+  doing
+    .run(["now", "--from", &format!("{today} 12:00"), "Third task @middle"])
+    .assert()
+    .success();
+  doing
+    .run(["done", "--at", &format!("{today} 13:00")])
+    .assert()
+    .success();
 
   let output = doing
     .run(["today", "--totals", "--tag-order", "asc"])
@@ -48,23 +60,35 @@ fn it_orders_tags() {
 fn it_orders_tags_descending() {
   let doing = DoingCmd::new();
 
-  doing
-    .run(["now", "--back", "3h", "First task @zebra"])
-    .assert()
-    .success();
-  doing.run(["done", "--back", "2h"]).assert().success();
+  // Use absolute times firmly within today to avoid midnight timezone flakes on CI.
+  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
   doing
-    .run(["now", "--back", "2h", "Second task @alpha"])
+    .run(["now", "--from", &format!("{today} 10:00"), "First task @zebra"])
     .assert()
     .success();
-  doing.run(["done", "--back", "1h"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{today} 11:00")])
+    .assert()
+    .success();
 
   doing
-    .run(["now", "--back", "1h", "Third task @middle"])
+    .run(["now", "--from", &format!("{today} 11:00"), "Second task @alpha"])
     .assert()
     .success();
-  doing.run(["done"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{today} 12:00")])
+    .assert()
+    .success();
+
+  doing
+    .run(["now", "--from", &format!("{today} 12:00"), "Third task @middle"])
+    .assert()
+    .success();
+  doing
+    .run(["done", "--at", &format!("{today} 13:00")])
+    .assert()
+    .success();
 
   let output = doing
     .run(["today", "--totals", "--tag-order", "desc"])

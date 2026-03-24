@@ -4,8 +4,17 @@ use crate::support::helpers::DoingCmd;
 fn it_shows_tag_time_totals() {
   let doing = DoingCmd::new();
 
-  doing.run(["now", "--back", "1h", "Coding @project"]).assert().success();
-  doing.run(["done"]).assert().success();
+  // Use absolute times firmly within today to avoid midnight timezone flakes on CI.
+  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+  doing
+    .run(["now", "--from", &format!("{today} 10:00"), "Coding @project"])
+    .assert()
+    .success();
+  doing
+    .run(["done", "--at", &format!("{today} 11:00")])
+    .assert()
+    .success();
 
   let output = doing.run(["today", "--totals"]).output().expect("failed to run");
 
@@ -33,11 +42,17 @@ fn it_shows_tag_time_totals() {
 fn it_does_not_show_totals_without_flag() {
   let doing = DoingCmd::new();
 
+  // Use absolute times firmly within today to avoid midnight timezone flakes on CI.
+  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
   doing
-    .run(["now", "--back", "1h", "No totals @project"])
+    .run(["now", "--from", &format!("{today} 10:00"), "No totals @project"])
     .assert()
     .success();
-  doing.run(["done"]).assert().success();
+  doing
+    .run(["done", "--at", &format!("{today} 11:00")])
+    .assert()
+    .success();
 
   let with_totals = doing.run(["today", "--totals"]).output().expect("failed to run");
   let without_totals = doing.run(["today"]).output().expect("failed to run");

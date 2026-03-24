@@ -1,8 +1,11 @@
 [package]
+categories = ["command-line-utilities", "parser-implementations"]
 description = "TaskPaper document parser and serializer for the doing CLI"
 edition.workspace = true
+keywords = ["cli", "doing", "taskpaper", "parser"]
 license.workspace = true
 name = "doing-taskpaper"
+readme = "README.md"
 repository.workspace = true
 rust-version.workspace = true
 version = "0.1.0"

@@ -2,8 +2,10 @@
 categories = ["command-line-utilities"]
 description = "Export and import plugins for the doing CLI"
 edition.workspace = true
+keywords = ["cli", "doing", "time-tracking", "plugins"]
 license.workspace = true
 name = "doing-plugins"
+readme = "README.md"
 repository.workspace = true
 rust-version.workspace = true
 version = "0.1.0"

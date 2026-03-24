@@ -1,8 +1,11 @@
 [package]
+categories = ["command-line-utilities"]
 description = "Error types for the doing CLI"
 edition.workspace = true
+keywords = ["cli", "doing", "time-tracking"]
 license.workspace = true
 name = "doing-error"
+readme = "README.md"
 repository.workspace = true
 rust-version.workspace = true
 version = "0.1.0"

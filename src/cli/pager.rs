@@ -1,5 +1,5 @@
 use std::{
-  io::{self, Write},
+  io::{self, IsTerminal, Write},
   process::{Command, Stdio},
 };
 
@@ -27,6 +27,10 @@ pub fn output(content: &str, config: &Config, use_pager: bool) -> io::Result<()>
 /// If the pager cannot be launched (e.g. command not found), the content is written
 /// directly to stdout as a fallback.
 pub fn paginate(content: &str, config: &Config) -> io::Result<()> {
+  if !io::stdout().is_terminal() {
+    return io::stdout().write_all(content.as_bytes());
+  }
+
   let pager = resolve_pager(config);
   let parts: Vec<&str> = pager.split_whitespace().collect();
   let (cmd, args) = parts.split_first().expect("pager command must not be empty");

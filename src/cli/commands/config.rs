@@ -453,7 +453,7 @@ fn set_value(key: &str, raw_value: &str, local: bool, quiet: bool) -> Result<()>
   // Create a backup before modifying for `config undo`
   if config_path.exists() {
     let backup_dir = resolve_backup_dir();
-    let _ = doing_ops::backup::create_backup(&config_path, &backup_dir);
+    doing_ops::backup::create_backup(&config_path, &backup_dir)?;
   }
 
   if config_path.exists() {

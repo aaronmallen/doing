@@ -222,7 +222,9 @@ fn compare_ord<T: PartialOrd>(a: T, b: T, op: ComparisonOp) -> bool {
     ComparisonOp::GreaterThanOrEqual => a >= b,
     ComparisonOp::LessThan => a < b,
     ComparisonOp::LessThanOrEqual => a <= b,
-    ComparisonOp::Contains | ComparisonOp::StartsWith | ComparisonOp::EndsWith => a == b,
+    ComparisonOp::Contains | ComparisonOp::StartsWith | ComparisonOp::EndsWith => {
+      unreachable!("string operators must be handled by compare_string, not compare_ord")
+    }
   }
 }
 

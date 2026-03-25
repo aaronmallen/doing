@@ -7,6 +7,25 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.2] - 2026-03-25
+
+### Fixed
+
+- "this monday" (and other weekdays) now resolves to the current week instead of 7 days ago (see [#308])
+- Single-dash date range separator no longer misparses ISO date hyphens (see [#307])
+- Case-insensitive tags now hash correctly for use in HashSet and HashMap collections (see [#310])
+- Comments and blank lines between sections are preserved during parse instead of being silently dropped (see [#314])
+- ICS calendar import correctly handles TZID timezone parameters and `\;`/`\N` escape sequences (see [#315])
+- Control character sentinels replaced with Unicode Private Use Area codepoints to prevent user data
+  corruption (see [#316])
+- `select` "again" action now preserves tags and notes from the source entry (see [#317])
+- Empty editor input returns an error instead of creating a blank entry (see [#319])
+- JSON export preserves section order instead of sorting alphabetically (see [#320])
+- Unset `HOME` environment variable returns a config error instead of panicking (see [#321])
+- Tag search matches each tag individually instead of joining them, preventing cross-tag false positives (see [#326])
+- Undo restoration is atomic and propagates directory-read errors (see [#330])
+- Install script uses correct checksum filename and strips leading `v` from version
+
 ## [v0.1.1] - 2026-03-24
 
 ### Fixed
@@ -391,9 +410,21 @@ Initial alpha release
 [#304]: https://github.com/aaronmallen/doing/issues/304
 [#305]: https://github.com/aaronmallen/doing/issues/305
 [#306]: https://github.com/aaronmallen/doing/issues/306
+[#307]: https://github.com/aaronmallen/doing/issues/307
+[#308]: https://github.com/aaronmallen/doing/issues/308
+[#310]: https://github.com/aaronmallen/doing/issues/310
 [#311]: https://github.com/aaronmallen/doing/issues/311
+[#314]: https://github.com/aaronmallen/doing/issues/314
+[#315]: https://github.com/aaronmallen/doing/issues/315
+[#316]: https://github.com/aaronmallen/doing/issues/316
+[#317]: https://github.com/aaronmallen/doing/issues/317
+[#319]: https://github.com/aaronmallen/doing/issues/319
+[#320]: https://github.com/aaronmallen/doing/issues/320
+[#321]: https://github.com/aaronmallen/doing/issues/321
+[#326]: https://github.com/aaronmallen/doing/issues/326
+[#330]: https://github.com/aaronmallen/doing/issues/330
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.1...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.2...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -402,3 +433,4 @@ Initial alpha release
 [v0.0.1-alpha.7]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6.1...0.0.1-alpha.7
 [v0.1.0]: https://github.com/aaronmallen/doing/compare/v0.0.1-alpha.7...v0.1.0
 [v0.1.1]: https://github.com/aaronmallen/doing/compare/v0.1.0...v0.1.1
+[v0.1.2]: https://github.com/aaronmallen/doing/compare/v0.1.1...v0.1.2

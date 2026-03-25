@@ -89,18 +89,20 @@ impl Command {
     let source = if self.interactive {
       match self.choose_source_entry(ctx) {
         Ok(entry) => entry,
-        Err(_) => {
+        Err(crate::Error::Config(_)) => {
           ctx.status("Skipped: No previous entry found");
           return Ok(());
         }
+        Err(e) => return Err(e),
       }
     } else {
       match self.find_source_entry(ctx) {
         Ok(entry) => entry,
-        Err(_) => {
+        Err(crate::Error::Config(_)) => {
           ctx.status("Skipped: No previous entry found");
           return Ok(());
         }
+        Err(e) => return Err(e),
       }
     };
     let source_id = source.id().to_string();

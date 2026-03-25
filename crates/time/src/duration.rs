@@ -58,7 +58,11 @@ fn try_clock_format(input: &str) -> Option<Duration> {
     return None;
   }
 
-  Some(Duration::seconds(hours * 3600 + minutes * 60 + seconds))
+  let total = hours
+    .checked_mul(3600)?
+    .checked_add(minutes.checked_mul(60)?)?
+    .checked_add(seconds)?;
+  Some(Duration::seconds(total))
 }
 
 /// Parse compact duration: `1d2h30m`, `2h`, `45m`, `1h30m`.
@@ -73,7 +77,11 @@ fn try_compact_format(input: &str) -> Option<Duration> {
     return None;
   }
 
-  Some(Duration::seconds(days * 86400 + hours * 3600 + minutes * 60))
+  let total = days
+    .checked_mul(86400)?
+    .checked_add(hours.checked_mul(3600)?)?
+    .checked_add(minutes.checked_mul(60)?)?;
+  Some(Duration::seconds(total))
 }
 
 /// Parse decimal duration: `1.5h`, `2.5d`, `0.5m`.
@@ -90,6 +98,9 @@ fn try_decimal_format(input: &str) -> Option<Duration> {
     _ => return None,
   };
 
+  if !seconds.is_finite() || seconds > i64::MAX as f64 {
+    return None;
+  }
   Some(Duration::seconds(seconds as i64))
 }
 
@@ -103,13 +114,14 @@ fn try_natural_format(input: &str) -> Option<Duration> {
     let amount: i64 = caps[1].parse().ok()?;
     let unit = &caps[2];
 
-    total_seconds += match unit {
-      u if u.starts_with("day") => amount * 86400,
-      u if u.starts_with('h') => amount * 3600,
-      u if u.starts_with("mi") => amount * 60,
+    let unit_seconds = match unit {
+      u if u.starts_with("day") => amount.checked_mul(86400)?,
+      u if u.starts_with('h') => amount.checked_mul(3600)?,
+      u if u.starts_with("mi") => amount.checked_mul(60)?,
       u if u.starts_with('s') => amount,
       _ => return None,
     };
+    total_seconds = total_seconds.checked_add(unit_seconds)?;
   }
 
   if matched {
@@ -232,6 +244,27 @@ mod test {
       let result = parse_duration("90").unwrap();
 
       assert_eq!(result, Duration::minutes(90));
+    }
+
+    #[test]
+    fn it_rejects_clock_format_overflow() {
+      let err = parse_duration("99999999999999999:00").unwrap_err();
+
+      assert!(matches!(err, Error::InvalidTimeExpression(_)));
+    }
+
+    #[test]
+    fn it_rejects_compact_format_overflow() {
+      let err = parse_duration("99999999999999999h").unwrap_err();
+
+      assert!(matches!(err, Error::InvalidTimeExpression(_)));
+    }
+
+    #[test]
+    fn it_rejects_decimal_format_overflow() {
+      let err = parse_duration("99999999999999999999999999999999999999.0h").unwrap_err();
+
+      assert!(matches!(err, Error::InvalidTimeExpression(_)));
     }
 
     #[test]

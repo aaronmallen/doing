@@ -7,6 +7,22 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.3] - 2026-03-26
+
+### Changed
+
+- Reduced unnecessary allocations in TaskPaper serializer and note rendering (see [#325])
+
+### Fixed
+
+- Pager is no longer launched when stdout is not a TTY (see [#335])
+- Duration parsing rejects extremely large values instead of overflowing (see [#332])
+- `again` command propagates real errors instead of masking them as "Skipped" (see [#331])
+- ANSI stripping now removes all CSI escape sequences, not just SGR color codes (see [#329])
+- Filtered entry lists break sort ties by title for stable display order (see [#327])
+- Reversed date ranges are automatically normalized by swapping bounds (see [#322])
+- `config set` propagates backup failures instead of silently ignoring them (see [#318])
+
 ## [v0.1.2] - 2026-03-25
 
 ### Fixed
@@ -418,19 +434,28 @@ Initial alpha release
 [#315]: https://github.com/aaronmallen/doing/issues/315
 [#316]: https://github.com/aaronmallen/doing/issues/316
 [#317]: https://github.com/aaronmallen/doing/issues/317
+[#318]: https://github.com/aaronmallen/doing/issues/318
 [#319]: https://github.com/aaronmallen/doing/issues/319
 [#320]: https://github.com/aaronmallen/doing/issues/320
 [#321]: https://github.com/aaronmallen/doing/issues/321
+[#322]: https://github.com/aaronmallen/doing/issues/322
+[#325]: https://github.com/aaronmallen/doing/issues/325
 [#326]: https://github.com/aaronmallen/doing/issues/326
+[#327]: https://github.com/aaronmallen/doing/issues/327
+[#329]: https://github.com/aaronmallen/doing/issues/329
 [#330]: https://github.com/aaronmallen/doing/issues/330
+[#331]: https://github.com/aaronmallen/doing/issues/331
+[#332]: https://github.com/aaronmallen/doing/issues/332
+[#335]: https://github.com/aaronmallen/doing/issues/335
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.2...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.3...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
 [v0.0.1-alpha.5]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.4.1...0.0.1-alpha.5
 [v0.0.1-alpha.6.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.5...0.0.1-alpha.6.1
 [v0.0.1-alpha.7]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.6.1...0.0.1-alpha.7
-[v0.1.0]: https://github.com/aaronmallen/doing/compare/v0.0.1-alpha.7...v0.1.0
-[v0.1.1]: https://github.com/aaronmallen/doing/compare/v0.1.0...v0.1.1
-[v0.1.2]: https://github.com/aaronmallen/doing/compare/v0.1.1...v0.1.2
+[v0.1.0]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.7...0.1.0
+[v0.1.1]: https://github.com/aaronmallen/doing/compare/0.1.0...0.1.1
+[v0.1.2]: https://github.com/aaronmallen/doing/compare/0.1.1...0.1.2
+[v0.1.3]: https://github.com/aaronmallen/doing/compare/0.1.2...0.1.3

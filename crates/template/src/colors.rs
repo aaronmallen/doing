@@ -6,7 +6,7 @@ use std::{
 use regex::Regex;
 use yansi::{Condition, Style};
 
-pub static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9;]*m").unwrap());
+pub static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9;]*[A-Za-z]").unwrap());
 
 /// A named ANSI color or modifier that can appear as a `%color` token in templates.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -612,6 +612,27 @@ mod test {
     #[test]
     fn it_returns_plain_text_unchanged() {
       assert_eq!(strip_ansi("hello"), "hello");
+    }
+
+    #[test]
+    fn it_strips_cursor_movement_sequences() {
+      let input = "\x1b[2Ahello\x1b[3Bworld";
+
+      assert_eq!(strip_ansi(input), "helloworld");
+    }
+
+    #[test]
+    fn it_strips_erase_sequences() {
+      let input = "hello\x1b[2Jworld";
+
+      assert_eq!(strip_ansi(input), "helloworld");
+    }
+
+    #[test]
+    fn it_strips_scroll_sequences() {
+      let input = "hello\x1b[1Sworld";
+
+      assert_eq!(strip_ansi(input), "helloworld");
     }
   }
 

@@ -4,7 +4,7 @@ use regex::Regex;
 
 use crate::Document;
 
-static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9;]*m").unwrap());
+static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9;]*[A-Za-z]").unwrap());
 
 /// Serialize a `Document` into the doing file format string.
 ///

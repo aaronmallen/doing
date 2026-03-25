@@ -98,7 +98,7 @@ pub fn filter_entries(mut entries: Vec<Entry>, options: &FilterOptions) -> Vec<E
 
 /// Sort entries and apply age-based count limiting.
 fn apply_sort_and_limit(mut entries: Vec<Entry>, options: &FilterOptions) -> Vec<Entry> {
-  // Sort chronologically for age selection
+  // Sort chronologically for age selection (stable sort preserves insertion order for ties)
   entries.sort_by_key(|a| a.date());
 
   // Apply count limit based on age
@@ -116,13 +116,15 @@ fn apply_sort_and_limit(mut entries: Vec<Entry>, options: &FilterOptions) -> Vec
     }
   }
 
-  // Apply final sort order
-  if let Some(sort) = options.sort {
-    match sort {
-      SortOrder::Asc => {} // already ascending
-      SortOrder::Desc => entries.reverse(),
-    }
-  }
+  // Apply final sort order, breaking ties by title for deterministic display
+  entries.sort_by(|a, b| {
+    let ord = a.date().cmp(&b.date());
+    let ord = match options.sort {
+      Some(SortOrder::Desc) => ord.reverse(),
+      _ => ord,
+    };
+    ord.then_with(|| a.title().cmp(b.title()))
+  });
 
   entries
 }
@@ -274,6 +276,22 @@ mod test {
       let result = super::super::apply_sort_and_limit(entries, &options);
 
       assert_eq!(result.len(), 2);
+    }
+
+    #[test]
+    fn it_sorts_by_title_when_dates_are_equal() {
+      let entries = vec![
+        make_entry("Charlie", "Currently", date(2024, 1, 1, 10, 0), Tags::new()),
+        make_entry("Alpha", "Currently", date(2024, 1, 1, 10, 0), Tags::new()),
+        make_entry("Bravo", "Currently", date(2024, 1, 1, 10, 0), Tags::new()),
+      ];
+      let options = FilterOptions::default();
+
+      let result = super::super::apply_sort_and_limit(entries, &options);
+
+      assert_eq!(result[0].title(), "Alpha");
+      assert_eq!(result[1].title(), "Bravo");
+      assert_eq!(result[2].title(), "Charlie");
     }
 
     #[test]

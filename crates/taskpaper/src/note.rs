@@ -92,18 +92,39 @@ impl Note {
 
   /// Convert to a single-line string with the given separator between lines.
   pub fn to_line(&self, separator: &str) -> String {
-    let mut note = self.clone();
-    note.compress();
-    note.lines.join(separator)
+    let lines: Vec<&str> = self.compressed_lines().collect();
+    lines.join(separator)
+  }
+
+  /// Return an iterator over compressed lines without cloning or mutating self.
+  fn compressed_lines(&self) -> impl Iterator<Item = &str> {
+    let mut prev_blank = true; // start true to skip leading blanks
+    let mut lines: Vec<&str> = Vec::new();
+    for line in &self.lines {
+      let trimmed = line.trim_end();
+      let is_blank = trimmed.trim().is_empty();
+      if is_blank {
+        if !prev_blank {
+          lines.push("");
+        }
+        prev_blank = true;
+      } else {
+        lines.push(trimmed);
+        prev_blank = false;
+      }
+    }
+    // Remove trailing blank lines
+    while lines.last().is_some_and(|l| l.trim().is_empty()) {
+      lines.pop();
+    }
+    lines.into_iter()
   }
 }
 
 impl Display for Note {
   /// Format as multi-line text with each line prefixed by two tabs (TaskPaper note format).
   fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-    let mut note = self.clone();
-    note.compress();
-    for (i, line) in note.lines.iter().enumerate() {
+    for (i, line) in self.compressed_lines().enumerate() {
       if i > 0 {
         writeln!(f)?;
       }

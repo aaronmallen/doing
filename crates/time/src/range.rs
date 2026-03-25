@@ -35,8 +35,10 @@ pub fn parse_range(input: &str) -> Result<(DateTime<Local>, DateTime<Local>)> {
   let parts: Vec<&str> = RANGE_SEPARATOR_RE.splitn(input, 2).collect();
 
   if parts.len() == 2 {
-    let start = chronify(parts[0])?;
-    let end = chronify(parts[1])?;
+    let a = chronify(parts[0])?;
+    let b = chronify(parts[1])?;
+    // Normalize reversed ranges before applying end-of-day extension
+    let (start, end) = if a > b { (b, a) } else { (a, b) };
     // When end is at midnight (date-only expression), extend to end-of-day to make inclusive
     let end = if end.time() == NaiveTime::from_hms_opt(0, 0, 0).unwrap() {
       end + Duration::days(1)
@@ -118,6 +120,14 @@ mod test {
       assert_eq!(start.date_naive(), expected_date);
       assert_eq!(start.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
       assert_eq!(end, start + Duration::days(1));
+    }
+
+    #[test]
+    fn it_normalizes_reversed_range() {
+      let (start, end) = parse_range("2024-01-31 to 2024-01-01").unwrap();
+
+      assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 1).unwrap());
+      assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 2, 1).unwrap());
     }
 
     #[test]

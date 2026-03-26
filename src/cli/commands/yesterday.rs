@@ -56,12 +56,12 @@ impl Command {
 
     let yesterday = (Local::now() - Duration::days(1)).date_naive();
     if options.after.is_none() {
-      options.after = yesterday.and_time(NaiveTime::MIN).and_local_timezone(Local).single();
+      options.after = yesterday.and_time(NaiveTime::MIN).and_local_timezone(Local).earliest();
     }
     if options.before.is_none() {
       options.before = yesterday
         .and_hms_opt(23, 59, 59)
-        .and_then(|dt| dt.and_local_timezone(Local).single());
+        .and_then(|dt| dt.and_local_timezone(Local).latest());
     }
 
     let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));

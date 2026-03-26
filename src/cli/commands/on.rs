@@ -76,11 +76,11 @@ impl Command {
         let day_start = date
           .date_naive()
           .and_hms_opt(0, 0, 0)
-          .and_then(|dt| dt.and_local_timezone(chrono::Local).single());
+          .and_then(|dt| dt.and_local_timezone(chrono::Local).earliest());
         let day_end = date
           .date_naive()
           .and_hms_opt(23, 59, 59)
-          .and_then(|dt| dt.and_local_timezone(chrono::Local).single());
+          .and_then(|dt| dt.and_local_timezone(chrono::Local).latest());
 
         if options.after.is_none() {
           options.after = day_start;

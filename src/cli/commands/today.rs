@@ -56,7 +56,7 @@ impl Command {
 
     if options.after.is_none() {
       let today = Local::now().date_naive();
-      options.after = today.and_time(NaiveTime::MIN).and_local_timezone(Local).single();
+      options.after = today.and_time(NaiveTime::MIN).and_local_timezone(Local).earliest();
     }
 
     let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));

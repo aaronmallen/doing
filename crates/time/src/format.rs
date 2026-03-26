@@ -140,9 +140,7 @@ impl FormattedShortdate {
       &config.today
     } else if datetime.date_naive() > today - chrono::Duration::days(7) {
       &config.this_week
-    } else if datetime.year() == today.year()
-      || (datetime.year() + 1 == today.year() && datetime.month() > today.month())
-    {
+    } else if datetime.year() == today.year() {
       &config.this_month
     } else {
       &config.older
@@ -509,6 +507,17 @@ mod test {
 
       let expected = datetime.format("%a %H:%M").to_string();
       assert_eq!(result.to_string(), expected);
+    }
+
+    #[test]
+    fn it_formats_cross_year_dates_as_older() {
+      let now = Local::now();
+      let last_year = now.year() - 1;
+      let datetime = Local.with_ymd_and_hms(last_year, 11, 15, 14, 30, 0).unwrap();
+
+      let result = FormattedShortdate::new(datetime, &config());
+
+      assert_eq!(result.to_string(), format!("11/15/{} 14:30", last_year % 100));
     }
 
     #[test]

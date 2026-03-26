@@ -164,12 +164,14 @@ pub fn parse(template: &str) -> Vec<Token> {
       TokenMatch::Placeholder {
         caps, ..
       } => {
-        let width = caps.name("width").map(|m| m.as_str().parse::<i32>().unwrap());
+        let width = caps
+          .name("width")
+          .map(|m| m.as_str().parse::<i32>().unwrap_or(i32::MAX));
         let marker = caps.name("marker").and_then(|m| m.as_str().chars().next());
 
         let indent = caps.name("ichar").and_then(|ic| {
           caps.name("icount").map(|cnt| {
-            let count = cnt.as_str().parse::<u32>().unwrap();
+            let count = cnt.as_str().parse::<u32>().unwrap_or(u32::MAX);
             let kind = match ic.as_str().chars().next().unwrap() {
               ' ' | '_' => IndentChar::Space,
               't' => IndentChar::Tab,
@@ -410,6 +412,22 @@ mod test {
           placeholder(TokenKind::Title),
           Token::Literal(" world".into()),
         ]
+      );
+    }
+
+    #[test]
+    fn it_handles_overflow_width_gracefully() {
+      let tokens = parse("%999999999999title");
+
+      assert_eq!(
+        tokens,
+        vec![Token::Placeholder {
+          indent: None,
+          kind: TokenKind::Title,
+          marker: None,
+          prefix: None,
+          width: Some(i32::MAX),
+        }]
       );
     }
 

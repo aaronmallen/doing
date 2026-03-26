@@ -7,6 +7,18 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.4] - 2026-03-27
+
+### Fixed
+
+- `last --editor` and `select --editor` now persist edits back to the doing file (see [#336], [#337])
+- Tag queries no longer panic when string operators are used against Date, Duration, or Time properties (see [#338])
+- `budget remove` propagates I/O errors instead of silently ignoring them (see [#339])
+- Short date format is no longer incorrectly applied to cross-year dates (see [#340])
+- Color validation returns the correct span length after underscore normalization (see [#342])
+- Date filters on `on`, `today`, and `yesterday` no longer silently drop entries during DST transitions (see [#345])
+- Template parser uses saturating arithmetic to prevent panics on large width or count values (see [#361])
+
 ## [v0.1.3] - 2026-03-26
 
 ### Changed
@@ -447,8 +459,16 @@ Initial alpha release
 [#331]: https://github.com/aaronmallen/doing/issues/331
 [#332]: https://github.com/aaronmallen/doing/issues/332
 [#335]: https://github.com/aaronmallen/doing/issues/335
+[#336]: https://github.com/aaronmallen/doing/issues/336
+[#337]: https://github.com/aaronmallen/doing/issues/337
+[#338]: https://github.com/aaronmallen/doing/issues/338
+[#339]: https://github.com/aaronmallen/doing/issues/339
+[#340]: https://github.com/aaronmallen/doing/issues/340
+[#342]: https://github.com/aaronmallen/doing/issues/342
+[#345]: https://github.com/aaronmallen/doing/issues/345
+[#361]: https://github.com/aaronmallen/doing/issues/361
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.3...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.4...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -459,3 +479,4 @@ Initial alpha release
 [v0.1.1]: https://github.com/aaronmallen/doing/compare/0.1.0...0.1.1
 [v0.1.2]: https://github.com/aaronmallen/doing/compare/0.1.1...0.1.2
 [v0.1.3]: https://github.com/aaronmallen/doing/compare/0.1.2...0.1.3
+[v0.1.4]: https://github.com/aaronmallen/doing/compare/0.1.3...0.1.4

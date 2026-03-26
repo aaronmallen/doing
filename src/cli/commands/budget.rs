@@ -130,7 +130,11 @@ fn print_budget_line(
 
 fn remove_budget(tag: &str, quiet: bool) -> Result<()> {
   let config_path = doing_config::loader::resolve_global_config_path();
-  let content = std::fs::read_to_string(&config_path).unwrap_or_default();
+  let content = if config_path.exists() {
+    std::fs::read_to_string(&config_path)?
+  } else {
+    String::new()
+  };
 
   let mut doc: toml_edit::DocumentMut = content
     .parse()

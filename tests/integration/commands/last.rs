@@ -2,6 +2,7 @@ mod when_bool_flag;
 mod when_case_flag;
 mod when_delete_flag;
 mod when_duration_flag;
+mod when_editor_flag;
 mod when_exact_flag;
 mod when_no_flags;
 mod when_not_flag;

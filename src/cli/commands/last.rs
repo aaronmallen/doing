@@ -92,7 +92,16 @@ impl Command {
     let mut render_options = RenderOptions::from_config("default", &ctx.config);
     render_options.include_notes = ctx.include_notes;
     let initial = format_items(std::slice::from_ref(entry), &render_options, &ctx.config, false);
-    let _edited = editor::edit(&initial, &ctx.config)?;
+    let edited = editor::edit(&initial, &ctx.config)?;
+
+    let new_title = edited.trim();
+    if let Some(section) = ctx.document.section_by_name_mut(entry.section())
+      && let Some(e) = section.entries_mut().iter_mut().find(|e| e.id() == entry.id())
+    {
+      e.set_title(new_title);
+    }
+
+    write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
     ctx.status("Edited last entry");
     Ok(())
   }

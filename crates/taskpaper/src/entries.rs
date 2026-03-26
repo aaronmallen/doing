@@ -200,12 +200,6 @@ fn gen_id(date: &DateTime<Local>, title: &str, section: &str) -> String {
   format!("{:x}", md5::compute(content.as_bytes()))
 }
 
-/// Parse a date string from a tag value in `YYYY-MM-DD HH:MM` format.
-fn parse_tag_date(value: &str) -> Option<DateTime<Local>> {
-  let naive = NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M").ok()?;
-  Local.from_local_datetime(&naive).single()
-}
-
 /// Check whether an entry should receive a particular treatment based on config patterns.
 ///
 /// Each pattern is either `@tagname` (matches if the entry has that tag) or a
@@ -222,6 +216,12 @@ fn no_patterns_match(patterns: &[String], tags: &Tags, section: &str) -> bool {
     }
   }
   true
+}
+
+/// Parse a date string from a tag value in `YYYY-MM-DD HH:MM` format.
+fn parse_tag_date(value: &str) -> Option<DateTime<Local>> {
+  let naive = NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M").ok()?;
+  Local.from_local_datetime(&naive).single()
 }
 
 #[cfg(test)]

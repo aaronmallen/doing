@@ -284,11 +284,14 @@ pub fn strip_ansi(s: &str) -> String {
   STRIP_ANSI_RE.replace_all(s, "").into_owned()
 }
 
-/// Validate a color name string, returning the longest valid prefix.
+/// Validate a color name string, returning the longest valid prefix and its original length.
+///
+/// Returns a tuple of (normalized_color_name, original_byte_length) so the parser
+/// can compute correct span offsets even when underscores are stripped during normalization.
 ///
 /// This allows color tokens to bleed into adjacent text, e.g. `%greensomething`
 /// still matches `green`.
-pub fn validate_color(s: &str) -> Option<String> {
+pub fn validate_color(s: &str) -> Option<(String, usize)> {
   let normalized = s.replace('_', "").replace("bright", "bold");
   let normalized = if normalized.starts_with("bgbold") {
     normalized.replacen("bgbold", "boldbg", 1)
@@ -301,27 +304,84 @@ pub fn validate_color(s: &str) -> Option<String> {
     && rest.len() >= 6
     && rest[..6].chars().all(|c| c.is_ascii_hexdigit())
   {
-    return Some(format!("#{}", &rest[..6]));
+    let color = format!("#{}", &rest[..6]);
+    let orig_len = original_len_for_normalized(s, color.len());
+    return Some((color, orig_len));
   }
   for prefix in ["fg#", "bg#", "f#", "b#"] {
     if let Some(rest) = normalized.strip_prefix(prefix)
       && rest.len() >= 6
       && rest[..6].chars().all(|c| c.is_ascii_hexdigit())
     {
-      return Some(format!("{prefix}{}", &rest[..6]));
+      let color = format!("{prefix}{}", &rest[..6]);
+      let orig_len = original_len_for_normalized(s, color.len());
+      return Some((color, orig_len));
     }
   }
 
   // Find longest matching named color
   let mut valid = None;
   let mut compiled = String::new();
+  let mut norm_len = 0;
   for ch in normalized.chars() {
     compiled.push(ch);
+    norm_len += ch.len_utf8();
     if NamedColor::parse(&compiled).is_some() {
-      valid = Some(compiled.clone());
+      valid = Some((compiled.clone(), original_len_for_normalized(s, norm_len)));
     }
   }
   valid
+}
+
+/// Map a normalized byte length back to the original input byte length,
+/// accounting for underscores stripped and "bright" → "bold" replacement.
+fn original_len_for_normalized(original: &str, normalized_len: usize) -> usize {
+  // First strip underscores, tracking original byte offsets
+  let stripped: String = original.chars().filter(|&c| c != '_').collect();
+  let mut stripped_to_orig = Vec::new();
+  let mut orig_pos = 0;
+  for ch in original.chars() {
+    if ch != '_' {
+      stripped_to_orig.push(orig_pos);
+    }
+    orig_pos += ch.len_utf8();
+  }
+  // sentinel for "consumed everything"
+  stripped_to_orig.push(orig_pos);
+
+  // Walk both the normalized and stripped strings to find how many stripped chars
+  // correspond to normalized_len normalized bytes
+  let mut norm_pos = 0;
+  let mut strip_pos = 0;
+  while norm_pos < normalized_len && strip_pos < stripped.len() {
+    if stripped[strip_pos..].starts_with("bright") {
+      // "bright" (6 stripped chars) became "bold" (4 normalized chars)
+      let norm_advance = "bold".len().min(normalized_len - norm_pos);
+      norm_pos += norm_advance;
+      if norm_advance == "bold".len() {
+        strip_pos += "bright".len();
+      } else {
+        // partial match within "bold" — consume proportional stripped chars
+        strip_pos += norm_advance;
+      }
+    } else {
+      let ch_len = stripped[strip_pos..].chars().next().map_or(1, |c| c.len_utf8());
+      norm_pos += ch_len;
+      strip_pos += ch_len;
+    }
+  }
+
+  // Map stripped position back to original position
+  if strip_pos >= stripped.len() {
+    *stripped_to_orig.last().unwrap_or(&orig_pos)
+  } else {
+    // Count how many non-underscore chars we consumed
+    let stripped_chars_consumed = stripped[..strip_pos].chars().count();
+    stripped_to_orig
+      .get(stripped_chars_consumed)
+      .copied()
+      .unwrap_or(orig_pos)
+  }
 }
 
 /// Return the visible (non-ANSI) display width of a string.
@@ -643,7 +703,12 @@ mod test {
 
     #[test]
     fn it_finds_longest_prefix() {
-      assert_eq!(validate_color("boldbluefoo"), Some("boldblue".into()));
+      assert_eq!(validate_color("boldbluefoo"), Some(("boldblue".into(), 8)));
+    }
+
+    #[test]
+    fn it_returns_correct_original_length_with_underscores() {
+      assert_eq!(validate_color("bold_white"), Some(("boldwhite".into(), 10)));
     }
 
     #[test]
@@ -653,22 +718,27 @@ mod test {
 
     #[test]
     fn it_validates_bg_hex() {
-      assert_eq!(validate_color("bg#00FF00"), Some("bg#00FF00".into()));
+      assert_eq!(validate_color("bg#00FF00"), Some(("bg#00FF00".into(), 9)));
     }
 
     #[test]
     fn it_validates_bold_color() {
-      assert_eq!(validate_color("boldwhite"), Some("boldwhite".into()));
+      assert_eq!(validate_color("boldwhite"), Some(("boldwhite".into(), 9)));
+    }
+
+    #[test]
+    fn it_validates_bright_red_with_underscore() {
+      assert_eq!(validate_color("bright_red"), Some(("boldred".into(), 10)));
     }
 
     #[test]
     fn it_validates_hex() {
-      assert_eq!(validate_color("#FF5500"), Some("#FF5500".into()));
+      assert_eq!(validate_color("#FF5500"), Some(("#FF5500".into(), 7)));
     }
 
     #[test]
     fn it_validates_simple_color() {
-      assert_eq!(validate_color("cyan"), Some("cyan".into()));
+      assert_eq!(validate_color("cyan"), Some(("cyan".into(), 4)));
     }
   }
 

@@ -125,10 +125,10 @@ pub fn parse(template: &str) -> Vec<Token> {
   for caps in COLOR_RE.captures_iter(&escaped) {
     let m = caps.get(0).unwrap();
     let color_str = caps.get(1).unwrap().as_str();
-    if let Some(valid) = colors::validate_color(color_str) {
+    if let Some((valid, orig_len)) = colors::validate_color(color_str) {
       // Only add if not overlapping with a placeholder match
       let start = m.start();
-      let end = start + 1 + valid.len(); // +1 for the % prefix
+      let end = start + 1 + orig_len; // +1 for the % prefix
       let overlaps = matches.iter().any(|tm| {
         let (ts, te) = tm.span();
         start < te && end > ts
@@ -296,6 +296,19 @@ mod test {
           Token::Color(colors::Color::Named(colors::NamedColor::Cyan)),
           placeholder(TokenKind::Date),
           Token::Color(colors::Color::Named(colors::NamedColor::Reset)),
+        ]
+      );
+    }
+
+    #[test]
+    fn it_parses_color_with_underscores() {
+      let tokens = parse("%bold_white%title");
+
+      assert_eq!(
+        tokens,
+        vec![
+          Token::Color(colors::Color::Named(colors::NamedColor::BoldWhite)),
+          placeholder(TokenKind::Title),
         ]
       );
     }

@@ -3,7 +3,7 @@ use std::fs;
 use crate::support::helpers::DoingCmd;
 
 #[test]
-fn it_opens_selected_entries_in_editor() {
+fn it_persists_edits_to_the_doing_file() {
   let doing = DoingCmd::new();
 
   fs::write(
@@ -12,15 +12,22 @@ fn it_opens_selected_entries_in_editor() {
   )
   .expect("failed to write doing file");
 
-  // With cat as the editor (set in test config), --editor should succeed
+  // With cat as the editor (set in test config), --editor should succeed and persist
   doing
     .run(["select", "--no-menu", "--query", "Editor task", "--editor"])
     .assert()
     .success();
+
+  let contents = doing.read_doing_file();
+
+  assert!(
+    contents.contains("Editor task"),
+    "expected entry to be persisted after editor, got: {contents}"
+  );
 }
 
 #[test]
-fn it_opens_with_short_flag() {
+fn it_persists_edits_to_the_doing_file_with_short_flag() {
   let doing = DoingCmd::new();
 
   fs::write(
@@ -33,4 +40,11 @@ fn it_opens_with_short_flag() {
     .run(["select", "--no-menu", "--query", "Short editor", "-e"])
     .assert()
     .success();
+
+  let contents = doing.read_doing_file();
+
+  assert!(
+    contents.contains("Short editor task"),
+    "expected entry to be persisted after editor, got: {contents}"
+  );
 }

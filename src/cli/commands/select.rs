@@ -286,6 +286,15 @@ impl Command {
       )));
     }
 
+    for (original, edited_part) in selected.iter().zip(parts.iter()) {
+      let new_title = edited_part.trim();
+      if let Some(section) = ctx.document.section_by_name_mut(original.section())
+        && let Some(entry) = section.entries_mut().iter_mut().find(|e| e.id() == original.id())
+      {
+        entry.set_title(new_title);
+      }
+    }
+
     ctx.status(format!("Edited {} entries", selected.len()));
     Ok(())
   }
@@ -476,7 +485,7 @@ impl Command {
     } else if self.delete {
       self.action_delete(ctx, selected)?;
     } else if self.editor {
-      return self.action_editor(ctx, selected);
+      self.action_editor(ctx, selected)?;
     } else if self.finish {
       self.action_finish(ctx, selected)?;
     } else if self.flag {

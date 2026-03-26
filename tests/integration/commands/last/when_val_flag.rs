@@ -21,3 +21,12 @@ fn it_filters_by_tag_value() {
     "expected entry with matching tag value, got: {stdout}"
   );
 }
+
+#[test]
+fn it_does_not_panic_on_string_operator_against_date() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Some entry"]).assert().success();
+
+  doing.run(["last", "--val", "date *= 2024"]).assert().success();
+}

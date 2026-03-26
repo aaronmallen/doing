@@ -97,6 +97,9 @@ impl TagQuery {
   }
 
   fn compare_date(&self, entry_date: DateTime<Local>, value: &str) -> bool {
+    if is_string_op(self.op) {
+      return false;
+    }
     let Ok(target) = chronify(value) else {
       return false;
     };
@@ -104,6 +107,9 @@ impl TagQuery {
   }
 
   fn compare_duration(&self, entry: &Entry, is_interval: bool) -> bool {
+    if is_string_op(self.op) {
+      return false;
+    }
     let entry_duration = if is_interval {
       entry.interval()
     } else {
@@ -142,6 +148,9 @@ impl TagQuery {
   }
 
   fn compare_time(&self, entry: &Entry) -> bool {
+    if is_string_op(self.op) {
+      return false;
+    }
     // Parse the target as a date/time expression, then compare time-of-day
     let Ok(target) = chronify(&self.value) else {
       return false;
@@ -413,6 +422,30 @@ mod test {
 
         assert!(!query.matches_entry(&entry));
       }
+
+      #[test]
+      fn it_returns_false_for_contains_operator() {
+        let entry = finished_entry();
+        let query = TagQuery::parse("date *= 2024").unwrap();
+
+        assert!(!query.matches_entry(&entry));
+      }
+
+      #[test]
+      fn it_returns_false_for_ends_with_operator() {
+        let entry = finished_entry();
+        let query = TagQuery::parse("date $= 17").unwrap();
+
+        assert!(!query.matches_entry(&entry));
+      }
+
+      #[test]
+      fn it_returns_false_for_starts_with_operator() {
+        let entry = finished_entry();
+        let query = TagQuery::parse("date ^= 2024").unwrap();
+
+        assert!(!query.matches_entry(&entry));
+      }
     }
 
     mod duration_property {
@@ -437,6 +470,21 @@ mod test {
       fn it_returns_false_for_finished_entry() {
         let entry = finished_entry();
         let query = TagQuery::parse("duration > 1h").unwrap();
+
+        assert!(!query.matches_entry(&entry));
+      }
+
+      #[test]
+      fn it_returns_false_for_contains_operator() {
+        let entry = Entry::new(
+          Local::now() - Duration::hours(3),
+          "Active task",
+          Tags::new(),
+          Note::new(),
+          "Currently",
+          None::<String>,
+        );
+        let query = TagQuery::parse("duration *= 3").unwrap();
 
         assert!(!query.matches_entry(&entry));
       }
@@ -646,6 +694,21 @@ mod test {
         let query = TagQuery::parse("time < 2024-03-17 12:00").unwrap();
 
         assert!(query.matches_entry(&entry));
+      }
+
+      #[test]
+      fn it_returns_false_for_contains_operator() {
+        let entry = Entry::new(
+          Local.with_ymd_and_hms(2024, 3, 17, 10, 0, 0).unwrap(),
+          "Morning task",
+          Tags::new(),
+          Note::new(),
+          "Currently",
+          None::<String>,
+        );
+        let query = TagQuery::parse("time *= 10").unwrap();
+
+        assert!(!query.matches_entry(&entry));
       }
     }
 

@@ -89,8 +89,11 @@ impl Command {
       return Err(crate::Error::Config("no matching entries found".into()));
     }
 
+    let mut count = 0;
     for entry_id in &entries {
-      self.cancel_entry(ctx, &section_name, entry_id)?;
+      if self.cancel_entry(ctx, &section_name, entry_id)? {
+        count += 1;
+      }
     }
 
     if self.archive {
@@ -99,7 +102,6 @@ impl Command {
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
-    let count = entries.len();
     if count == 1 {
       ctx.status("Cancelled 1 entry");
     } else {
@@ -138,7 +140,7 @@ impl Command {
     Ok(())
   }
 
-  fn cancel_entry(&self, ctx: &mut AppContext, section_name: &str, entry_id: &str) -> Result<()> {
+  fn cancel_entry(&self, ctx: &mut AppContext, section_name: &str, entry_id: &str) -> Result<bool> {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
@@ -151,17 +153,17 @@ impl Command {
       .ok_or_else(|| crate::Error::Config("entry not found".into()))?;
 
     if entry.finished() {
-      return Ok(());
+      return Ok(false);
     }
 
     if !entry.should_finish(&ctx.config.never_finish) {
-      return Ok(());
+      return Ok(false);
     }
 
     // Cancel: add @done with no timestamp (no time tracked)
     entry.tags_mut().add(Tag::new("done", None::<String>));
 
-    Ok(())
+    Ok(true)
   }
 
   fn effective_count(&self) -> usize {

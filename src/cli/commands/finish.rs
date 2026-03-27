@@ -152,6 +152,7 @@ impl Command {
     };
     let confirm_threshold = parse_duration(&ctx.config.interaction.confirm_longer_than).ok();
 
+    let mut finished_ids: Vec<String> = Vec::new();
     for (i, entry_id) in entries.iter().enumerate() {
       let entry_id = entry_id.clone();
 
@@ -183,7 +184,11 @@ impl Command {
         }
       }
 
-      self.finish_entry(ctx, &section_name, &entry_id, done_date, include_date)?;
+      let modified = self.finish_entry(ctx, &section_name, &entry_id, done_date, include_date)?;
+
+      if modified {
+        finished_ids.push(entry_id.clone());
+      }
 
       if let Some(start) = new_start
         && let Some(entry) = ctx
@@ -202,7 +207,7 @@ impl Command {
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
 
     // Build status messages matching Ruby format
-    for entry_id in &entries {
+    for entry_id in &finished_ids {
       if let Some(entry) = self.find_entry_by_id(ctx, entry_id) {
         let title = entry.full_title();
         ctx.status(format!("Tagged: added tag @done to {title}"));
@@ -344,7 +349,7 @@ impl Command {
     entry_id: &str,
     done_date: DateTime<Local>,
     include_date: bool,
-  ) -> Result<()> {
+  ) -> Result<bool> {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
@@ -357,7 +362,7 @@ impl Command {
       .ok_or_else(|| crate::Error::Config("entry not found".into()))?;
 
     if !entry.should_finish(&ctx.config.never_finish) {
-      return Ok(());
+      return Ok(false);
     }
 
     let done_value = if include_date && entry.should_time(&ctx.config.never_time) {
@@ -368,7 +373,7 @@ impl Command {
 
     entry.tags_mut().add(Tag::new("done", done_value));
 
-    Ok(())
+    Ok(true)
   }
 
   fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {

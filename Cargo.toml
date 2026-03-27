@@ -35,7 +35,7 @@ chrono = { features = ["serde"], version = "0.4" }
 chrono-tz = "0.10"
 clap = { features = ["derive", "suggestions"], version = "4" }
 clap_complete = "4"
-clap_mangen = "0.2"
+clap_mangen = "0.3"
 dialoguer = "0.12"
 dir_spec = "0.5"
 doing-config = { path = "crates/config", version = "0.1.2" }

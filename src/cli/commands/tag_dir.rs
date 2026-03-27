@@ -49,7 +49,7 @@ impl Command {
     let rc_path = dir.join(".doingrc");
 
     if self.editor {
-      let editor = ctx.config.editors.default.clone().unwrap_or_else(|| "vi".into());
+      let editor = resolve_editor(ctx);
       let parts: Vec<&str> = editor.split_whitespace().collect();
       let (cmd, args) = parts
         .split_first()
@@ -185,6 +185,30 @@ fn remove_tags(path: &PathBuf, tags_to_remove: &[String]) -> Result<()> {
   fs::write(path, yaml).map_err(|e| Error::Config(format!("failed to write {}: {e}", path.display())))?;
 
   Ok(())
+}
+
+fn resolve_editor(ctx: &crate::cli::AppContext) -> String {
+  if let Some(ref editor) = ctx.config.editors.doing_file {
+    return editor.clone();
+  }
+
+  if let Ok(editor) = doing_config::env::DOING_EDITOR.value() {
+    return editor;
+  }
+
+  if let Some(ref editor) = ctx.config.editors.default {
+    return editor.clone();
+  }
+
+  if let Ok(editor) = doing_config::env::VISUAL.value() {
+    return editor;
+  }
+
+  if let Ok(editor) = doing_config::env::EDITOR.value() {
+    return editor;
+  }
+
+  "vi".into()
 }
 
 fn write_new_rc(path: &PathBuf, tags: &[String]) -> Result<()> {

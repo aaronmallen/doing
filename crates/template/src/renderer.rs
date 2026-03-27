@@ -339,7 +339,7 @@ fn format_value(
 
   let sized = apply_width(raw, width);
   if matches!(kind, TokenKind::Title) && wrap_width > 0 {
-    return wrap::wrap(raw, wrap_width as usize);
+    return wrap::wrap(&sized, wrap_width as usize);
   }
   sized
 }
@@ -431,6 +431,20 @@ mod test {
       let result = apply_width("hello world", Some(5));
 
       assert_eq!(result, "hello");
+    }
+  }
+
+  mod format_value {
+    use pretty_assertions::assert_eq;
+
+    use super::super::{TokenKind, format_value};
+
+    #[test]
+    fn it_applies_width_before_wrapping_title() {
+      let raw = "This is a long title that should be truncated first";
+      let result = format_value(raw, TokenKind::Title, Some(20), None, None, None, 80);
+
+      assert_eq!(result, "This is a long title");
     }
   }
 

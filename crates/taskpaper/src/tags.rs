@@ -183,6 +183,7 @@ impl Tags {
         count += 1;
       }
     }
+    self.dedup();
     count
   }
 
@@ -202,6 +203,7 @@ impl Tags {
         count += 1;
       }
     }
+    self.dedup();
     count
   }
 
@@ -597,6 +599,19 @@ mod test {
         assert_eq!(renamed, 1);
         assert!(tags.has("newtag"));
       }
+
+      #[test]
+      fn it_deduplicates_when_target_already_exists() {
+        let mut tags = Tags::from_iter(vec![
+          Tag::new("alpha", None::<String>),
+          Tag::new("beta", None::<String>),
+        ]);
+
+        tags.rename("alpha", "beta");
+
+        assert_eq!(tags.len(), 1);
+        assert!(tags.has("beta"));
+      }
     }
 
     mod rename_by_wildcard {
@@ -628,6 +643,20 @@ mod test {
 
         assert!(tags.has("new"));
         assert_eq!(tags.iter().next().unwrap().value(), Some("val"));
+      }
+
+      #[test]
+      fn it_deduplicates_when_wildcard_matches_multiple_to_same_name() {
+        let mut tags = Tags::from_iter(vec![
+          Tag::new("proj-a", None::<String>),
+          Tag::new("proj-b", None::<String>),
+          Tag::new("project", None::<String>),
+        ]);
+
+        tags.rename_by_wildcard("proj-*", "project");
+
+        assert_eq!(tags.len(), 1);
+        assert!(tags.has("project"));
       }
 
       #[test]

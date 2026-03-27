@@ -93,12 +93,11 @@ impl Command {
     let has_advanced_filters =
       self.after.is_some() || self.before.is_some() || self.case.is_some() || self.exact || self.not || self.only_timed;
 
-    if !has_advanced_filters {
-      self.apply_search_filter(&mut entries)?;
-    }
-    self.apply_date_filter(&mut entries)?;
     if has_advanced_filters {
       self.apply_filter_flags(&mut entries, ctx)?;
+    } else {
+      self.apply_search_filter(&mut entries)?;
+      self.apply_date_filter(&mut entries)?;
     }
 
     let section_name = self.section.as_deref().unwrap_or(&ctx.config.current_section);
@@ -154,6 +153,7 @@ impl Command {
       before: self.before.clone(),
       case: self.case.clone(),
       exact: self.exact,
+      from: self.from.clone(),
       not: self.not,
       only_timed: self.only_timed,
       search: self.search.clone(),

@@ -7,10 +7,11 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
-## [v0.1.5] - 2026-03-28
+## [v0.1.5] - 2026-03-27
 
 ### Fixed
 
+- `self-update` no longer fails with a 404 error due to incorrect `v`-prefixed release tag lookup
 - `tag-dir --editor` now uses the full editor resolution chain (`DOING_EDITOR`, `VISUAL`,
   `EDITOR`, config) instead of only checking the config default (see [#355])
 - `cancel` and `finish` report the actual number of modified entries instead of counting

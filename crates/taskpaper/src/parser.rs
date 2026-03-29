@@ -5,6 +5,9 @@ use regex::Regex;
 
 use crate::{Document, Entry, Note, Section, Tag, Tags};
 
+/// The default section name used when entries appear before any section header.
+pub const DEFAULT_SECTION: &str = "Uncategorized";
+
 static ENTRY_RX: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^\t- (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) \| (.*?)(?:\s+<([a-f0-9]{32})>)?\s*$").unwrap());
 static SECTION_RX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\S[\S ]+):\s*$").unwrap());
@@ -53,7 +56,7 @@ pub fn parse(content: &str) -> Document {
 
       if !found_first_section {
         found_first_section = true;
-        current_section = Some(Section::new("Uncategorized"));
+        current_section = Some(Section::new(DEFAULT_SECTION));
       }
 
       let date_str = &caps[1];
@@ -144,8 +147,8 @@ mod test {
       let content = "\t- 2024-03-17 14:30 | Orphan task";
       let doc = parse(content);
 
-      assert!(doc.has_section("Uncategorized"));
-      assert_eq!(doc.entries_in_section("Uncategorized").len(), 1);
+      assert!(doc.has_section(DEFAULT_SECTION));
+      assert_eq!(doc.entries_in_section(DEFAULT_SECTION).len(), 1);
     }
 
     #[test]

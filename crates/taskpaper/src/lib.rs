@@ -33,6 +33,7 @@ pub use document::Document;
 pub use entries::Entry;
 pub use io::{create_file, read_file, write_file};
 pub use note::Note;
+pub use parser::DEFAULT_SECTION;
 pub use section::Section;
 pub use serializer::serialize;
 pub use tags::{Tag, Tags};

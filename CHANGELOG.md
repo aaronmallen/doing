@@ -7,6 +7,14 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.7] - 2026-03-30
+
+### Changed
+
+- Unified export and import plugin registries into a single generic registry with a shared `Plugin`
+  trait, replacing the separate `ExportRegistry` and `ImportRegistry` types (see [#352], [#353],
+  [#354], [#356])
+
 ## [v0.1.6] - 2026-03-29
 
 ### Changed
@@ -500,12 +508,16 @@ Initial alpha release
 [#349]: https://github.com/aaronmallen/doing/issues/349
 [#350]: https://github.com/aaronmallen/doing/issues/350
 [#351]: https://github.com/aaronmallen/doing/issues/351
+[#352]: https://github.com/aaronmallen/doing/issues/352
+[#353]: https://github.com/aaronmallen/doing/issues/353
+[#354]: https://github.com/aaronmallen/doing/issues/354
 [#355]: https://github.com/aaronmallen/doing/issues/355
+[#356]: https://github.com/aaronmallen/doing/issues/356
 [#357]: https://github.com/aaronmallen/doing/issues/357
 [#358]: https://github.com/aaronmallen/doing/issues/358
 [#361]: https://github.com/aaronmallen/doing/issues/361
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.6...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.7...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -519,3 +531,4 @@ Initial alpha release
 [v0.1.4]: https://github.com/aaronmallen/doing/compare/0.1.3...0.1.4
 [v0.1.5]: https://github.com/aaronmallen/doing/compare/0.1.4...0.1.5
 [v0.1.6]: https://github.com/aaronmallen/doing/compare/0.1.5...0.1.6
+[v0.1.7]: https://github.com/aaronmallen/doing/compare/0.1.6...0.1.7

@@ -58,3 +58,19 @@ fn it_shows_empty_when_no_sections() {
   // stdout may be empty or show just section headers with no entries
   let _ = stdout; // Just verify it doesn't crash
 }
+
+#[test]
+fn it_suppresses_output_with_quiet_flag() {
+  let doing = DoingCmd::new();
+
+  doing.run(["now", "Test entry"]).assert().success();
+
+  let output = doing
+    .run(["--quiet", "sections"])
+    .output()
+    .expect("failed to run sections --quiet");
+  let stdout = String::from_utf8_lossy(&output.stdout);
+
+  assert!(output.status.success(), "expected sections --quiet to succeed");
+  assert!(stdout.is_empty(), "expected no output with --quiet, got: {stdout}");
+}

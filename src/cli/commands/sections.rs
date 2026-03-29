@@ -75,6 +75,10 @@ fn add_section(name: &str, ctx: &mut AppContext) -> Result<()> {
 }
 
 fn list_sections(ctx: &AppContext) -> Result<()> {
+  if ctx.quiet {
+    return Ok(());
+  }
+
   if ctx.document.is_empty() {
     println!("No sections found.");
     return Ok(());

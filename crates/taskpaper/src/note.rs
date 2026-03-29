@@ -65,10 +65,12 @@ impl Note {
     }
     self.lines = compressed;
 
-    // Remove leading and trailing blank lines
-    while self.lines.first().is_some_and(|l| l.trim().is_empty()) {
-      self.lines.remove(0);
+    // Remove leading blank lines
+    let leading = self.lines.iter().take_while(|l| l.trim().is_empty()).count();
+    if leading > 0 {
+      self.lines.drain(..leading);
     }
+    // Remove trailing blank lines
     while self.lines.last().is_some_and(|l| l.trim().is_empty()) {
       self.lines.pop();
     }

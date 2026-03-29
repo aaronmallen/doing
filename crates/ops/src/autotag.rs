@@ -15,9 +15,11 @@ use regex::Regex;
 /// Autotagging is idempotent — applying it twice does not duplicate tags.
 pub fn autotag(entry: &mut Entry, config: &AutotagConfig, default_tags: &[String]) {
   apply_default_tags(entry, default_tags);
-  apply_mappings(entry, &config.mappings);
-  apply_whitelist(entry, &config.whitelist);
-  apply_synonyms(entry, &config.synonyms);
+  let title_lower = entry.title().to_lowercase();
+  let words: Vec<&str> = title_lower.split_whitespace().collect();
+  apply_mappings(entry, &config.mappings, &words);
+  apply_whitelist(entry, &config.whitelist, &words);
+  apply_synonyms(entry, &config.synonyms, &words);
   apply_transforms(entry, &config.transform);
   entry.tags_mut().dedup();
 }
@@ -31,10 +33,7 @@ fn apply_default_tags(entry: &mut Entry, default_tags: &[String]) {
 }
 
 /// Apply Ruby-style key-value mappings: if word appears in title, add the mapped tag.
-fn apply_mappings(entry: &mut Entry, mappings: &HashMap<String, String>) {
-  let title_lower = entry.title().to_lowercase();
-  let words: Vec<&str> = title_lower.split_whitespace().collect();
-
+fn apply_mappings(entry: &mut Entry, mappings: &HashMap<String, String>, words: &[&str]) {
   for (word, tag_name) in mappings {
     if entry.tags().has(tag_name) {
       continue;
@@ -46,10 +45,7 @@ fn apply_mappings(entry: &mut Entry, mappings: &HashMap<String, String>) {
   }
 }
 
-fn apply_synonyms(entry: &mut Entry, synonyms: &HashMap<String, Vec<String>>) {
-  let title_lower = entry.title().to_lowercase();
-  let words: Vec<&str> = title_lower.split_whitespace().collect();
-
+fn apply_synonyms(entry: &mut Entry, synonyms: &HashMap<String, Vec<String>>, words: &[&str]) {
   for (tag_name, synonym_patterns) in synonyms {
     if entry.tags().has(tag_name) {
       continue;
@@ -127,10 +123,7 @@ fn apply_transforms(entry: &mut Entry, transforms: &[String]) {
   }
 }
 
-fn apply_whitelist(entry: &mut Entry, whitelist: &[String]) {
-  let title_lower = entry.title().to_lowercase();
-  let words: Vec<&str> = title_lower.split_whitespace().collect();
-
+fn apply_whitelist(entry: &mut Entry, whitelist: &[String], words: &[&str]) {
   for whitelist_entry in whitelist {
     if entry.tags().has(whitelist_entry) {
       continue;
@@ -210,6 +203,15 @@ mod test {
     Entry::new(date, title, tags, Note::new(), "Currently", None::<String>)
   }
 
+  fn title_words(entry: &Entry) -> Vec<String> {
+    entry
+      .title()
+      .to_lowercase()
+      .split_whitespace()
+      .map(String::from)
+      .collect()
+  }
+
   mod apply_default_tags {
     use pretty_assertions::assert_eq;
 
@@ -252,7 +254,9 @@ mod test {
       let mut synonyms = HashMap::new();
       synonyms.insert("design".to_string(), vec!["typography".to_string()]);
 
-      apply_synonyms(&mut entry, &synonyms);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_synonyms(&mut entry, &synonyms, &word_refs);
 
       assert!(entry.tags().has("design"));
       assert_eq!(entry.tags().len(), 1);
@@ -264,7 +268,9 @@ mod test {
       let mut synonyms = HashMap::new();
       synonyms.insert("design".to_string(), vec!["typography".to_string()]);
 
-      apply_synonyms(&mut entry, &synonyms);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_synonyms(&mut entry, &synonyms, &word_refs);
 
       assert!(entry.tags().has("design"));
     }
@@ -278,7 +284,9 @@ mod test {
       let mut synonyms = HashMap::new();
       synonyms.insert("design".to_string(), vec!["typography".to_string()]);
 
-      apply_synonyms(&mut entry, &synonyms);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_synonyms(&mut entry, &synonyms, &word_refs);
 
       assert_eq!(entry.tags().len(), 1);
     }
@@ -289,7 +297,9 @@ mod test {
       let mut synonyms = HashMap::new();
       synonyms.insert("design".to_string(), vec!["typo*".to_string()]);
 
-      apply_synonyms(&mut entry, &synonyms);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_synonyms(&mut entry, &synonyms, &word_refs);
 
       assert!(entry.tags().has("design"));
     }
@@ -379,7 +389,9 @@ mod test {
       let mut entry = sample_entry("Working on design", Tags::new());
       let whitelist = vec!["design".to_string()];
 
-      apply_whitelist(&mut entry, &whitelist);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_whitelist(&mut entry, &whitelist, &word_refs);
 
       assert!(entry.tags().has("design"));
       assert_eq!(entry.tags().len(), 1);
@@ -390,7 +402,9 @@ mod test {
       let mut entry = sample_entry("Working on redesign", Tags::new());
       let whitelist = vec!["design".to_string()];
 
-      apply_whitelist(&mut entry, &whitelist);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_whitelist(&mut entry, &whitelist, &word_refs);
 
       assert!(entry.tags().is_empty());
     }
@@ -400,7 +414,9 @@ mod test {
       let mut entry = sample_entry("Working on Design", Tags::new());
       let whitelist = vec!["design".to_string()];
 
-      apply_whitelist(&mut entry, &whitelist);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_whitelist(&mut entry, &whitelist, &word_refs);
 
       assert!(entry.tags().has("design"));
     }
@@ -410,7 +426,9 @@ mod test {
       let mut entry = sample_entry("Working on openai stuff", Tags::new());
       let whitelist = vec!["OpenAI".to_string()];
 
-      apply_whitelist(&mut entry, &whitelist);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_whitelist(&mut entry, &whitelist, &word_refs);
 
       assert!(entry.tags().has("OpenAI"));
     }
@@ -423,7 +441,9 @@ mod test {
       );
       let whitelist = vec!["design".to_string()];
 
-      apply_whitelist(&mut entry, &whitelist);
+      let words = title_words(&entry);
+      let word_refs: Vec<&str> = words.iter().map(|s| s.as_str()).collect();
+      apply_whitelist(&mut entry, &whitelist, &word_refs);
 
       assert_eq!(entry.tags().len(), 1);
     }

@@ -92,14 +92,6 @@ fn build_regex(pattern: &str, original_query: &str, config: &SearchConfig) -> Re
   Regex::new(&full_pattern)
 }
 
-/// Check whether `text` contains `word` as a substring.
-fn contains_word(text: &str, word: &str, case: CaseSensitivity) -> bool {
-  match case {
-    CaseSensitivity::Sensitive => text.contains(word),
-    CaseSensitivity::Ignore => text.to_lowercase().contains(&word.to_lowercase()),
-  }
-}
-
 /// Detect the search mode from the query string and config.
 ///
 /// Detection order:
@@ -166,20 +158,42 @@ fn matches_fuzzy(text: &str, pattern: &str, distance: u32, case: CaseSensitivity
 /// - Exclude: word must NOT appear in text.
 /// - Phrase: exact substring must appear in text.
 fn matches_pattern(text: &str, tokens: &[PatternToken], case: CaseSensitivity) -> bool {
+  // Pre-lowercase text once for case-insensitive matching to avoid per-token allocation.
+  let lowered;
+  let haystack = match case {
+    CaseSensitivity::Ignore => {
+      lowered = text.to_lowercase();
+      &lowered
+    }
+    CaseSensitivity::Sensitive => text,
+  };
+
   for token in tokens {
     match token {
       PatternToken::Exclude(word) => {
-        if contains_word(text, word, case) {
+        let needle = match case {
+          CaseSensitivity::Ignore => word.to_lowercase(),
+          CaseSensitivity::Sensitive => word.clone(),
+        };
+        if haystack.contains(&needle) {
           return false;
         }
       }
       PatternToken::Include(word) => {
-        if !contains_word(text, word, case) {
+        let needle = match case {
+          CaseSensitivity::Ignore => word.to_lowercase(),
+          CaseSensitivity::Sensitive => word.clone(),
+        };
+        if !haystack.contains(&needle) {
           return false;
         }
       }
       PatternToken::Phrase(phrase) => {
-        if !matches_exact(text, phrase, case) {
+        let needle = match case {
+          CaseSensitivity::Ignore => phrase.to_lowercase(),
+          CaseSensitivity::Sensitive => phrase.clone(),
+        };
+        if !haystack.contains(&needle) {
           return false;
         }
       }
@@ -267,6 +281,13 @@ fn try_extract_regex(query: &str) -> Option<String> {
 mod test {
   use super::*;
 
+  fn contains_word(text: &str, word: &str, case: CaseSensitivity) -> bool {
+    match case {
+      CaseSensitivity::Sensitive => text.contains(word),
+      CaseSensitivity::Ignore => text.to_lowercase().contains(&word.to_lowercase()),
+    }
+  }
+
   fn default_config() -> SearchConfig {
     SearchConfig::default()
   }
@@ -283,25 +304,17 @@ mod test {
 
     #[test]
     fn it_finds_case_insensitive_match() {
-      assert!(super::super::contains_word(
-        "Hello World",
-        "hello",
-        CaseSensitivity::Ignore
-      ));
+      assert!(super::contains_word("Hello World", "hello", CaseSensitivity::Ignore));
     }
 
     #[test]
     fn it_finds_case_sensitive_match() {
-      assert!(super::super::contains_word(
-        "Hello World",
-        "Hello",
-        CaseSensitivity::Sensitive
-      ));
+      assert!(super::contains_word("Hello World", "Hello", CaseSensitivity::Sensitive));
     }
 
     #[test]
     fn it_rejects_case_mismatch_when_sensitive() {
-      assert!(!super::super::contains_word(
+      assert!(!super::contains_word(
         "Hello World",
         "hello",
         CaseSensitivity::Sensitive

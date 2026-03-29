@@ -192,10 +192,8 @@ fn parse_combined(input: &str) -> Option<DateTime<Local>> {
     dt
   } else if let Some(dt) = parse_day_of_week(date_part) {
     dt
-  } else if let Some(dt) = parse_absolute(date_part) {
-    dt
   } else {
-    return None;
+    parse_absolute(date_part)?
   };
 
   apply_time_to_date(base_date, time)

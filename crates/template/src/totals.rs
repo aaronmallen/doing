@@ -68,8 +68,8 @@ impl TagTotals {
 
     let mut sorted_tags: Vec<(&String, &Duration)> = self.tags.iter().collect();
     match sort_field {
-      TagSortField::Name => sorted_tags.sort_by(|(a, _), (b, _)| a.cmp(b)),
-      TagSortField::Time => sorted_tags.sort_by(|(_, a), (_, b)| a.cmp(b)),
+      TagSortField::Name => sorted_tags.sort_by_key(|(a, _)| *a),
+      TagSortField::Time => sorted_tags.sort_by_key(|(_, a)| *a),
     }
     if sort_order == TagSortOrder::Desc {
       sorted_tags.reverse();

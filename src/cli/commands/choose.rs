@@ -36,16 +36,12 @@ pub struct Command {
   output: Option<String>,
 
   /// Text search query to filter entries
-  #[arg(long)]
+  #[arg(long, alias = "search")]
   query: Option<String>,
 
   /// Save output to a file
   #[arg(long, value_name = "FILE")]
   save_to: Option<PathBuf>,
-
-  /// Text search query to filter entries
-  #[arg(long)]
-  search: Option<String>,
 
   /// Section to choose entries from
   #[arg(short, long)]
@@ -287,13 +283,13 @@ impl Command {
       .cloned()
       .collect();
 
-    let has_filters = !self.tagged.is_empty() || self.search.is_some() || self.query.is_some();
+    let has_filters = !self.tagged.is_empty() || self.query.is_some();
 
     if !has_filters {
       return Ok(all_entries);
     }
 
-    let search_text = self.query.as_deref().or(self.search.as_deref());
+    let search_text = self.query.as_deref();
 
     let filter_args = FilterArgs {
       bool_op: self.bool_op,
@@ -340,7 +336,6 @@ mod test {
       output: None,
       query: None,
       save_to: None,
-      search: None,
       section: None,
       tagged: vec![],
     }
@@ -637,7 +632,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let ctx = sample_ctx(dir.path());
       let cmd = Command {
-        search: Some("Second".into()),
+        query: Some("Second".into()),
         ..default_cmd()
       };
 

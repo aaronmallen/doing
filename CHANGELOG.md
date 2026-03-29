@@ -7,6 +7,19 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.6] - 2026-03-29
+
+### Changed
+
+- Improved performance of note compression and search/autotag operations (see [#357], [#358])
+
+### Fixed
+
+- `plugins --type` now returns an error for invalid type values instead of silent empty output (see [#351])
+- `sections list` respects the `--quiet` flag (see [#349])
+- `mark --date` and `tag --date` now produce consistent `YYYY-MM-DD HH:MM` date formats (see [#347])
+- `changes` command correctly parses indented continuation lines in changelog entries (see [#344])
+
 ## [v0.1.5] - 2026-03-27
 
 ### Fixed
@@ -480,13 +493,19 @@ Initial alpha release
 [#341]: https://github.com/aaronmallen/doing/issues/341
 [#342]: https://github.com/aaronmallen/doing/issues/342
 [#343]: https://github.com/aaronmallen/doing/issues/343
+[#344]: https://github.com/aaronmallen/doing/issues/344
 [#345]: https://github.com/aaronmallen/doing/issues/345
 [#346]: https://github.com/aaronmallen/doing/issues/346
+[#347]: https://github.com/aaronmallen/doing/issues/347
+[#349]: https://github.com/aaronmallen/doing/issues/349
 [#350]: https://github.com/aaronmallen/doing/issues/350
+[#351]: https://github.com/aaronmallen/doing/issues/351
 [#355]: https://github.com/aaronmallen/doing/issues/355
+[#357]: https://github.com/aaronmallen/doing/issues/357
+[#358]: https://github.com/aaronmallen/doing/issues/358
 [#361]: https://github.com/aaronmallen/doing/issues/361
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.5...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.6...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -499,3 +518,4 @@ Initial alpha release
 [v0.1.3]: https://github.com/aaronmallen/doing/compare/0.1.2...0.1.3
 [v0.1.4]: https://github.com/aaronmallen/doing/compare/0.1.3...0.1.4
 [v0.1.5]: https://github.com/aaronmallen/doing/compare/0.1.4...0.1.5
+[v0.1.6]: https://github.com/aaronmallen/doing/compare/0.1.5...0.1.6

@@ -95,6 +95,7 @@ fn perform_update(target_version: &str) -> Result<()> {
     .bin_name("doing")
     .current_version(env!("CARGO_PKG_VERSION"))
     .target_version_tag(target_version)
+    .identifier("tar.gz")
     .show_download_progress(true)
     .no_confirm(true)
     .build()

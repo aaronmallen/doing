@@ -404,7 +404,7 @@ fn parse_changelog(content: &str) -> Result<Vec<Version>> {
           change_type: current_section.clone(),
           text: clean,
         });
-      } else if trimmed.starts_with("  ") && !trimmed.is_empty() {
+      } else if line.starts_with("  ") && !trimmed.is_empty() {
         // Continuation line — append to last entry
         if let Some(last) = version.entries.last_mut() {
           last.text.push(' ');
@@ -804,6 +804,25 @@ mod test {
       let versions = parse_changelog(TEST_CHANGELOG).unwrap();
 
       assert!(versions.iter().all(|v| v.number != "Unreleased"));
+    }
+
+    #[test]
+    fn it_parses_continuation_lines() {
+      let changelog = "\
+# Changelog
+
+## [v0.1.0] - 2026-04-01
+
+### Added
+
+- Multi-line feature that
+  spans two lines
+- Single-line feature
+";
+      let versions = parse_changelog(changelog).unwrap();
+
+      assert_eq!(versions[0].entries[0].text, "Multi-line feature that spans two lines");
+      assert_eq!(versions[0].entries[1].text, "Single-line feature");
     }
 
     #[test]

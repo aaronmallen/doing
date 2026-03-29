@@ -82,7 +82,6 @@ impl Note {
   }
 
   /// Return the number of lines.
-  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.lines.len()
   }

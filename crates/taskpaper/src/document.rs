@@ -90,7 +90,6 @@ impl Document {
   }
 
   /// Return the number of sections in the document.
-  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.sections.len()
   }

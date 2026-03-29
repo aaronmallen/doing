@@ -119,7 +119,6 @@ impl Tags {
   }
 
   /// Return the number of tags.
-  #[allow(dead_code)]
   pub fn len(&self) -> usize {
     self.inner.len()
   }

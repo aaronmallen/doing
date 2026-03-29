@@ -127,7 +127,17 @@ impl TagQuery {
   }
 
   fn compare_numeric(&self, entry_val: f64, target_val: f64) -> bool {
-    compare_ord(OrdF64(entry_val), OrdF64(target_val), self.op)
+    let ordering = entry_val.total_cmp(&target_val);
+    match self.op {
+      ComparisonOp::Equal => ordering == std::cmp::Ordering::Equal,
+      ComparisonOp::GreaterThan => ordering == std::cmp::Ordering::Greater,
+      ComparisonOp::GreaterThanOrEqual => ordering != std::cmp::Ordering::Less,
+      ComparisonOp::LessThan => ordering == std::cmp::Ordering::Less,
+      ComparisonOp::LessThanOrEqual => ordering != std::cmp::Ordering::Greater,
+      ComparisonOp::Contains | ComparisonOp::StartsWith | ComparisonOp::EndsWith => {
+        unreachable!("string operators must be handled by compare_string, not compare_numeric")
+      }
+    }
   }
 
   fn compare_string(&self, haystack: &str, needle: &str) -> bool {
@@ -210,16 +220,6 @@ impl TagQuery {
 
     // Fall back to string comparison
     self.compare_string(&tag_value, &self.value)
-  }
-}
-
-/// Wrapper for f64 that implements `PartialOrd` without NaN issues.
-#[derive(Debug, PartialEq)]
-struct OrdF64(f64);
-
-impl PartialOrd for OrdF64 {
-  fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-    self.0.partial_cmp(&other.0)
   }
 }
 

@@ -1,15 +1,16 @@
 use std::io::IsTerminal;
 
 use clap::Args;
-use doing_ops::{
-  backup::write_with_backup,
-  filter::{Age, filter_entries},
-};
-use doing_taskpaper::{Entry, Note};
+use doing_ops::backup::write_with_backup;
+use doing_taskpaper::Note;
 
 use crate::{
   Result,
-  cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
+  cli::{
+    AppContext,
+    args::FilterArgs,
+    entry_location::{self, EntryLocation},
+  },
 };
 
 /// Add or display notes on an entry.
@@ -54,9 +55,9 @@ pub struct Command {
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let entries = if self.interactive {
-      self.interactive_select(ctx)?
+      entry_location::interactive_select(&self.filter, true, ctx)?
     } else {
-      self.find_entries(ctx)?
+      entry_location::find_entries(&self.filter, self.count, true, ctx)?
     };
 
     if entries.is_empty() {
@@ -65,7 +66,7 @@ impl Command {
 
     let mut titles = Vec::new();
     for loc in &entries {
-      if let Ok(entry) = self.find_entry_mut(ctx, loc) {
+      if let Ok(entry) = entry_location::find_entry_mut(ctx, loc) {
         titles.push(entry.full_title());
       }
       self.update_note(ctx, loc)?;
@@ -78,97 +79,6 @@ impl Command {
     }
 
     Ok(())
-  }
-
-  fn find_entries(&self, ctx: &AppContext) -> Result<Vec<EntryLocation>> {
-    let section = self
-      .filter
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
-
-    let has_filters = !self.filter.tag.is_empty() || self.filter.search.is_some() || !self.filter.val.is_empty();
-
-    if has_filters {
-      let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
-
-      let mut options = self
-        .filter
-        .clone()
-        .into_filter_options(&ctx.config, ctx.include_notes)?;
-      options.age = options.age.or(Some(Age::Newest));
-
-      let results = filter_entries(all_entries, &options);
-      return Ok(
-        results
-          .iter()
-          .map(|e| EntryLocation {
-            id: e.id().to_string(),
-            section: e.section().to_string(),
-          })
-          .collect(),
-      );
-    }
-
-    let count = self.count.unwrap_or(1);
-    let entries = ctx.document.entries_in_section(&section);
-    let mut locs: Vec<EntryLocation> = entries
-      .iter()
-      .rev()
-      .filter(|e| e.unfinished())
-      .take(count)
-      .map(|e| EntryLocation {
-        id: e.id().to_string(),
-        section: e.section().to_string(),
-      })
-      .collect();
-    locs.reverse();
-
-    Ok(locs)
-  }
-
-  fn find_entry_mut<'a>(&self, ctx: &'a mut AppContext, loc: &EntryLocation) -> Result<&'a mut Entry> {
-    let section = ctx
-      .document
-      .section_by_name_mut(&loc.section)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{}\" not found", loc.section)))?;
-
-    section
-      .entries_mut()
-      .iter_mut()
-      .find(|e| e.id() == loc.id)
-      .ok_or_else(|| crate::Error::Config("entry not found".into()))
-  }
-
-  fn interactive_select(&self, ctx: &AppContext) -> Result<Vec<EntryLocation>> {
-    let section = self
-      .filter
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
-
-    let candidates: Vec<Entry> = ctx
-      .document
-      .entries_in_section(&section)
-      .into_iter()
-      .filter(|e| e.unfinished())
-      .cloned()
-      .collect();
-
-    if candidates.is_empty() {
-      return Ok(vec![]);
-    }
-
-    let selected = crate::cli::interactive::select_entries(&candidates)?;
-    Ok(
-      selected
-        .iter()
-        .map(|e| EntryLocation {
-          id: e.id().to_string(),
-          section: e.section().to_string(),
-        })
-        .collect(),
-    )
   }
 
   fn resolve_note_text(&self, ctx: &AppContext) -> Result<Option<String>> {
@@ -215,13 +125,13 @@ impl Command {
 
   fn update_note(&self, ctx: &mut AppContext, loc: &EntryLocation) -> Result<()> {
     if self.remove {
-      let entry = self.find_entry_mut(ctx, loc)?;
+      let entry = entry_location::find_entry_mut(ctx, loc)?;
       *entry.note_mut() = Note::new();
 
       // If text was provided with --remove, add it as replacement
       let text = self.resolve_note_text(ctx)?;
       if let Some(text) = text {
-        let entry = self.find_entry_mut(ctx, loc)?;
+        let entry = entry_location::find_entry_mut(ctx, loc)?;
         entry.note_mut().add(text);
       }
       return Ok(());
@@ -230,7 +140,7 @@ impl Command {
     let text = self.resolve_note_text(ctx)?;
 
     if let Some(text) = text {
-      let entry = self.find_entry_mut(ctx, loc)?;
+      let entry = entry_location::find_entry_mut(ctx, loc)?;
       entry.note_mut().add(text);
     }
 
@@ -244,7 +154,7 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
-  use doing_taskpaper::{Document, Section, Tag, Tags};
+  use doing_taskpaper::{Document, Entry, Section, Tag, Tags};
 
   use super::*;
   use crate::cli::args::FilterArgs;

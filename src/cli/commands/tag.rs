@@ -1,14 +1,14 @@
 use clap::Args;
-use doing_ops::{
-  autotag::autotag,
-  backup::write_with_backup,
-  filter::{Age, filter_entries},
-};
-use doing_taskpaper::{Entry, Tag};
+use doing_ops::{autotag::autotag, backup::write_with_backup};
+use doing_taskpaper::Tag;
 
 use crate::{
   Result,
-  cli::{AppContext, args::FilterArgs, entry_location::EntryLocation},
+  cli::{
+    AppContext,
+    args::FilterArgs,
+    entry_location::{self, EntryLocation},
+  },
 };
 
 /// Add, remove, or rename tags on existing entries.
@@ -65,9 +65,9 @@ pub struct Command {
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let entries = if self.interactive {
-      self.interactive_select(ctx)?
+      entry_location::interactive_select(&self.filter, self.filter.unfinished, ctx)?
     } else {
-      self.find_entries(ctx)?
+      entry_location::find_entries(&self.filter, self.count, self.filter.unfinished, ctx)?
     };
 
     if entries.is_empty() {
@@ -113,7 +113,7 @@ impl Command {
     let tag_value = self.resolve_tag_value();
 
     for loc in entry_ids {
-      let entry = self.find_entry_mut(ctx, loc)?;
+      let entry = entry_location::find_entry_mut(ctx, loc)?;
       for name in &tag_names {
         entry.tags_mut().add(Tag::new(name, tag_value.clone()));
       }
@@ -126,103 +126,10 @@ impl Command {
     let autotag_config = ctx.config.autotag.clone();
     let default_tags = ctx.config.default_tags.clone();
     for loc in entry_ids {
-      let entry = self.find_entry_mut(ctx, loc)?;
+      let entry = entry_location::find_entry_mut(ctx, loc)?;
       autotag(entry, &autotag_config, &default_tags);
     }
     Ok(())
-  }
-
-  fn find_entries(&self, ctx: &AppContext) -> Result<Vec<EntryLocation>> {
-    let section = self
-      .filter
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
-
-    let has_filters = !self.filter.tag.is_empty() || self.filter.search.is_some() || !self.filter.val.is_empty();
-
-    if has_filters {
-      let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
-
-      let mut options = self
-        .filter
-        .clone()
-        .into_filter_options(&ctx.config, ctx.include_notes)?;
-      options.age = options.age.or(Some(Age::Newest));
-
-      let results = filter_entries(all_entries, &options);
-      return Ok(
-        results
-          .iter()
-          .map(|e| EntryLocation {
-            id: e.id().to_string(),
-            section: e.section().to_string(),
-          })
-          .collect(),
-      );
-    }
-
-    let count = self.count.unwrap_or(1);
-    let entries = ctx.document.entries_in_section(&section);
-    let unfinished = self.filter.unfinished;
-    let mut locs: Vec<EntryLocation> = entries
-      .iter()
-      .rev()
-      .filter(|e| if unfinished { e.unfinished() } else { true })
-      .take(count)
-      .map(|e| EntryLocation {
-        id: e.id().to_string(),
-        section: e.section().to_string(),
-      })
-      .collect();
-    locs.reverse();
-
-    Ok(locs)
-  }
-
-  fn find_entry_mut<'a>(&self, ctx: &'a mut AppContext, loc: &EntryLocation) -> Result<&'a mut Entry> {
-    let section = ctx
-      .document
-      .section_by_name_mut(&loc.section)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{}\" not found", loc.section)))?;
-
-    section
-      .entries_mut()
-      .iter_mut()
-      .find(|e| e.id() == loc.id)
-      .ok_or_else(|| crate::Error::Config("entry not found".into()))
-  }
-
-  fn interactive_select(&self, ctx: &AppContext) -> Result<Vec<EntryLocation>> {
-    let section = self
-      .filter
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
-
-    let unfinished = self.filter.unfinished;
-    let candidates: Vec<Entry> = ctx
-      .document
-      .entries_in_section(&section)
-      .into_iter()
-      .filter(|e| if unfinished { e.unfinished() } else { true })
-      .cloned()
-      .collect();
-
-    if candidates.is_empty() {
-      return Ok(vec![]);
-    }
-
-    let selected = crate::cli::interactive::select_entries(&candidates)?;
-    Ok(
-      selected
-        .iter()
-        .map(|e| EntryLocation {
-          id: e.id().to_string(),
-          section: e.section().to_string(),
-        })
-        .collect(),
-    )
   }
 
   fn parse_tag_names(&self) -> Vec<String> {
@@ -242,7 +149,7 @@ impl Command {
     }
 
     for loc in entry_ids {
-      let entry = self.find_entry_mut(ctx, loc)?;
+      let entry = entry_location::find_entry_mut(ctx, loc)?;
       for name in &tag_names {
         if self.regex {
           entry.tags_mut().remove_by_regex(name);
@@ -262,7 +169,7 @@ impl Command {
     let new_name = &self.rename[1];
 
     for loc in entry_ids {
-      let entry = self.find_entry_mut(ctx, loc)?;
+      let entry = entry_location::find_entry_mut(ctx, loc)?;
       if old_name.contains('*') || old_name.contains('?') {
         entry.tags_mut().rename_by_wildcard(old_name, new_name);
       } else {
@@ -288,7 +195,7 @@ mod test {
 
   use chrono::{Local, TimeZone};
   use doing_config::Config;
-  use doing_taskpaper::{Document, Note, Section, Tags};
+  use doing_taskpaper::{Document, Entry, Note, Section, Tags};
 
   use super::*;
   use crate::cli::args::FilterArgs;

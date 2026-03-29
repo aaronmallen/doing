@@ -2,7 +2,7 @@ use doing_config::Config;
 use doing_taskpaper::{Document, Entry, Section, serialize};
 use doing_template::renderer::RenderOptions;
 
-use crate::{ExportPlugin, ExportPluginSettings};
+use crate::{ExportPlugin, Plugin, PluginSettings};
 
 /// Export plugin that renders entries in the native doing file format.
 ///
@@ -11,10 +11,6 @@ use crate::{ExportPlugin, ExportPluginSettings};
 pub struct DoingExport;
 
 impl ExportPlugin for DoingExport {
-  fn name(&self) -> &str {
-    "doing"
-  }
-
   fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
     let mut doc = Document::new();
 
@@ -31,9 +27,15 @@ impl ExportPlugin for DoingExport {
     doc.sort_entries(config.doing_file_sort == doing_config::SortOrder::Desc);
     serialize(&doc)
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for DoingExport {
+  fn name(&self) -> &str {
+    "doing"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "doing".into(),
     }
   }

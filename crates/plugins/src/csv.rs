@@ -2,7 +2,7 @@ use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 
-use crate::{ExportPlugin, ExportPluginSettings};
+use crate::{ExportPlugin, Plugin, PluginSettings};
 
 /// Fixed date format for CSV output matching Ruby doing: `YYYY-MM-DD HH:MM:SS %z`.
 const CSV_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
@@ -14,10 +14,6 @@ const CSV_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
 pub struct CsvExport;
 
 impl ExportPlugin for CsvExport {
-  fn name(&self) -> &str {
-    "csv"
-  }
-
   fn render(&self, entries: &[Entry], _options: &RenderOptions, _config: &Config) -> String {
     let mut out = String::from("start,end,title,note,timer,section\n");
 
@@ -57,9 +53,15 @@ impl ExportPlugin for CsvExport {
 
     out
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for CsvExport {
+  fn name(&self) -> &str {
+    "csv"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "csv".into(),
     }
   }

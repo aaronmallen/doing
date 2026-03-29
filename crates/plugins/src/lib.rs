@@ -2,7 +2,7 @@
 //!
 //! This crate implements the `--output FORMAT` export system and the `import`
 //! subcommand's format readers. Each export format implements the [`ExportPlugin`]
-//! trait and registers itself with an [`ExportRegistry`] via a trigger pattern
+//! trait and registers itself with a [`Registry`] via a trigger pattern
 //! (a regex matched against the user's `--output` value).
 //!
 //! # Built-in export formats
@@ -34,37 +34,43 @@ use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use regex::Regex;
 
+/// The base trait for all plugins (export and import).
+///
+/// Provides the common interface needed by [`Registry`] to register and
+/// resolve plugins by name and trigger pattern.
+pub trait Plugin {
+  /// Return the canonical name of this plugin.
+  fn name(&self) -> &str;
+
+  /// Return the plugin's settings including trigger pattern.
+  fn settings(&self) -> PluginSettings;
+}
+
 /// The interface that export format plugins must implement.
 ///
 /// Each plugin provides a trigger pattern used to match `--output FORMAT` values,
 /// settings for configuration, and a render method that formats entries into a string.
-pub trait ExportPlugin {
-  /// Return the canonical name of this export format.
-  fn name(&self) -> &str;
-
+pub trait ExportPlugin: Plugin {
   /// Render the given entries into the plugin's output format.
   fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String;
-
-  /// Return the plugin's settings including trigger pattern and optional templates.
-  fn settings(&self) -> ExportPluginSettings;
 }
 
-/// Settings declared by an export plugin.
+/// Settings declared by a plugin.
 #[derive(Clone, Debug)]
-pub struct ExportPluginSettings {
+pub struct PluginSettings {
   pub trigger: String,
 }
 
-/// A registry that maps format names to export plugin implementations.
+/// A registry that maps format names to plugin implementations.
 ///
 /// Plugins register themselves with a trigger pattern (a regular expression).
-/// When resolving an `--output FORMAT` argument, the registry matches the format
+/// When resolving a format argument, the registry matches the format
 /// string against each plugin's trigger pattern and returns the first match.
-pub struct ExportRegistry {
-  plugins: Vec<RegisteredPlugin>,
+pub struct Registry<T: Plugin + ?Sized> {
+  plugins: Vec<RegisteredPlugin<T>>,
 }
 
-impl ExportRegistry {
+impl<T: Plugin + ?Sized> Registry<T> {
   /// Create an empty registry.
   pub fn new() -> Self {
     Self {
@@ -79,7 +85,7 @@ impl ExportRegistry {
     names
   }
 
-  /// Register an export plugin.
+  /// Register a plugin.
   ///
   /// The plugin's trigger pattern is compiled into a case-insensitive regex
   /// that will be used to match format strings during resolution.
@@ -87,7 +93,7 @@ impl ExportRegistry {
   /// # Panics
   ///
   /// Panics if the plugin's trigger pattern is not a valid regular expression.
-  pub fn register(&mut self, plugin: Box<dyn ExportPlugin>) {
+  pub fn register(&mut self, plugin: Box<T>) {
     let name = plugin.name().to_string();
     let settings = plugin.settings();
     let pattern = normalize_trigger(&settings.trigger);
@@ -100,11 +106,11 @@ impl ExportRegistry {
     });
   }
 
-  /// Resolve a format string to a registered export plugin.
+  /// Resolve a format string to a registered plugin.
   ///
   /// Returns the first plugin whose trigger pattern matches the given format,
   /// or `None` if no plugin matches.
-  pub fn resolve(&self, format: &str) -> Option<&dyn ExportPlugin> {
+  pub fn resolve(&self, format: &str) -> Option<&T> {
     self
       .plugins
       .iter()
@@ -113,21 +119,21 @@ impl ExportRegistry {
   }
 }
 
-impl Default for ExportRegistry {
+impl<T: Plugin + ?Sized> Default for Registry<T> {
   fn default() -> Self {
     Self::new()
   }
 }
 
-struct RegisteredPlugin {
+struct RegisteredPlugin<T: Plugin + ?Sized> {
   name: String,
-  plugin: Box<dyn ExportPlugin>,
+  plugin: Box<T>,
   trigger: Regex,
 }
 
 /// Build the default export registry with all built-in export plugins.
-pub fn default_registry() -> ExportRegistry {
-  let mut registry = ExportRegistry::new();
+pub fn default_registry() -> Registry<dyn ExportPlugin> {
+  let mut registry: Registry<dyn ExportPlugin> = Registry::new();
   registry.register(Box::new(byday::BydayExport));
   registry.register(Box::new(csv::CsvExport));
   registry.register(Box::new(dayone::DayoneExport));
@@ -165,19 +171,21 @@ mod test {
     }
   }
 
-  impl ExportPlugin for MockPlugin {
+  impl Plugin for MockPlugin {
     fn name(&self) -> &str {
       &self.name
     }
 
-    fn render(&self, _entries: &[Entry], _options: &RenderOptions, _config: &Config) -> String {
-      format!("[{}]", self.name)
-    }
-
-    fn settings(&self) -> ExportPluginSettings {
-      ExportPluginSettings {
+    fn settings(&self) -> PluginSettings {
+      PluginSettings {
         trigger: self.trigger.clone(),
       }
+    }
+  }
+
+  impl ExportPlugin for MockPlugin {
+    fn render(&self, _entries: &[Entry], _options: &RenderOptions, _config: &Config) -> String {
+      format!("[{}]", self.name)
     }
   }
 
@@ -209,21 +217,21 @@ mod test {
     }
   }
 
-  mod export_registry_available_formats {
+  mod registry_available_formats {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn it_returns_empty_for_new_registry() {
-      let registry = ExportRegistry::new();
+      let registry = Registry::<dyn ExportPlugin>::new();
 
       assert!(registry.available_formats().is_empty());
     }
 
     #[test]
     fn it_returns_sorted_format_names() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("markdown", "markdown|md")));
       registry.register(Box::new(MockPlugin::new("csv", "csv")));
       registry.register(Box::new(MockPlugin::new("taskpaper", "task(?:paper)?|tp")));
@@ -234,14 +242,14 @@ mod test {
     }
   }
 
-  mod export_registry_register {
+  mod registry_register {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn it_adds_plugin_to_registry() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
 
       registry.register(Box::new(MockPlugin::new("csv", "csv")));
 
@@ -251,20 +259,20 @@ mod test {
     #[test]
     #[should_panic(expected = "invalid trigger pattern")]
     fn it_panics_on_invalid_trigger_pattern() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
 
       registry.register(Box::new(MockPlugin::new("bad", "(?invalid")));
     }
   }
 
-  mod export_registry_resolve {
+  mod registry_resolve {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn it_matches_exact_format_name() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("csv", "csv")));
 
       let plugin = registry.resolve("csv").unwrap();
@@ -274,7 +282,7 @@ mod test {
 
     #[test]
     fn it_matches_alternate_trigger_pattern() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("taskpaper", "task(?:paper)?|tp")));
 
       assert!(registry.resolve("taskpaper").is_some());
@@ -284,7 +292,7 @@ mod test {
 
     #[test]
     fn it_matches_case_insensitively() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("csv", "csv")));
 
       assert!(registry.resolve("CSV").is_some());
@@ -293,7 +301,7 @@ mod test {
 
     #[test]
     fn it_returns_none_for_unknown_format() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("csv", "csv")));
 
       assert!(registry.resolve("json").is_none());
@@ -301,7 +309,7 @@ mod test {
 
     #[test]
     fn it_does_not_match_partial_strings() {
-      let mut registry = ExportRegistry::new();
+      let mut registry = Registry::<dyn ExportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("csv", "csv")));
 
       assert!(registry.resolve("csvx").is_none());

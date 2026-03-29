@@ -2,7 +2,7 @@ use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 
-use crate::{ExportPlugin, ExportPluginSettings, helpers};
+use crate::{ExportPlugin, Plugin, PluginSettings, helpers};
 
 /// Fixed date format for markdown output matching Ruby doing: `Fri 9:01AM`.
 const MARKDOWN_DATE_FORMAT: &str = "%a %-I:%M%p";
@@ -15,10 +15,6 @@ const MARKDOWN_DATE_FORMAT: &str = "%a %-I:%M%p";
 pub struct MarkdownExport;
 
 impl ExportPlugin for MarkdownExport {
-  fn name(&self) -> &str {
-    "markdown"
-  }
-
   fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
     let sections = helpers::group_by_section(entries);
     let mut out = String::new();
@@ -54,9 +50,15 @@ impl ExportPlugin for MarkdownExport {
 
     out
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for MarkdownExport {
+  fn name(&self) -> &str {
+    "markdown"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "markdown|mk?d|gfm".into(),
     }
   }

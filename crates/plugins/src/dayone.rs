@@ -6,7 +6,7 @@ use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use serde::Serialize;
 
-use crate::{ExportPlugin, ExportPluginSettings, helpers};
+use crate::{ExportPlugin, Plugin, PluginSettings, helpers};
 
 /// Day format for grouping entries by day.
 const DAY_GROUP_FORMAT: &str = "%Y-%m-%d";
@@ -20,16 +20,18 @@ const DAYONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
 pub struct DayoneDaysExport;
 
 impl ExportPlugin for DayoneDaysExport {
+  fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
+    DayoneExport.render(entries, options, config)
+  }
+}
+
+impl Plugin for DayoneDaysExport {
   fn name(&self) -> &str {
     "dayone-days"
   }
 
-  fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
-    DayoneExport.render(entries, options, config)
-  }
-
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "dayone[_-]?days".into(),
     }
   }
@@ -39,10 +41,6 @@ impl ExportPlugin for DayoneDaysExport {
 pub struct DayoneEntriesExport;
 
 impl ExportPlugin for DayoneEntriesExport {
-  fn name(&self) -> &str {
-    "dayone-entries"
-  }
-
   fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
     let dayone_entries: Vec<DayoneEntry> = entries.iter().map(|e| render_single_entry(e, config)).collect();
 
@@ -51,9 +49,15 @@ impl ExportPlugin for DayoneEntriesExport {
     })
     .unwrap_or_else(|_| "{}".into())
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for DayoneEntriesExport {
+  fn name(&self) -> &str {
+    "dayone-entries"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "dayone[_-]?entr(?:y|ies)".into(),
     }
   }
@@ -66,10 +70,6 @@ impl ExportPlugin for DayoneEntriesExport {
 pub struct DayoneExport;
 
 impl ExportPlugin for DayoneExport {
-  fn name(&self) -> &str {
-    "dayone"
-  }
-
   fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
     let grouped = group_by_day(entries);
     let dayone_entries: Vec<DayoneEntry> = grouped
@@ -82,9 +82,15 @@ impl ExportPlugin for DayoneExport {
     })
     .unwrap_or_else(|_| "{}".into())
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for DayoneExport {
+  fn name(&self) -> &str {
+    "dayone"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "dayone$|day_?one$".into(),
     }
   }

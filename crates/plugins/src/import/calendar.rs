@@ -4,7 +4,7 @@ use chrono::{DateTime, Local, NaiveDateTime, TimeZone};
 use doing_error::Result;
 use doing_taskpaper::{Entry, Note, Tag, Tags};
 
-use crate::import::{ImportPlugin, ImportPluginSettings};
+use crate::{Plugin, PluginSettings, import::ImportPlugin};
 
 /// Import plugin that reads entries from an iCalendar (ICS) file.
 ///
@@ -24,13 +24,15 @@ impl ImportPlugin for CalendarImport {
     }
     Ok(entries)
   }
+}
 
+impl Plugin for CalendarImport {
   fn name(&self) -> &str {
     "calendar"
   }
 
-  fn settings(&self) -> ImportPluginSettings {
-    ImportPluginSettings {
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "calendar|ics|ical".into(),
     }
   }

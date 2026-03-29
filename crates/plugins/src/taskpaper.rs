@@ -2,7 +2,7 @@ use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 
-use crate::{ExportPlugin, ExportPluginSettings};
+use crate::{ExportPlugin, Plugin, PluginSettings};
 
 /// Export plugin that renders entries in TaskPaper format.
 ///
@@ -11,10 +11,6 @@ use crate::{ExportPlugin, ExportPluginSettings};
 pub struct TaskPaperExport;
 
 impl ExportPlugin for TaskPaperExport {
-  fn name(&self) -> &str {
-    "taskpaper"
-  }
-
   fn render(&self, entries: &[Entry], options: &RenderOptions, _config: &Config) -> String {
     let mut out = String::new();
 
@@ -43,9 +39,15 @@ impl ExportPlugin for TaskPaperExport {
 
     out
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for TaskPaperExport {
+  fn name(&self) -> &str {
+    "taskpaper"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "task(?:paper)?|tp".into(),
     }
   }

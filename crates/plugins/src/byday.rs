@@ -3,7 +3,7 @@ use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use indexmap::IndexMap;
 
-use crate::{ExportPlugin, ExportPluginSettings};
+use crate::{ExportPlugin, Plugin, PluginSettings};
 
 /// Export plugin that groups entries by date, rendering a table with daily and grand totals.
 ///
@@ -11,10 +11,6 @@ use crate::{ExportPlugin, ExportPluginSettings};
 pub struct BydayExport;
 
 impl ExportPlugin for BydayExport {
-  fn name(&self) -> &str {
-    "byday"
-  }
-
   fn render(&self, entries: &[Entry], _options: &RenderOptions, config: &Config) -> String {
     let width = config.plugins.byday.item_width as usize;
     let days = group_by_date(entries);
@@ -65,9 +61,15 @@ impl ExportPlugin for BydayExport {
 
     out.join("\n")
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for BydayExport {
+  fn name(&self) -> &str {
+    "byday"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "byday".into(),
     }
   }

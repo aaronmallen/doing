@@ -4,7 +4,7 @@ use doing_template::renderer::RenderOptions;
 use indexmap::IndexMap;
 use serde::Serialize;
 
-use crate::{ExportPlugin, ExportPluginSettings};
+use crate::{ExportPlugin, Plugin, PluginSettings};
 
 /// Date format matching Brett's doing: `2026-03-19 16:06:00 -0500`
 const JSON_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
@@ -13,10 +13,6 @@ const JSON_DATE_FORMAT: &str = "%Y-%m-%d %H:%M:%S %z";
 pub struct JsonExport;
 
 impl ExportPlugin for JsonExport {
-  fn name(&self) -> &str {
-    "json"
-  }
-
   fn render(&self, entries: &[Entry], _options: &RenderOptions, _config: &Config) -> String {
     let mut sections: IndexMap<String, Vec<JsonItem>> = IndexMap::new();
     for entry in entries {
@@ -36,9 +32,15 @@ impl ExportPlugin for JsonExport {
 
     serde_json::to_string_pretty(&output).unwrap_or_else(|_| "[]".into())
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for JsonExport {
+  fn name(&self) -> &str {
+    "json"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "json".into(),
     }
   }

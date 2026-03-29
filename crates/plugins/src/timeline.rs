@@ -3,7 +3,7 @@ use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 
-use crate::{ExportPlugin, ExportPluginSettings, helpers, html::escape_html};
+use crate::{ExportPlugin, Plugin, PluginSettings, helpers, html::escape_html};
 
 const TIMELINE_CSS: &str = r#"* { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -143,10 +143,6 @@ h1 {
 pub struct TimelineExport;
 
 impl ExportPlugin for TimelineExport {
-  fn name(&self) -> &str {
-    "timeline"
-  }
-
   fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
     let time_range = compute_time_range(entries);
     let mut items_html = String::new();
@@ -226,9 +222,15 @@ impl ExportPlugin for TimelineExport {
       items = items_html,
     )
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for TimelineExport {
+  fn name(&self) -> &str {
+    "timeline"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "time(?:line)?".into(),
     }
   }

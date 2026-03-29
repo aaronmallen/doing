@@ -7,102 +7,21 @@ use std::path::Path;
 
 use doing_error::Result;
 use doing_taskpaper::Entry;
-use regex::Regex;
+
+use crate::{Plugin, Registry};
 
 /// The interface that import format plugins must implement.
 ///
 /// Each plugin provides a trigger pattern used to match `--type FORMAT` values
 /// and an import method that reads entries from a file path.
-pub trait ImportPlugin {
+pub trait ImportPlugin: Plugin {
   /// Import entries from the file at `path`.
   fn import(&self, path: &Path) -> Result<Vec<Entry>>;
-
-  /// Return the canonical name of this import format.
-  fn name(&self) -> &str;
-
-  /// Return the plugin's settings including trigger pattern.
-  fn settings(&self) -> ImportPluginSettings;
-}
-
-/// Settings declared by an import plugin.
-#[derive(Clone, Debug)]
-pub struct ImportPluginSettings {
-  pub trigger: String,
-}
-
-/// A registry that maps format names to import plugin implementations.
-///
-/// Plugins register themselves with a trigger pattern (a regular expression).
-/// When resolving a `--type FORMAT` argument, the registry matches the format
-/// string against each plugin's trigger pattern and returns the first match.
-pub struct ImportRegistry {
-  plugins: Vec<RegisteredPlugin>,
-}
-
-impl ImportRegistry {
-  /// Create an empty registry.
-  pub fn new() -> Self {
-    Self {
-      plugins: Vec::new(),
-    }
-  }
-
-  /// Return a sorted list of all registered format names.
-  pub fn available_formats(&self) -> Vec<&str> {
-    let mut names: Vec<&str> = self.plugins.iter().map(|p| p.name.as_str()).collect();
-    names.sort();
-    names
-  }
-
-  /// Register an import plugin.
-  ///
-  /// The plugin's trigger pattern is compiled into a case-insensitive regex
-  /// that will be used to match format strings during resolution.
-  ///
-  /// # Panics
-  ///
-  /// Panics if the plugin's trigger pattern is not a valid regular expression.
-  pub fn register(&mut self, plugin: Box<dyn ImportPlugin>) {
-    let name = plugin.name().to_string();
-    let settings = plugin.settings();
-    let pattern = settings.trigger.trim().to_string();
-    let trigger = Regex::new(&format!("(?i)^(?:{pattern})$"))
-      .unwrap_or_else(|_| panic!("invalid trigger pattern for plugin \"{name}\": {pattern}"));
-    self.plugins.push(RegisteredPlugin {
-      name,
-      plugin,
-      trigger,
-    });
-  }
-
-  /// Resolve a format string to a registered import plugin.
-  ///
-  /// Returns the first plugin whose trigger pattern matches the given format,
-  /// or `None` if no plugin matches.
-  pub fn resolve(&self, format: &str) -> Option<&dyn ImportPlugin> {
-    self
-      .plugins
-      .iter()
-      .find(|p| p.trigger.is_match(format))
-      .map(|p| p.plugin.as_ref())
-  }
-}
-
-impl Default for ImportRegistry {
-  fn default() -> Self {
-    Self::new()
-  }
-}
-
-struct RegisteredPlugin {
-  name: String,
-  plugin: Box<dyn ImportPlugin>,
-  trigger: Regex,
 }
 
 /// Build the default import registry with all built-in import plugins.
-pub fn default_registry() -> ImportRegistry {
-  let mut registry = ImportRegistry::new();
+pub fn default_registry() -> Registry<dyn ImportPlugin> {
+  let mut registry: Registry<dyn ImportPlugin> = Registry::new();
   registry.register(Box::new(calendar::CalendarImport));
   registry.register(Box::new(doing::DoingImport));
   registry.register(Box::new(json::JsonImport));
@@ -115,6 +34,7 @@ mod test {
   use std::path::Path;
 
   use super::*;
+  use crate::PluginSettings;
 
   struct MockPlugin {
     name: String,
@@ -130,19 +50,21 @@ mod test {
     }
   }
 
-  impl ImportPlugin for MockPlugin {
-    fn import(&self, _path: &Path) -> Result<Vec<Entry>> {
-      Ok(Vec::new())
-    }
-
+  impl Plugin for MockPlugin {
     fn name(&self) -> &str {
       &self.name
     }
 
-    fn settings(&self) -> ImportPluginSettings {
-      ImportPluginSettings {
+    fn settings(&self) -> PluginSettings {
+      PluginSettings {
         trigger: self.trigger.clone(),
       }
+    }
+  }
+
+  impl ImportPlugin for MockPlugin {
+    fn import(&self, _path: &Path) -> Result<Vec<Entry>> {
+      Ok(Vec::new())
     }
   }
 
@@ -162,21 +84,21 @@ mod test {
     }
   }
 
-  mod import_registry_available_formats {
+  mod registry_available_formats {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn it_returns_empty_for_new_registry() {
-      let registry = ImportRegistry::new();
+      let registry = Registry::<dyn ImportPlugin>::new();
 
       assert!(registry.available_formats().is_empty());
     }
 
     #[test]
     fn it_returns_sorted_format_names() {
-      let mut registry = ImportRegistry::new();
+      let mut registry = Registry::<dyn ImportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("timing", "timing")));
       registry.register(Box::new(MockPlugin::new("doing", "doing")));
 
@@ -186,14 +108,14 @@ mod test {
     }
   }
 
-  mod import_registry_register {
+  mod registry_register {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn it_adds_plugin_to_registry() {
-      let mut registry = ImportRegistry::new();
+      let mut registry = Registry::<dyn ImportPlugin>::new();
 
       registry.register(Box::new(MockPlugin::new("doing", "doing")));
 
@@ -203,20 +125,20 @@ mod test {
     #[test]
     #[should_panic(expected = "invalid trigger pattern")]
     fn it_panics_on_invalid_trigger_pattern() {
-      let mut registry = ImportRegistry::new();
+      let mut registry = Registry::<dyn ImportPlugin>::new();
 
       registry.register(Box::new(MockPlugin::new("bad", "(?invalid")));
     }
   }
 
-  mod import_registry_resolve {
+  mod registry_resolve {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn it_matches_exact_format_name() {
-      let mut registry = ImportRegistry::new();
+      let mut registry = Registry::<dyn ImportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("doing", "doing")));
 
       let plugin = registry.resolve("doing").unwrap();
@@ -226,7 +148,7 @@ mod test {
 
     #[test]
     fn it_matches_case_insensitively() {
-      let mut registry = ImportRegistry::new();
+      let mut registry = Registry::<dyn ImportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("doing", "doing")));
 
       assert!(registry.resolve("DOING").is_some());
@@ -235,7 +157,7 @@ mod test {
 
     #[test]
     fn it_returns_none_for_unknown_format() {
-      let mut registry = ImportRegistry::new();
+      let mut registry = Registry::<dyn ImportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("doing", "doing")));
 
       assert!(registry.resolve("csv").is_none());
@@ -243,7 +165,7 @@ mod test {
 
     #[test]
     fn it_does_not_match_partial_strings() {
-      let mut registry = ImportRegistry::new();
+      let mut registry = Registry::<dyn ImportPlugin>::new();
       registry.register(Box::new(MockPlugin::new("doing", "doing")));
 
       assert!(registry.resolve("doingx").is_none());

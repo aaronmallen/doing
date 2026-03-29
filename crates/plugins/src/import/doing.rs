@@ -3,7 +3,7 @@ use std::{fs, path::Path};
 use doing_error::Result;
 use doing_taskpaper::{Document, Entry};
 
-use crate::import::{ImportPlugin, ImportPluginSettings};
+use crate::{Plugin, PluginSettings, import::ImportPlugin};
 
 /// Import plugin that reads entries from a doing file.
 ///
@@ -22,13 +22,15 @@ impl ImportPlugin for DoingImport {
       .collect();
     Ok(entries)
   }
+}
 
+impl Plugin for DoingImport {
   fn name(&self) -> &str {
     "doing"
   }
 
-  fn settings(&self) -> ImportPluginSettings {
-    ImportPluginSettings {
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "doing".into(),
     }
   }

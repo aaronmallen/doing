@@ -6,7 +6,7 @@ use doing_taskpaper::{Entry, Note, Tag, Tags};
 use regex::Regex;
 use serde::Deserialize;
 
-use crate::import::{ImportPlugin, ImportPluginSettings};
+use crate::{Plugin, PluginSettings, import::ImportPlugin};
 
 static STRIP_INLINE_TAGS_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s*@[^\s(]+(?:\([^)]*\))?").unwrap());
 
@@ -38,13 +38,15 @@ impl ImportPlugin for JsonImport {
     }
     Ok(entries)
   }
+}
 
+impl Plugin for JsonImport {
   fn name(&self) -> &str {
     "json"
   }
 
-  fn settings(&self) -> ImportPluginSettings {
-    ImportPluginSettings {
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "json".into(),
     }
   }

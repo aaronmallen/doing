@@ -5,7 +5,7 @@ use doing_error::{Error, Result};
 use doing_taskpaper::{Entry, Note, Tag, Tags};
 use serde::Deserialize;
 
-use crate::import::{ImportPlugin, ImportPluginSettings};
+use crate::{Plugin, PluginSettings, import::ImportPlugin};
 
 /// Import plugin that reads entries from a Timing.app JSON export.
 ///
@@ -27,13 +27,15 @@ impl ImportPlugin for TimingImport {
     }
     Ok(entries)
   }
+}
 
+impl Plugin for TimingImport {
   fn name(&self) -> &str {
     "timing"
   }
 
-  fn settings(&self) -> ImportPluginSettings {
-    ImportPluginSettings {
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "timing".into(),
     }
   }

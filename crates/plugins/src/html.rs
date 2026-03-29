@@ -5,7 +5,7 @@ use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use regex::Regex;
 
-use crate::{ExportPlugin, ExportPluginSettings, helpers};
+use crate::{ExportPlugin, Plugin, PluginSettings, helpers};
 
 static TAG_HIGHLIGHT_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(@[^\s(]+(?:\([^)]*\))?)").unwrap());
 
@@ -158,10 +158,6 @@ a:link {
 pub struct HtmlExport;
 
 impl ExportPlugin for HtmlExport {
-  fn name(&self) -> &str {
-    "html"
-  }
-
   fn render(&self, entries: &[Entry], options: &RenderOptions, config: &Config) -> String {
     let sections = helpers::group_by_section(entries);
     let style = DEFAULT_CSS;
@@ -223,9 +219,15 @@ impl ExportPlugin for HtmlExport {
       items = items_html,
     )
   }
+}
 
-  fn settings(&self) -> ExportPluginSettings {
-    ExportPluginSettings {
+impl Plugin for HtmlExport {
+  fn name(&self) -> &str {
+    "html"
+  }
+
+  fn settings(&self) -> PluginSettings {
+    PluginSettings {
       trigger: "html?|web(?:page)?".into(),
     }
   }

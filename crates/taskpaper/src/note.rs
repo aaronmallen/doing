@@ -42,38 +42,7 @@ impl Note {
   /// leading and trailing blank lines, and trim trailing whitespace from each
   /// line.
   pub fn compress(&mut self) {
-    // Trim trailing whitespace from each line
-    for line in &mut self.lines {
-      let trimmed = line.trim_end().to_string();
-      *line = trimmed;
-    }
-
-    // Collapse consecutive blank lines into one
-    let mut compressed = Vec::new();
-    let mut prev_blank = false;
-    for line in &self.lines {
-      let is_blank = line.trim().is_empty();
-      if is_blank {
-        if !prev_blank {
-          compressed.push(String::new());
-        }
-        prev_blank = true;
-      } else {
-        compressed.push(line.clone());
-        prev_blank = false;
-      }
-    }
-    self.lines = compressed;
-
-    // Remove leading blank lines
-    let leading = self.lines.iter().take_while(|l| l.trim().is_empty()).count();
-    if leading > 0 {
-      self.lines.drain(..leading);
-    }
-    // Remove trailing blank lines
-    while self.lines.last().is_some_and(|l| l.trim().is_empty()) {
-      self.lines.pop();
-    }
+    self.lines = self.compressed_lines().map(String::from).collect();
   }
 
   /// Return whether the note has no content.

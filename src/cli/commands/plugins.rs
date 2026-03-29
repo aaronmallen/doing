@@ -27,6 +27,15 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self) -> Result<()> {
+    if let Some(ref t) = self.plugin_type
+      && !t.eq_ignore_ascii_case("export")
+      && !t.eq_ignore_ascii_case("import")
+    {
+      return Err(crate::Error::Config(format!(
+        "invalid plugin type '{t}'. Valid types: import, export"
+      )));
+    }
+
     let show_export = self
       .plugin_type
       .as_ref()
@@ -97,6 +106,20 @@ mod test {
       let result = cmd.call();
 
       assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_errors_on_invalid_type() {
+      let cmd = Command {
+        column: false,
+        plugin_type: Some("foo".into()),
+      };
+
+      let result = cmd.call();
+
+      assert!(result.is_err());
+      let err = result.unwrap_err().to_string();
+      assert!(err.contains("invalid plugin type"), "unexpected error: {err}");
     }
   }
 }

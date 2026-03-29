@@ -50,3 +50,15 @@ fn it_lists_with_short_flag() {
     "expected import plugins with short flag, got: {stdout}"
   );
 }
+
+#[test]
+fn it_errors_on_invalid_type() {
+  let doing = DoingCmd::new();
+
+  let output = doing
+    .run(["plugins", "--type", "foo"])
+    .output()
+    .expect("failed to run plugins --type foo");
+
+  assert!(!output.status.success(), "expected plugins --type foo to fail");
+}

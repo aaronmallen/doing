@@ -185,7 +185,7 @@ impl Command {
 
   fn resolve_tag_value(&self) -> Option<String> {
     if self.date {
-      Some(chrono::Local::now().format("%Y-%m-%d").to_string())
+      Some(chrono::Local::now().format("%Y-%m-%d %H:%M").to_string())
     } else {
       self.value.clone()
     }
@@ -369,8 +369,12 @@ mod test {
 
       let entries = ctx.document.entries_in_section("Currently");
       let tag = entries[0].tags().iter().find(|t| t.name() == "flagged").unwrap();
-      assert!(tag.value().is_some());
-      assert!(tag.value().unwrap().contains('-'));
+      let value = tag.value().expect("tag should have a value");
+      let re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$").unwrap();
+      assert!(
+        re.is_match(value),
+        "tag value should match YYYY-MM-DD HH:MM format, got: {value}"
+      );
     }
 
     #[test]

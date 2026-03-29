@@ -168,14 +168,7 @@ impl Command {
   fn apply_prefix(&self, entry: &mut Entry) {
     if let Some(ref prefix) = self.prefix {
       let new_title = format!("{prefix} {}", entry.title());
-      *entry = Entry::new(
-        entry.date(),
-        &new_title,
-        entry.tags().clone(),
-        entry.note().clone(),
-        entry.section(),
-        Some(entry.id()),
-      );
+      entry.set_title(new_title);
     }
   }
 

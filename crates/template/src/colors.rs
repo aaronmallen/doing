@@ -123,12 +123,7 @@ pub enum NamedColor {
 impl NamedColor {
   /// Parse a string into a `NamedColor`, if it matches a known color name.
   pub fn parse(s: &str) -> Option<Self> {
-    let normalized = s.replace('_', "").replace("bright", "bold");
-    let normalized = if normalized.starts_with("bgbold") {
-      normalized.replacen("bgbold", "boldbg", 1)
-    } else {
-      normalized
-    };
+    let normalized = normalize_color_name(s);
     match normalized.as_str() {
       "alert" => Some(Self::Alert),
       "bgblack" => Some(Self::BgBlack),
@@ -292,12 +287,7 @@ pub fn strip_ansi(s: &str) -> String {
 /// This allows color tokens to bleed into adjacent text, e.g. `%greensomething`
 /// still matches `green`.
 pub fn validate_color(s: &str) -> Option<(String, usize)> {
-  let normalized = s.replace('_', "").replace("bright", "bold");
-  let normalized = if normalized.starts_with("bgbold") {
-    normalized.replacen("bgbold", "boldbg", 1)
-  } else {
-    normalized
-  };
+  let normalized = normalize_color_name(s);
 
   // Check for hex color
   if let Some(rest) = normalized.strip_prefix('#')
@@ -457,6 +447,15 @@ fn available_colors() -> Vec<&'static str> {
     "yeller",
     "yellow",
   ]
+}
+
+fn normalize_color_name(s: &str) -> String {
+  let normalized = s.replace('_', "").replace("bright", "bold");
+  if normalized.starts_with("bgbold") {
+    normalized.replacen("bgbold", "boldbg", 1)
+  } else {
+    normalized
+  }
 }
 
 fn parse_hex(s: &str) -> Option<Color> {

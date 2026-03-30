@@ -20,14 +20,7 @@ pub fn wrap(text: &str, width: usize) -> String {
     return text.to_string();
   }
 
-  // Protect spaces inside tag values from splitting
-  let protected = TAG_VALUE_RE.replace_all(text, |caps: &regex::Captures| caps[0].replace(' ', TAG_VALUE_SENTINEL));
-
-  let normalized = protected.replace('\n', " ");
-  let words: Vec<String> = normalized
-    .split(' ')
-    .map(|w| w.replace(TAG_VALUE_SENTINEL, " "))
-    .collect();
+  let words = protected_words(text);
 
   let mut lines: Vec<String> = Vec::new();
   let mut current_line: Vec<String> = Vec::new();
@@ -93,12 +86,7 @@ pub fn wrap_with_indent(text: &str, width: usize, indent: usize) -> String {
     return wrap(text, width);
   }
 
-  let protected = TAG_VALUE_RE.replace_all(text, |caps: &regex::Captures| caps[0].replace(' ', TAG_VALUE_SENTINEL));
-  let normalized = protected.replace('\n', " ");
-  let words: Vec<String> = normalized
-    .split(' ')
-    .map(|w| w.replace(TAG_VALUE_SENTINEL, " "))
-    .collect();
+  let words = protected_words(text);
 
   let indent_str: String = " ".repeat(indent);
   let mut lines: Vec<String> = Vec::new();
@@ -134,6 +122,15 @@ pub fn wrap_with_indent(text: &str, width: usize, indent: usize) -> String {
   }
 
   lines.join("\n")
+}
+
+fn protected_words(text: &str) -> Vec<String> {
+  let protected = TAG_VALUE_RE.replace_all(text, |caps: &regex::Captures| caps[0].replace(' ', TAG_VALUE_SENTINEL));
+  let normalized = protected.replace('\n', " ");
+  normalized
+    .split(' ')
+    .map(|w| w.replace(TAG_VALUE_SENTINEL, " "))
+    .collect()
 }
 
 #[cfg(test)]

@@ -15,9 +15,7 @@ use crate::backup::{self, backup_prefix};
 /// fully resetting the undo state.
 pub fn redo(source: &Path, backup_dir: &Path, count: usize) -> Result<()> {
   let undone = backup::list_undone(source, backup_dir)?;
-  let count = if count == 0 { 1 } else { count };
-
-  if count > undone.len() {
+  if count == 0 || count > undone.len() {
     return Err(Error::HistoryLimit("end of redo history".into()));
   }
 
@@ -67,7 +65,7 @@ fn consume(path: &Path) -> Result<()> {
 fn create_undone(source: &Path, backup_dir: &Path) -> Result<PathBuf> {
   fs::create_dir_all(backup_dir)?;
 
-  let prefix = backup_prefix(source);
+  let prefix = backup_prefix(source)?;
   let timestamp = Local::now().format("%Y%m%d_%H%M%S_%6f");
   let name = format!("{prefix}{timestamp}.undone");
   let path = backup_dir.join(name);
@@ -104,7 +102,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000002.undone")), "newer").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.undone")), "older").unwrap();
 
@@ -125,7 +123,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(
         backup_dir.join(format!("{prefix}20240101_000001.undone")),
         "older undone",
@@ -140,6 +138,22 @@ mod test {
       redo(&source, &backup_dir, 1).unwrap();
 
       assert_eq!(fs::read_to_string(&source).unwrap(), "newest undone");
+    }
+
+    #[test]
+    fn it_returns_error_when_count_is_zero() {
+      let dir = tempfile::tempdir().unwrap();
+      let source = dir.path().join("doing.md");
+      let backup_dir = dir.path().join("backups");
+      fs::create_dir_all(&backup_dir).unwrap();
+      fs::write(&source, "current").unwrap();
+
+      let prefix = backup_prefix(&source).unwrap();
+      fs::write(backup_dir.join(format!("{prefix}20240101_000001.undone")), "undone").unwrap();
+
+      let result = redo(&source, &backup_dir, 0);
+
+      assert!(result.is_err());
     }
 
     #[test]
@@ -169,7 +183,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current state").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup1").unwrap();
 
       undo(&source, &backup_dir, 1).unwrap();
@@ -189,7 +203,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current state").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup1").unwrap();
 
       undo(&source, &backup_dir, 1).unwrap();
@@ -207,7 +221,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup").unwrap();
 
       undo(&source, &backup_dir, 1).unwrap();
@@ -225,7 +239,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "oldest").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000002.bak")), "newest").unwrap();
 
@@ -242,7 +256,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "oldest").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000002.bak")), "middle").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000003.bak")), "newest").unwrap();
@@ -260,7 +274,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup").unwrap();
 
       let result = undo(&source, &backup_dir, 5);
@@ -277,7 +291,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup").unwrap();
 
       let result = undo(&source, &backup_dir, 0);
@@ -293,7 +307,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "oldest").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000002.bak")), "middle").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000003.bak")), "newest").unwrap();

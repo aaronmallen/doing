@@ -13,22 +13,24 @@ use doing_taskpaper::{Document, io as taskpaper_io};
 /// Format: `{filename}_{path_hash}_` where `path_hash` is 16 hex characters derived from
 /// hashing the full canonical path. This ensures files with the same name at different
 /// locations get isolated backup histories.
-pub fn backup_prefix(source: &Path) -> String {
+pub fn backup_prefix(source: &Path) -> Result<String> {
   let stem = source.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
-  let canonical = source
-    .canonicalize()
-    .or_else(|_| {
-      source
-        .parent()
-        .and_then(|p| p.canonicalize().ok())
-        .map(|p| p.join(source.file_name().unwrap_or_default()))
-        .ok_or_else(|| std::io::Error::new(std::io::ErrorKind::NotFound, ""))
-    })
-    .unwrap_or_else(|_| source.to_path_buf());
+  let canonical = source.canonicalize().or_else(|_| {
+    source
+      .parent()
+      .and_then(|p| p.canonicalize().ok())
+      .map(|p| p.join(source.file_name().unwrap_or_default()))
+      .ok_or_else(|| {
+        std::io::Error::new(
+          std::io::ErrorKind::NotFound,
+          format!("cannot resolve canonical path for {}", source.display()),
+        )
+      })
+  })?;
 
   let hash = fnv1a_hash(canonical.to_string_lossy().as_bytes());
 
-  format!("{stem}_{hash:016x}_")
+  Ok(format!("{stem}_{hash:016x}_"))
 }
 
 /// Create a timestamped backup of `source` in `backup_dir`.
@@ -38,7 +40,7 @@ pub fn backup_prefix(source: &Path) -> String {
 pub fn create_backup(source: &Path, backup_dir: &Path) -> Result<PathBuf> {
   fs::create_dir_all(backup_dir)?;
 
-  let prefix = backup_prefix(source);
+  let prefix = backup_prefix(source)?;
   let timestamp = Local::now().format("%Y%m%d_%H%M%S_%6f");
   let backup_name = format!("{prefix}{timestamp}.bak");
   let backup_path = backup_dir.join(backup_name);
@@ -110,7 +112,7 @@ fn list_files_with_ext(source: &Path, backup_dir: &Path, ext: &str) -> Result<Ve
     return Ok(Vec::new());
   }
 
-  let prefix = backup_prefix(source);
+  let prefix = backup_prefix(source)?;
   let mut backups: Vec<PathBuf> = fs::read_dir(backup_dir)?
     .collect::<std::result::Result<Vec<_>, _>>()?
     .into_iter()
@@ -161,8 +163,8 @@ mod test {
       let source = dir.path().join("test.md");
       fs::write(&source, "").unwrap();
 
-      let prefix1 = backup_prefix(&source);
-      let prefix2 = backup_prefix(&source);
+      let prefix1 = backup_prefix(&source).unwrap();
+      let prefix2 = backup_prefix(&source).unwrap();
 
       assert_eq!(prefix1, prefix2);
     }
@@ -221,7 +223,7 @@ mod test {
 
       let backup = create_backup(&source, &backup_dir).unwrap();
       let name = backup.file_name().unwrap().to_str().unwrap();
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
 
       assert!(name.starts_with(&prefix));
       assert!(name.ends_with(".bak"));
@@ -273,7 +275,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "").unwrap();
 
       prune_backups(&source, &backup_dir, 5).unwrap();
@@ -290,7 +292,7 @@ mod test {
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "").unwrap();
 
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       for i in 1..=5 {
         let name = format!("{prefix}20240101_{:06}.bak", i);
         fs::write(backup_dir.join(name), "").unwrap();

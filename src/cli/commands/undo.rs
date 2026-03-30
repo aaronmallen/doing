@@ -108,7 +108,7 @@ mod test {
       let backup_dir = dir.path().join("backups");
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "backup1").unwrap();
 
       let mut ctx = AppContext {
@@ -149,7 +149,7 @@ mod test {
       let backup_dir = dir.path().join("backups");
       fs::create_dir_all(&backup_dir).unwrap();
       fs::write(&source, "current").unwrap();
-      let prefix = backup_prefix(&source);
+      let prefix = backup_prefix(&source).unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000001.bak")), "oldest").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000002.bak")), "middle").unwrap();
       fs::write(backup_dir.join(format!("{prefix}20240101_000003.bak")), "newest").unwrap();

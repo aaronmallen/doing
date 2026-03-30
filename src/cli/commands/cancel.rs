@@ -4,7 +4,7 @@ use doing_ops::{
   filter::{Age, FilterOptions, filter_entries},
   tag_filter::{BooleanMode, TagFilter},
 };
-use doing_taskpaper::{Entry, Section, Tag};
+use doing_taskpaper::{Entry, Tag};
 
 use crate::{
   Result,
@@ -112,32 +112,7 @@ impl Command {
   }
 
   fn archive_cancelled(&self, ctx: &mut AppContext, section_name: &str, entry_ids: &[String]) -> Result<()> {
-    if !ctx.document.has_section("Archive") {
-      ctx.document.add_section(Section::new("Archive"));
-    }
-
-    let section = ctx
-      .document
-      .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
-
-    let to_move: Vec<Entry> = section
-      .entries_mut()
-      .iter()
-      .filter(|e| entry_ids.contains(&e.id().to_string()))
-      .cloned()
-      .collect();
-
-    section
-      .entries_mut()
-      .retain(|e| !entry_ids.contains(&e.id().to_string()));
-
-    let archive = ctx.document.section_by_name_mut("Archive").unwrap();
-    for entry in to_move {
-      archive.add_entry(entry);
-    }
-
-    Ok(())
+    super::archive_entries_by_id(ctx, section_name, entry_ids, false)
   }
 
   fn cancel_entry(&self, ctx: &mut AppContext, section_name: &str, entry_id: &str) -> Result<bool> {

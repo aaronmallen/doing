@@ -130,7 +130,7 @@ impl Command {
       || !filter.val.is_empty();
 
     let mut candidates = if has_filters {
-      let mut options = filter.clone().into_filter_options(&ctx.config, ctx.include_notes)?;
+      let mut options = filter.to_filter_options(&ctx.config, ctx.include_notes)?;
       options.section = Some(section_name.to_string());
       options.age = options.age.or(Some(Age::Oldest));
       filter_entries(all_entries, &options)

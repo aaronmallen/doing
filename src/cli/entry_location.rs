@@ -43,7 +43,7 @@ pub fn find_entries(
   if has_filters {
     let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
 
-    let mut options = filter.clone().into_filter_options(&ctx.config, ctx.include_notes)?;
+    let mut options = filter.to_filter_options(&ctx.config, ctx.include_notes)?;
     options.age = options.age.or(Some(Age::Newest));
 
     let results = filter_entries(all_entries, &options);

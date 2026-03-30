@@ -239,7 +239,7 @@ pub struct FilterArgs {
 
 impl FilterArgs {
   /// Convert CLI filter arguments into a [`FilterOptions`] for the filter pipeline.
-  pub fn into_filter_options(self, config: &Config, include_notes: bool) -> Result<FilterOptions> {
+  pub fn to_filter_options(&self, config: &Config, include_notes: bool) -> Result<FilterOptions> {
     let after = self.resolve_after()?;
     let before = self.resolve_before()?;
     let (from_after, from_before) = self.resolve_from()?;
@@ -300,7 +300,7 @@ impl FilterArgs {
       negate: self.not,
       only_timed: self.only_timed,
       search,
-      section: self.section,
+      section: self.section.clone(),
       sort: None,
       tag_filter,
       tag_queries,
@@ -444,7 +444,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert!(options.tag_filter.is_some());
     }
@@ -457,7 +457,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert!(options.tag_filter.is_some());
     }
@@ -467,7 +467,7 @@ mod test {
       let args = FilterArgs::default();
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert!(options.after.is_none());
       assert!(options.age.is_none());
@@ -492,7 +492,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert!(options.after.is_some());
     }
@@ -505,7 +505,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert!(options.before.is_some());
     }
@@ -518,7 +518,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert_eq!(options.tag_queries.len(), 1);
     }
@@ -531,7 +531,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert_eq!(options.section.as_deref(), Some("Archive"));
     }
@@ -544,7 +544,7 @@ mod test {
       };
       let config = Config::default();
 
-      assert!(args.into_filter_options(&config, true).is_err());
+      assert!(args.to_filter_options(&config, true).is_err());
     }
 
     #[test]
@@ -555,7 +555,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert!(options.negate);
     }
@@ -568,7 +568,7 @@ mod test {
       };
       let config = Config::default();
 
-      let options = args.into_filter_options(&config, true).unwrap();
+      let options = args.to_filter_options(&config, true).unwrap();
 
       assert!(options.only_timed);
     }

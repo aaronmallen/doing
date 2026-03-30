@@ -204,7 +204,7 @@ impl Command {
       ..ctx.config.clone()
     };
 
-    let mut options = filter_with_search.into_filter_options(&config_with_overrides, ctx.include_notes)?;
+    let mut options = filter_with_search.to_filter_options(&config_with_overrides, ctx.include_notes)?;
     options.section = Some(section_name.to_string());
     Ok(options)
   }

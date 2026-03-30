@@ -164,7 +164,7 @@ impl Command {
       ..self.filter.clone()
     };
 
-    let mut options = filter_with_tags.into_filter_options(&ctx.config, ctx.include_notes)?;
+    let mut options = filter_with_tags.to_filter_options(&ctx.config, ctx.include_notes)?;
     options.count = self.count;
     options.section = Some(section_name.to_string());
     Ok(options)

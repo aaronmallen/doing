@@ -67,7 +67,7 @@ impl Command {
       .cloned()
       .collect();
 
-    let filter_options = self.filter.clone().into_filter_options(&ctx.config, false)?;
+    let filter_options = self.filter.to_filter_options(&ctx.config, false)?;
     let filtered = filter_entries(all_entries, &filter_options);
     let entry_refs: Vec<_> = filtered.iter().collect();
 

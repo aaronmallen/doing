@@ -108,7 +108,7 @@ impl Command {
         section: Some(section_name.to_string()),
         ..self.filter.clone()
       };
-      let options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
+      let options = filter_args.to_filter_options(&ctx.config, ctx.include_notes)?;
       doing_ops::filter::filter_entries(all_entries, &options)
     } else {
       all_entries

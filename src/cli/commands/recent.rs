@@ -62,10 +62,7 @@ impl Command {
       .cloned()
       .collect();
 
-    let mut options = self
-      .filter
-      .clone()
-      .into_filter_options(&ctx.config, ctx.include_notes)?;
+    let mut options = self.filter.clone().to_filter_options(&ctx.config, ctx.include_notes)?;
     options.count = self.count.or(self.count_pos);
     options.section = Some(section_name.to_string());
     options.age = Some(Age::Newest);

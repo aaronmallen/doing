@@ -159,7 +159,7 @@ impl Command {
       search: self.search.clone(),
       ..Default::default()
     };
-    let options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
+    let options = filter_args.to_filter_options(&ctx.config, ctx.include_notes)?;
     let filtered = doing_ops::filter::filter_entries(mem::take(entries), &options);
     *entries = filtered;
     Ok(())

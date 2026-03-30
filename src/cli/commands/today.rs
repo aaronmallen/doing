@@ -68,7 +68,7 @@ pub fn display_date_range(
     .cloned()
     .collect();
 
-  let mut options = filter.clone().into_filter_options(&ctx.config, ctx.include_notes)?;
+  let mut options = filter.to_filter_options(&ctx.config, ctx.include_notes)?;
   options.section = Some(section_name.to_string());
 
   if options.after.is_none() {

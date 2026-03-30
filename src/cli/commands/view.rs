@@ -120,10 +120,7 @@ impl Command {
   }
 
   fn build_filter_options(&self, view: &ViewConfig, ctx: &AppContext) -> Result<FilterOptions> {
-    let mut options = self
-      .filter
-      .clone()
-      .into_filter_options(&ctx.config, ctx.include_notes)?;
+    let mut options = self.filter.clone().to_filter_options(&ctx.config, ctx.include_notes)?;
 
     // Apply view tags if no CLI tags were provided
     if options.tag_filter.is_none() && !view.tags.is_empty() {

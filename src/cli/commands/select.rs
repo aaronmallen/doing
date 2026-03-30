@@ -556,7 +556,7 @@ impl Command {
       ..Default::default()
     };
 
-    let mut options = filter_args.into_filter_options(&ctx.config, ctx.include_notes)?;
+    let mut options = filter_args.to_filter_options(&ctx.config, ctx.include_notes)?;
     options.sort = Some(SortOrder::Asc);
 
     Ok(filter_entries(all_entries, &options))

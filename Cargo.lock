@@ -530,7 +530,6 @@ dependencies = [
  "doing-error",
  "doing-taskpaper",
  "doing-time",
- "indexmap",
  "pretty_assertions",
  "regex",
  "sublime_fuzzy",

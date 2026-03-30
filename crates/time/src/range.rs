@@ -106,9 +106,9 @@ mod test {
       let (start, end) = parse_range("2024-01-15").unwrap();
 
       assert_eq!(start.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 15).unwrap());
-      assert_eq!(start.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+      assert_eq!(start.time(), NaiveTime::MIN);
       assert_eq!(end.date_naive(), NaiveDate::from_ymd_opt(2024, 1, 16).unwrap());
-      assert_eq!(end.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+      assert_eq!(end.time(), NaiveTime::MIN);
     }
 
     #[test]
@@ -118,7 +118,7 @@ mod test {
       let expected_date = (now - Duration::days(1)).date_naive();
 
       assert_eq!(start.date_naive(), expected_date);
-      assert_eq!(start.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
+      assert_eq!(start.time(), NaiveTime::MIN);
       assert_eq!(end, start + Duration::days(1));
     }
 

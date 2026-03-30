@@ -69,6 +69,11 @@ impl FormattedDuration {
       seconds,
     }
   }
+
+  /// Total duration expressed as whole minutes.
+  fn total_minutes(&self) -> i64 {
+    self.days * 24 * 60 + self.hours * 60 + self.minutes
+  }
 }
 
 impl Display for FormattedDuration {
@@ -78,44 +83,22 @@ impl Display for FormattedDuration {
         let total_hours = self.days * 24 + self.hours;
         write!(f, "{:02}:{:02}:{:02}", total_hours, self.minutes, self.seconds)
       }
-      DurationFormat::Dhm => {
-        let mut parts = Vec::new();
-        if self.days > 0 {
-          parts.push(format!("{}d", self.days));
-        }
-        if self.hours > 0 {
-          parts.push(format!("{}h", self.hours));
-        }
-        if self.minutes > 0 || parts.is_empty() {
-          parts.push(format!("{}m", self.minutes));
-        }
-        write!(f, "{}", parts.join(" "))
-      }
+      DurationFormat::Dhm => write!(
+        f,
+        "{}",
+        format_parts(self.days, self.hours, self.minutes, dhm_component)
+      ),
       DurationFormat::Hm => {
         let total_hours = self.days * 24 + self.hours;
         write!(f, "{:02}:{:02}", total_hours, self.minutes)
       }
-      DurationFormat::M => {
-        let total = self.days * 24 * 60 + self.hours * 60 + self.minutes;
-        write!(f, "{total}")
-      }
-      DurationFormat::Natural => {
-        let total = self.days * 24 * 60 + self.hours * 60 + self.minutes;
-        write!(f, "{}", natural_duration(total))
-      }
-      DurationFormat::Text => {
-        let mut parts = Vec::new();
-        if self.days > 0 {
-          parts.push(pluralize(self.days, "day"));
-        }
-        if self.hours > 0 {
-          parts.push(pluralize(self.hours, "hour"));
-        }
-        if self.minutes > 0 || parts.is_empty() {
-          parts.push(pluralize(self.minutes, "minute"));
-        }
-        write!(f, "{}", parts.join(" "))
-      }
+      DurationFormat::M => write!(f, "{}", self.total_minutes()),
+      DurationFormat::Natural => write!(f, "{}", natural_duration(self.total_minutes())),
+      DurationFormat::Text => write!(
+        f,
+        "{}",
+        format_parts(self.days, self.hours, self.minutes, text_component)
+      ),
     }
   }
 }
@@ -191,6 +174,24 @@ pub fn format_tag_total(duration: chrono::Duration) -> String {
   format!("{days:02}:{hours:02}:{minutes:02}")
 }
 
+fn dhm_component(value: i64, _unit: &str, suffix: &str) -> String {
+  format!("{value}{suffix}")
+}
+
+fn format_parts(days: i64, hours: i64, minutes: i64, fmt: fn(i64, &str, &str) -> String) -> String {
+  let mut parts = Vec::new();
+  if days > 0 {
+    parts.push(fmt(days, "day", "d"));
+  }
+  if hours > 0 {
+    parts.push(fmt(hours, "hour", "h"));
+  }
+  if minutes > 0 || parts.is_empty() {
+    parts.push(fmt(minutes, "minute", "m"));
+  }
+  parts.join(" ")
+}
+
 fn natural_duration(total_minutes: i64) -> String {
   if total_minutes == 0 {
     return "0 minutes".into();
@@ -216,13 +217,6 @@ fn natural_duration(total_minutes: i64) -> String {
   }
 
   if remaining_hours > 0 {
-    if minutes == 0 {
-      return if remaining_hours == 1 {
-        "about an hour".into()
-      } else {
-        format!("about {remaining_hours} hours")
-      };
-    }
     if minutes <= 15 {
       return if remaining_hours == 1 {
         "about an hour".into()
@@ -264,6 +258,10 @@ fn pluralize(count: i64, word: &str) -> String {
   } else {
     format!("{count} {word}s")
   }
+}
+
+fn text_component(value: i64, unit: &str, _suffix: &str) -> String {
+  pluralize(value, unit)
 }
 
 #[cfg(test)]

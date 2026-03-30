@@ -2,6 +2,7 @@ use doing_taskpaper::{Entry, Section, Tag};
 
 use crate::cli::AppContext;
 
+pub mod actions;
 pub mod again;
 pub mod archive;
 pub mod autotag;

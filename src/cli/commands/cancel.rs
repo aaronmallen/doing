@@ -227,21 +227,12 @@ impl Command {
   }
 
   fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
-    let unfinished = self.unfinished;
-    let candidates: Vec<Entry> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .filter(|e| if unfinished { e.unfinished() } else { true })
-      .cloned()
-      .collect();
-
-    if candidates.is_empty() {
-      return Ok(vec![]);
-    }
-
-    let selected = crate::cli::interactive::select_entries(&candidates)?;
-    Ok(selected.iter().map(|e| e.id().to_string()).collect())
+    let filter = crate::cli::args::FilterArgs {
+      section: Some(section_name.to_string()),
+      ..Default::default()
+    };
+    let locs = crate::cli::entry_location::interactive_select(&filter, self.unfinished, ctx)?;
+    Ok(locs.into_iter().map(|l| l.id).collect())
   }
 }
 

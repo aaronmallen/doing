@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use doing_config::SearchConfig;
 use doing_taskpaper::Entry;
 use regex::Regex;
@@ -59,9 +61,9 @@ pub fn matches_entry(entry: &Entry, mode: &SearchMode, case: CaseSensitivity, in
     }
   }
 
-  if include_notes {
+  if include_notes && !entry.note().is_empty() {
     let note_text = entry.note().lines().join(" ");
-    if !note_text.is_empty() && matches(&note_text, mode, case) {
+    if matches(&note_text, mode, case) {
       return true;
     }
   }
@@ -77,7 +79,7 @@ pub fn parse_query(query: &str, config: &SearchConfig) -> Option<(SearchMode, Ca
   }
 
   let case = resolve_case(query, config);
-  let mode = detect_mode(query, config);
+  let mode = detect_mode(query, config, case);
 
   Some((mode, case))
 }
@@ -99,9 +101,9 @@ fn build_regex(pattern: &str, original_query: &str, config: &SearchConfig) -> Re
 /// 2. `/pattern/` → regex mode
 /// 3. Config `matching` == `fuzzy` → fuzzy mode
 /// 4. Otherwise → pattern mode
-fn detect_mode(query: &str, config: &SearchConfig) -> SearchMode {
+fn detect_mode(query: &str, config: &SearchConfig, case: CaseSensitivity) -> SearchMode {
   if let Some(literal) = query.strip_prefix('\'') {
-    return SearchMode::Exact(literal.to_string());
+    return SearchMode::Exact(maybe_lowercase(literal, case));
   }
 
   if let Some(inner) = try_extract_regex(query)
@@ -111,17 +113,19 @@ fn detect_mode(query: &str, config: &SearchConfig) -> SearchMode {
   }
 
   if config.matching == "fuzzy" {
-    return SearchMode::Fuzzy(query.to_string(), config.distance);
+    return SearchMode::Fuzzy(maybe_lowercase(query, case), config.distance);
   }
 
-  SearchMode::Pattern(parse_pattern_tokens(query))
+  SearchMode::Pattern(parse_pattern_tokens(query, case))
 }
 
 /// Check whether `text` contains the exact literal substring.
+///
+/// The `literal` is expected to be pre-lowercased when `case` is `Ignore`.
 fn matches_exact(text: &str, literal: &str, case: CaseSensitivity) -> bool {
   match case {
     CaseSensitivity::Sensitive => text.contains(literal),
-    CaseSensitivity::Ignore => text.to_lowercase().contains(&literal.to_lowercase()),
+    CaseSensitivity::Ignore => text.to_lowercase().contains(literal),
   }
 }
 
@@ -130,13 +134,15 @@ fn matches_exact(text: &str, literal: &str, case: CaseSensitivity) -> bool {
 /// Characters in `pattern` must appear in `text` in order, but gaps are allowed.
 /// The `distance` parameter sets the maximum allowed gap between consecutive
 /// matched characters. A distance of 0 disables the gap check.
+///
+/// The `pattern` is expected to be pre-lowercased when `case` is `Ignore`.
 fn matches_fuzzy(text: &str, pattern: &str, distance: u32, case: CaseSensitivity) -> bool {
-  let (haystack, needle) = match case {
-    CaseSensitivity::Sensitive => (text.to_string(), pattern.to_string()),
-    CaseSensitivity::Ignore => (text.to_lowercase(), pattern.to_lowercase()),
+  let haystack: Cow<str> = match case {
+    CaseSensitivity::Sensitive => Cow::Borrowed(text),
+    CaseSensitivity::Ignore => Cow::Owned(text.to_lowercase()),
   };
 
-  let result = match best_match(&needle, &haystack) {
+  let result = match best_match(pattern, &haystack) {
     Some(m) => m,
     None => return false,
   };
@@ -157,8 +163,9 @@ fn matches_fuzzy(text: &str, pattern: &str, distance: u32, case: CaseSensitivity
 /// - Include: word must appear anywhere in text.
 /// - Exclude: word must NOT appear in text.
 /// - Phrase: exact substring must appear in text.
+///
+/// Tokens are expected to be pre-lowercased when `case` is `Ignore`.
 fn matches_pattern(text: &str, tokens: &[PatternToken], case: CaseSensitivity) -> bool {
-  // Pre-lowercase text once for case-insensitive matching to avoid per-token allocation.
   let lowered;
   let haystack = match case {
     CaseSensitivity::Ignore => {
@@ -169,34 +176,14 @@ fn matches_pattern(text: &str, tokens: &[PatternToken], case: CaseSensitivity) -
   };
 
   for token in tokens {
+    let needle = match token {
+      PatternToken::Exclude(word) | PatternToken::Include(word) | PatternToken::Phrase(word) => word.as_str(),
+    };
+    let found = haystack.contains(needle);
     match token {
-      PatternToken::Exclude(word) => {
-        let needle = match case {
-          CaseSensitivity::Ignore => word.to_lowercase(),
-          CaseSensitivity::Sensitive => word.clone(),
-        };
-        if haystack.contains(&needle) {
-          return false;
-        }
-      }
-      PatternToken::Include(word) => {
-        let needle = match case {
-          CaseSensitivity::Ignore => word.to_lowercase(),
-          CaseSensitivity::Sensitive => word.clone(),
-        };
-        if !haystack.contains(&needle) {
-          return false;
-        }
-      }
-      PatternToken::Phrase(phrase) => {
-        let needle = match case {
-          CaseSensitivity::Ignore => phrase.to_lowercase(),
-          CaseSensitivity::Sensitive => phrase.clone(),
-        };
-        if !haystack.contains(&needle) {
-          return false;
-        }
-      }
+      PatternToken::Exclude(_) if found => return false,
+      PatternToken::Include(_) | PatternToken::Phrase(_) if !found => return false,
+      _ => {}
     }
   }
   true
@@ -209,7 +196,14 @@ fn matches_pattern(text: &str, tokens: &[PatternToken], case: CaseSensitivity) -
 /// - `+word` → Include token (required)
 /// - `-word` → Exclude token (excluded)
 /// - bare `word` → Include token
-fn parse_pattern_tokens(query: &str) -> Vec<PatternToken> {
+fn maybe_lowercase(s: &str, case: CaseSensitivity) -> String {
+  match case {
+    CaseSensitivity::Ignore => s.to_lowercase(),
+    CaseSensitivity::Sensitive => s.to_string(),
+  }
+}
+
+fn parse_pattern_tokens(query: &str, case: CaseSensitivity) -> Vec<PatternToken> {
   let mut tokens = Vec::new();
   let mut chars = query.chars().peekable();
 
@@ -223,24 +217,24 @@ fn parse_pattern_tokens(query: &str) -> Vec<PatternToken> {
       chars.next(); // consume opening quote
       let phrase: String = chars.by_ref().take_while(|&ch| ch != '"').collect();
       if !phrase.is_empty() {
-        tokens.push(PatternToken::Phrase(phrase));
+        tokens.push(PatternToken::Phrase(maybe_lowercase(&phrase, case)));
       }
     } else if c == '+' {
       chars.next(); // consume +
       let word: String = chars.by_ref().take_while(|ch| !ch.is_whitespace()).collect();
       if !word.is_empty() {
-        tokens.push(PatternToken::Include(word));
+        tokens.push(PatternToken::Include(maybe_lowercase(&word, case)));
       }
     } else if c == '-' {
       chars.next(); // consume -
       let word: String = chars.by_ref().take_while(|ch| !ch.is_whitespace()).collect();
       if !word.is_empty() {
-        tokens.push(PatternToken::Exclude(word));
+        tokens.push(PatternToken::Exclude(maybe_lowercase(&word, case)));
       }
     } else {
       let word: String = chars.by_ref().take_while(|ch| !ch.is_whitespace()).collect();
       if !word.is_empty() {
-        tokens.push(PatternToken::Include(word));
+        tokens.push(PatternToken::Include(maybe_lowercase(&word, case)));
       }
     }
   }
@@ -327,28 +321,28 @@ mod test {
 
     #[test]
     fn it_detects_exact_mode_with_quote_prefix() {
-      let mode = super::super::detect_mode("'exact match", &default_config());
+      let mode = super::super::detect_mode("'exact match", &default_config(), CaseSensitivity::Ignore);
 
       assert!(matches!(mode, SearchMode::Exact(s) if s == "exact match"));
     }
 
     #[test]
     fn it_detects_fuzzy_mode_from_config() {
-      let mode = super::super::detect_mode("some query", &fuzzy_config());
+      let mode = super::super::detect_mode("some query", &fuzzy_config(), CaseSensitivity::Ignore);
 
       assert!(matches!(mode, SearchMode::Fuzzy(s, 3) if s == "some query"));
     }
 
     #[test]
     fn it_detects_pattern_mode_by_default() {
-      let mode = super::super::detect_mode("hello world", &default_config());
+      let mode = super::super::detect_mode("hello world", &default_config(), CaseSensitivity::Ignore);
 
       assert!(matches!(mode, SearchMode::Pattern(_)));
     }
 
     #[test]
     fn it_detects_regex_mode_with_slashes() {
-      let mode = super::super::detect_mode("/foo.*bar/", &default_config());
+      let mode = super::super::detect_mode("/foo.*bar/", &default_config(), CaseSensitivity::Ignore);
 
       assert!(matches!(mode, SearchMode::Regex(_)));
     }
@@ -659,9 +653,13 @@ mod test {
 
     use super::*;
 
+    fn parse_pattern_tokens_sensitive(query: &str) -> Vec<PatternToken> {
+      super::super::parse_pattern_tokens(query, CaseSensitivity::Sensitive)
+    }
+
     #[test]
     fn it_parses_bare_words_as_include() {
-      let tokens = super::super::parse_pattern_tokens("hello world");
+      let tokens = parse_pattern_tokens_sensitive("hello world");
 
       assert_eq!(
         tokens,
@@ -674,7 +672,7 @@ mod test {
 
     #[test]
     fn it_parses_exclude_tokens() {
-      let tokens = super::super::parse_pattern_tokens("hello -world");
+      let tokens = parse_pattern_tokens_sensitive("hello -world");
 
       assert_eq!(
         tokens,
@@ -687,7 +685,7 @@ mod test {
 
     #[test]
     fn it_parses_include_tokens() {
-      let tokens = super::super::parse_pattern_tokens("+hello +world");
+      let tokens = parse_pattern_tokens_sensitive("+hello +world");
 
       assert_eq!(
         tokens,
@@ -700,7 +698,7 @@ mod test {
 
     #[test]
     fn it_parses_mixed_tokens() {
-      let tokens = super::super::parse_pattern_tokens("+required -excluded bare \"exact phrase\"");
+      let tokens = parse_pattern_tokens_sensitive("+required -excluded bare \"exact phrase\"");
 
       assert_eq!(
         tokens,
@@ -715,7 +713,7 @@ mod test {
 
     #[test]
     fn it_parses_quoted_phrases() {
-      let tokens = super::super::parse_pattern_tokens("\"hello world\"");
+      let tokens = parse_pattern_tokens_sensitive("\"hello world\"");
 
       assert_eq!(tokens, vec![PatternToken::Phrase("hello world".into())]);
     }

@@ -77,7 +77,7 @@ impl TagQuery {
     let negated = caps.get(1).is_some();
     let property = parse_property(&caps[2]);
     let raw_op = &caps[3];
-    let value = caps[4].trim().to_string();
+    let value = caps[4].trim().to_lowercase();
 
     let (op, op_negated) = parse_operator(raw_op)?;
     let negated = negated ^ op_negated;
@@ -141,19 +141,18 @@ impl TagQuery {
   }
 
   fn compare_string(&self, haystack: &str, needle: &str) -> bool {
-    let needle = strip_quotes(needle);
+    let n = strip_quotes(needle);
     let h = haystack.to_lowercase();
-    let n = needle.to_lowercase();
 
     match self.op {
-      ComparisonOp::Contains => h.contains(&n),
-      ComparisonOp::EndsWith => h.ends_with(&n),
-      ComparisonOp::Equal => wildcard_match(&h, &n),
-      ComparisonOp::StartsWith => h.starts_with(&n),
-      ComparisonOp::GreaterThan => h.as_str() > n.as_str(),
-      ComparisonOp::GreaterThanOrEqual => h.as_str() >= n.as_str(),
-      ComparisonOp::LessThan => (h.as_str()) < n.as_str(),
-      ComparisonOp::LessThanOrEqual => h.as_str() <= n.as_str(),
+      ComparisonOp::Contains => h.contains(n),
+      ComparisonOp::EndsWith => h.ends_with(n),
+      ComparisonOp::Equal => wildcard_match(&h, n),
+      ComparisonOp::StartsWith => h.starts_with(n),
+      ComparisonOp::GreaterThan => h.as_str() > n,
+      ComparisonOp::GreaterThanOrEqual => h.as_str() >= n,
+      ComparisonOp::LessThan => (h.as_str()) < n,
+      ComparisonOp::LessThanOrEqual => h.as_str() <= n,
     }
   }
 

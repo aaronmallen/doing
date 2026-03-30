@@ -1,8 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Mutex};
 
 use doing_config::AutotagConfig;
 use doing_taskpaper::{Entry, Tag};
 use regex::Regex;
+
+static SYNONYM_REGEX_CACHE: Mutex<Option<HashMap<String, Regex>>> = Mutex::new(None);
 
 /// Apply automatic tagging to an entry based on configuration rules.
 ///
@@ -52,8 +54,7 @@ fn apply_synonyms(entry: &mut Entry, synonyms: &HashMap<String, Vec<String>>, wo
     }
 
     for pattern in synonym_patterns {
-      let rx_str = wildcard_to_word_regex(pattern);
-      if let Ok(rx) = Regex::new(&rx_str)
+      if let Some(rx) = cached_synonym_regex(pattern)
         && words.iter().any(|w| rx.is_match(w))
       {
         entry.tags_mut().add(Tag::new(tag_name, None::<String>));
@@ -169,6 +170,18 @@ fn parse_transform_rule(rule: &str) -> Option<(&str, &str)> {
 /// Convert a wildcard pattern to a case-insensitive regex matching a whole word.
 ///
 /// `*` matches zero or more non-whitespace characters, `?` matches exactly one.
+fn cached_synonym_regex(pattern: &str) -> Option<Regex> {
+  let mut guard = SYNONYM_REGEX_CACHE.lock().unwrap();
+  let cache = guard.get_or_insert_with(HashMap::new);
+  if let Some(rx) = cache.get(pattern) {
+    return Some(rx.clone());
+  }
+  let rx_str = wildcard_to_word_regex(pattern);
+  let rx = Regex::new(&rx_str).ok()?;
+  cache.insert(pattern.to_string(), rx.clone());
+  Some(rx)
+}
+
 fn wildcard_to_word_regex(pattern: &str) -> String {
   let mut rx = String::from("(?i)^");
   for ch in pattern.chars() {

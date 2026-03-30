@@ -85,6 +85,7 @@ pub fn format_items_with_tag_sort(
   let mut output = String::new();
   let mut current_section = "";
   let mut custom_title_shown = false;
+  let tokens = parser::parse(&options.template);
 
   for entry in entries {
     if let Some(title_value) = title {
@@ -114,7 +115,7 @@ pub fn format_items_with_tag_sort(
       output.push('\n');
     }
 
-    let mut line = render(entry, options, config);
+    let mut line = render_with_tokens(entry, &tokens, options, config);
 
     // Apply marker color to flagged entries
     if entry.tags().iter().any(|t| t.name() == config.marker_tag)
@@ -143,10 +144,15 @@ pub fn format_items_with_tag_sort(
 /// Render a single entry against a template string, returning the formatted output.
 pub fn render(entry: &Entry, options: &RenderOptions, config: &Config) -> String {
   let tokens = parser::parse(&options.template);
+  render_with_tokens(entry, &tokens, options, config)
+}
+
+/// Render a single entry using pre-parsed template tokens.
+fn render_with_tokens(entry: &Entry, tokens: &[Token], options: &RenderOptions, config: &Config) -> String {
   let values = build_values(entry, options, config);
   let mut output = String::new();
 
-  for token in &tokens {
+  for token in tokens {
     match token {
       Token::Color(color) => output.push_str(&color.to_ansi()),
       Token::Literal(text) => output.push_str(text),

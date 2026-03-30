@@ -1,10 +1,13 @@
 use std::{
-  collections::HashSet,
+  collections::{HashMap, HashSet},
   fmt::{Display, Formatter, Result as FmtResult},
   hash::{Hash, Hasher},
+  sync::Mutex,
 };
 
 use regex::Regex;
+
+static WILDCARD_CACHE: Mutex<Option<HashMap<String, Regex>>> = Mutex::new(None);
 
 /// A TaskPaper tag with an optional value.
 ///
@@ -121,8 +124,8 @@ impl Tags {
   /// Matching is case-insensitive.
   pub fn matches_wildcard(&self, pattern: &str) -> bool {
     let pattern = pattern.strip_prefix('@').unwrap_or(pattern);
-    let rx_str = wildcard_to_regex(pattern);
-    let Ok(rx) = Regex::new(&rx_str) else {
+    let rx = cached_wildcard_regex(pattern);
+    let Some(rx) = rx else {
       return false;
     };
     self.inner.iter().any(|t| rx.is_match(&t.name))
@@ -153,8 +156,7 @@ impl Tags {
   /// of tags removed.
   pub fn remove_by_wildcard(&mut self, pattern: &str) -> usize {
     let pattern = pattern.strip_prefix('@').unwrap_or(pattern);
-    let rx_str = wildcard_to_regex(pattern);
-    let Ok(rx) = Regex::new(&rx_str) else {
+    let Some(rx) = cached_wildcard_regex(pattern) else {
       return 0;
     };
     let before = self.inner.len();
@@ -183,8 +185,7 @@ impl Tags {
   pub fn rename_by_wildcard(&mut self, pattern: &str, new_name: &str) -> usize {
     let pattern = pattern.strip_prefix('@').unwrap_or(pattern);
     let new = new_name.strip_prefix('@').unwrap_or(new_name);
-    let rx_str = wildcard_to_regex(pattern);
-    let Ok(rx) = Regex::new(&rx_str) else {
+    let Some(rx) = cached_wildcard_regex(pattern) else {
       return 0;
     };
     let mut count = 0;
@@ -223,6 +224,19 @@ impl FromIterator<Tag> for Tags {
       inner: iter.into_iter().collect(),
     }
   }
+}
+
+/// Look up or compile and cache a wildcard regex.
+fn cached_wildcard_regex(pattern: &str) -> Option<Regex> {
+  let mut guard = WILDCARD_CACHE.lock().unwrap();
+  let cache = guard.get_or_insert_with(HashMap::new);
+  if let Some(rx) = cache.get(pattern) {
+    return Some(rx.clone());
+  }
+  let rx_str = wildcard_to_regex(pattern);
+  let rx = Regex::new(&rx_str).ok()?;
+  cache.insert(pattern.to_string(), rx.clone());
+  Some(rx)
 }
 
 /// Convert a wildcard pattern to a case-insensitive regex string.

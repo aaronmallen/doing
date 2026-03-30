@@ -25,12 +25,12 @@ impl ExportPlugin for CsvExport {
         .map(|d| d.format(CSV_DATE_FORMAT).to_string())
         .unwrap_or_default();
 
-      let title = escape_csv(&entry.full_title());
+      let title = entry.full_title();
 
       let note = if entry.note().is_empty() {
         String::new()
       } else {
-        escape_csv(&entry.note().to_line(" "))
+        entry.note().to_line(" ")
       };
 
       let timer = entry
@@ -38,16 +38,16 @@ impl ExportPlugin for CsvExport {
         .map(|iv| iv.num_seconds().to_string())
         .unwrap_or_default();
 
-      let section = escape_csv(entry.section());
+      let section = entry.section();
 
       out.push_str(&format!(
         "{},{},{},{},{},{}\n",
-        quote_field(&start),
-        quote_field(&end),
-        quote_field(&title),
-        quote_field(&note),
-        quote_field(&timer),
-        quote_field(&section),
+        csv_field(&start),
+        csv_field(&end),
+        csv_field(&title),
+        csv_field(&note),
+        csv_field(&timer),
+        csv_field(section),
       ));
     }
 
@@ -67,30 +67,12 @@ impl Plugin for CsvExport {
   }
 }
 
-/// Escape a value for inclusion in a CSV field.
+/// Format a value as a quoted CSV field.
 ///
-/// Wraps in double quotes if the value contains a comma, double quote, or newline.
-/// Any embedded double quotes are doubled.
-fn escape_csv(value: &str) -> String {
-  if value.contains(',') || value.contains('"') || value.contains('\n') {
-    format!("\"{}\"", value.replace('"', "\"\""))
-  } else {
-    value.to_string()
-  }
-}
-
-/// Quote a CSV field value, ensuring empty fields are represented as `""`.
-///
-/// Non-empty values that are already escaped (contain quotes) are passed through.
-/// Non-empty plain values are wrapped in double quotes. Empty values become `""`.
-fn quote_field(value: &str) -> String {
-  if value.is_empty() {
-    "\"\"".to_string()
-  } else if value.starts_with('"') && value.ends_with('"') {
-    value.to_string()
-  } else {
-    format!("\"{value}\"")
-  }
+/// Always wraps the value in double quotes and doubles any embedded quotes.
+/// Empty values become `""`.
+fn csv_field(value: &str) -> String {
+  format!("\"{}\"", value.replace('"', "\"\""))
 }
 
 #[cfg(test)]
@@ -261,50 +243,39 @@ mod test {
     }
   }
 
-  mod escape_csv {
+  mod csv_field {
     use pretty_assertions::assert_eq;
 
-    use super::super::escape_csv;
-
-    #[test]
-    fn it_returns_plain_value_unchanged() {
-      assert_eq!(escape_csv("hello"), "hello");
-    }
-
-    #[test]
-    fn it_wraps_value_with_comma_in_quotes() {
-      assert_eq!(escape_csv("hello, world"), "\"hello, world\"");
-    }
+    use super::super::csv_field;
 
     #[test]
     fn it_doubles_embedded_quotes() {
-      assert_eq!(escape_csv("say \"hi\""), "\"say \"\"hi\"\"\"");
+      assert_eq!(csv_field("say \"hi\""), "\"say \"\"hi\"\"\"");
     }
 
     #[test]
-    fn it_wraps_value_with_newline_in_quotes() {
-      assert_eq!(escape_csv("line1\nline2"), "\"line1\nline2\"");
+    fn it_handles_value_containing_but_not_wrapped_in_quotes() {
+      assert_eq!(csv_field("a \"b\" c"), "\"a \"\"b\"\" c\"");
     }
-  }
-
-  mod quote_field {
-    use pretty_assertions::assert_eq;
-
-    use super::super::quote_field;
 
     #[test]
     fn it_quotes_empty_value() {
-      assert_eq!(quote_field(""), "\"\"");
-    }
-
-    #[test]
-    fn it_passes_through_already_quoted_value() {
-      assert_eq!(quote_field("\"hello\""), "\"hello\"");
+      assert_eq!(csv_field(""), "\"\"");
     }
 
     #[test]
     fn it_wraps_plain_value_in_quotes() {
-      assert_eq!(quote_field("hello"), "\"hello\"");
+      assert_eq!(csv_field("hello"), "\"hello\"");
+    }
+
+    #[test]
+    fn it_wraps_value_with_comma_in_quotes() {
+      assert_eq!(csv_field("hello, world"), "\"hello, world\"");
+    }
+
+    #[test]
+    fn it_wraps_value_with_newline_in_quotes() {
+      assert_eq!(csv_field("line1\nline2"), "\"line1\nline2\"");
     }
   }
 }

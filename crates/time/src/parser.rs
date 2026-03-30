@@ -75,7 +75,7 @@ fn beginning_of_day(date: NaiveDate) -> DateTime<Local> {
   }
   for hour in 1..=12 {
     if let Some(dt) = Local
-      .from_local_datetime(&date.and_hms_opt(hour, 0, 0).unwrap())
+      .from_local_datetime(&date.and_hms_opt(hour, 0, 0).expect("valid hour 1..=12"))
       .earliest()
     {
       return dt;

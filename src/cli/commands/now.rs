@@ -109,7 +109,7 @@ impl Command {
     ctx
       .document
       .section_by_name_mut(&section_name)
-      .unwrap()
+      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found after creation")))?
       .add_entry(entry);
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;

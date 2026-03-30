@@ -40,7 +40,7 @@ pub fn parse_range(input: &str) -> Result<(DateTime<Local>, DateTime<Local>)> {
     // Normalize reversed ranges before applying end-of-day extension
     let (start, end) = if a > b { (b, a) } else { (a, b) };
     // When end is at midnight (date-only expression), extend to end-of-day to make inclusive
-    let end = if end.time() == NaiveTime::from_hms_opt(0, 0, 0).unwrap() {
+    let end = if end.time() == NaiveTime::MIN {
       end + Duration::days(1)
     } else {
       end
@@ -52,7 +52,7 @@ pub fn parse_range(input: &str) -> Result<(DateTime<Local>, DateTime<Local>)> {
   let parsed = chronify(input)?;
   let naive_date = parsed.date_naive();
   let start = Local
-    .from_local_datetime(&naive_date.and_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap()))
+    .from_local_datetime(&naive_date.and_time(NaiveTime::MIN))
     .single()
     .ok_or_else(|| Error::InvalidTimeExpression(format!("ambiguous local time for: {input:?}")))?;
   let end = start + Duration::days(1);

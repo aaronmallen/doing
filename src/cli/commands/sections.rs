@@ -105,7 +105,10 @@ fn remove_section(name: &str, archive: bool, ctx: &mut AppContext) -> Result<()>
   }
 
   let archived_count = if archive {
-    let section = ctx.document.section_by_name_mut(name).unwrap();
+    let section = ctx
+      .document
+      .section_by_name_mut(name)
+      .ok_or_else(|| Error::Config(format!("section '{name}' not found")))?;
     let entries: Vec<Entry> = section.entries_mut().drain(..).collect();
     let count = entries.len();
 
@@ -113,7 +116,10 @@ fn remove_section(name: &str, archive: bool, ctx: &mut AppContext) -> Result<()>
       if !ctx.document.has_section("Archive") {
         ctx.document.add_section(Section::new("Archive"));
       }
-      let archive_section = ctx.document.section_by_name_mut("Archive").unwrap();
+      let archive_section = ctx
+        .document
+        .section_by_name_mut("Archive")
+        .ok_or_else(|| Error::Config("Archive section not found after creation".to_string()))?;
       for entry in entries {
         archive_section.add_entry(entry);
       }

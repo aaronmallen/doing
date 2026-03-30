@@ -86,7 +86,7 @@ impl Command {
     ctx
       .document
       .section_by_name_mut("Archive")
-      .unwrap()
+      .ok_or_else(|| crate::Error::Config("Archive section not found after creation".to_string()))?
       .add_entry(entry.clone());
 
     if let Some(section) = ctx.document.section_by_name_mut(&section_name) {
@@ -192,7 +192,7 @@ impl Command {
     ctx
       .document
       .section_by_name_mut(target)
-      .unwrap()
+      .ok_or_else(|| crate::Error::Config(format!("section '{target}' not found after creation")))?
       .add_entry(entry.clone());
 
     if section_name != *target

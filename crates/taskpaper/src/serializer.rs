@@ -1,4 +1,4 @@
-use std::{collections::HashSet, sync::LazyLock};
+use std::sync::LazyLock;
 
 use regex::Regex;
 
@@ -11,44 +11,9 @@ static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9
 /// Deduplicates entries by ID and strips any ANSI color codes from the output.
 /// Callers are responsible for sorting entries before calling this function.
 pub fn serialize(doc: &Document) -> String {
-  let mut seen = HashSet::new();
-  let mut out = String::new();
-
-  for line in doc.other_content_top() {
-    out.push_str(line);
-    out.push('\n');
-  }
-
-  for (i, section) in doc.sections().iter().enumerate() {
-    if i > 0 || !doc.other_content_top().is_empty() {
-      out.push('\n');
-    }
-
-    out.push_str(section.title());
-    out.push(':');
-
-    for entry in section.entries() {
-      if !seen.insert(entry.id()) {
-        continue;
-      }
-      out.push_str(&format!("\n\t- {} | {}", entry.date().format("%Y-%m-%d %H:%M"), entry));
-      if !entry.note().is_empty() {
-        out.push_str(&format!("\n{}", entry.note()));
-      }
-    }
-
-    for line in section.trailing_content() {
-      out.push('\n');
-      out.push_str(line);
-    }
-  }
-
-  for line in doc.other_content_bottom() {
-    out.push('\n');
-    out.push_str(line);
-  }
-
-  strip_ansi(&out)
+  let mut doc = doc.clone();
+  doc.dedup();
+  strip_ansi(&doc.to_string())
 }
 
 /// Remove ANSI escape sequences from a string.

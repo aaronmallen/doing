@@ -63,7 +63,7 @@ impl Document {
   pub fn dedup(&mut self) {
     let mut seen = HashSet::new();
     for section in &mut self.sections {
-      section.entries_mut().retain(|e| seen.insert(e.id().to_string()));
+      section.entries_mut().retain(|e| seen.insert(e.id().to_owned()));
     }
   }
 

@@ -207,8 +207,13 @@ impl Tags {
 
 impl Display for Tags {
   fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-    let parts: Vec<String> = self.inner.iter().map(|t| t.to_string()).collect();
-    write!(f, "{}", parts.join(" "))
+    for (i, tag) in self.inner.iter().enumerate() {
+      if i > 0 {
+        write!(f, " ")?;
+      }
+      write!(f, "{tag}")?;
+    }
+    Ok(())
   }
 }
 

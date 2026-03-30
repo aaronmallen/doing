@@ -266,7 +266,7 @@ impl Command {
     if parts.is_empty() {
       Ok(Note::new())
     } else {
-      Ok(Note::from_str(&parts.join("\n")))
+      Ok(Note::from_text(&parts.join("\n")))
     }
   }
 
@@ -350,7 +350,7 @@ mod test {
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
       "Active task",
       Tags::new(),
-      Note::from_str("some notes"),
+      Note::from_text("some notes"),
       "Currently",
       None::<String>,
     ));

@@ -73,14 +73,6 @@ pub struct Tags {
 }
 
 impl Tags {
-  /// Build a tag collection from an iterator of tags.
-  #[allow(clippy::should_implement_trait)]
-  pub fn from_iter(iter: impl IntoIterator<Item = Tag>) -> Self {
-    Self {
-      inner: iter.into_iter().collect(),
-    }
-  }
-
   /// Create an empty tag collection.
   pub fn new() -> Self {
     Self::default()
@@ -217,6 +209,14 @@ impl Display for Tags {
   fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
     let parts: Vec<String> = self.inner.iter().map(|t| t.to_string()).collect();
     write!(f, "{}", parts.join(" "))
+  }
+}
+
+impl FromIterator<Tag> for Tags {
+  fn from_iter<I: IntoIterator<Item = Tag>>(iter: I) -> Self {
+    Self {
+      inner: iter.into_iter().collect(),
+    }
   }
 }
 

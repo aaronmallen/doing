@@ -147,7 +147,7 @@ mod test {
         sample_date(14, 30),
         "Task with notes",
         Tags::new(),
-        Note::from_str("A note line"),
+        Note::from_text("A note line"),
         "Currently",
         Some("aaaabbbbccccddddeeeeffffaaaabbbb"),
       );

@@ -215,7 +215,7 @@ mod test {
   }
 
   fn make_entry_with_note(title: &str, section: &str, date: DateTime<Local>, tags: Tags, note: &str) -> Entry {
-    Entry::new(date, title, tags, Note::from_str(note), section, None::<String>)
+    Entry::new(date, title, tags, Note::from_text(note), section, None::<String>)
   }
 
   mod apply_sort_and_limit {

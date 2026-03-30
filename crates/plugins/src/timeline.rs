@@ -451,7 +451,7 @@ mod test {
         sample_date(14, 0),
         "Task",
         Tags::new(),
-        Note::from_str("Line one\nLine two"),
+        Note::from_text("Line one\nLine two"),
         "Currently",
         None::<String>,
       );

@@ -249,7 +249,7 @@ mod test {
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
       "Active task",
       Tags::new(),
-      Note::from_str("Existing note"),
+      Note::from_text("Existing note"),
       "Currently",
       None::<String>,
     ));

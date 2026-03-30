@@ -139,7 +139,7 @@ mod test {
         date,
         "Working on feature",
         Tags::new(),
-        Note::from_str("A note line"),
+        Note::from_text("A note line"),
         "Currently",
         None::<String>,
       );

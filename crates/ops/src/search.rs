@@ -365,7 +365,7 @@ mod test {
         Local.with_ymd_and_hms(2024, 3, 17, 14, 30, 0).unwrap(),
         "Working on search feature",
         Tags::new(),
-        Note::from_str("Added fuzzy matching\nFixed regex parsing"),
+        Note::from_text("Added fuzzy matching\nFixed regex parsing"),
         "Currently",
         None::<String>,
       )

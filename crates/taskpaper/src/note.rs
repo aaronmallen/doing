@@ -1,4 +1,7 @@
-use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::{
+  fmt::{Display, Formatter, Result as FmtResult},
+  str::FromStr,
+};
 
 /// A multi-line note attached to a TaskPaper entry.
 ///
@@ -18,8 +21,7 @@ impl Note {
   }
 
   /// Create a note by splitting a single string on newlines.
-  #[allow(clippy::should_implement_trait)]
-  pub fn from_str(text: &str) -> Self {
+  pub fn from_text(text: &str) -> Self {
     Self {
       lines: text.lines().map(String::from).collect(),
     }
@@ -104,6 +106,16 @@ impl Display for Note {
   }
 }
 
+impl FromStr for Note {
+  type Err = std::convert::Infallible;
+
+  fn from_str(text: &str) -> std::result::Result<Self, Self::Err> {
+    Ok(Self {
+      lines: text.lines().map(String::from).collect(),
+    })
+  }
+}
+
 #[cfg(test)]
 mod test {
   use super::*;
@@ -163,14 +175,14 @@ mod test {
     }
   }
 
-  mod from_str {
+  mod from_text {
     use pretty_assertions::assert_eq;
 
     use super::*;
 
     #[test]
     fn it_splits_on_newlines() {
-      let note = Note::from_str("line one\nline two\nline three");
+      let note = Note::from_text("line one\nline two\nline three");
 
       assert_eq!(note.lines(), &["line one", "line two", "line three"]);
     }

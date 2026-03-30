@@ -47,7 +47,7 @@ pub fn resolve_title_and_note(
   let note = if parts.is_empty() {
     Note::new()
   } else {
-    Note::from_str(&parts.join("\n"))
+    Note::from_text(&parts.join("\n"))
   };
 
   Ok((title, note))

@@ -97,7 +97,7 @@ fn convert_item(item: &JsonItem, section: &str) -> Option<Entry> {
     .note
     .as_deref()
     .filter(|n| !n.is_empty())
-    .map(Note::from_str)
+    .map(Note::from_text)
     .unwrap_or_default();
 
   Some(Entry::new(date, title, tags, note, section, None::<String>))

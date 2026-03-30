@@ -326,7 +326,7 @@ mod test {
       sample_date(),
       "Working on project",
       Tags::from_iter(vec![Tag::new(name, value)]),
-      Note::from_str("Some notes here"),
+      Note::from_text("Some notes here"),
       "Currently",
       None::<String>,
     )
@@ -337,7 +337,7 @@ mod test {
       sample_date(),
       "Finished task",
       Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 16:00"))]),
-      Note::from_str("Task notes"),
+      Note::from_text("Task notes"),
       "Currently",
       None::<String>,
     )

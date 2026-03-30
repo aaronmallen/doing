@@ -243,7 +243,7 @@ mod test {
         Tag::new("coding", None::<String>),
         Tag::new("done", Some("2024-03-17 15:00")),
       ]),
-      Note::from_str("Some notes here"),
+      Note::from_text("Some notes here"),
       "Currently",
       None::<String>,
     )

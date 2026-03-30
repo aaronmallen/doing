@@ -167,7 +167,7 @@ Archive:
         sample_date(14, 30),
         "Task with notes",
         Tags::new(),
-        Note::from_str("A note line\nAnother note"),
+        Note::from_text("A note line\nAnother note"),
         "Currently",
         Some("aaaabbbbccccddddeeeeffffaaaabbbb"),
       ));

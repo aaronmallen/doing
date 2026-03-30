@@ -92,7 +92,7 @@ fn convert_entry(raw: &TimingEntry) -> Option<Entry> {
   tags.add(Tag::new("done", Some(done_value)));
 
   let note = match raw.notes.as_deref() {
-    Some(text) if !text.is_empty() => Note::from_str(text),
+    Some(text) if !text.is_empty() => Note::from_text(text),
     _ => Note::new(),
   };
 

@@ -69,7 +69,7 @@ fn convert_event(event: &IcsEvent) -> Option<Entry> {
     .description
     .as_deref()
     .filter(|d| !d.is_empty())
-    .map(Note::from_str)
+    .map(Note::from_text)
     .unwrap_or_default();
 
   Some(Entry::new(start, title, tags, note, "Currently", None::<String>))

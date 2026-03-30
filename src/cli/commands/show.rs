@@ -75,8 +75,12 @@ impl Command {
         .with_prompt("Select a section")
         .items(&section_names)
         .default(0)
-        .interact()
+        .interact_opt()
         .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+
+      let Some(selection) = selection else {
+        return Ok(());
+      };
 
       let mut cmd = self.clone();
       cmd.menu = false;

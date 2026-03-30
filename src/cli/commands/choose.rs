@@ -71,7 +71,9 @@ impl Command {
       }
     };
 
-    let action = self.prompt_action()?;
+    let Some(action) = self.prompt_action()? else {
+      return Ok(());
+    };
     self.apply_action(ctx, &selected, &action)
   }
 
@@ -177,8 +179,12 @@ impl Command {
     let selection = dialoguer::Select::new()
       .with_prompt("Move to section")
       .items(&sections)
-      .interact()
+      .interact_opt()
       .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+
+    let Some(selection) = selection else {
+      return Ok(());
+    };
 
     let target = &sections[selection];
 
@@ -309,14 +315,14 @@ impl Command {
     crate::cli::interactive::choose_entry(entries)
   }
 
-  fn prompt_action(&self) -> Result<String> {
+  fn prompt_action(&self) -> Result<Option<String>> {
     let selection = dialoguer::Select::new()
       .with_prompt("Action")
       .items(ACTIONS)
-      .interact()
+      .interact_opt()
       .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
-    Ok(ACTIONS[selection].to_string())
+    Ok(selection.map(|i| ACTIONS[i].to_string()))
   }
 }
 

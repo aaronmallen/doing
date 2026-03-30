@@ -53,7 +53,10 @@ impl Command {
     }
 
     let count = if self.interactive {
-      self.select_backup(target, &ctx.config.backup_dir)?
+      let Some(count) = self.select_backup(target, &ctx.config.backup_dir)? else {
+        return Ok(());
+      };
+      count
     } else {
       self.count
     };
@@ -63,7 +66,7 @@ impl Command {
     Ok(())
   }
 
-  fn select_backup(&self, target: &std::path::Path, backup_dir: &std::path::Path) -> Result<usize> {
+  fn select_backup(&self, target: &std::path::Path, backup_dir: &std::path::Path) -> Result<Option<usize>> {
     let backups = doing_ops::backup::list_backups(target, backup_dir)?;
 
     if backups.is_empty() {
@@ -79,10 +82,10 @@ impl Command {
       .with_prompt("Select a backup to restore")
       .items(&items)
       .default(0)
-      .interact()
+      .interact_opt()
       .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
-    Ok(selection + 1)
+    Ok(selection.map(|s| s + 1))
   }
 }
 

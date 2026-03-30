@@ -34,8 +34,12 @@ pub fn select_entries(entries: &[Entry]) -> Result<Vec<Entry>> {
   let selections = dialoguer::MultiSelect::new()
     .with_prompt("Select entries")
     .items(&items)
-    .interact()
+    .interact_opt()
     .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+
+  let Some(selections) = selections else {
+    return Ok(Vec::new());
+  };
 
   Ok(selections.into_iter().map(|i| entries[i].clone()).collect())
 }

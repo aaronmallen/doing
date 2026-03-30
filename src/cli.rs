@@ -50,11 +50,13 @@ impl AppContext {
       return Ok(true);
     }
 
-    dialoguer::Confirm::new()
+    let result = dialoguer::Confirm::new()
       .with_prompt(format!("Section \"{section_name}\" does not exist. Create it?"))
       .default(true)
-      .interact()
-      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))
+      .interact_opt()
+      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+
+    Ok(result.unwrap_or(false))
   }
 
   /// Ensure a section exists in the document, prompting for confirmation if needed.

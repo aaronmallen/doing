@@ -33,7 +33,10 @@ impl Command {
     let target = self.file.as_deref().unwrap_or(&ctx.doing_file);
 
     let count = if self.interactive {
-      self.select_redo(target, &ctx.config.backup_dir)?
+      let Some(count) = self.select_redo(target, &ctx.config.backup_dir)? else {
+        return Ok(());
+      };
+      count
     } else {
       self.count
     };
@@ -43,7 +46,7 @@ impl Command {
     Ok(())
   }
 
-  fn select_redo(&self, target: &std::path::Path, backup_dir: &std::path::Path) -> Result<usize> {
+  fn select_redo(&self, target: &std::path::Path, backup_dir: &std::path::Path) -> Result<Option<usize>> {
     let backups = doing_ops::backup::list_undone(target, backup_dir)?;
 
     if backups.is_empty() {
@@ -59,9 +62,9 @@ impl Command {
       .with_prompt("Select a redo backup to restore")
       .items(&items)
       .default(0)
-      .interact()
+      .interact_opt()
       .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
 
-    Ok(selection + 1)
+    Ok(selection.map(|s| s + 1))
   }
 }

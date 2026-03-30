@@ -37,8 +37,9 @@ impl Command {
     let confirm = dialoguer::Confirm::new()
       .with_prompt("Do you want to update?")
       .default(true)
-      .interact()
-      .map_err(|e| crate::Error::Config(e.to_string()))?;
+      .interact_opt()
+      .map_err(|e| crate::Error::Config(e.to_string()))?
+      .unwrap_or(false);
 
     if !confirm {
       eprintln!("Update cancelled.");

@@ -173,12 +173,13 @@ impl Command {
             entry.full_title(),
             format_duration(interval)
           );
-          if !dialoguer::Confirm::new()
+          let confirmed = dialoguer::Confirm::new()
             .with_prompt(prompt)
             .default(false)
-            .interact()
+            .interact_opt()
             .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?
-          {
+            .unwrap_or(false);
+          if !confirmed {
             continue;
           }
         }

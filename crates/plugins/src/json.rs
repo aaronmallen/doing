@@ -68,7 +68,7 @@ impl JsonItem {
 
     let done = entry.finished();
 
-    let timer_end = entry.end_date().map(|d| d.format(JSON_DATE_FORMAT).to_string());
+    let timer_end = end_date.clone();
     let timers = vec![JsonTimer {
       end: timer_end,
       start: entry.date().format(JSON_DATE_FORMAT).to_string(),

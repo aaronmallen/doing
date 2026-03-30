@@ -92,14 +92,17 @@ pub fn discover_global_config() -> Option<PathBuf> {
 /// can be merged in precedence order -- each successive file overrides the
 /// previous.
 pub fn discover_local_configs(start_dir: &Path) -> Vec<PathBuf> {
-  let global = discover_global_config();
+  discover_local_configs_with_global(start_dir, discover_global_config().as_deref())
+}
+
+pub fn discover_local_configs_with_global(start_dir: &Path, global: Option<&Path>) -> Vec<PathBuf> {
   let mut configs = Vec::new();
   let mut dir = start_dir.to_path_buf();
 
   loop {
     let candidate = dir.join(".doingrc");
     if candidate.exists() {
-      let dominated_by_global = global.as_ref().is_some_and(|g| *g == candidate);
+      let dominated_by_global = global.is_some_and(|g| g == candidate);
       if !dominated_by_global {
         configs.push(candidate);
       }

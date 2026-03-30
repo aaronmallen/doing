@@ -165,12 +165,13 @@ impl Config {
 
   /// Load configuration using a specific directory for local config discovery.
   pub fn load_from(start_dir: &std::path::Path) -> Result<Self> {
-    let mut merged = match loader::discover_global_config() {
-      Some(path) => loader::parse_file(&path)?,
+    let global_config = loader::discover_global_config();
+    let mut merged = match &global_config {
+      Some(path) => loader::parse_file(path)?,
       None => Value::Object(serde_json::Map::new()),
     };
 
-    for local_path in loader::discover_local_configs(start_dir) {
+    for local_path in loader::discover_local_configs_with_global(start_dir, global_config.as_deref()) {
       let local = loader::parse_file(&local_path)?;
       merged = loader::deep_merge(&merged, &local);
     }

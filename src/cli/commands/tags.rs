@@ -207,7 +207,10 @@ mod test {
     for name in tag_names {
       tags.add(Tag::new(*name, None::<String>));
     }
-    tags.add(Tag::new("done", Some(now.format("%Y-%m-%d %H:%M").to_string())));
+    tags.add(Tag::new(
+      "done",
+      Some(now.format(crate::cli::DONE_DATE_FORMAT).to_string()),
+    ));
     Entry::new(start, title, tags, Note::new(), "Currently", None::<String>)
   }
 

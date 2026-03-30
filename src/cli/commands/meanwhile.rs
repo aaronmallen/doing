@@ -163,7 +163,7 @@ fn finish_meanwhile_entries(
       }
 
       let done_value = if entry.should_time(never_time) {
-        Some(done_date.format("%Y-%m-%d %H:%M").to_string())
+        Some(done_date.format(crate::cli::DONE_DATE_FORMAT).to_string())
       } else {
         None
       };

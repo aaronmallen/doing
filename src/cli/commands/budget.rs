@@ -204,7 +204,10 @@ mod test {
     let start = now - Duration::hours(2);
     let mut tags = Tags::new();
     tags.add(Tag::new("dev", None::<String>));
-    tags.add(Tag::new("done", Some(now.format("%Y-%m-%d %H:%M").to_string())));
+    tags.add(Tag::new(
+      "done",
+      Some(now.format(crate::cli::DONE_DATE_FORMAT).to_string()),
+    ));
 
     let mut doc = Document::new();
     let mut section = Section::new("Currently");

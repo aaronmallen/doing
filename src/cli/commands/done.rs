@@ -110,7 +110,7 @@ impl Command {
 
     if entry.should_finish(&ctx.config.never_finish) {
       let done_value = if include_date && entry.should_time(&ctx.config.never_time) {
-        Some(finish_date.format("%Y-%m-%d %H:%M").to_string())
+        Some(finish_date.format(crate::cli::DONE_DATE_FORMAT).to_string())
       } else {
         None
       };
@@ -238,7 +238,7 @@ impl Command {
 
     if last.should_finish(&ctx.config.never_finish) {
       let done_value = if include_date && last.should_time(&ctx.config.never_time) {
-        Some(finish_date.format("%Y-%m-%d %H:%M").to_string())
+        Some(finish_date.format(crate::cli::DONE_DATE_FORMAT).to_string())
       } else {
         None
       };

@@ -91,7 +91,7 @@ impl Command {
 
     // Add @done tag when --from specifies a range or single time
     if let Some(done) = done_date {
-      let done_value = done.format("%Y-%m-%d %H:%M").to_string();
+      let done_value = done.format(crate::cli::DONE_DATE_FORMAT).to_string();
       entry.tags_mut().add(Tag::new("done", Some(done_value)));
     }
 
@@ -172,7 +172,7 @@ fn finish_last_entry(
   }
 
   let done_value = if last.should_time(never_time) {
-    Some(done_date.format("%Y-%m-%d %H:%M").to_string())
+    Some(done_date.format(crate::cli::DONE_DATE_FORMAT).to_string())
   } else {
     None
   };

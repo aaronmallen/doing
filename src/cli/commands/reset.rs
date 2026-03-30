@@ -96,7 +96,7 @@ impl Command {
     entry.set_date(new_date);
 
     if let Some(done) = done_date {
-      let done_value = done.format("%Y-%m-%d %H:%M").to_string();
+      let done_value = done.format(crate::cli::DONE_DATE_FORMAT).to_string();
       entry.tags_mut().remove("done");
       entry.tags_mut().add(Tag::new("done", Some(done_value)));
     } else if self.resume && !self.no_resume {

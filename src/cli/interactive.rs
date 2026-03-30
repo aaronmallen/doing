@@ -89,7 +89,7 @@ fn choose_fzf(entries: &[Entry]) -> Result<Option<Entry>> {
 }
 
 fn format_entry(entry: &Entry) -> String {
-  let date = entry.date().format("%Y-%m-%d %H:%M");
+  let date = entry.date().format(crate::cli::DONE_DATE_FORMAT);
   format!("{date} | {}", entry.full_title())
 }
 

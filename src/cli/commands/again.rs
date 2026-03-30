@@ -128,7 +128,7 @@ impl Command {
     let display_title = entry.full_title();
 
     // Mark the source entry as @done
-    let done_value = Some(date.format("%Y-%m-%d %H:%M").to_string());
+    let done_value = Some(date.format(crate::cli::DONE_DATE_FORMAT).to_string());
     let section = ctx
       .document
       .section_by_name_mut(&source_section)

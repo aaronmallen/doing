@@ -181,11 +181,7 @@ impl Command {
   }
 
   fn resolve_tag_value(&self) -> Option<String> {
-    if self.date {
-      Some(chrono::Local::now().format("%Y-%m-%d %H:%M").to_string())
-    } else {
-      self.value.clone()
-    }
+    crate::cli::resolve_tag_value(self.date, &self.value)
   }
 }
 

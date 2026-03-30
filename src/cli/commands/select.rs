@@ -310,7 +310,7 @@ impl Command {
         && e.should_finish(&ctx.config.never_finish)
       {
         let done_value = if e.should_time(&ctx.config.never_time) {
-          Some(now.format("%Y-%m-%d %H:%M").to_string())
+          Some(now.format(crate::cli::DONE_DATE_FORMAT).to_string())
         } else {
           None
         };
@@ -566,7 +566,7 @@ impl Command {
     let items: Vec<String> = entries
       .iter()
       .map(|e| {
-        let date = e.date().format("%Y-%m-%d %H:%M");
+        let date = e.date().format(crate::cli::DONE_DATE_FORMAT);
         let tags = if e.tags().is_empty() {
           String::new()
         } else {

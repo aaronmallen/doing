@@ -16,6 +16,21 @@ use yansi::Condition;
 
 use crate::Result;
 
+/// The date-time format string used for `@done` tag values throughout the CLI.
+pub const DONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M";
+
+/// Resolve a tag value from `--date` and `--value` flags.
+///
+/// When `date` is `true`, returns the current local time formatted with
+/// [`DONE_DATE_FORMAT`]. Otherwise returns `value` as-is.
+pub fn resolve_tag_value(date: bool, value: &Option<String>) -> Option<String> {
+  if date {
+    Some(chrono::Local::now().format(DONE_DATE_FORMAT).to_string())
+  } else {
+    value.clone()
+  }
+}
+
 /// Shared application context passed to all command handlers.
 #[allow(dead_code)]
 pub struct AppContext {

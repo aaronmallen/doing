@@ -1,4 +1,4 @@
-use chrono::{Local, NaiveTime};
+use chrono::{DateTime, Local, NaiveTime};
 use clap::Args;
 use doing_config::SortOrder;
 use doing_ops::filter::filter_entries;
@@ -39,41 +39,57 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self.filter.section.as_deref().unwrap_or("all");
-
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
-
-    let mut options = self
-      .filter
-      .clone()
-      .into_filter_options(&ctx.config, ctx.include_notes)?;
-    options.section = Some(section_name.to_string());
-
-    if options.after.is_none() {
-      let today = Local::now().date_naive();
-      options.after = today.and_time(NaiveTime::MIN).and_local_timezone(Local).earliest();
-    }
-
-    let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));
-    options.sort = sort_order;
-
-    let filtered = filter_entries(all_entries, &options);
-
-    let output = self
-      .display
-      .render_entries(&filtered, &ctx.config, "today", ctx.include_notes)?;
-
-    if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-    }
-
-    Ok(())
+    let today = Local::now().date_naive();
+    let after = today.and_time(NaiveTime::MIN).and_local_timezone(Local).earliest();
+    display_date_range(&self.filter, &self.display, ctx, self.pager, after, None, "today")
   }
+}
+
+/// Shared implementation for date-range display commands (today, yesterday).
+///
+/// Sets the `after` and `before` bounds on the filter options (only when the
+/// caller hasn't already specified them via flags), then filters, renders,
+/// and pages the output.
+pub fn display_date_range(
+  filter: &FilterArgs,
+  display: &DisplayArgs,
+  ctx: &mut AppContext,
+  use_pager: bool,
+  default_after: Option<DateTime<Local>>,
+  default_before: Option<DateTime<Local>>,
+  label: &str,
+) -> Result<()> {
+  let section_name = filter.section.as_deref().unwrap_or("all");
+
+  let all_entries: Vec<_> = ctx
+    .document
+    .entries_in_section(section_name)
+    .into_iter()
+    .cloned()
+    .collect();
+
+  let mut options = filter.clone().into_filter_options(&ctx.config, ctx.include_notes)?;
+  options.section = Some(section_name.to_string());
+
+  if options.after.is_none() {
+    options.after = default_after;
+  }
+  if options.before.is_none() {
+    options.before = default_before;
+  }
+
+  let sort_order = display.sort.map(SortOrder::from).or(Some(ctx.config.order));
+  options.sort = sort_order;
+
+  let filtered = filter_entries(all_entries, &options);
+
+  let output = display.render_entries(&filtered, &ctx.config, label, ctx.include_notes)?;
+
+  if !output.is_empty() {
+    pager::output(&output, &ctx.config, use_pager || ctx.use_pager)?;
+  }
+
+  Ok(())
 }
 
 #[cfg(test)]

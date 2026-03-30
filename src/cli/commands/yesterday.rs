@@ -1,14 +1,11 @@
 use chrono::{Duration, Local, NaiveTime};
 use clap::Args;
-use doing_config::SortOrder;
-use doing_ops::filter::filter_entries;
 
 use crate::{
   Result,
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
-    pager,
   },
 };
 
@@ -39,45 +36,12 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self.filter.section.as_deref().unwrap_or("all");
-
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
-
-    let mut options = self
-      .filter
-      .clone()
-      .into_filter_options(&ctx.config, ctx.include_notes)?;
-    options.section = Some(section_name.to_string());
-
     let yesterday = (Local::now() - Duration::days(1)).date_naive();
-    if options.after.is_none() {
-      options.after = yesterday.and_time(NaiveTime::MIN).and_local_timezone(Local).earliest();
-    }
-    if options.before.is_none() {
-      options.before = yesterday
-        .and_hms_opt(23, 59, 59)
-        .and_then(|dt| dt.and_local_timezone(Local).latest());
-    }
-
-    let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));
-    options.sort = sort_order;
-
-    let filtered = filter_entries(all_entries, &options);
-
-    let output = self
-      .display
-      .render_entries(&filtered, &ctx.config, "yesterday", ctx.include_notes)?;
-
-    if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-    }
-
-    Ok(())
+    let after = yesterday.and_time(NaiveTime::MIN).and_local_timezone(Local).earliest();
+    let before = yesterday
+      .and_hms_opt(23, 59, 59)
+      .and_then(|dt| dt.and_local_timezone(Local).latest());
+    super::today::display_date_range(&self.filter, &self.display, ctx, self.pager, after, before, "yesterday")
   }
 }
 

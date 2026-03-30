@@ -39,6 +39,7 @@ impl Plugin for CalendarImport {
 }
 
 /// A parsed VEVENT from an ICS file.
+#[derive(Default)]
 struct IcsEvent {
   description: Option<String>,
   dtend: Option<String>,
@@ -89,38 +90,17 @@ fn extract_tzid(params: &str) -> Option<String> {
 fn parse_ics(content: &str) -> Vec<IcsEvent> {
   let mut events = Vec::new();
   let mut in_event = false;
-  let mut current = IcsEvent {
-    description: None,
-    dtend: None,
-    dtend_tzid: None,
-    dtstart: None,
-    dtstart_tzid: None,
-    summary: None,
-  };
+  let mut current = IcsEvent::default();
 
   for line in unfold_lines(content) {
     let line = line.as_str();
     if line == "BEGIN:VEVENT" {
       in_event = true;
-      current = IcsEvent {
-        description: None,
-        dtend: None,
-        dtend_tzid: None,
-        dtstart: None,
-        dtstart_tzid: None,
-        summary: None,
-      };
+      current = IcsEvent::default();
     } else if line == "END:VEVENT" {
       if in_event {
         events.push(current);
-        current = IcsEvent {
-          description: None,
-          dtend: None,
-          dtend_tzid: None,
-          dtstart: None,
-          dtstart_tzid: None,
-          summary: None,
-        };
+        current = IcsEvent::default();
       }
       in_event = false;
     } else if in_event {

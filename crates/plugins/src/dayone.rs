@@ -122,6 +122,13 @@ fn earliest_date(entries: &[&Entry]) -> String {
     .to_string()
 }
 
+/// Append note lines from an entry to a text buffer, each indented and newline-terminated.
+fn render_note_lines(entry: &Entry, indent: &str, text: &mut String) {
+  for line in entry.note().lines().iter() {
+    text.push_str(&format!("{indent}{}\n", line.trim()));
+  }
+}
+
 /// Group entries by their date (day portion).
 fn group_by_day(entries: &[Entry]) -> Vec<(String, Vec<&Entry>)> {
   let mut groups: BTreeMap<String, Vec<&Entry>> = BTreeMap::new();
@@ -145,15 +152,10 @@ fn render_day_entry(day: &str, entries: &[&Entry], config: &Config) -> DayoneEnt
     }
 
     text.push('\n');
-
-    if !entry.note().is_empty() {
-      for line in entry.note().lines().iter() {
-        text.push_str(&format!("  {}\n", line.trim()));
-      }
-    }
+    render_note_lines(entry, "  ", &mut text);
 
     for tag in entry.tags().iter() {
-      if tag.name() != "done" && !all_tags.contains(&tag.name().to_string()) {
+      if tag.name() != "done" && !all_tags.iter().any(|t| t.eq_ignore_ascii_case(tag.name())) {
         all_tags.push(tag.name().to_string());
       }
     }
@@ -180,9 +182,7 @@ fn render_single_entry(entry: &Entry, config: &Config) -> DayoneEntry {
 
   if !entry.note().is_empty() {
     text.push('\n');
-    for line in entry.note().lines().iter() {
-      text.push_str(&format!("{}\n", line.trim()));
-    }
+    render_note_lines(entry, "", &mut text);
   }
 
   let tags: Vec<String> = entry

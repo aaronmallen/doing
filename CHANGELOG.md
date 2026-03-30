@@ -7,6 +7,13 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.9] - 2026-03-31
+
+### Changed
+
+- Template parsing and wildcard regex results are now cached, avoiding redundant work per entry (see [#324])
+- Reduced heap allocations and redundant computation in search matching, tag display, config loading, and JSON export (see [#378], [#380], [#381])
+
 ## [v0.1.8] - 2026-03-30
 
 ### Added
@@ -504,6 +511,7 @@ Initial alpha release
 [#320]: https://github.com/aaronmallen/doing/issues/320
 [#321]: https://github.com/aaronmallen/doing/issues/321
 [#322]: https://github.com/aaronmallen/doing/issues/322
+[#324]: https://github.com/aaronmallen/doing/issues/324
 [#325]: https://github.com/aaronmallen/doing/issues/325
 [#326]: https://github.com/aaronmallen/doing/issues/326
 [#327]: https://github.com/aaronmallen/doing/issues/327
@@ -539,10 +547,13 @@ Initial alpha release
 [#382]: https://github.com/aaronmallen/doing/issues/382
 [#384]: https://github.com/aaronmallen/doing/issues/384
 [#385]: https://github.com/aaronmallen/doing/issues/385
+[#378]: https://github.com/aaronmallen/doing/issues/378
+[#380]: https://github.com/aaronmallen/doing/issues/380
+[#381]: https://github.com/aaronmallen/doing/issues/381
 [#386]: https://github.com/aaronmallen/doing/issues/386
 [#390]: https://github.com/aaronmallen/doing/issues/390
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.8...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.9...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -558,3 +569,4 @@ Initial alpha release
 [v0.1.6]: https://github.com/aaronmallen/doing/compare/0.1.5...0.1.6
 [v0.1.7]: https://github.com/aaronmallen/doing/compare/0.1.6...0.1.7
 [v0.1.8]: https://github.com/aaronmallen/doing/compare/0.1.7...0.1.8
+[v0.1.9]: https://github.com/aaronmallen/doing/compare/0.1.8...0.1.9

@@ -7,6 +7,25 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.8] - 2026-03-30
+
+### Added
+
+- Ctrl-C during interactive prompts now cancels cleanly instead of producing an error (see [#323])
+
+### Changed
+
+- **Breaking:** `Note::from_str` renamed to `Note::from_text` in the `doing-taskpaper` crate; `FromStr`
+  trait is now implemented for `Note` and `FromIterator<Tag>` for `Tags` (see [#384])
+- **Breaking:** `backup_prefix` now returns `Result<String>` instead of `String` in the `doing-ops`
+  crate, and `redo` with count 0 now returns an error matching `undo` behavior (see [#386])
+
+### Fixed
+
+- `update` command downloads the binary archive instead of the checksum file (see [#390])
+- CSV export correctly escapes values containing embedded quotes (see [#385])
+- Several commands no longer panic on edge cases due to unchecked `unwrap()` calls (see [#382])
+
 ## [v0.1.7] - 2026-03-30
 
 ### Changed
@@ -515,9 +534,15 @@ Initial alpha release
 [#356]: https://github.com/aaronmallen/doing/issues/356
 [#357]: https://github.com/aaronmallen/doing/issues/357
 [#358]: https://github.com/aaronmallen/doing/issues/358
+[#323]: https://github.com/aaronmallen/doing/issues/323
 [#361]: https://github.com/aaronmallen/doing/issues/361
+[#382]: https://github.com/aaronmallen/doing/issues/382
+[#384]: https://github.com/aaronmallen/doing/issues/384
+[#385]: https://github.com/aaronmallen/doing/issues/385
+[#386]: https://github.com/aaronmallen/doing/issues/386
+[#390]: https://github.com/aaronmallen/doing/issues/390
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.7...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.8...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -532,3 +557,4 @@ Initial alpha release
 [v0.1.5]: https://github.com/aaronmallen/doing/compare/0.1.4...0.1.5
 [v0.1.6]: https://github.com/aaronmallen/doing/compare/0.1.5...0.1.6
 [v0.1.7]: https://github.com/aaronmallen/doing/compare/0.1.6...0.1.7
+[v0.1.8]: https://github.com/aaronmallen/doing/compare/0.1.7...0.1.8

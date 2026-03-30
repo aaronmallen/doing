@@ -8,6 +8,11 @@ use log::warn;
 
 use crate::Result;
 
+/// Convert a dialoguer error into a doing `Error`.
+pub fn dialoguer_error(e: impl std::fmt::Display) -> crate::Error {
+  crate::Error::Io(std::io::Error::other(format!("input error: {e}")))
+}
+
 /// Choose a single entry from a list using fzf (if available) or a dialoguer fallback.
 pub fn choose_entry(entries: &[Entry]) -> Result<Option<Entry>> {
   if has_fzf() {
@@ -35,7 +40,7 @@ pub fn select_entries(entries: &[Entry]) -> Result<Vec<Entry>> {
     .with_prompt("Select entries")
     .items(&items)
     .interact_opt()
-    .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+    .map_err(dialoguer_error)?;
 
   let Some(selections) = selections else {
     return Ok(Vec::new());
@@ -51,7 +56,7 @@ fn choose_dialoguer(entries: &[Entry]) -> Result<Option<Entry>> {
     .with_prompt("Choose an entry")
     .items(&items)
     .interact_opt()
-    .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+    .map_err(dialoguer_error)?;
 
   Ok(selection.map(|i| entries[i].clone()))
 }

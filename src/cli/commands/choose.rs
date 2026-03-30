@@ -180,7 +180,7 @@ impl Command {
       .with_prompt("Move to section")
       .items(&sections)
       .interact_opt()
-      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(crate::cli::interactive::dialoguer_error)?;
 
     let Some(selection) = selection else {
       return Ok(());
@@ -240,7 +240,7 @@ impl Command {
     let input: String = dialoguer::Input::new()
       .with_prompt("Tags (comma-separated)")
       .interact_text()
-      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(crate::cli::interactive::dialoguer_error)?;
 
     let tag_names: Vec<&str> = input.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
 
@@ -320,7 +320,7 @@ impl Command {
       .with_prompt("Action")
       .items(ACTIONS)
       .interact_opt()
-      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(crate::cli::interactive::dialoguer_error)?;
 
     Ok(selection.map(|i| ACTIONS[i].to_string()))
   }

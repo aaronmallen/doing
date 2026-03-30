@@ -177,7 +177,7 @@ impl Command {
             .with_prompt(prompt)
             .default(false)
             .interact_opt()
-            .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?
+            .map_err(crate::cli::interactive::dialoguer_error)?
             .unwrap_or(false);
           if !confirmed {
             continue;

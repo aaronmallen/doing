@@ -110,7 +110,7 @@ impl Command {
         .with_prompt("Add a note")
         .allow_empty(true)
         .interact_text()
-        .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+        .map_err(crate::cli::interactive::dialoguer_error)?;
       if !input.is_empty() {
         lines.push(input);
       }

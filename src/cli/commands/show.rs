@@ -76,7 +76,7 @@ impl Command {
         .items(&section_names)
         .default(0)
         .interact_opt()
-        .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+        .map_err(crate::cli::interactive::dialoguer_error)?;
 
       let Some(selection) = selection else {
         return Ok(());

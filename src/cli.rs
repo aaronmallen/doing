@@ -54,7 +54,7 @@ impl AppContext {
       .with_prompt(format!("Section \"{section_name}\" does not exist. Create it?"))
       .default(true)
       .interact_opt()
-      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(crate::cli::interactive::dialoguer_error)?;
 
     Ok(result.unwrap_or(false))
   }

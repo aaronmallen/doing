@@ -593,7 +593,7 @@ impl Command {
       .with_prompt("Select entries")
       .items(&items)
       .interact_opt()
-      .map_err(|e| crate::Error::Io(std::io::Error::other(format!("input error: {e}"))))?;
+      .map_err(crate::cli::interactive::dialoguer_error)?;
 
     let Some(selections) = selections else {
       return Ok(Vec::new());

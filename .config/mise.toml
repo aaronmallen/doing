@@ -16,6 +16,7 @@ depends = ["lint:**"]
 
 [tools]
 actionlint = "latest"
+bun = "latest"
 "cargo:cargo-audit" = "latest"
 "cargo:cargo-llvm-cov" = "latest"
 "cargo:cargo-nextest" = "latest"

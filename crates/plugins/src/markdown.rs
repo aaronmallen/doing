@@ -66,67 +66,10 @@ impl Plugin for MarkdownExport {
 
 #[cfg(test)]
 mod test {
-  use chrono::{Local, TimeZone};
   use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-
-  fn sample_date(hour: u32, minute: u32) -> chrono::DateTime<Local> {
-    Local.with_ymd_and_hms(2024, 3, 17, hour, minute, 0).unwrap()
-  }
-
-  fn sample_options() -> RenderOptions {
-    RenderOptions {
-      date_format: "%Y-%m-%d %H:%M".into(),
-      include_notes: true,
-      template: String::new(),
-      wrap_width: 0,
-    }
-  }
-
-  mod group_by_section {
-    use pretty_assertions::assert_eq;
-
-    use super::*;
-
-    #[test]
-    fn it_groups_entries_by_section() {
-      let entries = vec![
-        Entry::new(
-          sample_date(14, 0),
-          "A",
-          Tags::new(),
-          Note::new(),
-          "Currently",
-          None::<String>,
-        ),
-        Entry::new(
-          sample_date(15, 0),
-          "B",
-          Tags::new(),
-          Note::new(),
-          "Archive",
-          None::<String>,
-        ),
-        Entry::new(
-          sample_date(16, 0),
-          "C",
-          Tags::new(),
-          Note::new(),
-          "Currently",
-          None::<String>,
-        ),
-      ];
-
-      let groups = crate::helpers::group_by_section(&entries);
-
-      assert_eq!(groups.len(), 2);
-      assert_eq!(groups[0].0, "Currently");
-      assert_eq!(groups[0].1.len(), 2);
-      assert_eq!(groups[1].0, "Archive");
-      assert_eq!(groups[1].1.len(), 1);
-    }
-  }
+  use crate::test_helpers::{sample_date, sample_options};
 
   mod markdown_export_name {
     use pretty_assertions::assert_eq;
@@ -159,7 +102,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Task",
         Tags::new(),
         Note::new(),
@@ -177,7 +120,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Completed task",
         Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
         Note::new(),
@@ -199,7 +142,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "In progress",
         Tags::new(),
         Note::new(),
@@ -218,7 +161,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(9, 1),
+        sample_date(17, 9, 1),
         "Morning task",
         Tags::new(),
         Note::new(),
@@ -237,7 +180,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Working",
         Tags::from_iter(vec![
           Tag::new("coding", None::<String>),
@@ -258,7 +201,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Task",
         Tags::new(),
         Note::from_text("Note line 1\nNote line 2"),
@@ -278,7 +221,7 @@ mod test {
       let options = sample_options();
       let entries = vec![
         Entry::new(
-          sample_date(14, 0),
+          sample_date(17, 14, 0),
           "A",
           Tags::new(),
           Note::new(),
@@ -286,7 +229,7 @@ mod test {
           None::<String>,
         ),
         Entry::new(
-          sample_date(15, 0),
+          sample_date(17, 15, 0),
           "B",
           Tags::new(),
           Note::new(),
@@ -306,7 +249,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Working on project",
         Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
         Note::new(),

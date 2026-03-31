@@ -201,23 +201,10 @@ fn render_single_entry(entry: &Entry, config: &Config) -> DayoneEntry {
 
 #[cfg(test)]
 mod test {
-  use chrono::{Local, TimeZone};
   use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-
-  fn sample_date(day: u32, hour: u32, minute: u32) -> chrono::DateTime<Local> {
-    Local.with_ymd_and_hms(2024, 3, day, hour, minute, 0).unwrap()
-  }
-
-  fn sample_options() -> RenderOptions {
-    RenderOptions {
-      date_format: "%Y-%m-%d %H:%M".into(),
-      include_notes: true,
-      template: String::new(),
-      wrap_width: 0,
-    }
-  }
+  use crate::test_helpers::{sample_date, sample_options};
 
   mod dayone_entries_export_name {
     use pretty_assertions::assert_eq;

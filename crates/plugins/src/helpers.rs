@@ -38,3 +38,82 @@ pub fn note_to_html_list(entry: &Entry, css_class: &str, escape: fn(&str) -> Str
 
   format!(r#"<ul class="{css_class}">{}</ul>"#, items.join(""))
 }
+
+#[cfg(test)]
+mod test {
+  use doing_taskpaper::{Entry, Note, Tags};
+
+  use super::*;
+  use crate::test_helpers::sample_date;
+
+  mod group_by_section {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_groups_entries_by_section() {
+      let entries = vec![
+        Entry::new(
+          sample_date(17, 14, 0),
+          "A",
+          Tags::new(),
+          Note::new(),
+          "Currently",
+          None::<String>,
+        ),
+        Entry::new(
+          sample_date(17, 15, 0),
+          "B",
+          Tags::new(),
+          Note::new(),
+          "Archive",
+          None::<String>,
+        ),
+        Entry::new(
+          sample_date(17, 16, 0),
+          "C",
+          Tags::new(),
+          Note::new(),
+          "Currently",
+          None::<String>,
+        ),
+      ];
+
+      let groups = group_by_section(&entries);
+
+      assert_eq!(groups.len(), 2);
+      assert_eq!(groups[0].0, "Currently");
+      assert_eq!(groups[0].1.len(), 2);
+      assert_eq!(groups[1].0, "Archive");
+      assert_eq!(groups[1].1.len(), 1);
+    }
+
+    #[test]
+    fn it_preserves_first_seen_order() {
+      let entries = vec![
+        Entry::new(
+          sample_date(17, 14, 0),
+          "A",
+          Tags::new(),
+          Note::new(),
+          "Archive",
+          None::<String>,
+        ),
+        Entry::new(
+          sample_date(17, 15, 0),
+          "B",
+          Tags::new(),
+          Note::new(),
+          "Currently",
+          None::<String>,
+        ),
+      ];
+
+      let groups = group_by_section(&entries);
+
+      assert_eq!(groups[0].0, "Archive");
+      assert_eq!(groups[1].0, "Currently");
+    }
+  }
+}

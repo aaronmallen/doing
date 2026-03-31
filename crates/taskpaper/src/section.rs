@@ -154,7 +154,6 @@ mod test {
 
   mod is_empty {
     use chrono::Local;
-    use pretty_assertions::assert_eq;
 
     use super::*;
     use crate::{Note, Tags};
@@ -163,7 +162,7 @@ mod test {
     fn it_returns_true_when_empty() {
       let section = Section::new("Currently");
 
-      assert_eq!(section.is_empty(), true);
+      assert!(section.is_empty());
     }
 
     #[test]
@@ -178,7 +177,7 @@ mod test {
         None::<String>,
       ));
 
-      assert_eq!(section.is_empty(), false);
+      assert!(!section.is_empty());
     }
   }
 

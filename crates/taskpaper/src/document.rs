@@ -414,8 +414,6 @@ mod test {
   }
 
   mod has_section {
-    use pretty_assertions::assert_eq;
-
     use super::*;
 
     #[test]
@@ -423,15 +421,15 @@ mod test {
       let mut doc = Document::new();
       doc.add_section(Section::new("Currently"));
 
-      assert_eq!(doc.has_section("currently"), true);
-      assert_eq!(doc.has_section("CURRENTLY"), true);
+      assert!(doc.has_section("currently"));
+      assert!(doc.has_section("CURRENTLY"));
     }
 
     #[test]
     fn it_returns_false_for_missing_section() {
       let doc = Document::new();
 
-      assert_eq!(doc.has_section("Currently"), false);
+      assert!(!doc.has_section("Currently"));
     }
   }
 

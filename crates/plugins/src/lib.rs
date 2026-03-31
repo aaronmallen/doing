@@ -154,6 +154,25 @@ fn normalize_trigger(trigger: &str) -> String {
 }
 
 #[cfg(test)]
+pub(crate) mod test_helpers {
+  use chrono::{Local, TimeZone};
+  use doing_template::renderer::RenderOptions;
+
+  pub fn sample_date(day: u32, hour: u32, minute: u32) -> chrono::DateTime<Local> {
+    Local.with_ymd_and_hms(2024, 3, day, hour, minute, 0).unwrap()
+  }
+
+  pub fn sample_options() -> RenderOptions {
+    RenderOptions {
+      date_format: "%Y-%m-%d %H:%M".into(),
+      include_notes: true,
+      template: String::new(),
+      wrap_width: 0,
+    }
+  }
+}
+
+#[cfg(test)]
 mod test {
   use super::*;
 

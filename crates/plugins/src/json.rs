@@ -110,26 +110,13 @@ struct JsonTimer {
 
 #[cfg(test)]
 mod test {
-  use chrono::{Local, TimeZone};
   use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-
-  fn sample_date(hour: u32, minute: u32) -> chrono::DateTime<Local> {
-    Local.with_ymd_and_hms(2024, 3, 17, hour, minute, 0).unwrap()
-  }
-
-  fn sample_options() -> RenderOptions {
-    RenderOptions {
-      date_format: "%Y-%m-%d %H:%M".into(),
-      include_notes: true,
-      template: String::new(),
-      wrap_width: 0,
-    }
-  }
+  use crate::test_helpers::{sample_date, sample_options};
 
   fn expected_date(hour: u32, minute: u32) -> String {
-    sample_date(hour, minute).format(JSON_DATE_FORMAT).to_string()
+    sample_date(17, hour, minute).format(JSON_DATE_FORMAT).to_string()
   }
 
   mod json_export_name {
@@ -164,7 +151,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Working on project",
         Tags::from_iter(vec![
           Tag::new("coding", None::<String>),
@@ -209,7 +196,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "In progress",
         Tags::new(),
         Note::new(),
@@ -232,7 +219,7 @@ mod test {
       let options = sample_options();
       let entries = vec![
         Entry::new(
-          sample_date(14, 0),
+          sample_date(17, 14, 0),
           "Task A",
           Tags::new(),
           Note::new(),
@@ -240,7 +227,7 @@ mod test {
           None::<String>,
         ),
         Entry::new(
-          sample_date(13, 0),
+          sample_date(17, 13, 0),
           "Task B",
           Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 14:00"))]),
           Note::new(),
@@ -248,7 +235,7 @@ mod test {
           None::<String>,
         ),
         Entry::new(
-          sample_date(15, 0),
+          sample_date(17, 15, 0),
           "Task C",
           Tags::new(),
           Note::new(),
@@ -275,7 +262,7 @@ mod test {
       let options = sample_options();
       let entries = vec![
         Entry::new(
-          sample_date(14, 0),
+          sample_date(17, 14, 0),
           "Z task",
           Tags::new(),
           Note::new(),
@@ -283,7 +270,7 @@ mod test {
           None::<String>,
         ),
         Entry::new(
-          sample_date(13, 0),
+          sample_date(17, 13, 0),
           "A task",
           Tags::new(),
           Note::new(),
@@ -291,7 +278,7 @@ mod test {
           None::<String>,
         ),
         Entry::new(
-          sample_date(12, 0),
+          sample_date(17, 12, 0),
           "M task",
           Tags::new(),
           Note::new(),
@@ -315,7 +302,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Task with \"quotes\" and, commas",
         Tags::new(),
         Note::new(),

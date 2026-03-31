@@ -77,23 +77,10 @@ fn csv_field(value: &str) -> String {
 
 #[cfg(test)]
 mod test {
-  use chrono::{Local, TimeZone};
   use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-
-  fn sample_date(hour: u32, minute: u32) -> chrono::DateTime<Local> {
-    Local.with_ymd_and_hms(2024, 3, 17, hour, minute, 0).unwrap()
-  }
-
-  fn sample_options() -> RenderOptions {
-    RenderOptions {
-      date_format: "%Y-%m-%d %H:%M".into(),
-      include_notes: true,
-      template: String::new(),
-      wrap_width: 0,
-    }
-  }
+  use crate::test_helpers::{sample_date, sample_options};
 
   mod csv_export_name {
     use pretty_assertions::assert_eq;
@@ -126,7 +113,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Working on project",
         Tags::from_iter(vec![
           Tag::new("coding", None::<String>),
@@ -153,7 +140,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "In progress",
         Tags::new(),
         Note::new(),
@@ -174,7 +161,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Simple task",
         Tags::new(),
         Note::new(),
@@ -197,7 +184,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 30),
+        sample_date(17, 14, 30),
         "Task with, comma",
         Tags::new(),
         Note::new(),
@@ -215,7 +202,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 0),
+        sample_date(17, 14, 0),
         "Work",
         Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:30"))]),
         Note::new(),

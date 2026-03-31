@@ -288,23 +288,10 @@ fn render_tags(entry: &Entry) -> String {
 
 #[cfg(test)]
 mod test {
-  use chrono::{Local, TimeZone};
   use doing_taskpaper::{Note, Tag, Tags};
 
   use super::*;
-
-  fn sample_date(hour: u32, minute: u32) -> chrono::DateTime<Local> {
-    Local.with_ymd_and_hms(2024, 3, 17, hour, minute, 0).unwrap()
-  }
-
-  fn sample_options() -> RenderOptions {
-    RenderOptions {
-      date_format: "%Y-%m-%d %H:%M".into(),
-      include_notes: true,
-      template: String::new(),
-      wrap_width: 0,
-    }
-  }
+  use crate::test_helpers::{sample_date, sample_options};
 
   mod compute_bar_width {
     use pretty_assertions::assert_eq;
@@ -314,7 +301,7 @@ mod test {
     #[test]
     fn it_returns_default_when_no_time_range() {
       let entry = Entry::new(
-        sample_date(14, 0),
+        sample_date(17, 14, 0),
         "Test",
         Tags::new(),
         Note::new(),
@@ -340,7 +327,7 @@ mod test {
     fn it_computes_range_from_entries() {
       let entries = vec![
         Entry::new(
-          sample_date(10, 0),
+          sample_date(17, 10, 0),
           "First",
           Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 11:00"))]),
           Note::new(),
@@ -348,7 +335,7 @@ mod test {
           None::<String>,
         ),
         Entry::new(
-          sample_date(14, 0),
+          sample_date(17, 14, 0),
           "Second",
           Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 16:00"))]),
           Note::new(),
@@ -361,8 +348,8 @@ mod test {
 
       assert!(range.is_some());
       let (min, max) = range.unwrap();
-      assert_eq!(min, sample_date(10, 0));
-      assert_eq!(max, sample_date(16, 0));
+      assert_eq!(min, sample_date(17, 10, 0));
+      assert_eq!(max, sample_date(17, 16, 0));
     }
   }
 
@@ -397,7 +384,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 0),
+        sample_date(17, 14, 0),
         "Working on project",
         Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:30"))]),
         Note::new(),
@@ -418,7 +405,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 0),
+        sample_date(17, 14, 0),
         "In progress task",
         Tags::new(),
         Note::new(),
@@ -448,7 +435,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 0),
+        sample_date(17, 14, 0),
         "Task",
         Tags::new(),
         Note::from_text("Line one\nLine two"),
@@ -468,7 +455,7 @@ mod test {
       let config = Config::default();
       let options = sample_options();
       let entry = Entry::new(
-        sample_date(14, 0),
+        sample_date(17, 14, 0),
         "Work",
         Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
         Note::new(),

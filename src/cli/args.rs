@@ -169,13 +169,14 @@ impl DisplayArgs {
       _ => TagSortOrder::Asc,
     };
 
-    let totals_format = self
-      .totals_format
-      .as_deref()
-      .or_else(|| {
-        let v = config.totals_format.as_str();
-        if v.is_empty() { None } else { Some(v) }
-      })
+    let totals_format_str = self.totals_format.as_deref().or_else(|| {
+      let v = config.totals_format.as_str();
+      if v.is_empty() { None } else { Some(v) }
+    });
+
+    let show_averages = totals_format_str.is_some_and(|s| s.eq_ignore_ascii_case("averages"));
+    let totals_format = totals_format_str
+      .filter(|s| !s.eq_ignore_ascii_case("averages"))
       .map(DurationFormat::from_config);
 
     Ok(format_items_with_tag_sort(
@@ -186,6 +187,7 @@ impl DisplayArgs {
       TotalsOptions {
         duration_format: totals_format,
         enabled: self.totals,
+        show_averages,
         sort_field: tag_sort_field,
         sort_order: tag_sort_order,
       },

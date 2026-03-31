@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use chrono::Duration;
+use chrono::{Duration, NaiveDate};
 use doing_taskpaper::Entry;
 use doing_time::{DurationFormat, FormattedDuration, format_tag_total};
 
@@ -31,6 +31,8 @@ pub struct TotalsOptions {
   pub duration_format: Option<DurationFormat>,
   /// Whether to show tag totals.
   pub enabled: bool,
+  /// Whether to show average hours per day alongside totals.
+  pub show_averages: bool,
   /// How to sort tags.
   pub sort_field: TagSortField,
   /// Sort direction.
@@ -40,6 +42,8 @@ pub struct TotalsOptions {
 /// Aggregated time totals per tag.
 #[derive(Clone, Debug, Default)]
 pub struct TagTotals {
+  earliest_date: Option<NaiveDate>,
+  latest_date: Option<NaiveDate>,
   tags: BTreeMap<String, Duration>,
   total: Duration,
 }
@@ -78,6 +82,16 @@ impl TagTotals {
     sort_order: TagSortOrder,
     duration_format: Option<DurationFormat>,
   ) -> String {
+    self.render_sorted_with_averages(sort_field, sort_order, duration_format, false)
+  }
+
+  pub fn render_sorted_with_averages(
+    &self,
+    sort_field: TagSortField,
+    sort_order: TagSortOrder,
+    duration_format: Option<DurationFormat>,
+    show_averages: bool,
+  ) -> String {
     if self.tags.is_empty() {
       return String::new();
     }
@@ -109,9 +123,41 @@ impl TagTotals {
     }
 
     lines.push(String::new());
-    lines.push(format!("Total tracked: {}", format_duration(self.total)));
+
+    let total_str = format_duration(self.total);
+    if show_averages {
+      let day_span = self.day_span();
+      let avg = self.average_per_day(day_span);
+      lines.push(format!("Total tracked: {total_str} ({avg})"));
+    } else {
+      lines.push(format!("Total tracked: {total_str}"));
+    }
 
     lines.join("\n")
+  }
+
+  fn average_per_day(&self, day_span: i64) -> String {
+    let total_minutes = self.total.num_minutes();
+    let avg_minutes = total_minutes as f64 / day_span as f64;
+    let hours = (avg_minutes / 60.0).floor() as i64;
+    let mins = (avg_minutes % 60.0).round() as i64;
+    if hours > 0 && mins > 0 {
+      format!("avg {hours}h {mins}m/day")
+    } else if hours > 0 {
+      format!("avg {hours}h/day")
+    } else {
+      format!("avg {mins}m/day")
+    }
+  }
+
+  fn day_span(&self) -> i64 {
+    match (self.earliest_date, self.latest_date) {
+      (Some(earliest), Some(latest)) => {
+        let span = (latest - earliest).num_days() + 1;
+        span.max(1)
+      }
+      _ => 1,
+    }
   }
 
   fn record(&mut self, entry: &Entry) {
@@ -121,6 +167,16 @@ impl TagTotals {
     };
 
     self.total += interval;
+
+    let entry_date = entry.date().date_naive();
+    self.earliest_date = Some(match self.earliest_date {
+      Some(d) => d.min(entry_date),
+      None => entry_date,
+    });
+    self.latest_date = Some(match self.latest_date {
+      Some(d) => d.max(entry_date),
+      None => entry_date,
+    });
 
     for tag in entry.tags().iter() {
       let name = tag.name();

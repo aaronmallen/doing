@@ -27,5 +27,6 @@ mod when_tag_flag_is_provided;
 mod when_tag_sort_and_tag_order_flags_are_provided;
 mod when_template_flag_is_provided;
 mod when_totals_flag_is_provided;
+mod when_totals_format_averages;
 mod when_totals_format_flag_is_provided;
 mod when_val_flag_is_provided;

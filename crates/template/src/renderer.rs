@@ -133,7 +133,12 @@ pub fn format_items_with_tag_sort(
   if totals.enabled {
     let tag_totals = TagTotals::from_entries(entries);
     if !tag_totals.is_empty() {
-      output.push_str(&tag_totals.render_sorted(totals.sort_field, totals.sort_order, totals.duration_format));
+      output.push_str(&tag_totals.render_sorted_with_averages(
+        totals.sort_field,
+        totals.sort_order,
+        totals.duration_format,
+        totals.show_averages,
+      ));
     }
   }
 

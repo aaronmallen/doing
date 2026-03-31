@@ -15,6 +15,7 @@
 | [0011] | --age has no -a short flag                               | Active | 2026-03-23 |
 | [0012] | redo --file has no -f short flag                         | Active | 2026-03-23 |
 | [0013] | completion generate --file has no -f short flag          | Active | 2026-03-23 |
+| [0014] | Config home uses platform-native path                    | Active | 2026-03-31 |
 
 See [Writing Deviations][writing-deviations] for information on how to create and use deviation records.
 
@@ -31,4 +32,5 @@ See [Writing Deviations][writing-deviations] for information on how to create an
 [0011]: 0011-age-no-short-flag.md
 [0012]: 0012-redo-file-no-short-flag.md
 [0013]: 0013-completion-file-no-short-flag.md
+[0014]: 0014-config-home-platform-native.md
 [writing-deviations]: https://github.com/aaronmallen/doing/blob/main/docs/process/writing-deviations.md

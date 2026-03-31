@@ -4,4 +4,4 @@
 
 set -e
 
-markdownlint-cli2 --config .config/.markdownlint.yml "*.md" "**/*.md" "#.cargo" "#.mise" "#.mise-data" "#coverage" "#.github/PULL_REQUEST_TEMPLATE.md" "#target" "#tmp" "$@"
+markdownlint-cli2 --config .config/.markdownlint.yml "*.md" "**/*.md" "#.cargo" "#.mise" "#.mise-data" "#coverage" "#docs/site/node_modules" "#.github/PULL_REQUEST_TEMPLATE.md" "#target" "#tmp" "$@"

@@ -3,6 +3,7 @@ exclude:
   - .mise
   - .mise-data
   - coverage
+  - docs/site/node_modules
   - target
   - tmp
 formatter:

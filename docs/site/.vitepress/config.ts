@@ -145,6 +145,7 @@ export default defineConfig({
 
     footer: {
       message: 'Released under the MIT License.',
+      copyright: 'Based on <a href="https://github.com/ttscoff/doing">doing</a> by <a href="https://brettterpstra.com">Brett Terpstra</a>.',
     },
   },
 })

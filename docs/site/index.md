@@ -4,7 +4,7 @@ layout: home
 hero:
   name: doing
   text: Track what you're doing
-  tagline: A command line tool for remembering what you were doing and tracking what you've done — stored as plain text, versioned with your project.
+  tagline: A Rust rewrite of Brett Terpstra's doing — a command line tool for remembering what you were doing and tracking what you've done.
   actions:
     - theme: brand
       text: Get Started

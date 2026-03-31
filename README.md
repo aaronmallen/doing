@@ -16,7 +16,7 @@ you've done.
 ### Shell (recommended)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/install.sh | sh
+curl -fsSL https://doing.aaronmallen.dev/install | sh
 ```
 
 > [!TIP]
@@ -29,7 +29,7 @@ curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/insta
 Override the install directory or pin a specific version:
 
 ```sh
-DOING_INSTALL_PATH=~/.bin DOING_VERSION=0.1.0 curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/install.sh | sh
+DOING_INSTALL_PATH=~/.bin DOING_VERSION=0.1.0 curl -fsSL https://doing.aaronmallen.dev/install | sh
 ```
 
 ### Cargo

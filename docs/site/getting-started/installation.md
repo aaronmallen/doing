@@ -6,7 +6,7 @@ The quickest way to install `doing` is with the install script. It downloads a p
 platform and places it in `~/.local/bin`:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/install.sh | sh
+curl -fsSL https://doing.aaronmallen.dev/install | sh
 ```
 
 ### Customizing the Install
@@ -16,11 +16,11 @@ You can override the install location and version with environment variables:
 ```sh
 # Install to a custom directory
 DOING_INSTALL_PATH=/usr/local/bin \
-  curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/install.sh | sh
+  curl -fsSL https://doing.aaronmallen.dev/install | sh
 
 # Install a specific version
 DOING_VERSION=0.1.9 \
-  curl -fsSL https://raw.githubusercontent.com/aaronmallen/doing/main/script/install.sh | sh
+  curl -fsSL https://doing.aaronmallen.dev/install | sh
 ```
 
 ### PATH Setup

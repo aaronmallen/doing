@@ -11,9 +11,9 @@ use doing_plugins::default_registry;
 use doing_taskpaper::Entry;
 use doing_template::{
   renderer::{RenderOptions, format_items_with_tag_sort},
-  totals::{TagSortField, TagSortOrder},
+  totals::{TagSortField, TagSortOrder, TotalsOptions},
 };
-use doing_time::{chronify, parse_range};
+use doing_time::{DurationFormat, chronify, parse_range};
 
 use crate::Result;
 
@@ -108,6 +108,10 @@ pub struct DisplayArgs {
   /// Show tag time totals
   #[arg(long)]
   pub totals: bool,
+
+  /// Format for totals display (clock, hm, natural, text, dhm, m)
+  #[arg(long = "totals-format", alias = "totals_format")]
+  pub totals_format: Option<String>,
 }
 
 impl DisplayArgs {
@@ -165,14 +169,26 @@ impl DisplayArgs {
       _ => TagSortOrder::Asc,
     };
 
+    let totals_format = self
+      .totals_format
+      .as_deref()
+      .or_else(|| {
+        let v = config.totals_format.as_str();
+        if v.is_empty() { None } else { Some(v) }
+      })
+      .map(DurationFormat::from_config);
+
     Ok(format_items_with_tag_sort(
       entries,
       &render_options,
       config,
-      self.totals,
       self.title.as_deref(),
-      tag_sort_field,
-      tag_sort_order,
+      TotalsOptions {
+        duration_format: totals_format,
+        enabled: self.totals,
+        sort_field: tag_sort_field,
+        sort_order: tag_sort_order,
+      },
     ))
   }
 }

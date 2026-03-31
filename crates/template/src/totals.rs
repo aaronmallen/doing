@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use chrono::Duration;
 use doing_taskpaper::Entry;
-use doing_time::format_tag_total;
+use doing_time::{DurationFormat, FormattedDuration, format_tag_total};
 
 /// How tags are sorted in the totals section.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -22,6 +22,19 @@ pub enum TagSortOrder {
   Asc,
   /// Sort in descending order.
   Desc,
+}
+
+/// Options controlling how tag totals are rendered.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct TotalsOptions {
+  /// The duration format to use for totals display.
+  pub duration_format: Option<DurationFormat>,
+  /// Whether to show tag totals.
+  pub enabled: bool,
+  /// How to sort tags.
+  pub sort_field: TagSortField,
+  /// Sort direction.
+  pub sort_order: TagSortOrder,
 }
 
 /// Aggregated time totals per tag.
@@ -59,10 +72,22 @@ impl TagTotals {
   ///
   /// Total tracked: 01:32:30
   /// ```
-  pub fn render_sorted(&self, sort_field: TagSortField, sort_order: TagSortOrder) -> String {
+  pub fn render_sorted(
+    &self,
+    sort_field: TagSortField,
+    sort_order: TagSortOrder,
+    duration_format: Option<DurationFormat>,
+  ) -> String {
     if self.tags.is_empty() {
       return String::new();
     }
+
+    let format_duration = |d: Duration| -> String {
+      match duration_format {
+        Some(fmt) => FormattedDuration::new(d, fmt).to_string(),
+        None => format_tag_total(d),
+      }
+    };
 
     let max_name_len = self.tags.keys().map(|k| k.len()).max().unwrap_or(0) + 1;
 
@@ -80,11 +105,11 @@ impl TagTotals {
 
     for (tag, duration) in &sorted_tags {
       let padding = " ".repeat(max_name_len - tag.len());
-      lines.push(format!("{tag}:{padding}{}", format_tag_total(**duration)));
+      lines.push(format!("{tag}:{padding}{}", format_duration(**duration)));
     }
 
     lines.push(String::new());
-    lines.push(format!("Total tracked: {}", format_tag_total(self.total)));
+    lines.push(format!("Total tracked: {}", format_duration(self.total)));
 
     lines.join("\n")
   }
@@ -197,7 +222,7 @@ mod test {
       let entries = vec![entry_with_tags(&["coding"], "2024-03-17 14:30")];
 
       let totals = TagTotals::from_entries(&entries);
-      let output = totals.render_sorted(TagSortField::default(), TagSortOrder::default());
+      let output = totals.render_sorted(TagSortField::default(), TagSortOrder::default(), None);
 
       assert!(output.contains("Tag Totals"));
       assert!(output.contains("coding:"));
@@ -209,7 +234,7 @@ mod test {
       let totals = TagTotals::default();
 
       assert_eq!(
-        totals.render_sorted(TagSortField::default(), TagSortOrder::default()),
+        totals.render_sorted(TagSortField::default(), TagSortOrder::default(), None),
         ""
       );
     }

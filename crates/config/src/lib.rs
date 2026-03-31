@@ -143,6 +143,7 @@ pub struct Config {
   pub template_path: PathBuf,
   pub templates: HashMap<String, TemplateConfig>,
   pub timer_format: String,
+  pub totals_format: String,
   pub views: HashMap<String, ViewConfig>,
 }
 
@@ -228,6 +229,7 @@ impl Default for Config {
       template_path: config_dir.join("doing/templates"),
       templates: HashMap::new(),
       timer_format: "text".into(),
+      totals_format: String::new(),
       views: HashMap::new(),
     }
   }

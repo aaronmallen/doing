@@ -7,7 +7,7 @@ use doing_time::{DurationFormat, FormattedDuration, FormattedShortdate};
 use crate::{
   colors,
   parser::{self, Indent, IndentChar, Token, TokenKind},
-  totals::{TagSortField, TagSortOrder, TagTotals},
+  totals::{TagTotals, TotalsOptions},
   wrap,
 };
 
@@ -60,10 +60,11 @@ pub fn format_items(entries: &[Entry], options: &RenderOptions, config: &Config,
     entries,
     options,
     config,
-    show_totals,
     None,
-    TagSortField::default(),
-    TagSortOrder::default(),
+    TotalsOptions {
+      enabled: show_totals,
+      ..TotalsOptions::default()
+    },
   )
 }
 
@@ -77,10 +78,8 @@ pub fn format_items_with_tag_sort(
   entries: &[Entry],
   options: &RenderOptions,
   config: &Config,
-  show_totals: bool,
   title: Option<&str>,
-  tag_sort_field: TagSortField,
-  tag_sort_order: TagSortOrder,
+  totals: TotalsOptions,
 ) -> String {
   let mut output = String::new();
   let mut current_section = "";
@@ -131,10 +130,10 @@ pub fn format_items_with_tag_sort(
     output.push_str(&line);
   }
 
-  if show_totals {
-    let totals = TagTotals::from_entries(entries);
-    if !totals.is_empty() {
-      output.push_str(&totals.render_sorted(tag_sort_field, tag_sort_order));
+  if totals.enabled {
+    let tag_totals = TagTotals::from_entries(entries);
+    if !tag_totals.is_empty() {
+      output.push_str(&tag_totals.render_sorted(totals.sort_field, totals.sort_order, totals.duration_format));
     }
   }
 

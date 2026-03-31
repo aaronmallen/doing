@@ -96,8 +96,11 @@ pub fn discover_local_configs(start_dir: &Path) -> Vec<PathBuf> {
 }
 
 pub fn discover_local_configs_with_global(start_dir: &Path, global: Option<&Path>) -> Vec<PathBuf> {
+  const MAX_DEPTH: usize = 20;
+
   let mut configs = Vec::new();
   let mut dir = start_dir.to_path_buf();
+  let mut depth = 0;
 
   loop {
     let candidate = dir.join(".doingrc");
@@ -108,7 +111,8 @@ pub fn discover_local_configs_with_global(start_dir: &Path, global: Option<&Path
       }
     }
 
-    if !dir.pop() {
+    depth += 1;
+    if depth >= MAX_DEPTH || !dir.pop() {
       break;
     }
   }
@@ -330,6 +334,24 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
 
       let configs = discover_local_configs(dir.path());
+
+      assert!(configs.is_empty());
+    }
+
+    #[test]
+    fn it_stops_walking_at_max_depth() {
+      let dir = tempfile::tempdir().unwrap();
+      let root = dir.path();
+      // Build a path 25 levels deep — beyond MAX_DEPTH (20)
+      let mut deep = root.to_path_buf();
+      for i in 0..25 {
+        deep = deep.join(format!("d{i}"));
+      }
+      fs::create_dir_all(&deep).unwrap();
+      // Place a .doingrc at the root — it should NOT be found
+      fs::write(root.join(".doingrc"), "order: asc\n").unwrap();
+
+      let configs = discover_local_configs_with_global(&deep, None);
 
       assert!(configs.is_empty());
     }

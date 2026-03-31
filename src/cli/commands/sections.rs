@@ -145,7 +145,6 @@ fn remove_section(name: &str, archive: bool, ctx: &mut AppContext) -> Result<()>
 
 #[cfg(test)]
 mod test {
-  use doing_config::Config;
   use doing_taskpaper::{Document, Entry, Note, Section, Tags};
 
   use super::*;
@@ -164,20 +163,9 @@ mod test {
     doc.add_section(section);
     doc.add_section(Section::new("Archive"));
 
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
+    ctx.document = doc;
+    ctx
   }
 
   mod add_section {
@@ -198,20 +186,7 @@ mod test {
 
     #[test]
     fn it_handles_empty_document() {
-      let ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: Document::new(),
-        doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
-      };
+      let ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
 
       let result = super::super::list_sections(&ctx);
 
@@ -262,19 +237,10 @@ mod test {
       ));
       doc.add_section(section);
 
-      let mut ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: doc,
-        doing_file: dir.path().join("doing.md"),
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
+      let mut ctx = {
+        let mut ctx = AppContext::for_test(dir.path().join("doing.md"));
+        ctx.document = doc;
+        ctx
       };
 
       let result = super::super::remove_section("Ideas", true, &mut ctx);

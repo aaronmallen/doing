@@ -196,25 +196,11 @@ fn template_source(name: &str, template_dir: &Path) -> &'static str {
 
 #[cfg(test)]
 mod test {
-  use doing_config::Config;
 
   use super::*;
 
   fn sample_ctx() -> AppContext {
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doing_taskpaper::Document::new(),
-      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"))
   }
 
   mod call {

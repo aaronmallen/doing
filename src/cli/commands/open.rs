@@ -150,20 +150,7 @@ mod test {
 
     #[test]
     fn it_uses_app_flag_when_provided() {
-      let ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: doing_taskpaper::Document::new(),
-        doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
-      };
+      let ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
 
       let editor = super::super::resolve_open_editor(&Some("code".into()), &None, &ctx);
 
@@ -232,20 +219,7 @@ mod test {
 
     #[test]
     fn it_uses_editor_flag_when_provided() {
-      let ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: doing_taskpaper::Document::new(),
-        doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
-      };
+      let ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
 
       let editor = super::super::resolve_open_editor(&None, &Some("vim".into()), &ctx);
 

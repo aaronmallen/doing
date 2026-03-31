@@ -293,20 +293,7 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
       std::fs::write(&path, "Currently:\n").unwrap();
-      let mut ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: Document::new(),
-        doing_file: path,
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
-      };
+      let mut ctx = AppContext::for_test(path);
       let cmd = Command {
         amount: None,
         remove: false,

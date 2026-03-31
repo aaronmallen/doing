@@ -139,20 +139,9 @@ mod test {
     ));
     doc.add_section(section);
 
-    AppContext {
-      config: doing_config::Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
+    ctx.document = doc;
+    ctx
   }
 
   mod call {
@@ -199,20 +188,7 @@ mod test {
 
     #[test]
     fn it_handles_empty_document() {
-      let mut ctx = AppContext {
-        config: doing_config::Config::default(),
-        default_answer: false,
-        document: Document::new(),
-        doing_file: std::path::PathBuf::from("/tmp/test_doing.md"),
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
-      };
+      let mut ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
       let cmd = default_cmd();
 
       let result = cmd.call(&mut ctx);

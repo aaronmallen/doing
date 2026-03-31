@@ -91,6 +91,28 @@ impl AppContext {
     Ok(true)
   }
 
+  /// Create a minimal `AppContext` for unit tests.
+  ///
+  /// Uses `Config::default()`, an empty document, and sensible test defaults.
+  /// Callers can override any field after construction.
+  #[cfg(test)]
+  pub fn for_test(doing_file: impl Into<PathBuf>) -> Self {
+    Self {
+      config: Config::default(),
+      default_answer: false,
+      document: Document::new(),
+      doing_file: doing_file.into(),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
   /// Print a user-facing status message to stderr.
   ///
   /// Respects `--quiet` — when quiet mode is active, the message is suppressed.

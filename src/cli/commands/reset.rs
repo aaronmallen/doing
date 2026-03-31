@@ -158,7 +158,6 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
-  use doing_config::Config;
   use doing_taskpaper::{Document, Entry, Note, Section, Tag, Tags};
 
   use super::*;
@@ -191,20 +190,9 @@ mod test {
       None::<String>,
     ));
     doc.add_section(section);
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: path,
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
   }
 
   fn sample_ctx_with_done(dir: &std::path::Path) -> AppContext {
@@ -221,20 +209,9 @@ mod test {
       None::<String>,
     ));
     doc.add_section(section);
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: path,
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
   }
 
   fn sample_ctx_with_multiple(dir: &std::path::Path) -> AppContext {
@@ -259,20 +236,9 @@ mod test {
       None::<String>,
     ));
     doc.add_section(section);
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: path,
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
   }
 
   mod call {
@@ -302,19 +268,10 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
       fs::write(&path, "Currently:\n").unwrap();
-      let mut ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: Document::parse("Currently:\n"),
-        doing_file: path,
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
+      let mut ctx = {
+        let mut ctx = AppContext::for_test(path);
+        ctx.document = Document::parse("Currently:\n");
+        ctx
       };
       let cmd = default_cmd();
 

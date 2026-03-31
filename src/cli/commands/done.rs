@@ -270,7 +270,6 @@ mod test {
   use std::fs;
 
   use chrono::{Duration, Local, TimeZone};
-  use doing_config::Config;
   use doing_taskpaper::Document;
 
   use super::*;
@@ -298,20 +297,9 @@ mod test {
   fn sample_ctx(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");
     fs::write(&path, "Currently:\n").unwrap();
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: Document::parse("Currently:\n"),
-      doing_file: path,
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = Document::parse("Currently:\n");
+    ctx
   }
 
   fn sample_ctx_with_done_and_undone(dir: &std::path::Path) -> AppContext {
@@ -336,20 +324,9 @@ mod test {
       None::<String>,
     ));
     doc.add_section(section);
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: path,
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
   }
 
   fn sample_ctx_with_entry(dir: &std::path::Path) -> AppContext {
@@ -366,20 +343,9 @@ mod test {
       None::<String>,
     ));
     doc.add_section(section);
-    AppContext {
-      config: Config::default(),
-      default_answer: false,
-      document: doc,
-      doing_file: path,
-      include_notes: true,
-      no: false,
-      noauto: false,
-      quiet: false,
-      stdout: false,
-      use_color: false,
-      use_pager: false,
-      yes: false,
-    }
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
   }
 
   mod call {
@@ -555,19 +521,10 @@ mod test {
         None::<String>,
       ));
       doc.add_section(section);
-      let mut ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: doc,
-        doing_file: path,
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
+      let mut ctx = {
+        let mut ctx = AppContext::for_test(path);
+        ctx.document = doc;
+        ctx
       };
       let cmd = Command {
         remove: true,
@@ -735,19 +692,10 @@ mod test {
         None::<String>,
       ));
       doc.add_section(section);
-      let mut ctx = AppContext {
-        config: Config::default(),
-        default_answer: false,
-        document: doc,
-        doing_file: path,
-        include_notes: true,
-        no: false,
-        noauto: false,
-        quiet: false,
-        stdout: false,
-        use_color: false,
-        use_pager: false,
-        yes: false,
+      let mut ctx = {
+        let mut ctx = AppContext::for_test(path);
+        ctx.document = doc;
+        ctx
       };
       let cmd = default_cmd();
 

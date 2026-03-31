@@ -4,6 +4,7 @@ mod when_age_flag_is_oldest;
 mod when_before_flag_is_provided;
 mod when_bool_flag_is_and;
 mod when_bool_flag_is_not;
+mod when_by_flag_is_provided;
 mod when_case_flag_is_provided;
 mod when_count_flag_is_provided;
 mod when_duration_flag_is_provided;

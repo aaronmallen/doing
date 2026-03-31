@@ -11,7 +11,7 @@ use doing_plugins::default_registry;
 use doing_taskpaper::Entry;
 use doing_template::{
   renderer::{RenderOptions, format_items_with_tag_sort},
-  totals::{TagSortField, TagSortOrder, TotalsOptions},
+  totals::{TagSortField, TagSortOrder, TotalsGrouping, TotalsOptions},
 };
 use doing_time::{DurationFormat, chronify, parse_range};
 
@@ -59,9 +59,24 @@ impl From<BoolArg> for BooleanMode {
   }
 }
 
+/// How to group totals (tags or section).
+#[derive(Clone, Debug, ValueEnum)]
+pub enum TotalsGroupingArg {
+  /// Group by section name.
+  #[value(alias = "project", alias = "p")]
+  Section,
+  /// Group by tag (default).
+  #[value(alias = "tag")]
+  Tags,
+}
+
 /// Shared display/output arguments reused across commands.
 #[derive(Args, Clone, Debug, Default)]
 pub struct DisplayArgs {
+  /// Grouping for totals display (tags, section)
+  #[arg(long = "by", value_enum)]
+  pub by: Vec<TotalsGroupingArg>,
+
   /// Named template from config to use for output
   #[arg(long, alias = "config_template")]
   pub config_template: Option<String>,
@@ -179,6 +194,15 @@ impl DisplayArgs {
       .filter(|s| !s.eq_ignore_ascii_case("averages"))
       .map(DurationFormat::from_config);
 
+    let groupings: Vec<TotalsGrouping> = self
+      .by
+      .iter()
+      .map(|g| match g {
+        TotalsGroupingArg::Section => TotalsGrouping::Section,
+        TotalsGroupingArg::Tags => TotalsGrouping::Tags,
+      })
+      .collect();
+
     Ok(format_items_with_tag_sort(
       entries,
       &render_options,
@@ -187,6 +211,7 @@ impl DisplayArgs {
       TotalsOptions {
         duration_format: totals_format,
         enabled: self.totals,
+        groupings,
         show_averages,
         sort_field: tag_sort_field,
         sort_order: tag_sort_order,

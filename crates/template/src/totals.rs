@@ -25,12 +25,14 @@ pub enum TagSortOrder {
 }
 
 /// Options controlling how tag totals are rendered.
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct TotalsOptions {
   /// The duration format to use for totals display.
   pub duration_format: Option<DurationFormat>,
   /// Whether to show tag totals.
   pub enabled: bool,
+  /// Which groupings to show (defaults to tags only).
+  pub groupings: Vec<TotalsGrouping>,
   /// Whether to show average hours per day alongside totals.
   pub show_averages: bool,
   /// How to sort tags.
@@ -187,6 +189,79 @@ impl TagTotals {
       *current += interval;
     }
   }
+}
+
+/// Aggregated time totals per section.
+#[derive(Clone, Debug, Default)]
+pub struct SectionTotals {
+  sections: BTreeMap<String, Duration>,
+  total: Duration,
+}
+
+impl SectionTotals {
+  /// Build section totals from a slice of entries.
+  pub fn from_entries(entries: &[Entry]) -> Self {
+    let mut totals = Self::default();
+    for entry in entries {
+      let interval = match entry.interval() {
+        Some(d) if d > Duration::zero() => d,
+        _ => continue,
+      };
+      totals.total += interval;
+      let current = totals
+        .sections
+        .entry(entry.section().to_string())
+        .or_insert(Duration::zero());
+      *current += interval;
+    }
+    totals
+  }
+
+  /// Return true if no time has been recorded.
+  pub fn is_empty(&self) -> bool {
+    self.sections.is_empty()
+  }
+
+  /// Render the section totals as a formatted text block.
+  pub fn render(&self, duration_format: Option<DurationFormat>) -> String {
+    if self.sections.is_empty() {
+      return String::new();
+    }
+
+    let format_duration = |d: Duration| -> String {
+      match duration_format {
+        Some(fmt) => FormattedDuration::new(d, fmt).to_string(),
+        None => format_tag_total(d),
+      }
+    };
+
+    let max_name_len = self.sections.keys().map(|k| k.len()).max().unwrap_or(0) + 1;
+
+    let mut lines: Vec<String> = Vec::new();
+    lines.push("\n--- Section Totals ---".into());
+
+    let mut sorted: Vec<(&String, &Duration)> = self.sections.iter().collect();
+    sorted.sort_by_key(|(a, _)| a.to_lowercase());
+
+    for (section, duration) in &sorted {
+      let padding = " ".repeat(max_name_len - section.len());
+      lines.push(format!("{section}:{padding}{}", format_duration(**duration)));
+    }
+
+    lines.push(String::new());
+    lines.push(format!("Total tracked: {}", format_duration(self.total)));
+
+    lines.join("\n")
+  }
+}
+
+/// How to group totals.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum TotalsGrouping {
+  /// Group by section name.
+  Section,
+  /// Group by tag (default).
+  Tags,
 }
 
 #[cfg(test)]

@@ -7,7 +7,7 @@ use doing_time::{DurationFormat, FormattedDuration, FormattedShortdate};
 use crate::{
   colors,
   parser::{self, Indent, IndentChar, Token, TokenKind},
-  totals::{TagTotals, TotalsOptions},
+  totals::{SectionTotals, TagTotals, TotalsGrouping, TotalsOptions},
   wrap,
 };
 
@@ -131,14 +131,32 @@ pub fn format_items_with_tag_sort(
   }
 
   if totals.enabled {
-    let tag_totals = TagTotals::from_entries(entries);
-    if !tag_totals.is_empty() {
-      output.push_str(&tag_totals.render_sorted_with_averages(
-        totals.sort_field,
-        totals.sort_order,
-        totals.duration_format,
-        totals.show_averages,
-      ));
+    let groupings = if totals.groupings.is_empty() {
+      vec![TotalsGrouping::Tags]
+    } else {
+      totals.groupings.clone()
+    };
+
+    for grouping in &groupings {
+      match grouping {
+        TotalsGrouping::Tags => {
+          let tag_totals = TagTotals::from_entries(entries);
+          if !tag_totals.is_empty() {
+            output.push_str(&tag_totals.render_sorted_with_averages(
+              totals.sort_field,
+              totals.sort_order,
+              totals.duration_format,
+              totals.show_averages,
+            ));
+          }
+        }
+        TotalsGrouping::Section => {
+          let section_totals = SectionTotals::from_entries(entries);
+          if !section_totals.is_empty() {
+            output.push_str(&section_totals.render(totals.duration_format));
+          }
+        }
+      }
     }
   }
 

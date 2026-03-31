@@ -241,8 +241,10 @@ fn natural_duration(total_minutes: i64) -> String {
     "a few minutes".into()
   } else if minutes < 15 {
     format!("about {minutes} minutes")
-  } else if minutes < 25 {
+  } else if minutes < 18 {
     "about 15 minutes".into()
+  } else if minutes < 23 {
+    "about 20 minutes".into()
   } else if minutes < 35 {
     "about half an hour".into()
   } else if minutes < 50 {
@@ -405,6 +407,13 @@ mod test {
       let fd = FormattedDuration::new(Duration::hours(3), DurationFormat::Natural);
 
       assert_eq!(fd.to_string(), "about 3 hours");
+    }
+
+    #[test]
+    fn it_formats_natural_about_20_minutes() {
+      let fd = FormattedDuration::new(Duration::minutes(18), DurationFormat::Natural);
+
+      assert_eq!(fd.to_string(), "about 20 minutes");
     }
 
     #[test]

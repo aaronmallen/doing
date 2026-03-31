@@ -12,7 +12,8 @@ and this project adheres to [Break Versioning].
 ### Changed
 
 - Template parsing and wildcard regex results are now cached, avoiding redundant work per entry (see [#324])
-- Reduced heap allocations and redundant computation in search matching, tag display, config loading, and JSON export (see [#378], [#380], [#381])
+- Reduced heap allocations and redundant computation in search matching, tag display, config loading,
+  and JSON export (see [#378], [#380], [#381])
 
 ## [v0.1.8] - 2026-03-30
 

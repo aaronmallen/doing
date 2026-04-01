@@ -3,6 +3,7 @@
 [![Build][build-badge]][build-workflow]
 [![Version][crates-badge]][crates.io]
 [![GitHub Sponsors][sponsor-badge]][sponsor-link]
+[![Discord][discord-badge]][discord-link]
 
 A Rust clone of [doing] by Brett Terpstra — a command line tool for remembering what you were doing and tracking what
 you've done.
@@ -59,6 +60,9 @@ This project is licensed under the [MIT License].
 [crates-badge]: https://img.shields.io/crates/v/doing?style=for-the-badge&logo=rust
 [crates.io]: https://crates.io/crates/doing
 [deviation records]: https://github.com/aaronmallen/doing/blob/main/docs/deviations/README.md
+[discord-badge]:
+https://img.shields.io/discord/1441938388780585062?style=for-the-badge&logo=discord&logoColor=white&label=Discord&labelColor=%235865F2
+[discord-link]: https://discord.gg/PqQdhf9VMF
 [docs]: https://github.com/aaronmallen/doing/tree/main/docs
 [doing.aaronmallen.dev]: https://doing.aaronmallen.dev
 [doing]: https://github.com/ttscoff/doing

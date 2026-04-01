@@ -71,3 +71,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release edit "${{ github.ref_name }}" --draft=false
+  notify-discord:
+    needs: publish-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          curl -H "Content-Type: application/json" \
+            -d "{\"content\": \"**doing ${{ github.ref_name }}** has been released! https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}\"}" \
+            "$DISCORD_WEBHOOK_URL"

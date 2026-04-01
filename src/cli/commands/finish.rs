@@ -6,7 +6,11 @@ use doing_ops::{
   tag_filter::{BooleanMode, TagFilter},
 };
 use doing_taskpaper::{Entry, Tag};
-use doing_time::{chronify, parse_duration};
+use doing_time::{
+  chronify,
+  format::{DurationFormat, FormattedDuration},
+  parse_duration,
+};
 
 use crate::{
   Result,
@@ -171,7 +175,7 @@ impl Command {
           let prompt = format!(
             "Entry \"{}\" has an interval of {}. Continue?",
             entry.full_title(),
-            format_duration(interval)
+            FormattedDuration::new(interval, DurationFormat::Dhm)
           );
           let confirmed = dialoguer::Confirm::new()
             .with_prompt(prompt)
@@ -459,20 +463,6 @@ impl Command {
   }
 }
 
-/// Format a chrono::Duration as a human-readable string.
-fn format_duration(d: chrono::Duration) -> String {
-  let total_minutes = d.num_minutes();
-  let hours = total_minutes / 60;
-  let minutes = total_minutes % 60;
-  if hours > 0 && minutes > 0 {
-    format!("{hours}h{minutes}m")
-  } else if hours > 0 {
-    format!("{hours}h")
-  } else {
-    format!("{minutes}m")
-  }
-}
-
 #[cfg(test)]
 mod test {
   use std::fs;
@@ -539,6 +529,26 @@ mod test {
     ctx
   }
 
+  fn sample_ctx_with_done(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Already done",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+    let mut ctx = AppContext::for_test(path);
+    ctx.config = test_config();
+    ctx.document = doc;
+    ctx
+  }
+
   fn sample_ctx_with_multiple(dir: &std::path::Path) -> AppContext {
     let path = dir.join("doing.md");
     fs::write(&path, "Currently:\n").unwrap();
@@ -564,26 +574,6 @@ mod test {
       Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
       "Third task",
       Tags::new(),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    doc.add_section(section);
-    let mut ctx = AppContext::for_test(path);
-    ctx.config = test_config();
-    ctx.document = doc;
-    ctx
-  }
-
-  fn sample_ctx_with_done(dir: &std::path::Path) -> AppContext {
-    let path = dir.join("doing.md");
-    fs::write(&path, "Currently:\n").unwrap();
-    let mut doc = Document::new();
-    let mut section = Section::new("Currently");
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Already done",
-      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
       Note::new(),
       "Currently",
       None::<String>,
@@ -838,31 +828,6 @@ mod test {
         entries[0].done_date().unwrap(),
         Local.with_ymd_and_hms(2024, 3, 17, 16, 0, 0).unwrap()
       );
-    }
-  }
-
-  mod format_duration {
-    use pretty_assertions::assert_eq;
-
-    #[test]
-    fn it_formats_hours_and_minutes() {
-      let d = chrono::Duration::minutes(90);
-
-      assert_eq!(super::super::format_duration(d), "1h30m");
-    }
-
-    #[test]
-    fn it_formats_hours_only() {
-      let d = chrono::Duration::hours(2);
-
-      assert_eq!(super::super::format_duration(d), "2h");
-    }
-
-    #[test]
-    fn it_formats_minutes_only() {
-      let d = chrono::Duration::minutes(45);
-
-      assert_eq!(super::super::format_duration(d), "45m");
     }
   }
 

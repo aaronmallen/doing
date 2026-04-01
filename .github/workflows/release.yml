@@ -78,7 +78,7 @@ jobs:
       - name: Post to Discord
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        run: |
+        run: |-
           curl -H "Content-Type: application/json" \
             -d "{\"content\": \"**doing ${{ github.ref_name }}** has been released! https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}\"}" \
             "$DISCORD_WEBHOOK_URL"

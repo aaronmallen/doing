@@ -7,6 +7,15 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.10] - 2026-04-01
+
+### Added
+
+- `--totals-format` flag on totals-capable commands to switch between `total` and `average` display modes (see [#363])
+- `--by` flag on totals-capable commands to group totals by tag or section (see [#365])
+- `natural_duration` now includes an "about 20 minutes" bucket for more precise human-readable durations (see [#333])
+- Config discovery limits upward directory walk depth to avoid scanning unrelated parent directories (see [#334])
+
 ## [v0.1.9] - 2026-03-31
 
 ### Changed
@@ -552,9 +561,13 @@ Initial alpha release
 [#380]: https://github.com/aaronmallen/doing/issues/380
 [#381]: https://github.com/aaronmallen/doing/issues/381
 [#386]: https://github.com/aaronmallen/doing/issues/386
+[#333]: https://github.com/aaronmallen/doing/issues/333
+[#334]: https://github.com/aaronmallen/doing/issues/334
+[#363]: https://github.com/aaronmallen/doing/issues/363
+[#365]: https://github.com/aaronmallen/doing/issues/365
 [#390]: https://github.com/aaronmallen/doing/issues/390
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.9...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.10...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -571,3 +584,4 @@ Initial alpha release
 [v0.1.7]: https://github.com/aaronmallen/doing/compare/0.1.6...0.1.7
 [v0.1.8]: https://github.com/aaronmallen/doing/compare/0.1.7...0.1.8
 [v0.1.9]: https://github.com/aaronmallen/doing/compare/0.1.8...0.1.9
+[v0.1.10]: https://github.com/aaronmallen/doing/compare/0.1.9...0.1.10

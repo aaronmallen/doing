@@ -255,7 +255,9 @@ impl Command {
       if !ctx.document.has_section("Archive") {
         ctx.document.add_section(Section::new("Archive"));
       }
-      ctx.document.section_by_name_mut("Archive").unwrap().add_entry(entry);
+      if let Some(archive) = ctx.document.section_by_name_mut("Archive") {
+        archive.add_entry(entry);
+      }
     }
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;

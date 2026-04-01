@@ -33,7 +33,9 @@ pub fn paginate(content: &str, config: &Config) -> io::Result<()> {
 
   let pager = resolve_pager(config);
   let parts: Vec<&str> = pager.split_whitespace().collect();
-  let (cmd, args) = parts.split_first().expect("pager command must not be empty");
+  let Some((cmd, args)) = parts.split_first() else {
+    return io::stdout().write_all(content.as_bytes());
+  };
 
   match Command::new(cmd).args(args).stdin(Stdio::piped()).spawn() {
     Ok(mut child) => {

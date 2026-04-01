@@ -281,6 +281,9 @@ fn parse_raw_value(raw: &str) -> Value {
 }
 
 fn remove_dot_path(value: &mut Value, path: &str) -> Result<bool> {
+  if path.is_empty() {
+    return Err(Error::Config("config key must not be empty".into()));
+  }
   let parts: Vec<&str> = path.split('.').collect();
   let (parents, leaf) = parts.split_at(parts.len() - 1);
 
@@ -341,6 +344,9 @@ fn remove_value_generic(path: &Path, key: &str, quiet: bool) -> Result<()> {
 }
 
 fn remove_value_toml(path: &Path, key: &str, quiet: bool) -> Result<()> {
+  if key.is_empty() {
+    return Err(Error::Config("config key must not be empty".into()));
+  }
   let content = fs::read_to_string(path)?;
 
   let mut doc: toml_edit::DocumentMut = content
@@ -418,6 +424,9 @@ fn resolve_local_config_path() -> std::path::PathBuf {
 }
 
 fn set_dot_path(value: &mut Value, path: &str, new_value: Value) -> Result<()> {
+  if path.is_empty() {
+    return Err(Error::Config("config key must not be empty".into()));
+  }
   let parts: Vec<&str> = path.split('.').collect();
   let (parents, leaf) = parts.split_at(parts.len() - 1);
 
@@ -488,6 +497,9 @@ fn set_value_generic(path: &Path, key: &str, raw_value: &str, quiet: bool) -> Re
 }
 
 fn set_value_toml(path: &Path, key: &str, raw_value: &str, quiet: bool) -> Result<()> {
+  if key.is_empty() {
+    return Err(Error::Config("config key must not be empty".into()));
+  }
   let content = if path.exists() {
     fs::read_to_string(path)?
   } else {

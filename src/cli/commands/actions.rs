@@ -18,11 +18,9 @@ pub fn action_archive(ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
   let sections: Vec<String> = selected.iter().map(|e| e.section().to_string()).collect();
 
   for entry in selected {
-    ctx
-      .document
-      .section_by_name_mut("Archive")
-      .unwrap()
-      .add_entry(entry.clone());
+    if let Some(archive) = ctx.document.section_by_name_mut("Archive") {
+      archive.add_entry(entry.clone());
+    }
   }
 
   for (id, section_name) in ids.iter().zip(sections.iter()) {

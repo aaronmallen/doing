@@ -92,7 +92,7 @@ impl Command {
     ctx
       .document
       .section_by_name_mut(&section_name)
-      .unwrap()
+      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?
       .add_entry(entry);
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
@@ -135,9 +135,10 @@ fn archive_entries(document: &mut Document, entry_ids: &[String]) {
     }
   }
 
-  let archive = document.section_by_name_mut("Archive").unwrap();
-  for entry in to_archive {
-    archive.add_entry(entry);
+  if let Some(archive) = document.section_by_name_mut("Archive") {
+    for entry in to_archive {
+      archive.add_entry(entry);
+    }
   }
 }
 

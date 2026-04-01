@@ -49,7 +49,7 @@ fn it_outputs_status_to_stderr() {
 }
 
 #[test]
-fn it_overwrites_existing_done_date_without_unfinished_flag() {
+fn it_errors_when_all_entries_are_already_done() {
   let doing = DoingCmd::new();
 
   fs::write(
@@ -58,12 +58,37 @@ fn it_overwrites_existing_done_date_without_unfinished_flag() {
   )
   .expect("failed to write doing file");
 
-  doing.run(["finish"]).assert().success();
+  doing.run(["finish"]).assert().failure();
 
   let contents = doing.read_doing_file();
   assert!(
-    !contents.contains("@done(2026-03-20 12:00)"),
-    "expected old @done date to be overwritten, got: {contents}"
+    contents.contains("@done(2026-03-20 12:00)"),
+    "expected original @done date to be preserved, got: {contents}"
   );
-  assert!(contents.contains("@done("), "expected new @done date, got: {contents}");
+}
+
+#[test]
+fn it_skips_done_entries_and_finishes_unfinished() {
+  let doing = DoingCmd::new();
+
+  fs::write(
+    doing.doing_file_path(),
+    "Currently:\n\t- 2026-03-22 09:00 | Done task @done(2026-03-22 10:00)\n\t- 2026-03-22 11:00 | Active task\n",
+  )
+  .expect("failed to write doing file");
+
+  doing.run(["finish"]).assert().success();
+
+  let contents = doing.read_doing_file();
+  let done_line = contents.lines().find(|l| l.contains("Done task")).unwrap();
+  assert!(
+    done_line.contains("@done(2026-03-22 10:00)"),
+    "expected already-done entry to keep original @done date, got: {done_line}"
+  );
+
+  let active_line = contents.lines().find(|l| l.contains("Active task")).unwrap();
+  assert!(
+    active_line.contains("@done("),
+    "expected unfinished entry to be finished, got: {active_line}"
+  );
 }

@@ -288,7 +288,7 @@ impl Command {
         section: Some(section_name.to_string()),
         tag_filter,
         tag_queries,
-        unfinished: self.unfinished && !self.update,
+        unfinished: !self.update,
         ..Default::default()
       };
 
@@ -301,7 +301,7 @@ impl Command {
     // Sort by date descending (with position as tiebreaker for same-minute entries)
     // so we always pick the newest entries regardless of file order.
     let entries = ctx.document.entries_in_section(section_name);
-    let filter_unfinished = self.unfinished && !self.update;
+    let filter_unfinished = !self.update;
     let mut candidates: Vec<(usize, &&Entry)> = entries
       .iter()
       .enumerate()
@@ -797,6 +797,7 @@ mod test {
       let mut ctx = sample_ctx_with_done(dir.path());
       let cmd = Command {
         at: Some("2024-03-17 18:00".into()),
+        update: true,
         ..default_cmd()
       };
 

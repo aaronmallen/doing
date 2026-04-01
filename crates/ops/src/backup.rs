@@ -91,6 +91,7 @@ pub fn write_with_backup(doc: &Document, path: &Path, config: &Config) -> Result
 
   let mut doc = doc.clone();
   doc.sort_entries(config.doing_file_sort == doing_config::SortOrder::Desc);
+  doc.dedup();
   taskpaper_io::write_file(&doc, path)
 }
 

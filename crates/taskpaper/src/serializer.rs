@@ -11,8 +11,6 @@ static STRIP_ANSI_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\x1b\[[0-9
 /// Deduplicates entries by ID and strips any ANSI color codes from the output.
 /// Callers are responsible for sorting entries before calling this function.
 pub fn serialize(doc: &Document) -> String {
-  let mut doc = doc.clone();
-  doc.dedup();
   strip_ansi(&doc.to_string())
 }
 
@@ -60,7 +58,7 @@ Archive:
     }
 
     #[test]
-    fn it_deduplicates_entries_by_id() {
+    fn it_preserves_duplicate_entries_without_dedup() {
       let mut doc = Document::new();
       let entry = Entry::new(
         sample_date(14, 30),
@@ -77,6 +75,30 @@ Archive:
       doc.add_section(s1);
       doc.add_section(s2);
 
+      let output = serialize(&doc);
+
+      assert_eq!(output.matches("Task A").count(), 2);
+    }
+
+    #[test]
+    fn it_deduplicates_entries_when_doc_is_deduped_first() {
+      let mut doc = Document::new();
+      let entry = Entry::new(
+        sample_date(14, 30),
+        "Task A",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        Some("aaaabbbbccccddddeeeeffffaaaabbbb"),
+      );
+      let mut s1 = Section::new("Currently");
+      s1.add_entry(entry.clone());
+      let mut s2 = Section::new("Archive");
+      s2.add_entry(entry);
+      doc.add_section(s1);
+      doc.add_section(s2);
+
+      doc.dedup();
       let output = serialize(&doc);
 
       assert_eq!(output.matches("Task A").count(), 1);

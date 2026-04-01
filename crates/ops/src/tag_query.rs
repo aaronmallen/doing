@@ -1,4 +1,7 @@
-use std::sync::LazyLock;
+use std::{
+  collections::HashMap,
+  sync::{LazyLock, Mutex},
+};
 
 use chrono::{DateTime, Local};
 use doing_taskpaper::Entry;
@@ -7,6 +10,8 @@ use regex::Regex;
 
 static VALUE_QUERY_RE: LazyLock<Regex> =
   LazyLock::new(|| Regex::new(r"^(!)?@?(\S+)\s+(!?[<>=][=*]?|[$*^]=)\s+(.+)$").unwrap());
+
+static WILDCARD_CACHE: Mutex<Option<HashMap<String, Regex>>> = Mutex::new(None);
 
 /// A comparison operator for tag value queries.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -135,7 +140,11 @@ impl TagQuery {
       ComparisonOp::LessThan => ordering == std::cmp::Ordering::Less,
       ComparisonOp::LessThanOrEqual => ordering != std::cmp::Ordering::Greater,
       ComparisonOp::Contains | ComparisonOp::StartsWith | ComparisonOp::EndsWith => {
-        unreachable!("string operators must be handled by compare_string, not compare_numeric")
+        debug_assert!(
+          false,
+          "string operators must be handled by compare_string, not compare_numeric"
+        );
+        false
       }
     }
   }
@@ -222,6 +231,19 @@ impl TagQuery {
   }
 }
 
+/// Look up or compile and cache a wildcard regex.
+fn cached_wildcard_regex(pattern: &str) -> Option<Regex> {
+  let mut guard = WILDCARD_CACHE.lock().unwrap_or_else(|e| e.into_inner());
+  let cache = guard.get_or_insert_with(HashMap::new);
+  if let Some(rx) = cache.get(pattern) {
+    return Some(rx.clone());
+  }
+  let rx_str = wildcard_to_regex(pattern);
+  let rx = Regex::new(&rx_str).ok()?;
+  cache.insert(pattern.to_string(), rx.clone());
+  Some(rx)
+}
+
 /// Apply a comparison operator to two ordered values.
 fn compare_ord<T: PartialOrd>(a: T, b: T, op: ComparisonOp) -> bool {
   match op {
@@ -231,7 +253,11 @@ fn compare_ord<T: PartialOrd>(a: T, b: T, op: ComparisonOp) -> bool {
     ComparisonOp::LessThan => a < b,
     ComparisonOp::LessThanOrEqual => a <= b,
     ComparisonOp::Contains | ComparisonOp::StartsWith | ComparisonOp::EndsWith => {
-      unreachable!("string operators must be handled by compare_string, not compare_ord")
+      debug_assert!(
+        false,
+        "string operators must be handled by compare_string, not compare_ord"
+      );
+      false
     }
   }
 }
@@ -296,21 +322,22 @@ fn wildcard_match(text: &str, pattern: &str) -> bool {
     return text == pattern;
   }
 
+  let rx = cached_wildcard_regex(pattern);
+  rx.is_some_and(|r| r.is_match(text))
+}
+
+fn wildcard_to_regex(pattern: &str) -> String {
   let mut rx = String::from("(?i)^");
+  let mut buf = [0u8; 4];
   for ch in pattern.chars() {
     match ch {
       '*' => rx.push_str(".*"),
       '?' => rx.push('.'),
-      _ => {
-        for escaped in regex::escape(&ch.to_string()).chars() {
-          rx.push(escaped);
-        }
-      }
+      _ => rx.push_str(&regex::escape(ch.encode_utf8(&mut buf))),
     }
   }
   rx.push('$');
-
-  Regex::new(&rx).is_ok_and(|r| r.is_match(text))
+  rx
 }
 
 #[cfg(test)]

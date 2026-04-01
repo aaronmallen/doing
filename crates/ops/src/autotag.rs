@@ -171,7 +171,7 @@ fn parse_transform_rule(rule: &str) -> Option<(&str, &str)> {
 ///
 /// `*` matches zero or more non-whitespace characters, `?` matches exactly one.
 fn cached_synonym_regex(pattern: &str) -> Option<Regex> {
-  let mut guard = SYNONYM_REGEX_CACHE.lock().unwrap();
+  let mut guard = SYNONYM_REGEX_CACHE.lock().unwrap_or_else(|e| e.into_inner());
   let cache = guard.get_or_insert_with(HashMap::new);
   if let Some(rx) = cache.get(pattern) {
     return Some(rx.clone());
@@ -184,11 +184,12 @@ fn cached_synonym_regex(pattern: &str) -> Option<Regex> {
 
 fn wildcard_to_word_regex(pattern: &str) -> String {
   let mut rx = String::from("(?i)^");
+  let mut buf = [0u8; 4];
   for ch in pattern.chars() {
     match ch {
       '*' => rx.push_str(r"\S*"),
       '?' => rx.push_str(r"\S"),
-      _ => rx.push_str(&regex::escape(&ch.to_string())),
+      _ => rx.push_str(&regex::escape(ch.encode_utf8(&mut buf))),
     }
   }
   rx.push('$');

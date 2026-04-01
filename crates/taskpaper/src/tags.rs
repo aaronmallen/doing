@@ -228,7 +228,7 @@ impl FromIterator<Tag> for Tags {
 
 /// Look up or compile and cache a wildcard regex.
 fn cached_wildcard_regex(pattern: &str) -> Option<Regex> {
-  let mut guard = WILDCARD_CACHE.lock().unwrap();
+  let mut guard = WILDCARD_CACHE.lock().unwrap_or_else(|e| e.into_inner());
   let cache = guard.get_or_insert_with(HashMap::new);
   if let Some(rx) = cache.get(pattern) {
     return Some(rx.clone());
@@ -245,15 +245,12 @@ fn cached_wildcard_regex(pattern: &str) -> Option<Regex> {
 /// non-whitespace character). All other characters are regex-escaped.
 fn wildcard_to_regex(pattern: &str) -> String {
   let mut rx = String::from("(?i)^");
+  let mut buf = [0u8; 4];
   for ch in pattern.chars() {
     match ch {
       '*' => rx.push_str(r"\S*"),
       '?' => rx.push_str(r"\S"),
-      _ => {
-        for escaped in regex::escape(&ch.to_string()).chars() {
-          rx.push(escaped);
-        }
-      }
+      _ => rx.push_str(&regex::escape(ch.encode_utf8(&mut buf))),
     }
   }
   rx.push('$');

@@ -41,9 +41,9 @@ dir_spec = "0.5"
 doing-config = { path = "crates/config", version = "0.1.4" }
 doing-error = { path = "crates/error", version = "0.1.1" }
 doing-ops = { path = "crates/ops", version = "0.2.2" }
-doing-plugins = { path = "crates/plugins", version = "0.2.2" }
+doing-plugins = { path = "crates/plugins", version = "0.2.3" }
 doing-taskpaper = { path = "crates/taskpaper", version = "0.3.0" }
-doing-template = { path = "crates/template", version = "0.1.8" }
+doing-template = { path = "crates/template", version = "0.1.9" }
 doing-time = { path = "crates/time", version = "0.1.6" }
 env_logger = "0.11"
 indexmap = "2"

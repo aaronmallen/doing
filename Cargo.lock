@@ -538,7 +538,7 @@ dependencies = [
 
 [[package]]
 name = "doing-plugins"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -571,7 +571,7 @@ dependencies = [
 
 [[package]]
 name = "doing-template"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "chrono",
  "doing-config",

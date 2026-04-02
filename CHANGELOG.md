@@ -7,6 +7,21 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.11] - 2026-04-01
+
+### Changed
+
+- **Breaking:** `serialize()` in `doing-taskpaper` no longer implicitly deduplicates entries; callers
+  that need dedup must call `doc.dedup()` before serializing (see [#399])
+- Wildcard pattern matching and document saving are faster due to reduced heap allocations and
+  eliminated redundant cloning (see [#399], [#400])
+
+### Fixed
+
+- `finish` command now skips already-done entries, working through unfinished entries in order (see [#404])
+- Replaced several `unwrap()` and `unreachable!()` calls with safe fallbacks to prevent panics on
+  edge-case inputs (see [#402])
+
 ## [v0.1.10] - 2026-04-01
 
 ### Added
@@ -566,8 +581,12 @@ Initial alpha release
 [#363]: https://github.com/aaronmallen/doing/issues/363
 [#365]: https://github.com/aaronmallen/doing/issues/365
 [#390]: https://github.com/aaronmallen/doing/issues/390
+[#399]: https://github.com/aaronmallen/doing/issues/399
+[#400]: https://github.com/aaronmallen/doing/issues/400
+[#402]: https://github.com/aaronmallen/doing/issues/402
+[#404]: https://github.com/aaronmallen/doing/issues/404
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.10...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.11...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -585,3 +604,4 @@ Initial alpha release
 [v0.1.8]: https://github.com/aaronmallen/doing/compare/0.1.7...0.1.8
 [v0.1.9]: https://github.com/aaronmallen/doing/compare/0.1.8...0.1.9
 [v0.1.10]: https://github.com/aaronmallen/doing/compare/0.1.9...0.1.10
+[v0.1.11]: https://github.com/aaronmallen/doing/compare/0.1.10...0.1.11

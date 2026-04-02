@@ -465,7 +465,7 @@ dependencies = [
 
 [[package]]
 name = "doing"
-version = "0.1.10"
+version = "0.1.11"
 dependencies = [
  "assert_cmd",
  "chrono",
@@ -523,7 +523,7 @@ dependencies = [
 
 [[package]]
 name = "doing-ops"
-version = "0.2.1"
+version = "0.2.2"
 dependencies = [
  "chrono",
  "doing-config",
@@ -559,7 +559,7 @@ dependencies = [
 
 [[package]]
 name = "doing-taskpaper"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "chrono",
  "doing-error",

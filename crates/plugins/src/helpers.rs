@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_time::{DurationFormat, FormattedDuration};
@@ -12,13 +14,22 @@ pub fn format_interval(entry: &Entry, config: &Config) -> Option<String> {
   })
 }
 
-/// Group entries by section name, preserving the order sections are first seen.
-pub fn group_by_section(entries: &[Entry]) -> Vec<(&str, Vec<&Entry>)> {
-  let mut map: IndexMap<&str, Vec<&Entry>> = IndexMap::new();
+/// Group entries by an arbitrary key, preserving the order keys are first seen.
+pub fn group_entries_by<'a, K, F>(entries: &'a [Entry], key_fn: F) -> Vec<(K, Vec<&'a Entry>)>
+where
+  K: Eq + Hash,
+  F: Fn(&'a Entry) -> K,
+{
+  let mut map: IndexMap<K, Vec<&'a Entry>> = IndexMap::new();
   for entry in entries {
-    map.entry(entry.section()).or_default().push(entry);
+    map.entry(key_fn(entry)).or_default().push(entry);
   }
   map.into_iter().collect()
+}
+
+/// Group entries by section name, preserving the order sections are first seen.
+pub fn group_by_section(entries: &[Entry]) -> Vec<(&str, Vec<&Entry>)> {
+  group_entries_by(entries, |entry| entry.section())
 }
 
 /// Convert an entry's note lines into an HTML unordered list.

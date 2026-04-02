@@ -1,9 +1,9 @@
+use chrono::NaiveDate;
 use doing_config::Config;
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
-use indexmap::IndexMap;
 
-use crate::{ExportPlugin, Plugin, PluginSettings};
+use crate::{ExportPlugin, Plugin, PluginSettings, helpers::group_entries_by};
 
 /// Export plugin that groups entries by date, rendering a table with daily and grand totals.
 ///
@@ -84,14 +84,9 @@ fn format_clock(duration: chrono::Duration) -> String {
   format!("{hours:02}:{minutes:02}:{seconds:02}")
 }
 
-/// Group entries by date string (`YYYY-MM-DD`), preserving the order dates are first seen.
-fn group_by_date(entries: &[Entry]) -> Vec<(String, Vec<&Entry>)> {
-  let mut map: IndexMap<String, Vec<&Entry>> = IndexMap::new();
-  for entry in entries {
-    let date = entry.date().format("%Y-%m-%d").to_string();
-    map.entry(date).or_default().push(entry);
-  }
-  map.into_iter().collect()
+/// Group entries by date, preserving the order dates are first seen.
+fn group_by_date(entries: &[Entry]) -> Vec<(NaiveDate, Vec<&Entry>)> {
+  group_entries_by(entries, |entry| entry.date().date_naive())
 }
 
 /// Remove `@done` and `@done(...)` tags from a title string.
@@ -319,6 +314,7 @@ mod test {
   }
 
   mod group_by_date {
+    use chrono::NaiveDate;
     use pretty_assertions::assert_eq;
 
     use super::*;
@@ -355,9 +351,9 @@ mod test {
       let groups = super::super::group_by_date(&entries);
 
       assert_eq!(groups.len(), 2);
-      assert_eq!(groups[0].0, "2024-03-17");
+      assert_eq!(groups[0].0, NaiveDate::from_ymd_opt(2024, 3, 17).unwrap());
       assert_eq!(groups[0].1.len(), 2);
-      assert_eq!(groups[1].0, "2024-03-18");
+      assert_eq!(groups[1].0, NaiveDate::from_ymd_opt(2024, 3, 18).unwrap());
       assert_eq!(groups[1].1.len(), 1);
     }
   }

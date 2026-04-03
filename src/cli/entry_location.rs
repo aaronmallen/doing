@@ -26,7 +26,7 @@ impl EntryLocation {
 /// Locate entries matching filters, or fall back to the last N entries from the section.
 ///
 /// When `unfinished` is `true`, only entries without a `@done` tag are considered
-/// in the no-filter fallback path.
+/// in the no-filter fallback path and in filter options.
 pub fn find_entries(
   filter: &FilterArgs,
   count: Option<usize>,
@@ -45,6 +45,10 @@ pub fn find_entries(
 
     let mut options = filter.to_filter_options(&ctx.config, ctx.include_notes)?;
     options.age = options.age.or(Some(Age::Newest));
+    if count.is_some() {
+      options.count = count;
+    }
+    options.unfinished = unfinished;
 
     let results = filter_entries(all_entries, &options);
     return Ok(results.iter().map(EntryLocation::from_entry).collect());
@@ -52,14 +56,19 @@ pub fn find_entries(
 
   let count = count.unwrap_or(1);
   let entries = ctx.document.entries_in_section(&section);
-  let mut locs: Vec<EntryLocation> = entries
+  // Sort by date descending (with position as tiebreaker for same-timestamp
+  // entries) so we always pick the newest entries regardless of file order.
+  let mut candidates: Vec<(usize, &&Entry)> = entries
     .iter()
-    .rev()
-    .filter(|e| if unfinished { e.unfinished() } else { true })
-    .take(count)
-    .map(|e| EntryLocation::from_entry(e))
+    .enumerate()
+    .filter(|(_, e)| if unfinished { e.unfinished() } else { true })
     .collect();
-  locs.reverse();
+  candidates.sort_by(|(i_a, a), (i_b, b)| b.date().cmp(&a.date()).then_with(|| i_b.cmp(i_a)));
+  let locs: Vec<EntryLocation> = candidates
+    .iter()
+    .take(count)
+    .map(|(_, e)| EntryLocation::from_entry(e))
+    .collect();
 
   Ok(locs)
 }

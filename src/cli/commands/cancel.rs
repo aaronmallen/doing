@@ -1,10 +1,6 @@
 use clap::Args;
-use doing_ops::{
-  backup::write_with_backup,
-  filter::{Age, FilterOptions, filter_entries},
-  tag_filter::{BooleanMode, TagFilter},
-};
-use doing_taskpaper::{Entry, Tag};
+use doing_ops::backup::write_with_backup;
+use doing_taskpaper::Tag;
 
 use crate::{
   Result,
@@ -146,84 +142,19 @@ impl Command {
   }
 
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
-    let has_filters = !self.tag.is_empty() || self.search.is_some() || !self.val.is_empty();
-
-    if has_filters {
-      let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
-
-      let expanded_tags: Vec<String> = self
-        .tag
-        .iter()
-        .flat_map(|t| t.split(',').map(|s| s.trim().to_string()))
-        .filter(|s| !s.is_empty())
-        .collect();
-
-      let tag_filter = if expanded_tags.is_empty() {
-        None
-      } else {
-        let mode = self.bool_op.map(BooleanMode::from).unwrap_or_default();
-        Some(TagFilter::new(&expanded_tags, mode))
-      };
-
-      let mut search_config = ctx.config.search.clone();
-      if let Some(ref case_override) = self.case {
-        search_config.case = case_override.clone();
-      }
-      if self.exact {
-        search_config.matching = "exact".into();
-      }
-
-      let search = self
-        .search
-        .as_deref()
-        .and_then(|q| doing_ops::search::parse_query(q, &search_config));
-
-      let tag_queries = self
-        .val
-        .iter()
-        .map(|v| {
-          if let Some(q) = doing_ops::tag_query::TagQuery::parse(v) {
-            Ok(q)
-          } else if !expanded_tags.is_empty() {
-            let tag_name = &expanded_tags[0];
-            doing_ops::tag_query::TagQuery::parse(&format!("{tag_name} == {v}"))
-              .ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
-          } else {
-            Err(crate::Error::Parse(format!("invalid tag query: {v}")))
-          }
-        })
-        .collect::<crate::Result<Vec<_>>>()?;
-
-      let options = FilterOptions {
-        age: Some(Age::Newest),
-        count: Some(self.effective_count()),
-        include_notes: ctx.include_notes,
-        negate: self.not,
-        search,
-        section: Some(section_name.to_string()),
-        tag_filter,
-        tag_queries,
-        unfinished: self.unfinished,
-        ..Default::default()
-      };
-
-      let results = filter_entries(all_entries, &options);
-      return Ok(results.iter().map(|e| e.id().to_string()).collect());
-    }
-
-    // No filters: take the last N entries from the section
-    let entries = ctx.document.entries_in_section(section_name);
-    let unfinished = self.unfinished;
-    let mut ids: Vec<String> = entries
-      .iter()
-      .rev()
-      .filter(|e| if unfinished { e.unfinished() } else { true })
-      .take(self.effective_count())
-      .map(|e| e.id().to_string())
-      .collect();
-    ids.reverse();
-
-    Ok(ids)
+    let filter = crate::cli::args::FilterArgs {
+      bool_op: self.bool_op,
+      case: self.case.clone(),
+      exact: self.exact,
+      not: self.not,
+      search: self.search.clone(),
+      section: Some(section_name.to_string()),
+      tag: self.tag.clone(),
+      val: self.val.clone(),
+      ..Default::default()
+    };
+    let locs = crate::cli::entry_location::find_entries(&filter, Some(self.effective_count()), self.unfinished, ctx)?;
+    Ok(locs.into_iter().map(|l| l.id).collect())
   }
 
   fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
@@ -241,7 +172,7 @@ mod test {
   use std::fs;
 
   use chrono::{Local, TimeZone};
-  use doing_taskpaper::{Document, Note, Section, Tags};
+  use doing_taskpaper::{Document, Entry, Note, Section, Tags};
 
   use super::*;
 

@@ -7,6 +7,16 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.12] - 2026-04-02
+
+### Changed
+
+- Consolidated duplicated filter, display, and entry-lookup logic across CLI commands into shared
+  helpers, reducing code duplication by ~330 lines (see [#393], [#394], [#395], [#397])
+- Unified test setup boilerplate across command modules into shared test helpers (see [#396])
+- Entry grouping in the plugins crate now uses a single generic function instead of separate
+  per-key implementations (see [#398])
+
 ## [v0.1.11] - 2026-04-01
 
 ### Changed
@@ -586,7 +596,14 @@ Initial alpha release
 [#402]: https://github.com/aaronmallen/doing/issues/402
 [#404]: https://github.com/aaronmallen/doing/issues/404
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.11...main
+[#393]: https://github.com/aaronmallen/doing/issues/393
+[#394]: https://github.com/aaronmallen/doing/issues/394
+[#395]: https://github.com/aaronmallen/doing/issues/395
+[#396]: https://github.com/aaronmallen/doing/issues/396
+[#397]: https://github.com/aaronmallen/doing/issues/397
+[#398]: https://github.com/aaronmallen/doing/issues/398
+
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.12...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -605,3 +622,4 @@ Initial alpha release
 [v0.1.9]: https://github.com/aaronmallen/doing/compare/0.1.8...0.1.9
 [v0.1.10]: https://github.com/aaronmallen/doing/compare/0.1.9...0.1.10
 [v0.1.11]: https://github.com/aaronmallen/doing/compare/0.1.10...0.1.11
+[v0.1.12]: https://github.com/aaronmallen/doing/compare/0.1.11...0.1.12

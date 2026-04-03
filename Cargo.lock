@@ -465,7 +465,7 @@ dependencies = [
 
 [[package]]
 name = "doing"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "assert_cmd",
  "chrono",
@@ -538,7 +538,7 @@ dependencies = [
 
 [[package]]
 name = "doing-plugins"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "chrono",
  "chrono-tz",

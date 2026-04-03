@@ -1,6 +1,4 @@
 use clap::Args;
-use doing_config::SortOrder;
-use doing_ops::filter::filter_entries;
 use doing_time::{chronify, parse_range};
 
 use crate::{
@@ -8,7 +6,6 @@ use crate::{
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
-    pager,
   },
 };
 
@@ -47,27 +44,8 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self.filter.section.as_deref().unwrap_or("all");
-
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
-
-    let mut options = self.filter.clone().to_filter_options(&ctx.config, ctx.include_notes)?;
-    options.section = Some(section_name.to_string());
-
-    match parse_range(&self.date) {
-      Ok((start, end)) => {
-        if options.after.is_none() {
-          options.after = Some(start);
-        }
-        if options.before.is_none() {
-          options.before = Some(end);
-        }
-      }
+    let (after, before) = match parse_range(&self.date) {
+      Ok((start, end)) => (Some(start), Some(end)),
       Err(_) => {
         let date = chronify(&self.date)?;
         let day_start = date
@@ -78,30 +56,10 @@ impl Command {
           .date_naive()
           .and_hms_opt(23, 59, 59)
           .and_then(|dt| dt.and_local_timezone(chrono::Local).latest());
-
-        if options.after.is_none() {
-          options.after = day_start;
-        }
-        if options.before.is_none() {
-          options.before = day_end;
-        }
+        (day_start, day_end)
       }
-    }
-
-    let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));
-    options.sort = sort_order;
-
-    let filtered = filter_entries(all_entries, &options);
-
-    let output = self
-      .display
-      .render_entries(&filtered, &ctx.config, "default", ctx.include_notes)?;
-
-    if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-    }
-
-    Ok(())
+    };
+    super::today::display_date_range(&self.filter, &self.display, ctx, self.pager, after, before, "default")
   }
 }
 

@@ -88,8 +88,7 @@ impl Command {
     let mut filter_options = self.build_filter_options(&view, ctx)?;
     filter_options.section = Some(section_name);
 
-    let sort_order = self.display.sort.map(SortOrder::from).unwrap_or(view.order);
-    filter_options.sort = Some(sort_order);
+    filter_options.sort = Some(self.display.sort.map(SortOrder::from).unwrap_or(view.order));
 
     let filtered = filter_entries(all_entries, &filter_options);
 

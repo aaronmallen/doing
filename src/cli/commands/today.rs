@@ -1,6 +1,5 @@
 use chrono::{DateTime, Local, NaiveTime};
 use clap::Args;
-use doing_config::SortOrder;
 use doing_ops::filter::filter_entries;
 
 use crate::{
@@ -78,12 +77,24 @@ pub fn display_date_range(
     options.before = default_before;
   }
 
-  let sort_order = display.sort.map(SortOrder::from).or(Some(ctx.config.order));
-  options.sort = sort_order;
+  options.sort = display.resolve_sort_order(&ctx.config);
 
   let filtered = filter_entries(all_entries, &options);
+  display_filtered_entries(&filtered, display, ctx, label, use_pager)
+}
 
-  let output = display.render_entries(&filtered, &ctx.config, label, ctx.include_notes)?;
+/// Shared render-and-page pipeline for read-only display commands.
+///
+/// Takes already-filtered entries, renders them with the display template, and
+/// pages the output if requested.
+pub fn display_filtered_entries(
+  entries: &[doing_taskpaper::Entry],
+  display: &DisplayArgs,
+  ctx: &mut AppContext,
+  label: &str,
+  use_pager: bool,
+) -> Result<()> {
+  let output = display.render_entries(entries, &ctx.config, label, ctx.include_notes)?;
 
   if !output.is_empty() {
     pager::output(&output, &ctx.config, use_pager || ctx.use_pager)?;

@@ -1,5 +1,4 @@
 use clap::Args;
-use doing_config::SortOrder;
 use doing_ops::filter::{Age, filter_entries};
 
 use crate::{
@@ -7,7 +6,6 @@ use crate::{
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
-    pager,
   },
 };
 
@@ -77,8 +75,7 @@ impl Command {
       options.count = Some(config_count.unwrap_or(DEFAULT_COUNT));
     }
 
-    let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));
-    options.sort = sort_order;
+    options.sort = self.display.resolve_sort_order(&ctx.config);
 
     let filtered = filter_entries(all_entries, &options);
 
@@ -88,15 +85,7 @@ impl Command {
       filtered
     };
 
-    let output = self
-      .display
-      .render_entries(&entries, &ctx.config, "recent", ctx.include_notes)?;
-
-    if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-    }
-
-    Ok(())
+    super::today::display_filtered_entries(&entries, &self.display, ctx, "recent", self.pager)
   }
 }
 

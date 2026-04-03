@@ -130,6 +130,11 @@ pub struct DisplayArgs {
 }
 
 impl DisplayArgs {
+  /// Resolve the sort order from the `--sort` flag, falling back to the config default.
+  pub fn resolve_sort_order(&self, config: &Config) -> Option<SortOrder> {
+    self.sort.map(SortOrder::from).or(Some(config.order))
+  }
+
   /// Render entries using either an export plugin or the template pipeline.
   ///
   /// If `--output` matches a registered export plugin trigger, the plugin renders

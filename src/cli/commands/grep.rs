@@ -1,5 +1,4 @@
 use clap::Args;
-use doing_config::SortOrder;
 use doing_ops::{
   backup::write_with_backup,
   filter::{FilterOptions, filter_entries},
@@ -11,7 +10,7 @@ use crate::{
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
-    editor, pager,
+    editor,
   },
 };
 
@@ -94,8 +93,7 @@ impl Command {
 
     let mut filter_options = self.build_filter_options(ctx, section_name)?;
 
-    let sort_order = self.display.sort.map(SortOrder::from).or(Some(ctx.config.order));
-    filter_options.sort = sort_order;
+    filter_options.sort = self.display.resolve_sort_order(&ctx.config);
 
     let filtered = filter_entries(all_entries, &filter_options);
 
@@ -113,15 +111,7 @@ impl Command {
       return self.action_editor(ctx, &entries);
     }
 
-    let output = self
-      .display
-      .render_entries(&entries, &ctx.config, "default", ctx.include_notes)?;
-
-    if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-    }
-
-    Ok(())
+    super::today::display_filtered_entries(&entries, &self.display, ctx, "default", self.pager)
   }
 
   fn action_delete(&self, ctx: &mut AppContext, entries: &[doing_taskpaper::Entry]) -> Result<()> {

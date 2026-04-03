@@ -11,7 +11,7 @@ use crate::{
   cli::{
     AppContext,
     args::{DisplayArgs, FilterArgs},
-    editor, pager,
+    editor,
   },
 };
 
@@ -66,15 +66,7 @@ impl Command {
       return self.action_editor(ctx, &filtered);
     }
 
-    let output = self
-      .display
-      .render_entries(&filtered, &ctx.config, "last", ctx.include_notes)?;
-
-    if !output.is_empty() {
-      pager::output(&output, &ctx.config, self.pager || ctx.use_pager)?;
-    }
-
-    Ok(())
+    super::today::display_filtered_entries(&filtered, &self.display, ctx, "last", self.pager)
   }
 
   fn action_delete(&self, ctx: &mut AppContext, entries: &[doing_taskpaper::Entry]) -> Result<()> {

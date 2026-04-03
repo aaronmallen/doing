@@ -33,6 +33,11 @@ pub fn resolve_tag_value(date: bool, value: &Option<String>) -> Option<String> {
   }
 }
 
+/// Create a "section not found" error for the given section name.
+pub fn section_not_found_err(section_name: &str) -> crate::Error {
+  crate::Error::Config(format!("section \"{section_name}\" not found"))
+}
+
 /// Shared application context passed to all command handlers.
 #[allow(dead_code)]
 pub struct AppContext {
@@ -113,6 +118,11 @@ impl AppContext {
       use_pager: false,
       yes: false,
     }
+  }
+
+  /// Resolve a section name from an optional override, falling back to the config default.
+  pub fn resolve_section(&self, section: &Option<String>) -> String {
+    section.clone().unwrap_or_else(|| self.config.current_section.clone())
   }
 
   /// Print a user-facing status message to stderr.

@@ -79,10 +79,7 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
+    let section_name = ctx.resolve_section(&self.section);
     let include_date = self.date && !self.no_date;
 
     if self.title.is_empty() && !self.editor {
@@ -140,7 +137,7 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
     let last = section
       .entries_mut()
@@ -213,7 +210,7 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
     let last = if self.unfinished {
       section.entries_mut().iter_mut().rev().find(|e| e.unfinished())

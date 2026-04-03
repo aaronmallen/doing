@@ -49,10 +49,7 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
+    let section_name = ctx.resolve_section(&self.section);
     let date = self.resolve_date()?;
 
     let finished_ids = finish_meanwhile_entries(
@@ -92,7 +89,7 @@ impl Command {
     ctx
       .document
       .section_by_name_mut(&section_name)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?
+      .ok_or_else(|| crate::cli::section_not_found_err(&section_name))?
       .add_entry(entry);
 
     write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;

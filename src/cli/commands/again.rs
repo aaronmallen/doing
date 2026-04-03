@@ -132,7 +132,7 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(&source_section)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{source_section}\" not found")))?;
+      .ok_or_else(|| crate::cli::section_not_found_err(&source_section))?;
     if let Some(src) = section.entries_mut().iter_mut().find(|e| e.id() == source_id) {
       src.tags_mut().add(Tag::new("done", done_value));
     }
@@ -169,12 +169,7 @@ impl Command {
   fn find_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
     let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
 
-    let expanded_tags: Vec<String> = self
-      .tag
-      .iter()
-      .flat_map(|t| t.split(',').map(|s| s.trim().to_string()))
-      .filter(|s| !s.is_empty())
-      .collect();
+    let expanded_tags = crate::cli::args::expand_tags(&self.tag);
 
     let tag_filter = if expanded_tags.is_empty() {
       None

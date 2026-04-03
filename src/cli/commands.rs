@@ -64,7 +64,7 @@ pub fn archive_entries_by_id(
   let section = ctx
     .document
     .section_by_name_mut(section_name)
-    .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
+    .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
   let to_move: Vec<Entry> = section
     .entries_mut()

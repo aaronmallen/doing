@@ -21,9 +21,8 @@ use crate::{
 /// --archive to move finished entries to the Archive section.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
-  /// Number of entries to finish
-  #[arg(index = 1, value_name = "COUNT")]
-  count_pos: Option<usize>,
+  #[command(flatten)]
+  count_args: crate::cli::args::CountArgs,
 
   /// Move finished entries to Archive
   #[arg(short, long)]
@@ -48,10 +47,6 @@ pub struct Command {
   /// Case sensitivity for search (smart/sensitive/ignore)
   #[arg(long)]
   case: Option<String>,
-
-  /// Finish the last N entries
-  #[arg(short, long, default_value_t = 1)]
-  count: usize,
 
   /// Include date in @done tag
   #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_date", default_value_t = true)]
@@ -111,10 +106,7 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
+    let section_name = ctx.resolve_section(&self.section);
     let include_date = self.date && !self.no_date;
 
     if self.remove {
@@ -222,10 +214,6 @@ impl Command {
     super::archive_entries_by_id(ctx, section_name, entry_ids, true)
   }
 
-  fn effective_count(&self) -> usize {
-    self.count_pos.unwrap_or(self.count)
-  }
-
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
     let filter = crate::cli::args::FilterArgs {
       bool_op: self.bool_op,
@@ -238,7 +226,8 @@ impl Command {
       val: self.val.clone(),
       ..Default::default()
     };
-    let locs = crate::cli::entry_location::find_entries(&filter, Some(self.effective_count()), !self.update, ctx)?;
+    let locs =
+      crate::cli::entry_location::find_entries(&filter, Some(self.count_args.effective_count()), !self.update, ctx)?;
     Ok(locs.into_iter().map(|l| l.id).collect())
   }
 
@@ -257,7 +246,7 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
     let entry = section
       .entries_mut()
@@ -312,7 +301,7 @@ impl Command {
       .iter()
       .rev()
       .filter(|e| e.finished())
-      .take(self.effective_count())
+      .take(self.count_args.effective_count())
       .map(|e| e.id().to_string())
       .collect();
 
@@ -323,7 +312,7 @@ impl Command {
     let section = ctx
       .document
       .section_by_name_mut(section_name)
-      .ok_or_else(|| crate::Error::Config(format!("section \"{section_name}\" not found")))?;
+      .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
     for entry in section.entries_mut().iter_mut() {
       if ids.contains(&entry.id().to_string()) {
@@ -399,14 +388,16 @@ mod test {
 
   fn default_cmd() -> Command {
     Command {
-      count_pos: None,
+      count_args: crate::cli::args::CountArgs {
+        count_pos: None,
+        count: 1,
+      },
       archive: false,
       at: None,
       auto: false,
       back: None,
       bool_op: None,
       case: None,
-      count: 1,
       date: true,
       exact: false,
       from: None,
@@ -583,7 +574,10 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
-        count: 2,
+        count_args: crate::cli::args::CountArgs {
+          count_pos: None,
+          count: 2,
+        },
         ..default_cmd()
       };
 
@@ -602,7 +596,10 @@ mod test {
       let mut ctx = sample_ctx_with_multiple(dir.path());
       let cmd = Command {
         auto: true,
-        count: 2,
+        count_args: crate::cli::args::CountArgs {
+          count_pos: None,
+          count: 2,
+        },
         ..default_cmd()
       };
 

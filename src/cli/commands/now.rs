@@ -70,10 +70,7 @@ impl Command {
   }
 
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = self
-      .section
-      .clone()
-      .unwrap_or_else(|| ctx.config.current_section.clone());
+    let section_name = ctx.resolve_section(&self.section);
     let (date, done_date) = self.resolve_dates()?;
     let (title, note) = self.resolve_title_and_note(&ctx.config)?;
 

@@ -78,7 +78,7 @@ pub fn find_entry_mut<'a>(ctx: &'a mut AppContext, loc: &EntryLocation) -> Resul
   let section = ctx
     .document
     .section_by_name_mut(&loc.section)
-    .ok_or_else(|| crate::Error::Config(format!("section \"{}\" not found", loc.section)))?;
+    .ok_or_else(|| crate::cli::section_not_found_err(&loc.section))?;
 
   section
     .entries_mut()

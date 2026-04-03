@@ -303,12 +303,7 @@ impl FilterArgs {
       .as_deref()
       .and_then(|q| search::parse_query(q, &search_config));
 
-    let expanded_tags: Vec<String> = self
-      .tag
-      .iter()
-      .flat_map(|t| t.split(',').map(|s| s.trim().to_string()))
-      .filter(|s| !s.is_empty())
-      .collect();
+    let expanded_tags = expand_tags(&self.tag);
 
     let tag_filter = if expanded_tags.is_empty() {
       None
@@ -368,6 +363,37 @@ impl FilterArgs {
       None => Ok((None, None)),
     }
   }
+}
+
+/// Shared positional-count / flag-count pattern used by finish and cancel.
+///
+/// Provides a positional `COUNT` argument and a `--count` flag, with the positional
+/// taking precedence.
+#[derive(Args, Clone, Debug)]
+pub struct CountArgs {
+  /// Number of entries (positional)
+  #[arg(index = 1, value_name = "COUNT")]
+  pub count_pos: Option<usize>,
+
+  /// Number of entries (flag)
+  #[arg(short, long, default_value_t = 1)]
+  pub count: usize,
+}
+
+impl CountArgs {
+  /// Return the effective count, preferring the positional argument over the flag.
+  pub fn effective_count(&self) -> usize {
+    self.count_pos.unwrap_or(self.count)
+  }
+}
+
+/// Expand comma-separated tags into individual tag names, trimming whitespace and removing empties.
+pub fn expand_tags(tags: &[String]) -> Vec<String> {
+  tags
+    .iter()
+    .flat_map(|t| t.split(',').map(|s| s.trim().to_string()))
+    .filter(|s| !s.is_empty())
+    .collect()
 }
 
 /// Sort direction for output.

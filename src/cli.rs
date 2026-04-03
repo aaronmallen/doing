@@ -4,6 +4,8 @@ pub mod editor;
 pub mod entry_location;
 pub mod interactive;
 pub mod pager;
+#[cfg(test)]
+pub mod test_helpers;
 pub mod title_note;
 
 use std::{ffi::OsString, io::IsTerminal, path::PathBuf};

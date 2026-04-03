@@ -187,13 +187,14 @@ impl Command {
 
 #[cfg(test)]
 mod test {
-  use std::fs;
-
   use chrono::{Local, TimeZone};
-  use doing_taskpaper::{Document, Entry, Note, Section, Tags};
+  use doing_taskpaper::Tags;
 
   use super::*;
-  use crate::cli::args::FilterArgs;
+  use crate::cli::{
+    args::FilterArgs,
+    test_helpers::{make_ctx_with_entries, make_entry},
+  };
 
   fn default_cmd() -> Command {
     Command {
@@ -212,98 +213,64 @@ mod test {
   }
 
   fn sample_ctx(dir: &std::path::Path) -> AppContext {
-    let path = dir.join("doing.md");
-    fs::write(&path, "Currently:\n").unwrap();
-    let mut doc = Document::new();
-    let mut section = Section::new("Currently");
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Active task",
-      Tags::new(),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    doc.add_section(section);
-    let mut ctx = AppContext::for_test(path);
-    ctx.document = doc;
-    ctx
+    make_ctx_with_entries(
+      dir,
+      vec![make_entry(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+        "Active task",
+        Tags::new(),
+      )],
+    )
   }
 
   fn sample_ctx_with_tags(dir: &std::path::Path) -> AppContext {
-    let path = dir.join("doing.md");
-    fs::write(&path, "Currently:\n").unwrap();
-    let mut doc = Document::new();
-    let mut section = Section::new("Currently");
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Tagged task",
-      Tags::from_iter(vec![
-        Tag::new("project", None::<String>),
-        Tag::new("coding", None::<String>),
-      ]),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    doc.add_section(section);
-    let mut ctx = AppContext::for_test(path);
-    ctx.document = doc;
-    ctx
+    make_ctx_with_entries(
+      dir,
+      vec![make_entry(
+        Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+        "Tagged task",
+        Tags::from_iter(vec![
+          Tag::new("project", None::<String>),
+          Tag::new("coding", None::<String>),
+        ]),
+      )],
+    )
   }
 
   fn sample_ctx_with_done_entry(dir: &std::path::Path) -> AppContext {
-    let path = dir.join("doing.md");
-    fs::write(&path, "Currently:\n").unwrap();
-    let mut doc = Document::new();
-    let mut section = Section::new("Currently");
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
-      "Active task",
-      Tags::new(),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Done task",
-      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    doc.add_section(section);
-    let mut ctx = AppContext::for_test(path);
-    ctx.document = doc;
-    ctx
+    make_ctx_with_entries(
+      dir,
+      vec![
+        make_entry(
+          Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
+          "Active task",
+          Tags::new(),
+        ),
+        make_entry(
+          Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+          "Done task",
+          Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 15:00"))]),
+        ),
+      ],
+    )
   }
 
   fn sample_ctx_with_multiple(dir: &std::path::Path) -> AppContext {
-    let path = dir.join("doing.md");
-    fs::write(&path, "Currently:\n").unwrap();
-    let mut doc = Document::new();
-    let mut section = Section::new("Currently");
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
-      "First task",
-      Tags::from_iter(vec![Tag::new("proj-a", None::<String>)]),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    section.add_entry(Entry::new(
-      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
-      "Second task",
-      Tags::from_iter(vec![Tag::new("proj-b", None::<String>)]),
-      Note::new(),
-      "Currently",
-      None::<String>,
-    ));
-    doc.add_section(section);
-    let mut ctx = AppContext::for_test(path);
-    ctx.document = doc;
-    ctx
+    make_ctx_with_entries(
+      dir,
+      vec![
+        make_entry(
+          Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
+          "First task",
+          Tags::from_iter(vec![Tag::new("proj-a", None::<String>)]),
+        ),
+        make_entry(
+          Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+          "Second task",
+          Tags::from_iter(vec![Tag::new("proj-b", None::<String>)]),
+        ),
+      ],
+    )
   }
 
   mod call {
@@ -370,13 +337,7 @@ mod test {
     #[test]
     fn it_errors_on_empty_section() {
       let dir = tempfile::tempdir().unwrap();
-      let path = dir.path().join("doing.md");
-      fs::write(&path, "Currently:\n").unwrap();
-      let mut ctx = {
-        let mut ctx = AppContext::for_test(path);
-        ctx.document = Document::parse("Currently:\n");
-        ctx
-      };
+      let mut ctx = crate::cli::test_helpers::make_ctx_with_file(dir.path(), "Currently:\n");
       let cmd = Command {
         tags: vec!["coding".into()],
         ..default_cmd()

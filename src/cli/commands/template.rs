@@ -3,7 +3,7 @@ use std::{fs, path::Path};
 use clap::Args;
 use doing_plugins::default_registry;
 
-use crate::{Result, cli::AppContext};
+use crate::{Error, Result, cli::AppContext};
 
 /// Manage export format templates.
 ///
@@ -52,6 +52,7 @@ impl Command {
     }
 
     if let Some(ref name) = self.save {
+      validate_template_name(name)?;
       return save_template(name, ctx);
     }
 
@@ -62,6 +63,7 @@ impl Command {
     }
 
     if let Some(ref name) = self.name {
+      validate_template_name(name)?;
       return show_template(name, ctx);
     }
 
@@ -75,7 +77,7 @@ fn builtin_css() -> &'static str {
 }
 
 fn list_templates(column: bool, ctx: &AppContext) -> Result<()> {
-  let registry = default_registry();
+  let registry = default_registry()?;
   let formats = registry.available_formats();
 
   // Also check for user-saved templates on disk
@@ -116,6 +118,7 @@ fn list_templates(column: bool, ctx: &AppContext) -> Result<()> {
 }
 
 fn save_template(name: &str, ctx: &AppContext) -> Result<()> {
+  validate_template_name(name)?;
   let template_dir = &ctx.config.template_path;
   fs::create_dir_all(template_dir)
     .map_err(|e| crate::Error::Config(format!("failed to create templates directory: {e}")))?;
@@ -139,6 +142,7 @@ fn show_path(ctx: &AppContext) -> Result<()> {
 }
 
 fn show_template(name: &str, ctx: &AppContext) -> Result<()> {
+  validate_template_name(name)?;
   // Check for a user-saved template file first
   let template_dir = &ctx.config.template_path;
   let candidates = [
@@ -164,7 +168,7 @@ fn show_template(name: &str, ctx: &AppContext) -> Result<()> {
       println!("{}", builtin_css());
     }
     _ => {
-      let registry = default_registry();
+      let registry = default_registry()?;
       if registry.resolve(name).is_some() {
         println!("Built-in export format: {name}");
         println!("No editable template file. Use --save {name} to create one.");
@@ -192,6 +196,24 @@ fn template_source(name: &str, template_dir: &Path) -> &'static str {
   }
 
   "(built-in)"
+}
+
+/// Validate that a template name is a plain identifier without path traversal.
+///
+/// Rejects names containing path separators (`/`, `\`), parent-directory
+/// references (`..`), or absolute paths.
+fn validate_template_name(name: &str) -> Result<()> {
+  if name.is_empty() {
+    return Err(Error::Config("template name must not be empty".into()));
+  }
+
+  if name.contains('/') || name.contains('\\') || name.contains("..") || Path::new(name).is_absolute() {
+    return Err(Error::Config(format!(
+      "invalid template name \"{name}\": must be a plain name without path separators"
+    )));
+  }
+
+  Ok(())
 }
 
 #[cfg(test)]
@@ -351,6 +373,59 @@ mod test {
       let dir = Path::new("/nonexistent");
 
       assert_eq!(super::super::template_source("json", dir), "(built-in)");
+    }
+  }
+
+  mod validate_template_name {
+    #[test]
+    fn it_accepts_plain_names() {
+      assert!(super::super::validate_template_name("css").is_ok());
+      assert!(super::super::validate_template_name("my-template").is_ok());
+      assert!(super::super::validate_template_name("custom_html").is_ok());
+    }
+
+    #[test]
+    fn it_rejects_absolute_paths() {
+      let result = super::super::validate_template_name("/etc/passwd");
+
+      assert!(result.is_err());
+      assert!(result.unwrap_err().to_string().contains("invalid template name"));
+    }
+
+    #[test]
+    fn it_rejects_empty_names() {
+      let result = super::super::validate_template_name("");
+
+      assert!(result.is_err());
+      assert!(result.unwrap_err().to_string().contains("must not be empty"));
+    }
+
+    #[test]
+    fn it_rejects_forward_slash_traversal() {
+      let result = super::super::validate_template_name("../secret");
+
+      assert!(result.is_err());
+    }
+
+    #[test]
+    fn it_rejects_nested_path_segments() {
+      let result = super::super::validate_template_name("foo/bar");
+
+      assert!(result.is_err());
+    }
+
+    #[test]
+    fn it_rejects_parent_directory_references() {
+      let result = super::super::validate_template_name("templates/../secret");
+
+      assert!(result.is_err());
+    }
+
+    #[test]
+    fn it_rejects_windows_backslash_traversal() {
+      let result = super::super::validate_template_name("..\\secret");
+
+      assert!(result.is_err());
     }
   }
 }

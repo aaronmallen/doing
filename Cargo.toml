@@ -10,7 +10,7 @@ name = "doing"
 readme = "README.md"
 repository.workspace = true
 rust-version.workspace = true
-version = "0.1.12"
+version = "0.1.13"
 
 [package.metadata.binstall]
 bin-dir = "{ bin }{ binary-ext }"
@@ -40,8 +40,8 @@ dialoguer = "0.12"
 dir_spec = "0.5"
 doing-config = { path = "crates/config", version = "0.1.4" }
 doing-error = { path = "crates/error", version = "0.1.1" }
-doing-ops = { path = "crates/ops", version = "0.2.2" }
-doing-plugins = { path = "crates/plugins", version = "0.2.4" }
+doing-ops = { path = "crates/ops", version = "0.2.3" }
+doing-plugins = { path = "crates/plugins", version = "0.3.0" }
 doing-taskpaper = { path = "crates/taskpaper", version = "0.3.0" }
 doing-template = { path = "crates/template", version = "0.1.9" }
 doing-time = { path = "crates/time", version = "0.1.6" }

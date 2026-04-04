@@ -7,6 +7,22 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.1.13] - 2026-04-04
+
+### Changed
+
+- Listing and searching commands are faster on large doing files thanks to reduced sorting overhead
+  and fewer temporary allocations during text matching (see [#408])
+- **Breaking (`doing-plugins`):** `Registry::register` and `default_registry` now return `Result`
+  instead of panicking on invalid trigger patterns (see [#406])
+
+### Fixed
+
+- `template` command no longer allows path traversal in template names, preventing reads or writes
+  outside the configured templates directory (see [#405])
+- Undo and redo restores now use unique temporary files instead of a fixed `.tmp` path, preventing
+  collisions and stale residue from interrupted operations (see [#407])
+
 ## [v0.1.12] - 2026-04-02
 
 ### Changed
@@ -595,7 +611,10 @@ Initial alpha release
 [#400]: https://github.com/aaronmallen/doing/issues/400
 [#402]: https://github.com/aaronmallen/doing/issues/402
 [#404]: https://github.com/aaronmallen/doing/issues/404
-
+[#405]: https://github.com/aaronmallen/doing/issues/405
+[#406]: https://github.com/aaronmallen/doing/issues/406
+[#407]: https://github.com/aaronmallen/doing/issues/407
+[#408]: https://github.com/aaronmallen/doing/issues/408
 [#393]: https://github.com/aaronmallen/doing/issues/393
 [#394]: https://github.com/aaronmallen/doing/issues/394
 [#395]: https://github.com/aaronmallen/doing/issues/395
@@ -603,7 +622,7 @@ Initial alpha release
 [#397]: https://github.com/aaronmallen/doing/issues/397
 [#398]: https://github.com/aaronmallen/doing/issues/398
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.12...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.13...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -623,3 +642,4 @@ Initial alpha release
 [v0.1.10]: https://github.com/aaronmallen/doing/compare/0.1.9...0.1.10
 [v0.1.11]: https://github.com/aaronmallen/doing/compare/0.1.10...0.1.11
 [v0.1.12]: https://github.com/aaronmallen/doing/compare/0.1.11...0.1.12
+[v0.1.13]: https://github.com/aaronmallen/doing/compare/0.1.12...0.1.13

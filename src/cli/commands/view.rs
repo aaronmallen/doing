@@ -98,7 +98,7 @@ impl Command {
 
     let output_format = self.display.output.as_deref();
     let output = if let Some(format) = output_format {
-      let registry = default_registry();
+      let registry = default_registry()?;
       if let Some(plugin) = registry.resolve(format) {
         plugin.render(&filtered, &render_options, &ctx.config)
       } else {

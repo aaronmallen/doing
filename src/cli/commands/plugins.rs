@@ -51,7 +51,7 @@ impl Command {
       if !self.column {
         println!("Export Plugins:");
       }
-      let export_registry = plugins::default_registry();
+      let export_registry = plugins::default_registry()?;
       for name in export_registry.available_formats() {
         if let Some(plugin) = export_registry.resolve(name) {
           if self.column {
@@ -72,7 +72,7 @@ impl Command {
       if !self.column {
         println!("Import Plugins:");
       }
-      let import_registry = plugins::import::default_registry();
+      let import_registry = plugins::import::default_registry()?;
       for name in import_registry.available_formats() {
         if let Some(plugin) = import_registry.resolve(name) {
           if self.column {

@@ -170,7 +170,7 @@ impl DisplayArgs {
     render_options.include_notes = include_notes;
 
     if let Some(ref format) = self.output {
-      let registry = default_registry();
+      let registry = default_registry()?;
       if let Some(plugin) = registry.resolve(format) {
         return Ok(plugin.render(entries, &render_options, config));
       }

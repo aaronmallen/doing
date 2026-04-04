@@ -20,13 +20,13 @@ pub trait ImportPlugin: Plugin {
 }
 
 /// Build the default import registry with all built-in import plugins.
-pub fn default_registry() -> Registry<dyn ImportPlugin> {
+pub fn default_registry() -> Result<Registry<dyn ImportPlugin>> {
   let mut registry: Registry<dyn ImportPlugin> = Registry::new();
-  registry.register(Box::new(calendar::CalendarImport));
-  registry.register(Box::new(doing::DoingImport));
-  registry.register(Box::new(json::JsonImport));
-  registry.register(Box::new(timing::TimingImport));
-  registry
+  registry.register(Box::new(calendar::CalendarImport))?;
+  registry.register(Box::new(doing::DoingImport))?;
+  registry.register(Box::new(json::JsonImport))?;
+  registry.register(Box::new(timing::TimingImport))?;
+  Ok(registry)
 }
 
 #[cfg(test)]
@@ -75,7 +75,7 @@ mod test {
 
     #[test]
     fn it_registers_all_built_in_plugins() {
-      let registry = default_registry();
+      let registry = default_registry().unwrap();
 
       assert_eq!(
         registry.available_formats(),
@@ -99,8 +99,10 @@ mod test {
     #[test]
     fn it_returns_sorted_format_names() {
       let mut registry = Registry::<dyn ImportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("timing", "timing")));
-      registry.register(Box::new(MockPlugin::new("doing", "doing")));
+      registry
+        .register(Box::new(MockPlugin::new("timing", "timing")))
+        .unwrap();
+      registry.register(Box::new(MockPlugin::new("doing", "doing"))).unwrap();
 
       let formats = registry.available_formats();
 
@@ -117,17 +119,19 @@ mod test {
     fn it_adds_plugin_to_registry() {
       let mut registry = Registry::<dyn ImportPlugin>::new();
 
-      registry.register(Box::new(MockPlugin::new("doing", "doing")));
+      registry.register(Box::new(MockPlugin::new("doing", "doing"))).unwrap();
 
       assert_eq!(registry.available_formats(), vec!["doing"]);
     }
 
     #[test]
-    #[should_panic(expected = "invalid trigger pattern")]
-    fn it_panics_on_invalid_trigger_pattern() {
+    fn it_returns_error_on_invalid_trigger_pattern() {
       let mut registry = Registry::<dyn ImportPlugin>::new();
 
-      registry.register(Box::new(MockPlugin::new("bad", "(?invalid")));
+      let result = registry.register(Box::new(MockPlugin::new("bad", "(?invalid")));
+
+      assert!(result.is_err());
+      assert!(result.unwrap_err().to_string().contains("invalid trigger pattern"));
     }
   }
 
@@ -139,7 +143,7 @@ mod test {
     #[test]
     fn it_matches_exact_format_name() {
       let mut registry = Registry::<dyn ImportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("doing", "doing")));
+      registry.register(Box::new(MockPlugin::new("doing", "doing"))).unwrap();
 
       let plugin = registry.resolve("doing").unwrap();
 
@@ -149,7 +153,7 @@ mod test {
     #[test]
     fn it_matches_case_insensitively() {
       let mut registry = Registry::<dyn ImportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("doing", "doing")));
+      registry.register(Box::new(MockPlugin::new("doing", "doing"))).unwrap();
 
       assert!(registry.resolve("DOING").is_some());
       assert!(registry.resolve("Doing").is_some());
@@ -158,7 +162,7 @@ mod test {
     #[test]
     fn it_returns_none_for_unknown_format() {
       let mut registry = Registry::<dyn ImportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("doing", "doing")));
+      registry.register(Box::new(MockPlugin::new("doing", "doing"))).unwrap();
 
       assert!(registry.resolve("csv").is_none());
     }
@@ -166,7 +170,7 @@ mod test {
     #[test]
     fn it_does_not_match_partial_strings() {
       let mut registry = Registry::<dyn ImportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("doing", "doing")));
+      registry.register(Box::new(MockPlugin::new("doing", "doing"))).unwrap();
 
       assert!(registry.resolve("doingx").is_none());
       assert!(registry.resolve("xdoing").is_none());

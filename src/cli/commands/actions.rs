@@ -188,7 +188,7 @@ pub fn action_output(
   let mut render_options = RenderOptions::from_config("default", &ctx.config);
   render_options.include_notes = ctx.include_notes;
   let output = if let Some(format) = output_format {
-    let registry = default_registry();
+    let registry = default_registry()?;
     if let Some(plugin) = registry.resolve(format) {
       plugin.render(selected, &render_options, &ctx.config)
     } else {

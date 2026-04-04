@@ -30,6 +30,7 @@ mod taskpaper;
 mod timeline;
 
 use doing_config::Config;
+use doing_error::{Error, Result};
 use doing_taskpaper::Entry;
 use doing_template::renderer::RenderOptions;
 use regex::Regex;
@@ -90,20 +91,19 @@ impl<T: Plugin + ?Sized> Registry<T> {
   /// The plugin's trigger pattern is compiled into a case-insensitive regex
   /// that will be used to match format strings during resolution.
   ///
-  /// # Panics
-  ///
-  /// Panics if the plugin's trigger pattern is not a valid regular expression.
-  pub fn register(&mut self, plugin: Box<T>) {
+  /// Returns an error if the plugin's trigger pattern is not a valid regular expression.
+  pub fn register(&mut self, plugin: Box<T>) -> Result<()> {
     let name = plugin.name().to_string();
     let settings = plugin.settings();
     let pattern = normalize_trigger(&settings.trigger);
     let trigger = Regex::new(&format!("(?i)^(?:{pattern})$"))
-      .unwrap_or_else(|_| panic!("invalid trigger pattern for plugin \"{name}\": {pattern}"));
+      .map_err(|_| Error::Plugin(format!("invalid trigger pattern for plugin \"{name}\": {pattern}")))?;
     self.plugins.push(RegisteredPlugin {
       name,
       plugin,
       trigger,
     });
+    Ok(())
   }
 
   /// Resolve a format string to a registered plugin.
@@ -132,20 +132,20 @@ struct RegisteredPlugin<T: Plugin + ?Sized> {
 }
 
 /// Build the default export registry with all built-in export plugins.
-pub fn default_registry() -> Registry<dyn ExportPlugin> {
+pub fn default_registry() -> Result<Registry<dyn ExportPlugin>> {
   let mut registry: Registry<dyn ExportPlugin> = Registry::new();
-  registry.register(Box::new(byday::BydayExport));
-  registry.register(Box::new(csv::CsvExport));
-  registry.register(Box::new(dayone::DayoneExport));
-  registry.register(Box::new(dayone::DayoneDaysExport));
-  registry.register(Box::new(dayone::DayoneEntriesExport));
-  registry.register(Box::new(doing::DoingExport));
-  registry.register(Box::new(html::HtmlExport));
-  registry.register(Box::new(json::JsonExport));
-  registry.register(Box::new(markdown::MarkdownExport));
-  registry.register(Box::new(taskpaper::TaskPaperExport));
-  registry.register(Box::new(timeline::TimelineExport));
-  registry
+  registry.register(Box::new(byday::BydayExport))?;
+  registry.register(Box::new(csv::CsvExport))?;
+  registry.register(Box::new(dayone::DayoneExport))?;
+  registry.register(Box::new(dayone::DayoneDaysExport))?;
+  registry.register(Box::new(dayone::DayoneEntriesExport))?;
+  registry.register(Box::new(doing::DoingExport))?;
+  registry.register(Box::new(html::HtmlExport))?;
+  registry.register(Box::new(json::JsonExport))?;
+  registry.register(Box::new(markdown::MarkdownExport))?;
+  registry.register(Box::new(taskpaper::TaskPaperExport))?;
+  registry.register(Box::new(timeline::TimelineExport))?;
+  Ok(registry)
 }
 
 /// Normalize a trigger string for use as a regex pattern.
@@ -215,7 +215,7 @@ mod test {
 
     #[test]
     fn it_registers_all_built_in_plugins() {
-      let registry = default_registry();
+      let registry = default_registry().unwrap();
 
       assert_eq!(
         registry.available_formats(),
@@ -251,9 +251,13 @@ mod test {
     #[test]
     fn it_returns_sorted_format_names() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("markdown", "markdown|md")));
-      registry.register(Box::new(MockPlugin::new("csv", "csv")));
-      registry.register(Box::new(MockPlugin::new("taskpaper", "task(?:paper)?|tp")));
+      registry
+        .register(Box::new(MockPlugin::new("markdown", "markdown|md")))
+        .unwrap();
+      registry.register(Box::new(MockPlugin::new("csv", "csv"))).unwrap();
+      registry
+        .register(Box::new(MockPlugin::new("taskpaper", "task(?:paper)?|tp")))
+        .unwrap();
 
       let formats = registry.available_formats();
 
@@ -270,17 +274,19 @@ mod test {
     fn it_adds_plugin_to_registry() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
 
-      registry.register(Box::new(MockPlugin::new("csv", "csv")));
+      registry.register(Box::new(MockPlugin::new("csv", "csv"))).unwrap();
 
       assert_eq!(registry.available_formats(), vec!["csv"]);
     }
 
     #[test]
-    #[should_panic(expected = "invalid trigger pattern")]
-    fn it_panics_on_invalid_trigger_pattern() {
+    fn it_returns_error_on_invalid_trigger_pattern() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
 
-      registry.register(Box::new(MockPlugin::new("bad", "(?invalid")));
+      let result = registry.register(Box::new(MockPlugin::new("bad", "(?invalid")));
+
+      assert!(result.is_err());
+      assert!(result.unwrap_err().to_string().contains("invalid trigger pattern"));
     }
   }
 
@@ -292,7 +298,7 @@ mod test {
     #[test]
     fn it_matches_exact_format_name() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("csv", "csv")));
+      registry.register(Box::new(MockPlugin::new("csv", "csv"))).unwrap();
 
       let plugin = registry.resolve("csv").unwrap();
 
@@ -302,7 +308,9 @@ mod test {
     #[test]
     fn it_matches_alternate_trigger_pattern() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("taskpaper", "task(?:paper)?|tp")));
+      registry
+        .register(Box::new(MockPlugin::new("taskpaper", "task(?:paper)?|tp")))
+        .unwrap();
 
       assert!(registry.resolve("taskpaper").is_some());
       assert!(registry.resolve("task").is_some());
@@ -312,7 +320,7 @@ mod test {
     #[test]
     fn it_matches_case_insensitively() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("csv", "csv")));
+      registry.register(Box::new(MockPlugin::new("csv", "csv"))).unwrap();
 
       assert!(registry.resolve("CSV").is_some());
       assert!(registry.resolve("Csv").is_some());
@@ -321,7 +329,7 @@ mod test {
     #[test]
     fn it_returns_none_for_unknown_format() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("csv", "csv")));
+      registry.register(Box::new(MockPlugin::new("csv", "csv"))).unwrap();
 
       assert!(registry.resolve("json").is_none());
     }
@@ -329,7 +337,7 @@ mod test {
     #[test]
     fn it_does_not_match_partial_strings() {
       let mut registry = Registry::<dyn ExportPlugin>::new();
-      registry.register(Box::new(MockPlugin::new("csv", "csv")));
+      registry.register(Box::new(MockPlugin::new("csv", "csv"))).unwrap();
 
       assert!(registry.resolve("csvx").is_none());
       assert!(registry.resolve("xcsv").is_none());

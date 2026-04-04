@@ -75,7 +75,7 @@ pub struct Command {
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let registry = import::default_registry();
+    let registry = import::default_registry()?;
     let format = self.resolve_format()?;
     let plugin = registry.resolve(&format).ok_or_else(|| {
       let available = registry.available_formats().join(", ");

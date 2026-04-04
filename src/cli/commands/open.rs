@@ -1,5 +1,3 @@
-use std::process;
-
 use clap::Args;
 use doing_ops::backup::list_backups;
 
@@ -58,20 +56,7 @@ impl Command {
 
     let editor = resolve_open_editor(&self.app, &self.editor, ctx);
 
-    let parts: Vec<&str> = editor.split_whitespace().collect();
-    let (cmd, args) = parts
-      .split_first()
-      .ok_or_else(|| Error::Config("editor command must not be empty".into()))?;
-
-    let status = process::Command::new(cmd).args(args).arg(&file_path).status()?;
-
-    if !status.success() {
-      return Err(Error::Io(std::io::Error::other(format!(
-        "editor exited with status {status}"
-      ))));
-    }
-
-    Ok(())
+    crate::cli::process::launch(&editor, Some(&file_path))
   }
 }
 
@@ -84,27 +69,7 @@ fn resolve_open_editor(app: &Option<String>, editor_flag: &Option<String>, ctx: 
     return editor.clone();
   }
 
-  if let Some(ref editor) = ctx.config.editors.doing_file {
-    return editor.clone();
-  }
-
-  if let Ok(editor) = doing_config::env::DOING_EDITOR.value() {
-    return editor;
-  }
-
-  if let Some(ref editor) = ctx.config.editors.default {
-    return editor.clone();
-  }
-
-  if let Ok(editor) = doing_config::env::VISUAL.value() {
-    return editor;
-  }
-
-  if let Ok(editor) = doing_config::env::EDITOR.value() {
-    return editor;
-  }
-
-  "vi".into()
+  crate::cli::process::resolve_doing_file_editor(&ctx.config)
 }
 
 #[cfg(test)]

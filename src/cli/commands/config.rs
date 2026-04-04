@@ -247,19 +247,7 @@ fn open_with_app(config_path: &Path, app: &str) -> Result<()> {
 }
 
 fn open_with_editor(config_path: &Path, editor_cmd: &str) -> Result<()> {
-  let parts: Vec<&str> = editor_cmd.split_whitespace().collect();
-  let (cmd, args) = parts
-    .split_first()
-    .ok_or_else(|| Error::Config("editor command must not be empty".into()))?;
-
-  let status = process::Command::new(cmd).args(args).arg(config_path).status()?;
-
-  if !status.success() {
-    return Err(Error::Config(format!(
-      "editor '{editor_cmd}' exited with non-zero status"
-    )));
-  }
-  Ok(())
+  crate::cli::process::launch(editor_cmd, Some(config_path))
 }
 
 fn parse_raw_value(raw: &str) -> Value {

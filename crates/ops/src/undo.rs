@@ -19,7 +19,17 @@ pub fn redo(source: &Path, backup_dir: &Path, count: usize) -> Result<()> {
     return Err(Error::HistoryLimit("end of redo history".into()));
   }
 
-  fs::copy(&undone[count - 1], source)?;
+  // Atomic restore: write to a unique temp file, then rename into place
+  let parent = source.parent().ok_or_else(|| {
+    Error::Io(std::io::Error::new(
+      std::io::ErrorKind::InvalidInput,
+      "source path has no parent directory",
+    ))
+  })?;
+  let tmp = tempfile::NamedTempFile::new_in(parent)?;
+  fs::copy(&undone[count - 1], tmp.path())?;
+  tmp.persist(source).map_err(|e| Error::Io(e.error))?;
+
   unconsume_all(source, backup_dir)?;
   Ok(())
 }
@@ -39,10 +49,16 @@ pub fn undo(source: &Path, backup_dir: &Path, count: usize) -> Result<()> {
 
   create_undone(source, backup_dir)?;
 
-  // Atomic restore: write to a temp file, then rename into place
-  let tmp = source.with_extension("tmp");
-  fs::copy(&backups[count - 1], &tmp)?;
-  fs::rename(&tmp, source)?;
+  // Atomic restore: write to a unique temp file in the same directory, then rename into place
+  let parent = source.parent().ok_or_else(|| {
+    Error::Io(std::io::Error::new(
+      std::io::ErrorKind::InvalidInput,
+      "source path has no parent directory",
+    ))
+  })?;
+  let tmp = tempfile::NamedTempFile::new_in(parent)?;
+  fs::copy(&backups[count - 1], tmp.path())?;
+  tmp.persist(source).map_err(|e| Error::Io(e.error))?;
 
   for backup in &backups[..count] {
     consume(backup)?;

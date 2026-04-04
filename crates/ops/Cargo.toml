@@ -21,7 +21,7 @@ doing-taskpaper.workspace = true
 doing-time.workspace = true
 regex.workspace = true
 sublime_fuzzy.workspace = true
+tempfile.workspace = true
 
 [dev-dependencies]
 pretty_assertions.workspace = true
-tempfile.workspace = true

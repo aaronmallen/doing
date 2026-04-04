@@ -62,9 +62,24 @@ pub fn matches_entry(entry: &Entry, mode: &SearchMode, case: CaseSensitivity, in
   }
 
   if include_notes && !entry.note().is_empty() {
-    let note_text = entry.note().lines().join(" ");
-    if matches(&note_text, mode, case) {
-      return true;
+    // Check each line individually to avoid joining into a temporary String.
+    // Fall back to a joined string only for modes that need cross-line matching.
+    let note = entry.note();
+    match mode {
+      SearchMode::Regex(_) | SearchMode::Fuzzy(..) => {
+        // These modes may need to match across line boundaries
+        let note_text = note.lines().join(" ");
+        if matches(&note_text, mode, case) {
+          return true;
+        }
+      }
+      _ => {
+        for line in note.lines() {
+          if matches(line, mode, case) {
+            return true;
+          }
+        }
+      }
     }
   }
 

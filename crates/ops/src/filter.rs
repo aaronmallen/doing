@@ -98,20 +98,17 @@ pub fn filter_entries(mut entries: Vec<Entry>, options: &FilterOptions) -> Vec<E
 
 /// Sort entries and apply age-based count limiting.
 fn apply_sort_and_limit(mut entries: Vec<Entry>, options: &FilterOptions) -> Vec<Entry> {
-  // Sort chronologically for age selection (stable sort preserves insertion order for ties)
-  entries.sort_by_key(|a| a.date());
+  if let Some(count) = options.count.filter(|&c| c < entries.len()) {
+    // Sort chronologically for age-based selection (stable sort preserves insertion order for ties)
+    entries.sort_by_key(|a| a.date());
 
-  // Apply count limit based on age
-  if let Some(count) = options.count {
     let len = entries.len();
-    if count < len {
-      match options.age.unwrap_or_default() {
-        Age::Newest => {
-          entries.drain(..len - count);
-        }
-        Age::Oldest => {
-          entries.truncate(count);
-        }
+    match options.age.unwrap_or_default() {
+      Age::Newest => {
+        entries.drain(..len - count);
+      }
+      Age::Oldest => {
+        entries.truncate(count);
       }
     }
   }

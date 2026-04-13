@@ -439,9 +439,9 @@ dependencies = [
 
 [[package]]
 name = "dir_spec"
-version = "0.5.0"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbe111bdda79626e929d51c9b229c8127d024abc2a99efeb48f16a0a76f7d54d"
+checksum = "acc9e6cd0db73b23d515420c1e0d0ad6d73980423d63ece40a2bd60bfe3f8ce8"
 
 [[package]]
 name = "displaydoc"

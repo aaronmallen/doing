@@ -67,11 +67,6 @@ impl Entry {
     Some(Local::now().signed_duration_since(self.date))
   }
 
-  /// Return the end date: the `@done` tag timestamp if present, otherwise `None`.
-  pub fn end_date(&self) -> Option<DateTime<Local>> {
-    self.done_date()
-  }
-
   /// Return whether the entry has a `@done` tag.
   pub fn finished(&self) -> bool {
     self.tags.has("done")
@@ -116,9 +111,9 @@ impl Entry {
   pub fn overlapping_time(&self, other: &Entry) -> bool {
     let now = Local::now();
     let start_a = self.date;
-    let end_a = self.end_date().unwrap_or(now);
+    let end_a = self.done_date().unwrap_or(now);
     let start_b = other.date;
-    let end_b = other.end_date().unwrap_or(now);
+    let end_b = other.done_date().unwrap_or(now);
     start_a < end_b && start_b < end_a
   }
 

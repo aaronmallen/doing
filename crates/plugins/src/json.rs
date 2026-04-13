@@ -64,7 +64,7 @@ impl JsonItem {
   fn from_entry(entry: &Entry) -> Self {
     let tags: Vec<String> = entry.tags().iter().map(|t| t.name().to_string()).collect();
 
-    let end_date = entry.end_date().map(|d| d.format(JSON_DATE_FORMAT).to_string());
+    let end_date = entry.done_date().map(|d| d.format(JSON_DATE_FORMAT).to_string());
 
     let done = entry.finished();
 

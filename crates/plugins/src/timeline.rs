@@ -154,7 +154,7 @@ impl ExportPlugin for TimelineExport {
       let ongoing = !entry.finished();
       let class = if ongoing { " ongoing" } else { "" };
 
-      let end_str = if let Some(end) = entry.end_date() {
+      let end_str = if let Some(end) = entry.done_date() {
         format!(
           " &mdash; {}",
           escape_html(&end.format(&options.date_format).to_string())
@@ -247,7 +247,7 @@ fn compute_bar_width(entry: &Entry, time_range: &Option<(DateTime<Local>, DateTi
     return 50.0;
   }
 
-  let entry_end = entry.end_date().unwrap_or(Local::now());
+  let entry_end = entry.done_date().unwrap_or(Local::now());
   let entry_span = (entry_end - entry.date()).num_seconds() as f64;
   let pct = (entry_span / total_span) * 100.0;
   pct.clamp(2.0, 100.0)
@@ -263,7 +263,7 @@ fn compute_time_range(entries: &[Entry]) -> Option<(DateTime<Local>, DateTime<Lo
 
   let now = Local::now();
   let min_start = entries.iter().map(|e| e.date()).min()?;
-  let max_end = entries.iter().map(|e| e.end_date().unwrap_or(now)).max()?;
+  let max_end = entries.iter().map(|e| e.done_date().unwrap_or(now)).max()?;
 
   if min_start == max_end {
     return None;

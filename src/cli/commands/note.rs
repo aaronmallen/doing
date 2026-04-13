@@ -55,13 +55,31 @@ pub struct Command {
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let entries = if self.interactive {
-      entry_location::interactive_select(&self.filter, true, ctx)?
+      entry_location::interactive_select(&self.filter, self.filter.unfinished, ctx)?
     } else {
-      entry_location::find_entries(&self.filter, self.count, true, ctx)?
+      entry_location::find_entries(&self.filter, self.count, self.filter.unfinished, ctx)?
     };
 
     if entries.is_empty() {
-      return Err(crate::Error::Config("no matching entries found".into()));
+      let mut filters = Vec::new();
+      if let Some(section) = &self.filter.section {
+        filters.push(format!("section={section}"));
+      }
+      if self.filter.unfinished {
+        filters.push("unfinished".to_string());
+      }
+      for tag in &self.filter.tag {
+        filters.push(format!("tag={tag}"));
+      }
+      if let Some(search) = &self.filter.search {
+        filters.push(format!("search={search}"));
+      }
+      let msg = if filters.is_empty() {
+        "no matching entries found".to_string()
+      } else {
+        format!("no matching entries found (filters: {})", filters.join(", "))
+      };
+      return Err(crate::Error::Config(msg));
     }
 
     let mut titles = Vec::new();
@@ -272,10 +290,30 @@ mod test {
     }
 
     #[test]
-    fn it_appends_note_to_last_unfinished_entry_skipping_done() {
+    fn it_annotates_finished_entry_by_default() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done_entry(dir.path());
       let cmd = Command {
+        text: vec!["A new note".into()],
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert!(entries[0].note().is_empty());
+      assert_eq!(entries[1].note().lines(), &["A new note"]);
+    }
+
+    #[test]
+    fn it_skips_done_entries_with_unfinished_flag() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done_entry(dir.path());
+      let cmd = Command {
+        filter: FilterArgs {
+          unfinished: true,
+          ..FilterArgs::default()
+        },
         text: vec!["A new note".into()],
         ..default_cmd()
       };

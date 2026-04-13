@@ -215,19 +215,10 @@ impl Command {
   }
 
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
-    let filter = crate::cli::args::FilterArgs {
-      bool_op: self.bool_op,
-      case: self.case.clone(),
-      exact: self.exact,
-      not: self.not,
-      search: self.search.clone(),
-      section: Some(section_name.to_string()),
-      tag: self.tag.clone(),
-      val: self.val.clone(),
-      ..Default::default()
-    };
+    let filter = self.to_filter_args(section_name);
+    let unfinished = self.unfinished || !self.update;
     let locs =
-      crate::cli::entry_location::find_entries(&filter, Some(self.count_args.effective_count()), !self.update, ctx)?;
+      crate::cli::entry_location::find_entries(&filter, Some(self.count_args.effective_count()), unfinished, ctx)?;
     Ok(locs.into_iter().map(|l| l.id).collect())
   }
 
@@ -270,13 +261,25 @@ impl Command {
   }
 
   fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
-    let filter = crate::cli::args::FilterArgs {
-      section: Some(section_name.to_string()),
-      ..Default::default()
-    };
-    let unfinished = self.unfinished && !self.update;
+    let filter = self.to_filter_args(section_name);
+    let unfinished = self.unfinished || !self.update;
     let locs = crate::cli::entry_location::interactive_select(&filter, unfinished, ctx)?;
     Ok(locs.into_iter().map(|l| l.id).collect())
+  }
+
+  fn to_filter_args(&self, section_name: &str) -> crate::cli::args::FilterArgs {
+    crate::cli::args::FilterArgs {
+      bool_op: self.bool_op,
+      case: self.case.clone(),
+      exact: self.exact,
+      not: self.not,
+      search: self.search.clone(),
+      section: Some(section_name.to_string()),
+      tag: self.tag.clone(),
+      unfinished: self.unfinished,
+      val: self.val.clone(),
+      ..Default::default()
+    }
   }
 
   fn next_entry_start(&self, ctx: &AppContext, section_name: &str, entry_id: &str) -> DateTime<Local> {

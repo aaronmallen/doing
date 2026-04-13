@@ -4,7 +4,7 @@ use doing_taskpaper::Tag;
 
 use crate::{
   Result,
-  cli::{AppContext, args::BoolArg},
+  cli::{AppContext, args::FilterArgs},
 };
 
 /// Mark the last entry as cancelled.
@@ -22,50 +22,17 @@ pub struct Command {
   #[arg(short, long)]
   archive: bool,
 
-  /// Boolean operator for combining tag filters
-  #[arg(long = "bool", value_enum, ignore_case = true)]
-  bool_op: Option<BoolArg>,
-
-  /// Case sensitivity for search (smart/sensitive/ignore)
-  #[arg(long)]
-  case: Option<String>,
-
-  /// Use exact (literal substring) matching for search
-  #[arg(short = 'x', long)]
-  exact: bool,
+  #[command(flatten)]
+  filter: FilterArgs,
 
   /// Interactively select entries to cancel
   #[arg(short, long)]
   interactive: bool,
-
-  /// Negate all filter results
-  #[arg(long)]
-  not: bool,
-
-  /// Text search query to filter entries
-  #[arg(long)]
-  search: Option<String>,
-
-  /// Section to cancel entries from
-  #[arg(short, long)]
-  section: Option<String>,
-
-  /// Tags to filter by (can be repeated)
-  #[arg(short, long)]
-  tag: Vec<String>,
-
-  /// Only cancel unfinished entries (no @done tag)
-  #[arg(short = 'u', long)]
-  unfinished: bool,
-
-  /// Tag value queries (e.g. "progress > 50")
-  #[arg(long)]
-  val: Vec<String>,
 }
 
 impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
-    let section_name = ctx.resolve_section(&self.section);
+    let section_name = ctx.resolve_section(&self.filter.section);
 
     let entries = if self.interactive {
       self.interactive_select(ctx, &section_name)?
@@ -130,28 +97,21 @@ impl Command {
   }
 
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
-    let filter = crate::cli::args::FilterArgs {
-      bool_op: self.bool_op,
-      case: self.case.clone(),
-      exact: self.exact,
-      not: self.not,
-      search: self.search.clone(),
-      section: Some(section_name.to_string()),
-      tag: self.tag.clone(),
-      val: self.val.clone(),
-      ..Default::default()
-    };
-    let locs =
-      crate::cli::entry_location::find_entries(&filter, Some(self.count_args.effective_count()), self.unfinished, ctx)?;
+    let mut filter = self.filter.clone();
+    filter.section = Some(section_name.to_string());
+    let locs = crate::cli::entry_location::find_entries(
+      &filter,
+      Some(self.count_args.effective_count()),
+      self.filter.unfinished,
+      ctx,
+    )?;
     Ok(locs.into_iter().map(|l| l.id).collect())
   }
 
   fn interactive_select(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<String>> {
-    let filter = crate::cli::args::FilterArgs {
-      section: Some(section_name.to_string()),
-      ..Default::default()
-    };
-    let locs = crate::cli::entry_location::interactive_select(&filter, self.unfinished, ctx)?;
+    let mut filter = self.filter.clone();
+    filter.section = Some(section_name.to_string());
+    let locs = crate::cli::entry_location::interactive_select(&filter, self.filter.unfinished, ctx)?;
     Ok(locs.into_iter().map(|l| l.id).collect())
   }
 }
@@ -171,16 +131,8 @@ mod test {
         count: 1,
       },
       archive: false,
-      bool_op: None,
-      case: None,
-      exact: false,
+      filter: FilterArgs::default(),
       interactive: false,
-      not: false,
-      search: None,
-      section: None,
-      tag: vec![],
-      unfinished: false,
-      val: vec![],
     }
   }
 
@@ -315,7 +267,10 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
       let cmd = Command {
-        unfinished: true,
+        filter: FilterArgs {
+          unfinished: true,
+          ..FilterArgs::default()
+        },
         ..default_cmd()
       };
 
@@ -327,7 +282,10 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_tagged(dir.path());
       let cmd = Command {
-        tag: vec!["project".into()],
+        filter: FilterArgs {
+          tag: vec!["project".into()],
+          ..FilterArgs::default()
+        },
         ..default_cmd()
       };
 

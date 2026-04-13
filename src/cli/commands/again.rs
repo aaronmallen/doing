@@ -1,18 +1,13 @@
 use chrono::{DateTime, Local};
 use clap::Args;
 use doing_config::Config;
-use doing_ops::{
-  autotag::autotag,
-  backup::write_with_backup,
-  filter::{Age, FilterOptions, filter_entries},
-  tag_filter::{BooleanMode, TagFilter},
-};
+use doing_ops::{autotag::autotag, backup::write_with_backup};
 use doing_taskpaper::{Entry, Note, Tag, Tags};
 use doing_time::chronify;
 
 use crate::{
   Result,
-  cli::{AppContext, args::BoolArg},
+  cli::{AppContext, args::FilterArgs, entry_location},
 };
 
 /// Repeat the last entry.
@@ -30,21 +25,12 @@ pub struct Command {
   #[arg(short, long, visible_aliases = ["started", "since"])]
   back: Option<String>,
 
-  /// Boolean operator for combining tag filters
-  #[arg(long = "bool", value_enum, ignore_case = true)]
-  bool_op: Option<BoolArg>,
-
-  /// Case sensitivity for search (smart/sensitive/ignore)
-  #[arg(long)]
-  case: Option<String>,
-
   /// Open an editor to compose the entry title and notes
   #[arg(short, long)]
   editor: bool,
 
-  /// Use exact (literal substring) matching for search
-  #[arg(short = 'x', long)]
-  exact: bool,
+  #[command(flatten)]
+  filter: FilterArgs,
 
   /// Target section for the new entry
   #[arg(long = "in")]
@@ -58,29 +44,9 @@ pub struct Command {
   #[arg(short = 'X', long)]
   noauto: bool,
 
-  /// Negate all filter results
-  #[arg(long)]
-  not: bool,
-
   /// Attach a note directly from the command line
   #[arg(short, long)]
   note: Option<String>,
-
-  /// Text search query to find the entry to repeat
-  #[arg(long)]
-  search: Option<String>,
-
-  /// Source section to find the entry to repeat
-  #[arg(short, long)]
-  section: Option<String>,
-
-  /// Tags to filter by (can be repeated)
-  #[arg(short, long)]
-  tag: Vec<String>,
-
-  /// Tag value queries (e.g. "progress > 50")
-  #[arg(long)]
-  val: Vec<String>,
 }
 
 impl Command {
@@ -167,59 +133,19 @@ impl Command {
   }
 
   fn find_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
-    let all_entries: Vec<Entry> = ctx.document.all_entries().cloned().collect();
-
-    let expanded_tags = crate::cli::args::expand_tags(&self.tag);
-
-    let tag_filter = if expanded_tags.is_empty() {
-      None
-    } else {
-      let mode = self.bool_op.map(BooleanMode::from).unwrap_or_default();
-      Some(TagFilter::new(&expanded_tags, mode))
-    };
-
-    let mut search_config = ctx.config.search.clone();
-    if let Some(ref case_override) = self.case {
-      search_config.case = case_override.clone();
+    let mut filter = self.filter.clone();
+    if filter.section.is_none() {
+      filter.section = Some("all".to_string());
     }
-    if self.exact {
-      search_config.matching = "exact".into();
-    }
+    let locs = entry_location::find_entries(&filter, Some(1), false, ctx)?;
 
-    let search = self
-      .search
-      .as_deref()
-      .and_then(|q| doing_ops::search::parse_query(q, &search_config));
-
-    let tag_queries = self
-      .val
-      .iter()
-      .map(|v| {
-        doing_ops::tag_query::TagQuery::parse(v).ok_or_else(|| crate::Error::Parse(format!("invalid tag query: {v}")))
-      })
-      .collect::<crate::Result<Vec<_>>>()?;
-
-    let options = FilterOptions {
-      age: Some(Age::Newest),
-      count: Some(1),
-      include_notes: ctx.include_notes,
-      negate: self.not,
-      search,
-      section: self.section.clone(),
-      tag_filter,
-      tag_queries,
-      ..Default::default()
-    };
-
-    let mut results = filter_entries(all_entries, &options);
-
-    // If no filters specified, find the most recent entry regardless of done status
-    if self.tag.is_empty() && self.search.is_none() && self.section.is_none() {
-      results.sort_by_key(|e| e.date());
-      if let Some(last) = results.pop() {
-        return Ok(last);
-      }
-    } else if let Some(entry) = results.into_iter().next() {
+    if let Some(loc) = locs.into_iter().next() {
+      let entry = ctx
+        .document
+        .all_entries()
+        .find(|e| e.id() == loc.id)
+        .cloned()
+        .ok_or_else(|| crate::Error::Config("entry not found".into()))?;
       return Ok(entry);
     }
 
@@ -289,19 +215,12 @@ mod test {
     Command {
       ask: false,
       back: None,
-      bool_op: None,
-      case: None,
-      exact: false,
       editor: false,
+      filter: FilterArgs::default(),
       interactive: false,
       in_section: None,
       noauto: true,
-      not: false,
       note: None,
-      search: None,
-      section: None,
-      tag: vec![],
-      val: vec![],
     }
   }
 
@@ -410,7 +329,10 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_tagged_entries(dir.path());
       let cmd = Command {
-        tag: vec!["project".into()],
+        filter: FilterArgs {
+          tag: vec!["project".into()],
+          ..FilterArgs::default()
+        },
         ..default_cmd()
       };
 
@@ -547,7 +469,10 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let ctx = sample_ctx_with_tagged_entries(dir.path());
       let cmd = Command {
-        tag: vec!["project".into()],
+        filter: FilterArgs {
+          tag: vec!["project".into()],
+          ..FilterArgs::default()
+        },
         ..default_cmd()
       };
 

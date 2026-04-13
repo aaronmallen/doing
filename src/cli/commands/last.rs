@@ -54,7 +54,24 @@ impl Command {
     let filtered = self.find_last_entry(ctx)?;
 
     if filtered.is_empty() {
-      ctx.status("No matching entry found");
+      let mut filters = Vec::new();
+      if let Some(section) = &self.filter.section {
+        filters.push(format!("section={section}"));
+      }
+      if self.filter.unfinished {
+        filters.push("unfinished".to_string());
+      }
+      for tag in &self.filter.tag {
+        filters.push(format!("tag={tag}"));
+      }
+      if let Some(search) = &self.filter.search {
+        filters.push(format!("search={search}"));
+      }
+      if filters.is_empty() {
+        ctx.status("No matching entry found");
+      } else {
+        ctx.status(format!("No matching entry found (filters: {})", filters.join(", ")));
+      }
       return Ok(());
     }
 
@@ -108,7 +125,6 @@ impl Command {
     options.count = Some(1);
     options.age = Some(Age::Newest);
     options.sort = Some(SortOrder::Desc);
-    options.unfinished = true;
 
     Ok(filter_entries(all_entries, &options))
   }
@@ -290,13 +306,31 @@ mod test {
     }
 
     #[test]
-    fn it_skips_done_entries() {
-      let mut ctx = sample_ctx_with_done_last();
+    fn it_shows_finished_entries_by_default() {
+      let ctx = sample_ctx_with_done_last();
       let cmd = default_cmd();
 
-      let result = cmd.call(&mut ctx);
+      let entries = cmd.find_last_entry(&ctx).unwrap();
 
-      assert!(result.is_ok());
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Done task");
+    }
+
+    #[test]
+    fn it_skips_done_entries_with_unfinished_flag() {
+      let ctx = sample_ctx_with_done_last();
+      let cmd = Command {
+        filter: FilterArgs {
+          unfinished: true,
+          ..FilterArgs::default()
+        },
+        ..default_cmd()
+      };
+
+      let entries = cmd.find_last_entry(&ctx).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Active task");
     }
   }
 }

@@ -290,7 +290,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let tag = entries[0].tags().iter().find(|t| t.name() == "started").unwrap();
       let value = tag.value().expect("tag should have a value");
       let re = regex::Regex::new(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$").unwrap();
@@ -312,7 +312,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("status"));
       let tag = entries[0].tags().iter().find(|t| t.name() == "status").unwrap();
       assert_eq!(tag.value(), Some("in progress"));
@@ -329,7 +329,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("coding"));
       assert!(entries[0].tags().has("design"));
     }
@@ -367,7 +367,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].tags().has("project"));
       assert!(entries[0].tags().has("coding"));
     }
@@ -386,7 +386,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].tags().has("proj-a"));
       assert!(!entries[1].tags().has("proj-b"));
     }
@@ -404,7 +404,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].tags().has("proj-a"));
       assert!(!entries[1].tags().has("proj-b"));
     }
@@ -420,7 +420,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].tags().has("project"));
       assert!(entries[0].tags().has("work"));
       assert!(entries[0].tags().has("coding"));
@@ -438,7 +438,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("project"));
       assert!(!entries[0].tags().has("proj-a"));
       assert!(entries[1].tags().has("project"));
@@ -456,7 +456,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].tags().has("important"));
       assert!(entries[1].tags().has("important"));
     }
@@ -473,7 +473,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].tags().has("important"));
       assert!(entries[1].tags().has("important"));
@@ -494,7 +494,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("important"));
       assert!(!entries[1].tags().has("important"));
     }

@@ -258,7 +258,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let expected = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected);
     }
@@ -293,7 +293,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 8, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected_start);
       assert!(entries[0].finished());
@@ -311,7 +311,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
     }
 
@@ -323,7 +323,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].finished());
     }
 
@@ -338,7 +338,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       for entry in entries {
         let elapsed = Local::now().signed_duration_since(entry.date());
@@ -350,12 +350,12 @@ mod test {
     fn it_resets_start_date_to_now() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
-      let original_date = ctx.document.entries_in_section("Currently")[0].date();
+      let original_date = ctx.document.entries_in_section("Currently").next().unwrap().date();
       let cmd = default_cmd();
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_ne!(entries[0].date(), original_date);
       // New date should be very recent (within last few seconds)
       let elapsed = Local::now().signed_duration_since(entries[0].date());
@@ -373,7 +373,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let expected = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected);
     }
@@ -389,7 +389,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let expected = Local.with_ymd_and_hms(2024, 6, 15, 15, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected);
     }
@@ -408,7 +408,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 8, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected_start);
       assert!(entries[0].finished());
@@ -428,7 +428,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
       let expected_done = Local.with_ymd_and_hms(2024, 6, 15, 11, 30, 0).unwrap();
       assert_eq!(entries[0].date(), expected_start);
@@ -448,7 +448,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       let expected_start = Local.with_ymd_and_hms(2024, 6, 15, 10, 0, 0).unwrap();
       let expected_done = Local.with_ymd_and_hms(2024, 6, 15, 12, 0, 0).unwrap();
       assert_eq!(entries[0].date(), expected_start);

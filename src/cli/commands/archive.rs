@@ -111,12 +111,7 @@ impl Command {
   }
 
   fn find_entries(&self, ctx: &AppContext, section_name: &str, filter: &FilterArgs) -> Result<Vec<Entry>> {
-    let all_entries: Vec<Entry> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<Entry> = ctx.document.entries_in_section(section_name).cloned().collect();
 
     if all_entries.is_empty() {
       return Ok(Vec::new());
@@ -291,9 +286,9 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let archive = ctx.document.entries_in_section("Archive");
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 2);
-      for entry in archive {
+      for entry in &archive {
         assert!(entry.tags().has("from"));
         let from_tag = entry.tags().iter().find(|t| t.name() == "from").unwrap();
         assert_eq!(from_tag.value(), Some("Currently"));
@@ -311,9 +306,9 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let archive = ctx.document.entries_in_section("Archive");
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 2);
-      for entry in archive {
+      for entry in &archive {
         assert!(!entry.tags().has("from"));
       }
     }
@@ -348,11 +343,10 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let currently = ctx.document.entries_in_section("Currently");
+      let currently: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(currently.len(), 1);
       assert_eq!(currently[0].title(), "Active task");
-      let archive = ctx.document.entries_in_section("Archive");
-      assert_eq!(archive.len(), 3);
+      assert_eq!(ctx.document.entries_in_section("Archive").count(), 3);
     }
 
     #[test]
@@ -366,8 +360,8 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 3);
-      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 3);
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert_eq!(archive[0].title(), "First done");
     }
@@ -380,10 +374,9 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.entries_in_section("Currently").is_empty());
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
 
-      let archive = ctx.document.entries_in_section("Archive");
-      assert_eq!(archive.len(), 2);
+      assert_eq!(ctx.document.entries_in_section("Archive").count(), 2);
     }
 
     #[test]
@@ -424,9 +417,9 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
-      assert!(ctx.document.entries_in_section("Later").is_empty());
-      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 1);
+      assert_eq!(ctx.document.entries_in_section("Later").count(), 0);
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert_eq!(archive[0].title(), "Later task");
     }
@@ -442,10 +435,10 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let currently = ctx.document.entries_in_section("Currently");
+      let currently: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(currently.len(), 1);
       assert_eq!(currently[0].title(), "Active task");
-      let archive = ctx.document.entries_in_section("Archive");
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert_eq!(archive[0].title(), "Done task");
     }
@@ -461,7 +454,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 2);
       assert!(!ctx.document.has_section("Archive"));
     }
 
@@ -490,8 +483,8 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.entries_in_section("Currently").is_empty());
-      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert_eq!(archive[0].title(), "Active task");
     }

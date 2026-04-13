@@ -236,7 +236,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Working on feature");
     }
@@ -260,7 +260,7 @@ mod test {
       cmd.call(&mut ctx).unwrap();
 
       assert!(ctx.document.has_section("Later"));
-      let entries = ctx.document.entries_in_section("Later");
+      let entries: Vec<_> = ctx.document.entries_in_section("Later").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Future task");
     }
@@ -284,7 +284,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("tracked"));
     }
 
@@ -306,7 +306,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].note().is_empty());
     }
 
@@ -327,8 +327,7 @@ mod test {
       };
 
       cmd.call(&mut ctx).unwrap();
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 1);
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 1);
     }
 
     #[test]
@@ -349,7 +348,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished());
       assert!(!entries[1].finished());
@@ -374,7 +373,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].tags().has("tracked"));
     }
   }
@@ -392,7 +391,7 @@ mod test {
 
       finish_last_entry(&mut ctx.document, "Currently", done_date, &[], &[]);
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert_eq!(
         entries[0].done_date().unwrap(),
@@ -417,7 +416,7 @@ mod test {
 
       finish_last_entry(&mut doc, "Currently", done_date, &[], &[]);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries[0].tags().len(), 1);
     }
 
@@ -429,7 +428,7 @@ mod test {
 
       finish_last_entry(&mut doc, "Currently", done_date, &[], &[]);
 
-      assert!(doc.entries_in_section("Currently").is_empty());
+      assert_eq!(doc.entries_in_section("Currently").count(), 0);
     }
 
     #[test]
@@ -451,7 +450,7 @@ mod test {
 
       finish_last_entry(&mut ctx.document, "Currently", done_date, &[], &never_time);
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert!(entries[0].done_date().is_none());
     }
@@ -465,7 +464,7 @@ mod test {
 
       finish_last_entry(&mut ctx.document, "Currently", done_date, &never_finish, &[]);
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].finished());
     }
   }

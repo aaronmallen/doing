@@ -364,8 +364,8 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.entries_in_section("Currently").is_empty());
-      let entries = ctx.document.entries_in_section("Archive");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
+      let entries: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Archived task");
       assert!(entries[0].finished());
@@ -382,7 +382,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Completed task");
       assert!(entries[0].finished());
@@ -400,7 +400,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert!(entries[0].done_date().is_none());
     }
@@ -418,7 +418,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("tracked"));
     }
 
@@ -434,7 +434,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].note().is_empty());
     }
 
@@ -463,7 +463,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert!(entries[0].done_date().is_none());
     }
@@ -476,7 +476,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert!(entries[0].finished());
     }
@@ -492,7 +492,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished());
       assert!(entries[1].finished());
@@ -532,7 +532,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert!(!entries[0].finished());
     }
@@ -639,8 +639,8 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.entries_in_section("Currently").is_empty());
-      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert!(archive[0].finished());
     }
@@ -656,7 +656,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].note().is_empty());
       assert!(entries[0].finished());
     }
@@ -669,7 +669,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished());
       assert!(entries[1].finished());
@@ -701,7 +701,7 @@ mod test {
       // Should succeed without error (logs "All entries already @done")
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].tags().len(), 1);
     }

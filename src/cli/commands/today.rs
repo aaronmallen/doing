@@ -60,12 +60,7 @@ pub fn display_date_range(
 ) -> Result<()> {
   let section_name = filter.section.as_deref().unwrap_or("all");
 
-  let all_entries: Vec<_> = ctx
-    .document
-    .entries_in_section(section_name)
-    .into_iter()
-    .cloned()
-    .collect();
+  let all_entries: Vec<_> = ctx.document.entries_in_section(section_name).cloned().collect();
 
   let mut options = filter.to_filter_options(&ctx.config, ctx.include_notes)?;
   options.section = Some(section_name.to_string());

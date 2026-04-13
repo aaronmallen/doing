@@ -41,7 +41,7 @@ pub fn find_entries(
   let has_filters = !filter.tag.is_empty() || filter.search.is_some() || !filter.val.is_empty();
 
   if has_filters {
-    let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
+    let all_entries: Vec<Entry> = ctx.document.all_entries().cloned().collect();
 
     let mut options = filter.to_filter_options(&ctx.config, ctx.include_notes)?;
     options.age = options.age.or(Some(Age::Newest));
@@ -55,7 +55,7 @@ pub fn find_entries(
   }
 
   let count = count.unwrap_or(1);
-  let entries = ctx.document.entries_in_section(&section);
+  let entries: Vec<_> = ctx.document.entries_in_section(&section).collect();
   // Sort by date descending (with position as tiebreaker for same-timestamp
   // entries) so we always pick the newest entries regardless of file order.
   let mut candidates: Vec<(usize, &&Entry)> = entries
@@ -99,7 +99,6 @@ pub fn interactive_select(filter: &FilterArgs, unfinished: bool, ctx: &AppContex
   let candidates: Vec<Entry> = ctx
     .document
     .entries_in_section(&section)
-    .into_iter()
     .filter(|e| if unfinished { e.unfinished() } else { true })
     .cloned()
     .collect();

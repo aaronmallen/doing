@@ -126,7 +126,7 @@ impl Command {
     // When using --auto timing, sort entries chronologically (oldest first)
     // so that next_entry_start finds the correct following entry.
     if self.auto {
-      let all_entries = ctx.document.entries_in_section(&section_name);
+      let all_entries: Vec<_> = ctx.document.entries_in_section(&section_name).collect();
       entries.sort_by_key(|id| {
         all_entries
           .iter()
@@ -232,7 +232,7 @@ impl Command {
   }
 
   fn find_entry_by_id<'a>(&self, ctx: &'a AppContext, id: &str) -> Option<&'a Entry> {
-    ctx.document.all_entries().into_iter().find(|e| e.id() == id)
+    ctx.document.all_entries().find(|e| e.id() == id)
   }
 
   fn finish_entry(
@@ -281,7 +281,7 @@ impl Command {
 
   fn next_entry_start(&self, ctx: &AppContext, section_name: &str, entry_id: &str) -> DateTime<Local> {
     // Find the next entry chronologically (by date, ascending)
-    let mut entries: Vec<_> = ctx.document.entries_in_section(section_name).to_vec();
+    let mut entries: Vec<_> = ctx.document.entries_in_section(section_name).collect();
     entries.sort_by_key(|e| e.date());
     let mut found = false;
     for entry in &entries {
@@ -296,7 +296,7 @@ impl Command {
   }
 
   fn remove_done_tags(&self, ctx: &mut AppContext, section_name: &str) -> Result<()> {
-    let entries = ctx.document.entries_in_section(section_name);
+    let entries: Vec<_> = ctx.document.entries_in_section(section_name).collect();
     let ids: Vec<String> = entries
       .iter()
       .rev()
@@ -511,8 +511,8 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.entries_in_section("Currently").is_empty());
-      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert!(archive[0].finished());
     }
@@ -550,7 +550,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished()); // project task
       assert!(!entries[1].finished()); // meeting task
@@ -564,7 +564,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert!(entries[0].finished());
     }
@@ -583,7 +583,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 3);
       assert!(!entries[0].finished());
       assert!(entries[1].finished());
@@ -605,7 +605,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       // Second task (index 1) should have @done set to 1 min before third task's start
       assert!(entries[1].finished());
       assert_eq!(
@@ -625,7 +625,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert!(entries[0].done_date().is_none());
     }
@@ -641,7 +641,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert!(!entries[0].finished());
     }
@@ -655,7 +655,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].finished());
     }
 
@@ -668,7 +668,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert!(entries[0].done_date().is_none());
     }
@@ -685,7 +685,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert_eq!(
         entries[0].done_date().unwrap(),
@@ -705,7 +705,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert_eq!(
         entries[0].done_date().unwrap(),

@@ -53,12 +53,7 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let section_name = self.filter.section.as_deref().unwrap_or("all");
 
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<_> = ctx.document.entries_in_section(section_name).cloned().collect();
 
     let mut options = self.filter.clone().to_filter_options(&ctx.config, ctx.include_notes)?;
     options.count = self.count.or(self.count_pos);

@@ -161,12 +161,7 @@ impl Command {
       .clone()
       .unwrap_or_else(|| ctx.config.current_section.clone());
 
-    let all_entries: Vec<Entry> = ctx
-      .document
-      .entries_in_section(&section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<Entry> = ctx.document.entries_in_section(&section_name).cloned().collect();
 
     let has_filters = !self.tagged.is_empty() || self.query.is_some();
 
@@ -296,18 +291,13 @@ mod test {
     fn it_archives_the_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_archive(&mut ctx, &entries[0]).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
-      let archive = ctx.document.entries_in_section("Archive");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 2);
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert_eq!(archive[0].title(), "First task");
     }
@@ -316,12 +306,7 @@ mod test {
     fn it_creates_archive_section_if_missing() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       assert!(!ctx.document.has_section("Archive"));
@@ -339,17 +324,12 @@ mod test {
     fn it_cancels_the_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_cancel(&mut ctx, &entries[0]).unwrap();
 
-      let current = ctx.document.entries_in_section("Currently");
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(current[0].finished());
       assert!(current[0].done_date().is_none());
     }
@@ -358,17 +338,12 @@ mod test {
     fn it_skips_already_finished_entries() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_cancel(&mut ctx, &entries[0]).unwrap();
 
-      let current = ctx.document.entries_in_section("Currently");
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(current[0].finished());
     }
   }
@@ -382,18 +357,14 @@ mod test {
     fn it_deletes_the_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_delete(&mut ctx, &entries[0]).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
-      assert_eq!(ctx.document.entries_in_section("Currently")[0].title(), "Second task");
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 2);
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert_eq!(current[0].title(), "Second task");
     }
   }
 
@@ -404,17 +375,12 @@ mod test {
     fn it_finishes_the_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_finish(&mut ctx, &entries[0]).unwrap();
 
-      let current = ctx.document.entries_in_section("Currently");
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(current[0].finished());
       assert!(current[0].done_date().is_some());
     }
@@ -423,17 +389,12 @@ mod test {
     fn it_skips_already_finished_entries() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_done(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_finish(&mut ctx, &entries[0]).unwrap();
 
-      let current = ctx.document.entries_in_section("Currently");
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(current[0].finished());
     }
   }
@@ -445,17 +406,12 @@ mod test {
     fn it_flags_an_unflagged_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_flag(&mut ctx, &entries[0]).unwrap();
 
-      let current = ctx.document.entries_in_section("Currently");
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(current[0].tags().has("flagged"));
     }
 
@@ -469,17 +425,12 @@ mod test {
         .tags_mut()
         .add(Tag::new("flagged", None::<String>));
 
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd();
 
       cmd.action_flag(&mut ctx, &entries[0]).unwrap();
 
-      let current = ctx.document.entries_in_section("Currently");
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!current[0].tags().has("flagged"));
     }
   }

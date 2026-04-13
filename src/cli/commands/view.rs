@@ -78,12 +78,7 @@ impl Command {
 
     let section_name = self.resolve_section(&view, &ctx.config.current_section);
 
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(&section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<_> = ctx.document.entries_in_section(&section_name).cloned().collect();
 
     let mut filter_options = self.build_filter_options(&view, ctx)?;
     filter_options.section = Some(section_name);

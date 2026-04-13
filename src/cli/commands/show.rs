@@ -100,12 +100,7 @@ impl Command {
       }
     };
 
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<_> = ctx.document.entries_in_section(section_name).cloned().collect();
 
     let mut filter_options = self.build_filter_options(ctx, section_name, extra_tag)?;
     filter_options.sort = self.display.resolve_sort_order(&ctx.config);

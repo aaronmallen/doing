@@ -210,7 +210,6 @@ fn has_overlap(entry: &Entry, ctx: &AppContext) -> bool {
   ctx
     .document
     .all_entries()
-    .iter()
     .any(|existing| entry.overlapping_time(existing))
 }
 
@@ -266,7 +265,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries[0].title(), "[imported] Task");
     }
 
@@ -300,7 +299,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("imported"));
       assert!(entries[0].tags().has("work"));
     }
@@ -335,7 +334,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Imported task");
     }
@@ -379,7 +378,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "[Timing.app] Writing code");
     }
@@ -415,8 +414,7 @@ mod test {
       cmd.call(&mut ctx).unwrap();
 
       assert!(ctx.document.has_section("Archive"));
-      let entries = ctx.document.entries_in_section("Archive");
-      assert_eq!(entries.len(), 1);
+      assert_eq!(ctx.document.entries_in_section("Archive").count(), 1);
     }
 
     #[test]
@@ -494,7 +492,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Existing task");
     }

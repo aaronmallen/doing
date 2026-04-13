@@ -84,12 +84,7 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let section_name = self.filter.section.as_deref().unwrap_or("all");
 
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<_> = ctx.document.entries_in_section(section_name).cloned().collect();
 
     let mut filter_options = self.build_filter_options(ctx, section_name)?;
 
@@ -292,38 +287,26 @@ mod test {
     fn it_deletes_all_matching_entries() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_dir(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd("project");
 
       cmd.action_delete(&mut ctx, &entries).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 0);
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
     }
 
     #[test]
     fn it_deletes_matching_entries() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_dir(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let cmd = default_cmd("project");
 
       cmd.action_delete(&mut ctx, &entries[..1]).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
-      assert_eq!(
-        ctx.document.entries_in_section("Currently")[0].title(),
-        "Meeting with team"
-      );
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 1);
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert_eq!(current[0].title(), "Meeting with team");
     }
   }
 
@@ -336,12 +319,7 @@ mod test {
     fn it_persists_edited_titles() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_dir(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
 
       // Simulate the edit loop from action_editor: update title and write back
       for original in &entries {
@@ -355,7 +333,7 @@ mod test {
 
       let content = fs::read_to_string(&ctx.doing_file).unwrap();
       let reloaded = Document::parse(&content);
-      let reloaded_entries = reloaded.entries_in_section("Currently");
+      let reloaded_entries: Vec<_> = reloaded.entries_in_section("Currently").collect();
 
       assert_eq!(reloaded_entries.len(), 2);
       assert_eq!(reloaded_entries[0].title(), "Edited title");

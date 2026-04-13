@@ -81,12 +81,7 @@ impl Command {
   }
 
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<Entry>> {
-    let all_entries: Vec<Entry> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<Entry> = ctx.document.entries_in_section(section_name).cloned().collect();
 
     if all_entries.is_empty() {
       return Ok(Vec::new());
@@ -281,8 +276,7 @@ mod test {
       let archive_path = cmd.archive_path(&ctx.doing_file);
       assert!(archive_path.exists());
       let archive_doc = taskpaper_io::read_file(&archive_path).unwrap();
-      let entries = archive_doc.entries_in_section("Currently");
-      assert_eq!(entries.len(), 2);
+      assert_eq!(archive_doc.entries_in_section("Currently").count(), 2);
     }
 
     #[test]
@@ -301,7 +295,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.entries_in_section("Currently").is_empty());
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
     }
 
     #[test]
@@ -315,14 +309,13 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let currently = ctx.document.entries_in_section("Currently");
+      let currently: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(currently.len(), 1);
       assert_eq!(currently[0].title(), "Active task");
 
       let archive_path = cmd.archive_path(&ctx.doing_file);
       let archive_doc = taskpaper_io::read_file(&archive_path).unwrap();
-      let archived = archive_doc.entries_in_section("Currently");
-      assert_eq!(archived.len(), 2);
+      assert_eq!(archive_doc.entries_in_section("Currently").count(), 2);
     }
 
     #[test]
@@ -339,11 +332,11 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 2);
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 2);
 
       let archive_path = cmd.archive_path(&ctx.doing_file);
       let archive_doc = taskpaper_io::read_file(&archive_path).unwrap();
-      let archived = archive_doc.entries_in_section("Currently");
+      let archived: Vec<_> = archive_doc.entries_in_section("Currently").collect();
       assert_eq!(archived.len(), 1);
       assert_eq!(archived[0].title(), "First done");
     }
@@ -356,7 +349,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      assert!(ctx.document.entries_in_section("Currently").is_empty());
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
     }
   }
 }

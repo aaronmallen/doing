@@ -213,13 +213,13 @@ mod test {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx();
       ctx.doing_file = dir.path().join("doing.md");
-      let entry_count = ctx.document.entries_in_section("Currently").len();
+      let entry_count = ctx.document.entries_in_section("Currently").count();
 
       let result = super::super::remove_section("Currently", true, &mut ctx);
 
       assert!(result.is_ok());
       assert!(!ctx.document.has_section("Currently"));
-      assert_eq!(ctx.document.entries_in_section("Archive").len(), entry_count);
+      assert_eq!(ctx.document.entries_in_section("Archive").count(), entry_count);
     }
 
     #[test]
@@ -248,7 +248,7 @@ mod test {
       assert!(result.is_ok());
       assert!(!ctx.document.has_section("Ideas"));
       assert!(ctx.document.has_section("Archive"));
-      assert_eq!(ctx.document.entries_in_section("Archive").len(), 1);
+      assert_eq!(ctx.document.entries_in_section("Archive").count(), 1);
     }
 
     #[test]

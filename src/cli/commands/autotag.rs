@@ -66,7 +66,7 @@ impl Command {
   }
 
   fn find_entries(&self, ctx: &AppContext, section_name: &str) -> Result<Vec<(String, String)>> {
-    let entries = ctx.document.entries_in_section(section_name);
+    let entries: Vec<_> = ctx.document.entries_in_section(section_name).collect();
     let mut ids: Vec<(String, String)> = entries
       .iter()
       .rev()
@@ -155,7 +155,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("tracked"));
     }
 
@@ -172,7 +172,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("creative"));
     }
 
@@ -188,7 +188,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].tags().has("tracked"));
       assert!(entries[1].tags().has("tracked"));
@@ -203,7 +203,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("design"));
     }
 
@@ -231,10 +231,22 @@ mod test {
       let cmd = default_cmd();
 
       cmd.call(&mut ctx).unwrap();
-      let tags_after_first = ctx.document.entries_in_section("Currently")[0].tags().len();
+      let tags_after_first = ctx
+        .document
+        .entries_in_section("Currently")
+        .next()
+        .unwrap()
+        .tags()
+        .len();
 
       cmd.call(&mut ctx).unwrap();
-      let tags_after_second = ctx.document.entries_in_section("Currently")[0].tags().len();
+      let tags_after_second = ctx
+        .document
+        .entries_in_section("Currently")
+        .next()
+        .unwrap()
+        .tags()
+        .len();
 
       assert_eq!(tags_after_first, tags_after_second);
     }
@@ -269,7 +281,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Work");
+      let entries: Vec<_> = ctx.document.entries_in_section("Work").collect();
       assert!(entries[0].tags().has("design"));
     }
   }

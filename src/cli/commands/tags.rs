@@ -60,12 +60,7 @@ impl Command {
   pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
     let section_name = self.filter.section.as_deref().unwrap_or("all");
 
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<_> = ctx.document.entries_in_section(section_name).cloned().collect();
 
     let filter_options = self.filter.to_filter_options(&ctx.config, false)?;
     let filtered = filter_entries(all_entries, &filter_options);

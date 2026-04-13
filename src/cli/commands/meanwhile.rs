@@ -240,7 +240,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Background work");
       assert!(entries[0].tags().has("meanwhile"));
@@ -259,7 +259,7 @@ mod test {
       cmd.call(&mut ctx).unwrap();
 
       assert!(ctx.document.has_section("Later"));
-      let entries = ctx.document.entries_in_section("Later");
+      let entries: Vec<_> = ctx.document.entries_in_section("Later").collect();
       assert_eq!(entries.len(), 1);
       assert!(entries[0].tags().has("meanwhile"));
     }
@@ -285,12 +285,12 @@ mod test {
       };
       cmd.call(&mut ctx).unwrap();
 
-      let work_entries = ctx.document.entries_in_section("Work");
+      let work_entries: Vec<_> = ctx.document.entries_in_section("Work").collect();
       assert_eq!(work_entries.len(), 1);
       assert!(work_entries[0].tags().has("meanwhile"));
       assert_eq!(work_entries[0].title(), "Second task");
 
-      let archive_entries = ctx.document.entries_in_section("Archive");
+      let archive_entries: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive_entries.len(), 1);
       assert!(archive_entries[0].finished());
     }
@@ -308,7 +308,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].tags().has("tracked"));
       assert!(entries[0].tags().has("meanwhile"));
     }
@@ -325,12 +325,12 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert!(entries[0].tags().has("meanwhile"));
       assert_eq!(entries[0].title(), "New background");
 
-      let archive = ctx.document.entries_in_section("Archive");
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert!(archive[0].finished());
       assert!(!archive[0].tags().has("meanwhile"));
@@ -347,10 +347,9 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
-      assert_eq!(entries.len(), 0);
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 0);
 
-      let archive = ctx.document.entries_in_section("Archive");
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
       assert_eq!(archive.len(), 1);
       assert!(archive[0].finished());
     }
@@ -367,7 +366,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].note().is_empty());
     }
 
@@ -382,7 +381,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished());
       assert!(!entries[0].tags().has("meanwhile"));
@@ -399,7 +398,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert!(entries[0].finished());
     }
@@ -416,7 +415,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].tags().has("tracked"));
       assert!(entries[0].tags().has("meanwhile"));
     }
@@ -444,7 +443,7 @@ mod test {
 
       super::super::finish_meanwhile_entries(&mut doc, done_date, &[], &[]);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert!(!entries[0].finished());
     }
@@ -458,7 +457,7 @@ mod test {
       let ids = super::super::finish_meanwhile_entries(&mut ctx.document, done_date, &[], &[]);
 
       assert_eq!(ids.len(), 1);
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert!(!entries[0].tags().has("meanwhile"));
       assert_eq!(
@@ -476,7 +475,7 @@ mod test {
 
       super::super::finish_meanwhile_entries(&mut ctx.document, done_date, &[], &never_time);
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[0].finished());
       assert!(entries[0].done_date().is_none());
     }
@@ -490,7 +489,7 @@ mod test {
 
       super::super::finish_meanwhile_entries(&mut ctx.document, done_date, &never_finish, &[]);
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[0].finished());
     }
 
@@ -514,7 +513,7 @@ mod test {
 
       super::super::finish_meanwhile_entries(&mut doc, done_date, &[], &[]);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries[0].tags().len(), 2);
     }
   }

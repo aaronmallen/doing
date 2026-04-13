@@ -55,8 +55,8 @@ impl Document {
   }
 
   /// Return all entries across all sections.
-  pub fn all_entries(&self) -> Vec<&Entry> {
-    self.sections.iter().flat_map(|s| s.entries()).collect()
+  pub fn all_entries(&self) -> impl Iterator<Item = &Entry> {
+    self.sections.iter().flat_map(|s| s.entries())
   }
 
   /// Deduplicate entries across all sections by ID, keeping the first occurrence.
@@ -69,14 +69,13 @@ impl Document {
 
   /// Return entries from a specific section by name (case-insensitive).
   /// If `name` is "all" (case-insensitive), returns entries from all sections.
-  pub fn entries_in_section(&self, name: &str) -> Vec<&Entry> {
-    if name.eq_ignore_ascii_case("all") {
-      return self.all_entries();
-    }
+  pub fn entries_in_section<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a Entry> {
+    let all = name.eq_ignore_ascii_case("all");
     self
-      .section_by_name(name)
-      .map(|s| s.entries().iter().collect())
-      .unwrap_or_default()
+      .sections
+      .iter()
+      .filter(move |s| all || s.title().eq_ignore_ascii_case(name))
+      .flat_map(|s| s.entries())
   }
 
   /// Return `true` if a section with the given name exists (case-insensitive).
@@ -268,7 +267,7 @@ mod test {
       doc.add_section(s1);
       doc.add_section(s2);
 
-      assert_eq!(doc.all_entries().len(), 2);
+      assert_eq!(doc.all_entries().count(), 2);
     }
   }
 
@@ -299,7 +298,7 @@ mod test {
 
       doc.dedup();
 
-      assert_eq!(doc.all_entries().len(), 1);
+      assert_eq!(doc.all_entries().count(), 1);
       assert_eq!(doc.sections()[0].len(), 1);
       assert_eq!(doc.sections()[1].len(), 0);
     }
@@ -375,7 +374,7 @@ mod test {
       ));
       doc.add_section(section);
 
-      assert_eq!(doc.entries_in_section("currently").len(), 1);
+      assert_eq!(doc.entries_in_section("currently").count(), 1);
     }
 
     #[test]
@@ -402,14 +401,14 @@ mod test {
       doc.add_section(s1);
       doc.add_section(s2);
 
-      assert_eq!(doc.entries_in_section("All").len(), 2);
+      assert_eq!(doc.entries_in_section("All").count(), 2);
     }
 
     #[test]
     fn it_returns_empty_for_unknown_section() {
       let doc = Document::new();
 
-      assert_eq!(doc.entries_in_section("Nonexistent").len(), 0);
+      assert_eq!(doc.entries_in_section("Nonexistent").count(), 0);
     }
   }
 

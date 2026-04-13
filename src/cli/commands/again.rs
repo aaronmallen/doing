@@ -155,7 +155,7 @@ impl Command {
   }
 
   fn choose_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
-    let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
+    let all_entries: Vec<Entry> = ctx.document.all_entries().cloned().collect();
 
     if all_entries.is_empty() {
       return Err(crate::Error::Config("no entries found".into()));
@@ -167,7 +167,7 @@ impl Command {
   }
 
   fn find_source_entry(&self, ctx: &AppContext) -> Result<Entry> {
-    let all_entries: Vec<Entry> = ctx.document.all_entries().into_iter().cloned().collect();
+    let all_entries: Vec<Entry> = ctx.document.all_entries().cloned().collect();
 
     let expanded_tags = crate::cli::args::expand_tags(&self.tag);
 
@@ -387,7 +387,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(entries[1].tags().has("tracked"));
     }
 
@@ -399,7 +399,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 3);
       assert!(entries[2].tags().has("meeting"));
       assert!(!entries[2].finished());
@@ -416,7 +416,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 3);
       assert_eq!(entries[2].title(), "First task");
       assert!(entries[2].tags().has("project"));
@@ -431,7 +431,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished());
     }
@@ -448,7 +448,7 @@ mod test {
       cmd.call(&mut ctx).unwrap();
 
       assert!(ctx.document.has_section("Later"));
-      let entries = ctx.document.entries_in_section("Later");
+      let entries: Vec<_> = ctx.document.entries_in_section("Later").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Active task");
     }
@@ -461,7 +461,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[1].note().is_empty());
     }
 
@@ -473,7 +473,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert_eq!(entries[1].title(), "Done task");
       assert!(!entries[1].finished());
@@ -487,7 +487,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 2);
       assert_eq!(entries[1].title(), "Active task");
       assert!(!entries[1].finished());
@@ -504,7 +504,7 @@ mod test {
 
       cmd.call(&mut ctx).unwrap();
 
-      let entries = ctx.document.entries_in_section("Currently");
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert!(!entries[1].note().is_empty());
     }
   }

@@ -124,7 +124,7 @@ mod test {
       let doc = read_file(&path).unwrap();
 
       assert!(doc.has_section("Currently"));
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Test task");
       assert_eq!(

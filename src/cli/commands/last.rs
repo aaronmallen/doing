@@ -101,12 +101,7 @@ impl Command {
   fn find_last_entry(&self, ctx: &AppContext) -> Result<Vec<doing_taskpaper::Entry>> {
     let section_name = self.filter.section.as_deref().unwrap_or("all");
 
-    let all_entries: Vec<_> = ctx
-      .document
-      .entries_in_section(section_name)
-      .into_iter()
-      .cloned()
-      .collect();
+    let all_entries: Vec<_> = ctx.document.entries_in_section(section_name).cloned().collect();
 
     let mut options = self.filter.clone().to_filter_options(&ctx.config, ctx.include_notes)?;
     options.section = Some(section_name.to_string());
@@ -227,22 +222,15 @@ mod test {
     fn it_deletes_the_last_entry() {
       let dir = tempfile::tempdir().unwrap();
       let mut ctx = sample_ctx_with_file(dir.path());
-      let entries: Vec<Entry> = ctx
-        .document
-        .entries_in_section("Currently")
-        .into_iter()
-        .cloned()
-        .collect();
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
       let last = vec![entries[1].clone()];
       let cmd = default_cmd();
 
       cmd.action_delete(&mut ctx, &last).unwrap();
 
-      assert_eq!(ctx.document.entries_in_section("Currently").len(), 1);
-      assert_eq!(
-        ctx.document.entries_in_section("Currently")[0].title(),
-        "Working on project"
-      );
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 1);
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert_eq!(current[0].title(), "Working on project");
     }
   }
 

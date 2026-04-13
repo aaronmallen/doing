@@ -148,7 +148,7 @@ mod test {
       let doc = parse(content);
 
       assert!(doc.has_section(DEFAULT_SECTION));
-      assert_eq!(doc.entries_in_section(DEFAULT_SECTION).len(), 1);
+      assert_eq!(doc.entries_in_section(DEFAULT_SECTION).count(), 1);
     }
 
     #[test]
@@ -163,8 +163,8 @@ mod test {
       let content = "Currently:\nArchive:";
       let doc = parse(content);
 
-      assert_eq!(doc.entries_in_section("Currently").len(), 0);
-      assert_eq!(doc.entries_in_section("Archive").len(), 0);
+      assert_eq!(doc.entries_in_section("Currently").count(), 0);
+      assert_eq!(doc.entries_in_section("Archive").count(), 0);
     }
 
     #[test]
@@ -172,7 +172,7 @@ mod test {
       let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature";
       let doc = parse(content);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].title(), "Working on feature");
       assert_eq!(
@@ -186,7 +186,7 @@ mod test {
       let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature <aaaabbbbccccddddeeeeffffaaaabbbb>";
       let doc = parse(content);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries[0].id(), "aaaabbbbccccddddeeeeffffaaaabbbb");
     }
 
@@ -195,7 +195,7 @@ mod test {
       let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature @coding @done(2024-03-17 15:00)";
       let doc = parse(content);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries[0].title(), "Working on feature");
       assert!(entries[0].tags().has("coding"));
       assert!(entries[0].tags().has("done"));
@@ -211,7 +211,7 @@ mod test {
         "Currently:\n\t- 2024-03-17 14:30 | My task @flag @done(2024-03-17 15:00) <aaaabbbbccccddddeeeeffffaaaabbbb>";
       let doc = parse(content);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries[0].title(), "My task");
       assert!(entries[0].tags().has("flag"));
       assert!(entries[0].tags().has("done"));
@@ -229,8 +229,8 @@ Archive:
       let doc = parse(content);
 
       assert_eq!(doc.len(), 2);
-      assert_eq!(doc.entries_in_section("Currently").len(), 2);
-      assert_eq!(doc.entries_in_section("Archive").len(), 1);
+      assert_eq!(doc.entries_in_section("Currently").count(), 2);
+      assert_eq!(doc.entries_in_section("Archive").count(), 1);
     }
 
     #[test]
@@ -238,7 +238,7 @@ Archive:
       let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature\n\t\tA note line\n\t\tAnother note";
       let doc = parse(content);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries[0].note().len(), 2);
       assert_eq!(entries[0].note().lines(), &["A note line", "Another note"]);
     }
@@ -267,7 +267,7 @@ Archive:
       let content = "Currently:\n\t- 2024-03-17 14:30 | Working on feature";
       let doc = parse(content);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries[0].id().len(), 32);
       assert!(entries[0].id().chars().all(|c| c.is_ascii_hexdigit()));
     }
@@ -314,7 +314,7 @@ Archive:
       let doc = parse(content);
 
       assert_eq!(doc.len(), 1);
-      assert_eq!(doc.entries_in_section("Archive").len(), 2);
+      assert_eq!(doc.entries_in_section("Archive").count(), 2);
     }
 
     #[test]
@@ -329,7 +329,7 @@ Currently:
 \t- 2024-06-15 14:00 | Normal task";
       let doc = parse(content);
 
-      let entries = doc.entries_in_section("Currently");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 3);
       assert_eq!(entries[0].title(), "Spring forward task");
       assert_eq!(entries[1].title(), "Fall back task");
@@ -382,8 +382,9 @@ Archive:
       let content = "Currently:\n\t- not a valid entry\n\t- 2024-03-17 14:30 | Valid task";
       let doc = parse(content);
 
-      assert_eq!(doc.entries_in_section("Currently").len(), 1);
-      assert_eq!(doc.entries_in_section("Currently")[0].title(), "Valid task");
+      let entries: Vec<_> = doc.entries_in_section("Currently").collect();
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Valid task");
     }
   }
 

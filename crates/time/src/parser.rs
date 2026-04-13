@@ -67,6 +67,35 @@ fn apply_time_to_date(dt: DateTime<Local>, time: NaiveTime) -> Option<DateTime<L
   Local.from_local_datetime(&dt.date_naive().and_time(time)).earliest()
 }
 
+/// Subtract calendar months from a date, clamping the day to the last day of the target month
+/// (e.g. March 31 - 1 month = February 28/29).
+fn subtract_months(dt: DateTime<Local>, months: i64) -> DateTime<Local> {
+  let total_months = dt.year() * 12 + dt.month0() as i32 - months as i32;
+  let target_year = total_months.div_euclid(12);
+  let target_month0 = total_months.rem_euclid(12) as u32;
+  let target_month = target_month0 + 1;
+
+  // Clamp day to last valid day of target month
+  let max_day = last_day_of_month(target_year, target_month);
+  let day = dt.day().min(max_day);
+
+  let date = NaiveDate::from_ymd_opt(target_year, target_month, day).expect("valid date after month subtraction");
+  let time = dt.time();
+  Local
+    .from_local_datetime(&date.and_time(time))
+    .earliest()
+    .unwrap_or_else(|| beginning_of_day(date))
+}
+
+/// Return the last day of a given month.
+fn last_day_of_month(year: i32, month: u32) -> u32 {
+  NaiveDate::from_ymd_opt(year, month + 1, 1)
+    .unwrap_or_else(|| NaiveDate::from_ymd_opt(year + 1, 1, 1).unwrap())
+    .pred_opt()
+    .unwrap()
+    .day()
+}
+
 /// Set a date to the beginning of its day (midnight), falling back to progressively later
 /// hours when midnight lands in a DST gap.
 fn beginning_of_day(date: NaiveDate) -> DateTime<Local> {
@@ -132,21 +161,22 @@ fn parse_absolute(input: &str) -> Option<DateTime<Local>> {
     return Some(beginning_of_day(date));
   }
 
-  // MM/DD (short US date, no year — resolve to current year or most recent past)
+  // MM/DD (short US date, no year — resolve to most recent valid past date)
   if let Some(caps) = RE_US_DATE_NO_YEAR.captures(input) {
     let month: u32 = caps[1].parse().ok()?;
     let day: u32 = caps[2].parse().ok()?;
     let today = Local::now().date_naive();
-    let year = today.year();
 
-    let date = NaiveDate::from_ymd_opt(year, month, day)?;
-    // If the date is in the future, use last year
-    let date = if date > today {
-      NaiveDate::from_ymd_opt(year - 1, month, day)?
-    } else {
-      date
-    };
-    return Some(beginning_of_day(date));
+    // Search backward from current year to find a valid date (handles Feb 29 in non-leap years)
+    for offset in 0..=4 {
+      let y = today.year() - offset;
+      if let Some(date) = NaiveDate::from_ymd_opt(y, month, day)
+        && date <= today
+      {
+        return Some(beginning_of_day(date));
+      }
+    }
+    return None;
   }
 
   None
@@ -160,12 +190,18 @@ fn parse_ago(input: &str, now: DateTime<Local>) -> Option<DateTime<Local>> {
   let amount = parse_number(&caps[1])?;
   let unit = &caps[2];
 
+  match unit {
+    u if u.starts_with("mo") => {
+      return Some(subtract_months(now, amount));
+    }
+    _ => {}
+  }
+
   let duration = match unit {
     u if u.starts_with("mi") || u == "m" => Duration::minutes(amount),
     u if u.starts_with('h') => Duration::hours(amount),
     u if u.starts_with('d') => Duration::days(amount),
     u if u.starts_with('w') => Duration::weeks(amount),
-    u if u.starts_with("mo") => Duration::days(amount * 30),
     _ => return None,
   };
 
@@ -227,6 +263,15 @@ fn parse_number(s: &str) -> Option<i64> {
     "ten" => Some(10),
     "eleven" => Some(11),
     "twelve" => Some(12),
+    "thirteen" => Some(13),
+    "fourteen" => Some(14),
+    "fifteen" => Some(15),
+    "sixteen" => Some(16),
+    "seventeen" => Some(17),
+    "eighteen" => Some(18),
+    "nineteen" => Some(19),
+    "twenty" => Some(20),
+    "thirty" => Some(30),
     _ => s.parse().ok(),
   }
 }
@@ -547,6 +592,14 @@ mod test {
     }
 
     #[test]
+    fn it_parses_thirteen_days_ago() {
+      let result = chronify("thirteen days ago").unwrap();
+      let expected = Local::now() - Duration::days(13);
+
+      assert_eq!(result.date_naive(), expected.date_naive());
+    }
+
+    #[test]
     fn it_trims_whitespace() {
       let result = chronify("  today  ").unwrap();
 
@@ -603,10 +656,38 @@ mod test {
     }
 
     #[test]
+    fn it_parses_written_teen_numbers() {
+      let now = Local::now();
+      let result = parse_ago("thirteen days ago", now).unwrap();
+
+      assert_eq!(result.date_naive(), (now - Duration::days(13)).date_naive());
+    }
+
+    #[test]
     fn it_returns_none_for_invalid_input() {
       let now = Local::now();
 
       assert!(parse_ago("not valid", now).is_none());
+    }
+
+    #[test]
+    fn it_subtracts_calendar_months() {
+      let now = Local.with_ymd_and_hms(2024, 3, 31, 12, 0, 0).unwrap();
+      let result = parse_ago("1 month ago", now).unwrap();
+
+      // March 31 - 1 month = February 29 (2024 is a leap year)
+      assert_eq!(result.month(), 2);
+      assert_eq!(result.day(), 29);
+    }
+
+    #[test]
+    fn it_clamps_month_to_last_day() {
+      let now = Local.with_ymd_and_hms(2025, 3, 31, 12, 0, 0).unwrap();
+      let result = parse_ago("1 month ago", now).unwrap();
+
+      // March 31 - 1 month = February 28 (2025 is not a leap year)
+      assert_eq!(result.month(), 2);
+      assert_eq!(result.day(), 28);
     }
   }
 
@@ -701,6 +782,23 @@ mod test {
       assert_eq!(parse_number("one"), Some(1));
       assert_eq!(parse_number("six"), Some(6));
       assert_eq!(parse_number("twelve"), Some(12));
+    }
+
+    #[test]
+    fn it_parses_teen_numbers() {
+      assert_eq!(parse_number("thirteen"), Some(13));
+      assert_eq!(parse_number("fourteen"), Some(14));
+      assert_eq!(parse_number("fifteen"), Some(15));
+      assert_eq!(parse_number("sixteen"), Some(16));
+      assert_eq!(parse_number("seventeen"), Some(17));
+      assert_eq!(parse_number("eighteen"), Some(18));
+      assert_eq!(parse_number("nineteen"), Some(19));
+    }
+
+    #[test]
+    fn it_parses_twenty_and_thirty() {
+      assert_eq!(parse_number("twenty"), Some(20));
+      assert_eq!(parse_number("thirty"), Some(30));
     }
 
     #[test]

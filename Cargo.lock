@@ -465,7 +465,7 @@ dependencies = [
 
 [[package]]
 name = "doing"
-version = "0.1.13"
+version = "0.2.0"
 dependencies = [
  "assert_cmd",
  "chrono",
@@ -499,7 +499,7 @@ dependencies = [
 
 [[package]]
 name = "doing-config"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "dir_spec",
  "doing-error",
@@ -523,7 +523,7 @@ dependencies = [
 
 [[package]]
 name = "doing-ops"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "chrono",
  "doing-config",
@@ -538,7 +538,7 @@ dependencies = [
 
 [[package]]
 name = "doing-plugins"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -559,7 +559,7 @@ dependencies = [
 
 [[package]]
 name = "doing-taskpaper"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "doing-error",
@@ -571,7 +571,7 @@ dependencies = [
 
 [[package]]
 name = "doing-template"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "chrono",
  "doing-config",
@@ -586,7 +586,7 @@ dependencies = [
 
 [[package]]
 name = "doing-time"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "chrono",
  "doing-error",

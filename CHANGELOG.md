@@ -7,6 +7,25 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.2.0] - 2026-04-13
+
+### Added
+
+- Natural date expressions like "thirteen days ago" or "twenty minutes ago" now parse correctly, and
+  "1 month ago" uses proper calendar subtraction instead of subtracting a fixed 30 days (see [#328])
+
+### Changed
+
+- `note` command can now annotate finished entries; use `--unfinished` to restore the previous
+  behavior of only showing unfinished entries (see [#313])
+- `last` command now shows the most recent entry regardless of status; use `--unfinished` to restore
+  the previous behavior (see [#309])
+- `again` command now supports the bare-value filter fallback it was previously missing (see [#367])
+- **Breaking (`doing-taskpaper`):** `all_entries` and `entries_in_section` now return iterators
+  instead of `Vec<&Entry>` to avoid unnecessary allocations (see [#403])
+- **Breaking (`doing-taskpaper`):** Removed `end_date()` method; use `done_date()` directly
+  (see [#383])
+
 ## [v0.1.13] - 2026-04-04
 
 ### Changed
@@ -602,10 +621,15 @@ Initial alpha release
 [#380]: https://github.com/aaronmallen/doing/issues/380
 [#381]: https://github.com/aaronmallen/doing/issues/381
 [#386]: https://github.com/aaronmallen/doing/issues/386
+[#309]: https://github.com/aaronmallen/doing/issues/309
+[#313]: https://github.com/aaronmallen/doing/issues/313
+[#328]: https://github.com/aaronmallen/doing/issues/328
 [#333]: https://github.com/aaronmallen/doing/issues/333
 [#334]: https://github.com/aaronmallen/doing/issues/334
 [#363]: https://github.com/aaronmallen/doing/issues/363
 [#365]: https://github.com/aaronmallen/doing/issues/365
+[#367]: https://github.com/aaronmallen/doing/issues/367
+[#383]: https://github.com/aaronmallen/doing/issues/383
 [#390]: https://github.com/aaronmallen/doing/issues/390
 [#399]: https://github.com/aaronmallen/doing/issues/399
 [#400]: https://github.com/aaronmallen/doing/issues/400
@@ -621,8 +645,9 @@ Initial alpha release
 [#396]: https://github.com/aaronmallen/doing/issues/396
 [#397]: https://github.com/aaronmallen/doing/issues/397
 [#398]: https://github.com/aaronmallen/doing/issues/398
+[#403]: https://github.com/aaronmallen/doing/issues/403
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.1.13...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.2.0...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -643,3 +668,4 @@ Initial alpha release
 [v0.1.11]: https://github.com/aaronmallen/doing/compare/0.1.10...0.1.11
 [v0.1.12]: https://github.com/aaronmallen/doing/compare/0.1.11...0.1.12
 [v0.1.13]: https://github.com/aaronmallen/doing/compare/0.1.12...0.1.13
+[v0.2.0]: https://github.com/aaronmallen/doing/compare/0.1.13...0.2.0

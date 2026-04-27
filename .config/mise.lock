@@ -89,10 +89,6 @@ version = "0.8.5"
 backend = "cargo:cargo-llvm-cov"
 
 [[tools."cargo:cargo-nextest"]]
-version = "0.9.131"
-backend = "cargo:cargo-nextest"
-
-[[tools."cargo:cargo-nextest"]]
 version = "0.9.132"
 backend = "cargo:cargo-nextest"
 
@@ -173,15 +169,11 @@ checksum = "sha256:2508c549b049b1d4342d08edc1cb42bfac169082b6e3069431b5bab9822db
 url = "https://github.com/sharkdp/hyperfine/releases/download/v1.20.0/hyperfine-v1.20.0-x86_64-pc-windows-msvc.zip"
 
 [[tools.markdownlint-cli2]]
-version = "0.21.0"
-backend = "npm:markdownlint-cli2"
-
-[[tools.markdownlint-cli2]]
 version = "0.22.0"
 backend = "npm:markdownlint-cli2"
 
 [[tools.rust]]
-version = "1.94.1"
+version = "1.95.0"
 backend = "core:rust"
 
 [[tools.rust]]
@@ -212,38 +204,6 @@ url = "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-darwin-x8
 
 [tools.taplo."platforms.windows-x64"]
 url = "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-windows-x86_64.zip"
-
-[[tools.usage]]
-version = "3.0.0"
-backend = "aqua:jdx/usage"
-
-[tools.usage."platforms.linux-arm64"]
-checksum = "sha256:6c32e248c2203d3d0b43bed07a9c6d25b05773e8443fb99b4c4a724f9c8fc64a"
-url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-aarch64-unknown-linux-musl.tar.gz"
-
-[tools.usage."platforms.linux-arm64-musl"]
-checksum = "sha256:6c32e248c2203d3d0b43bed07a9c6d25b05773e8443fb99b4c4a724f9c8fc64a"
-url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-aarch64-unknown-linux-musl.tar.gz"
-
-[tools.usage."platforms.linux-x64"]
-checksum = "sha256:e9d4c42cbc28668da0c1ee02eaea1948ab043ee1ef2637fa90737095da487e1c"
-url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-x86_64-unknown-linux-musl.tar.gz"
-
-[tools.usage."platforms.linux-x64-musl"]
-checksum = "sha256:e9d4c42cbc28668da0c1ee02eaea1948ab043ee1ef2637fa90737095da487e1c"
-url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-x86_64-unknown-linux-musl.tar.gz"
-
-[tools.usage."platforms.macos-arm64"]
-checksum = "sha256:4de86e95923dd57d8171a5ae40ca65492ef84b69175fefd7ab14442ab3ea0fc2"
-url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-universal-apple-darwin.tar.gz"
-
-[tools.usage."platforms.macos-x64"]
-checksum = "sha256:4de86e95923dd57d8171a5ae40ca65492ef84b69175fefd7ab14442ab3ea0fc2"
-url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-universal-apple-darwin.tar.gz"
-
-[tools.usage."platforms.windows-x64"]
-checksum = "sha256:b0a8cb81f4a259f8eaee134d9d427ed8284177141d615669dce2bde184ab06b3"
-url = "https://github.com/jdx/usage/releases/download/v3.0.0/usage-x86_64-pc-windows-msvc.zip"
 
 [[tools.usage]]
 version = "3.2.0"

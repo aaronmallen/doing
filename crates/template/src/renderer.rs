@@ -172,6 +172,53 @@ pub fn render(entry: &Entry, options: &RenderOptions, config: &Config) -> String
 /// Render a single entry using pre-parsed template tokens.
 fn render_with_tokens(entry: &Entry, tokens: &[Token], options: &RenderOptions, config: &Config) -> String {
   let values = build_values(entry, options, config);
+
+  // Pre-compute available stretch width if any token uses stretch.
+  let stretch_width: Option<usize> = if tokens.iter().any(|t| {
+    matches!(
+      t,
+      Token::Placeholder {
+        stretch: true,
+        ..
+      }
+    )
+  }) {
+    let fixed: usize = tokens
+      .iter()
+      .map(|t| match t {
+        Token::Color(_) => 0,
+        Token::Literal(text) => colors::visible_len(text),
+        Token::Placeholder {
+          stretch: true, ..
+        } => 0,
+        Token::Placeholder {
+          indent,
+          kind,
+          marker,
+          prefix,
+          width,
+          ..
+        } => {
+          let raw = values.get(kind).cloned().unwrap_or_default();
+          let s = format_value(
+            &raw,
+            *kind,
+            *width,
+            marker.as_ref(),
+            indent.as_ref(),
+            prefix.as_deref(),
+            0,
+          );
+          colors::visible_len(&s)
+        }
+      })
+      .sum();
+    let term = terminal_width();
+    Some(term.saturating_sub(fixed))
+  } else {
+    None
+  };
+
   let mut output = String::new();
 
   for token in tokens {
@@ -182,18 +229,34 @@ fn render_with_tokens(entry: &Entry, tokens: &[Token], options: &RenderOptions, 
         indent,
         kind,
         marker,
+        min_width,
         prefix,
+        stretch,
         width,
       } => {
         let raw = values.get(kind).cloned().unwrap_or_default();
+        let effective_width = if *stretch {
+          let avail = stretch_width.unwrap_or(0);
+          let min = min_width.map(|m| m as usize).unwrap_or(0);
+          Some(avail.max(min) as i32)
+        } else {
+          *width
+        };
+        let effective_wrap = if *stretch && matches!(kind, TokenKind::Note | TokenKind::Odnote | TokenKind::Idnote) {
+          let avail = stretch_width.unwrap_or(0);
+          let min = min_width.map(|m| m as usize).unwrap_or(0);
+          avail.max(min) as u32
+        } else {
+          options.wrap_width
+        };
         let formatted = format_value(
           &raw,
           *kind,
-          *width,
+          effective_width,
           marker.as_ref(),
           indent.as_ref(),
           prefix.as_deref(),
-          options.wrap_width,
+          effective_wrap,
         );
         output.push_str(&formatted);
       }
@@ -201,6 +264,18 @@ fn render_with_tokens(entry: &Entry, tokens: &[Token], options: &RenderOptions, 
   }
 
   output
+}
+
+/// Return the current terminal width in columns.
+///
+/// Checks `COLUMNS` env var first, then falls back to 80.
+fn terminal_width() -> usize {
+  if let Ok(cols) = std::env::var("COLUMNS")
+    && let Ok(n) = cols.parse::<usize>()
+  {
+    return n;
+  }
+  80
 }
 
 fn apply_width(raw: &str, width: Option<i32>) -> String {
@@ -687,6 +762,58 @@ mod test {
       let result = render(&entry, &options, &config);
 
       assert_eq!(result, "");
+    }
+  }
+
+  mod render_stretch {
+    use pretty_assertions::assert_eq;
+    use temp_env;
+
+    use super::*;
+
+    #[test]
+    fn it_stretches_title_to_columns_env_var() {
+      let entry = Entry::new(
+        sample_date(),
+        "Short",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let config = sample_config();
+      let options = RenderOptions {
+        template: "prefix: %*title :suffix".into(),
+        ..sample_options()
+      };
+
+      let result = temp_env::with_var("COLUMNS", Some("30"), || render(&entry, &options, &config));
+
+      // "prefix: " = 8, " :suffix" = 8, total fixed = 16, stretch width = 14
+      // "Short" (5 chars) padded to 14 = "Short         "
+      assert_eq!(result, "prefix: Short          :suffix");
+    }
+
+    #[test]
+    fn it_respects_min_width_for_stretch() {
+      let entry = Entry::new(
+        sample_date(),
+        "Hi",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      );
+      let config = sample_config();
+      let options = RenderOptions {
+        template: "%20-*title".into(),
+        ..sample_options()
+      };
+
+      let result = temp_env::with_var("COLUMNS", Some("10"), || render(&entry, &options, &config));
+
+      // terminal=10, fixed=0, available=10, min_width=20 → effective=20
+      assert_eq!(result.len(), 20);
     }
   }
 

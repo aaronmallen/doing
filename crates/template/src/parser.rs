@@ -7,7 +7,7 @@ use crate::colors;
 static COLOR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"%((?:[fb]g?)?#[a-fA-F0-9]{6}|[a-zA-Z_]+)").unwrap());
 static PLACEHOLDER_RE: LazyLock<Regex> = LazyLock::new(|| {
   Regex::new(concat!(
-    r"%(?P<width>-?\d+)?",
+    r"%(?:(?P<min>\d+)-)?(?:(?P<stretch>\*)|(?P<width>-?\d+))?",
     r"(?:\^(?P<marker>.))?",
     r"(?:(?P<ichar>[ _t]|[^a-zA-Z0-9\s])(?P<icount>\d+))?",
     r"(?P<prefix>.[ _t]?)?",
@@ -43,7 +43,9 @@ pub enum Token {
     indent: Option<Indent>,
     kind: TokenKind,
     marker: Option<char>,
+    min_width: Option<u32>,
     prefix: Option<String>,
+    stretch: bool,
     width: Option<i32>,
   },
 }
@@ -164,6 +166,8 @@ pub fn parse(template: &str) -> Vec<Token> {
       TokenMatch::Placeholder {
         caps, ..
       } => {
+        let stretch = caps.name("stretch").is_some();
+        let min_width = caps.name("min").and_then(|m| m.as_str().parse::<u32>().ok());
         let width = caps
           .name("width")
           .map(|m| m.as_str().parse::<i32>().unwrap_or(i32::MAX));
@@ -209,7 +213,9 @@ pub fn parse(template: &str) -> Vec<Token> {
           indent,
           kind,
           marker,
+          min_width,
           prefix,
+          stretch,
           width,
         });
       }
@@ -238,7 +244,9 @@ mod test {
       indent: None,
       kind,
       marker: None,
+      min_width: None,
       prefix: None,
+      stretch: false,
       width: None,
     }
   }
@@ -328,7 +336,9 @@ mod test {
           }),
           kind: TokenKind::Note,
           marker: None,
+          min_width: None,
           prefix: Some("\u{2503} ".into()),
+          stretch: false,
           width: Some(80),
         }]
       );
@@ -354,7 +364,9 @@ mod test {
           }),
           kind: TokenKind::Note,
           marker: Some('>'),
+          min_width: None,
           prefix: Some(": ".into()),
+          stretch: false,
           width: None,
         }]
       );
@@ -395,7 +407,9 @@ mod test {
           indent: None,
           kind: TokenKind::Note,
           marker: Some('>'),
+          min_width: None,
           prefix: None,
+          stretch: false,
           width: None,
         }]
       );
@@ -425,7 +439,9 @@ mod test {
           indent: None,
           kind: TokenKind::Title,
           marker: None,
+          min_width: None,
           prefix: None,
+          stretch: false,
           width: Some(i32::MAX),
         }]
       );
@@ -441,7 +457,9 @@ mod test {
           indent: None,
           kind: TokenKind::Section,
           marker: None,
+          min_width: None,
           prefix: None,
+          stretch: false,
           width: Some(-10),
         }]
       );
@@ -457,7 +475,9 @@ mod test {
           indent: None,
           kind: TokenKind::Title,
           marker: None,
+          min_width: None,
           prefix: None,
+          stretch: false,
           width: Some(80),
         }]
       );
@@ -473,7 +493,9 @@ mod test {
           indent: None,
           kind: TokenKind::Note,
           marker: None,
+          min_width: None,
           prefix: Some(": ".into()),
+          stretch: false,
           width: None,
         }]
       );
@@ -489,7 +511,9 @@ mod test {
           indent: None,
           kind: TokenKind::Title,
           marker: None,
+          min_width: None,
           prefix: Some("\u{2551} ".into()),
+          stretch: false,
           width: Some(80),
         }]
       );
@@ -508,7 +532,9 @@ mod test {
           }),
           kind: TokenKind::Note,
           marker: None,
+          min_width: None,
           prefix: None,
+          stretch: false,
           width: None,
         }]
       );
@@ -527,7 +553,9 @@ mod test {
           }),
           kind: TokenKind::Note,
           marker: None,
+          min_width: None,
           prefix: None,
+          stretch: false,
           width: None,
         }]
       );
@@ -555,7 +583,84 @@ mod test {
           }),
           kind: TokenKind::Note,
           marker: None,
+          min_width: None,
           prefix: None,
+          stretch: false,
+          width: None,
+        }]
+      );
+    }
+
+    #[test]
+    fn it_parses_stretch_modifier() {
+      let tokens = parse("%*title");
+
+      assert_eq!(
+        tokens,
+        vec![Token::Placeholder {
+          indent: None,
+          kind: TokenKind::Title,
+          marker: None,
+          min_width: None,
+          prefix: None,
+          stretch: true,
+          width: None,
+        }]
+      );
+    }
+
+    #[test]
+    fn it_parses_min_width_with_stretch() {
+      let tokens = parse("%20-*title");
+
+      assert_eq!(
+        tokens,
+        vec![Token::Placeholder {
+          indent: None,
+          kind: TokenKind::Title,
+          marker: None,
+          min_width: Some(20),
+          prefix: None,
+          stretch: true,
+          width: None,
+        }]
+      );
+    }
+
+    #[test]
+    fn it_parses_min_width_stretch_with_indent() {
+      let tokens = parse("%20-*_4title");
+
+      assert_eq!(
+        tokens,
+        vec![Token::Placeholder {
+          indent: Some(Indent {
+            count: 4,
+            kind: IndentChar::Space,
+          }),
+          kind: TokenKind::Title,
+          marker: None,
+          min_width: Some(20),
+          prefix: None,
+          stretch: true,
+          width: None,
+        }]
+      );
+    }
+
+    #[test]
+    fn it_parses_stretch_note() {
+      let tokens = parse("%*note");
+
+      assert_eq!(
+        tokens,
+        vec![Token::Placeholder {
+          indent: None,
+          kind: TokenKind::Note,
+          marker: None,
+          min_width: None,
+          prefix: None,
+          stretch: true,
           width: None,
         }]
       );

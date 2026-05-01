@@ -25,3 +25,4 @@ yansi.workspace = true
 
 [dev-dependencies]
 pretty_assertions.workspace = true
+temp-env.workspace = true

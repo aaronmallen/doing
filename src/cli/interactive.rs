@@ -8,11 +8,6 @@ use log::warn;
 
 use crate::Result;
 
-/// Convert a dialoguer error into a doing `Error`.
-pub fn dialoguer_error(e: impl std::fmt::Display) -> crate::Error {
-  crate::Error::Io(std::io::Error::other(format!("input error: {e}")))
-}
-
 /// Choose a single entry from a list using fzf (if available) or a dialoguer fallback.
 pub fn choose_entry(entries: &[Entry]) -> Result<Option<Entry>> {
   if has_fzf() {
@@ -21,6 +16,11 @@ pub fn choose_entry(entries: &[Entry]) -> Result<Option<Entry>> {
     warn!("fzf not found on $PATH, falling back to built-in menu");
     choose_dialoguer(entries)
   }
+}
+
+/// Convert a dialoguer error into a doing `Error`.
+pub fn dialoguer_error(e: impl std::fmt::Display) -> crate::Error {
+  crate::Error::Io(std::io::Error::other(format!("input error: {e}")))
 }
 
 pub fn has_fzf() -> bool {
@@ -83,7 +83,10 @@ fn choose_fzf(entries: &[Entry]) -> Result<Option<Entry>> {
     return Ok(None);
   }
 
-  let chosen = String::from_utf8_lossy(&output.stdout).trim().to_string();
+  let chosen = String::from_utf8(output.stdout)
+    .map_err(|e| crate::Error::Io(std::io::Error::other(e)))?
+    .trim()
+    .to_string();
   let index = items.iter().position(|item| *item == chosen);
   Ok(index.map(|i| entries[i].clone()))
 }

@@ -27,7 +27,7 @@ static RE_US_DATE_SHORT: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(\d{1,
 /// (`3pm`, `15:00`, `noon`, `midnight`), absolute dates (`2024-01-15`,
 /// `01/15/24`), and combined forms (`yesterday 3pm`, `monday 9:30am`).
 ///
-/// Bare times always resolve to today's date.
+/// Bare times resolve to today if the time has already passed, or yesterday if the time is in the future.
 pub fn chronify(input: &str) -> Result<DateTime<Local>> {
   let input = input.trim().to_lowercase();
 
@@ -299,13 +299,19 @@ fn parse_shorthand_duration(input: &str) -> Option<DateTime<Local>> {
   Some(Local::now() - duration)
 }
 
-/// Parse a time-only expression into today's date with the given time.
+/// Parse a time-only expression into a `DateTime<Local>`.
 /// Supports `noon`, `midnight`, `3pm`, `3:30pm`, `15:00`.
-/// Bare times always resolve to today, matching the original Ruby behavior.
+/// If the resolved time is in the future (later than now), it resolves to the previous day
+/// so that `--back 2:30pm` after midnight records yesterday afternoon.
 fn parse_time_only(input: &str) -> Option<DateTime<Local>> {
   let time = resolve_time_expression(input)?;
   let now = Local::now();
-  apply_time_to_date(now, time)
+  let result = apply_time_to_date(now, time)?;
+  if result > now {
+    apply_time_to_date(now - Duration::days(1), time)
+  } else {
+    Some(result)
+  }
 }
 
 /// Convert a weekday abbreviation to a `chrono::Weekday`.
@@ -847,17 +853,18 @@ mod test {
 
     #[test]
     fn it_resolves_bare_time_to_today() {
-      let result = parse_time_only("3pm").unwrap();
+      let result = parse_time_only("midnight").unwrap();
 
       assert_eq!(result.date_naive(), Local::now().date_naive());
-      assert_eq!(result.time(), NaiveTime::from_hms_opt(15, 0, 0).unwrap());
+      assert_eq!(result.time(), NaiveTime::from_hms_opt(0, 0, 0).unwrap());
     }
 
     #[test]
-    fn it_resolves_future_time_to_today() {
+    fn it_resolves_future_time_to_previous_day() {
       let result = parse_time_only("11:59pm").unwrap();
+      let yesterday = (Local::now() - Duration::days(1)).date_naive();
 
-      assert_eq!(result.date_naive(), Local::now().date_naive());
+      assert_eq!(result.date_naive(), yesterday);
       assert_eq!(result.time(), NaiveTime::from_hms_opt(23, 59, 0).unwrap());
     }
   }

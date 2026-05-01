@@ -288,7 +288,21 @@ fn build_values(entry: &Entry, options: &RenderOptions, config: &Config) -> Hash
   // Tags
   let tags = entry.tags();
   if !tags.is_empty() {
-    values.insert(TokenKind::Tags, tags.to_string());
+    let tags_str = tags.to_string();
+    let colored = if let Some(color_name) = &config.tags_color
+      && let Some(color) = colors::Color::parse(color_name)
+    {
+      let ansi = color.to_ansi();
+      let reset = colors::Color::parse("reset").map(|c| c.to_ansi()).unwrap_or_default();
+      if ansi.is_empty() {
+        tags_str
+      } else {
+        format!("{ansi}{tags_str}{reset}")
+      }
+    } else {
+      tags_str
+    };
+    values.insert(TokenKind::Tags, colored);
   }
 
   // Special tokens

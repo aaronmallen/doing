@@ -7,6 +7,26 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.2.1] - 2026-05-01
+
+### Added
+
+- New `tags_color` config option to colorize `%tags` placeholder output; `--no-color` automatically
+  suppresses the ANSI sequences to prevent stray codes in piped output (see [#421])
+- New `%*title` and `%*note` template placeholders expand to fill remaining terminal width after
+  all fixed-width elements on the line; `%min-*title` sets a minimum width floor (see [#422])
+
+### Fixed
+
+- `--back` with a clock-only time (e.g. `2:30pm`) entered after midnight now resolves to the
+  previous day instead of a future timestamp (see [#420])
+- Config loading now surfaces errors from `current_dir()` instead of silently resolving paths from
+  an empty working directory (see [#423])
+- Arithmetic in search matching and duration parsing now uses checked operations, preventing silent
+  integer wrapping on out-of-bounds values (see [#424])
+- Interactive `fzf` output now returns a proper error on invalid UTF-8 subprocess output instead of
+  silently replacing bytes (see [#425])
+
 ## [v0.2.0] - 2026-04-13
 
 ### Added
@@ -646,8 +666,14 @@ Initial alpha release
 [#397]: https://github.com/aaronmallen/doing/issues/397
 [#398]: https://github.com/aaronmallen/doing/issues/398
 [#403]: https://github.com/aaronmallen/doing/issues/403
+[#420]: https://github.com/aaronmallen/doing/issues/420
+[#421]: https://github.com/aaronmallen/doing/issues/421
+[#422]: https://github.com/aaronmallen/doing/issues/422
+[#423]: https://github.com/aaronmallen/doing/issues/423
+[#424]: https://github.com/aaronmallen/doing/issues/424
+[#425]: https://github.com/aaronmallen/doing/issues/425
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.2.0...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.2.1...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -669,3 +695,4 @@ Initial alpha release
 [v0.1.12]: https://github.com/aaronmallen/doing/compare/0.1.11...0.1.12
 [v0.1.13]: https://github.com/aaronmallen/doing/compare/0.1.12...0.1.13
 [v0.2.0]: https://github.com/aaronmallen/doing/compare/0.1.13...0.2.0
+[v0.2.1]: https://github.com/aaronmallen/doing/compare/0.2.0...0.2.1

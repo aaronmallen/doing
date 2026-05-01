@@ -161,7 +161,7 @@ impl Config {
   ///
   /// Missing config files produce defaults, not errors.
   pub fn load() -> Result<Self> {
-    let cwd = std_env::current_dir().unwrap_or_default();
+    let cwd = std_env::current_dir()?;
     Self::load_from(&cwd)
   }
 
@@ -407,6 +407,17 @@ mod test {
   use std::fs;
 
   use super::*;
+
+  mod load {
+    use super::*;
+
+    #[test]
+    fn it_succeeds_when_current_dir_is_valid() {
+      let result = Config::load();
+
+      assert!(result.is_ok());
+    }
+  }
 
   mod load_from {
     use pretty_assertions::assert_eq;

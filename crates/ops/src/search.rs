@@ -170,7 +170,12 @@ fn matches_fuzzy(text: &str, pattern: &str, distance: u32, case: CaseSensitivity
     .continuous_matches()
     .flat_map(|cm| cm.start()..cm.start() + cm.len())
     .collect();
-  positions.windows(2).all(|w| (w[1] - w[0] - 1) as u32 <= distance)
+  positions.windows(2).all(|w| {
+    w[1]
+      .checked_sub(w[0])
+      .and_then(|d| d.checked_sub(1))
+      .is_some_and(|gap| gap as u32 <= distance)
+  })
 }
 
 /// Check whether `text` matches all pattern tokens.
@@ -415,18 +420,6 @@ mod test {
     }
 
     #[test]
-    fn it_matches_note_when_include_notes_enabled() {
-      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
-
-      assert!(super::super::matches_entry(
-        &sample_entry(),
-        &mode,
-        CaseSensitivity::Ignore,
-        true,
-      ));
-    }
-
-    #[test]
     fn it_does_not_match_across_tag_boundaries() {
       // Tags ["co", "ding"] should not match "co ding" since they are separate tags.
       let entry = Entry::new(
@@ -465,6 +458,18 @@ mod test {
         &mode,
         CaseSensitivity::Ignore,
         false
+      ));
+    }
+
+    #[test]
+    fn it_matches_note_when_include_notes_enabled() {
+      let mode = SearchMode::Pattern(vec![PatternToken::Include("fuzzy".into())]);
+
+      assert!(super::super::matches_entry(
+        &sample_entry(),
+        &mode,
+        CaseSensitivity::Ignore,
+        true,
       ));
     }
 
@@ -562,6 +567,11 @@ mod test {
 
   mod matches_fuzzy {
     use super::*;
+
+    #[test]
+    fn it_matches_adjacent_characters_within_distance() {
+      assert!(super::super::matches_fuzzy("abc", "ab", 1, CaseSensitivity::Sensitive));
+    }
 
     #[test]
     fn it_matches_characters_in_order_with_gaps() {

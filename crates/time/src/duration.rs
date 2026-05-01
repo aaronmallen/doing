@@ -98,7 +98,7 @@ fn try_decimal_format(input: &str) -> Option<Duration> {
     _ => return None,
   };
 
-  if !seconds.is_finite() || seconds > i64::MAX as f64 {
+  if !seconds.is_finite() || seconds > i64::MAX as f64 || seconds < i64::MIN as f64 {
     return None;
   }
   Some(Duration::seconds(seconds as i64))
@@ -202,6 +202,13 @@ mod test {
       let result = parse_duration("1.5h").unwrap();
 
       assert_eq!(result, Duration::seconds(5400));
+    }
+
+    #[test]
+    fn it_parses_decimal_zero_hours() {
+      let result = parse_duration("0.0h").unwrap();
+
+      assert_eq!(result, Duration::seconds(0));
     }
 
     #[test]

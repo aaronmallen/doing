@@ -135,7 +135,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/aaronmallen/gest' },
+      { icon: 'github', link: 'https://github.com/aaronmallen/doing' },
       { icon: 'discord', link: 'https://discord.gg/PqQdhf9VMF' }
     ],
 

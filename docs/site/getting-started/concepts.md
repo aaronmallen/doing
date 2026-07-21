@@ -5,7 +5,7 @@ that file is structured and the key ideas behind it.
 
 ## The Doing File
 
-By default, `doing` reads and writes a file at `~/.doing`. You can change this in your configuration or
+By default, `doing` reads and writes a file at `~/.doing` or `~/Library/Application\ Support/doing/what_was_i_doing.md` on macOS. You can change this in your configuration or
 pass `--doing-file` to any command.
 
 The file is plain text in TaskPaper format, which means it is human-readable, easy to grep, and works

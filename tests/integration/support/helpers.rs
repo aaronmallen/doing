@@ -156,7 +156,37 @@ pub fn extract_entry_timestamp(contents: &str) -> String {
   cap[1].to_string()
 }
 
+/// Format a naive datetime the way doing writes entry timestamps.
+pub fn fmt_naive(dt: chrono::NaiveDateTime) -> String {
+  dt.format("%Y-%m-%d %H:%M").to_string()
+}
+
 /// Format a chrono DateTime to the timestamp format used by doing entries.
 pub fn fmt_time(dt: chrono::DateTime<Local>) -> String {
   dt.format("%Y-%m-%d %H:%M").to_string()
+}
+
+/// The most recent occurrence of a wall-clock time, the way doing resolves one.
+///
+/// A clock-only time never lands in the future. Ask for `2pm` at half past
+/// midnight and doing reaches back to yesterday afternoon. A test that pins such
+/// a time has to follow the same rule, or it passes only when it happens to run
+/// later in the day than the time it names.
+pub fn most_recent_clock(hour: u32, minute: u32) -> chrono::NaiveDateTime {
+  let now = Local::now();
+  let today = now
+    .date_naive()
+    .and_hms_opt(hour, minute, 0)
+    .expect("invalid clock time");
+
+  if today <= now.naive_local() {
+    today
+  } else {
+    today - chrono::Duration::days(1)
+  }
+}
+
+/// [`most_recent_clock`] formatted the way doing writes entry timestamps.
+pub fn most_recent_clock_time(hour: u32, minute: u32) -> String {
+  fmt_naive(most_recent_clock(hour, minute))
 }

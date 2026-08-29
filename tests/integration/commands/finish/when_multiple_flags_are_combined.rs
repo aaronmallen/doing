@@ -1,15 +1,18 @@
 use std::fs;
 
+use chrono::Duration;
+
 use crate::support::helpers::{
-  DoingCmd, assert_times_within_tolerance, extract_done_timestamp, extract_entry_timestamp,
+  DoingCmd, assert_times_within_tolerance, extract_done_timestamp, extract_entry_timestamp, fmt_naive,
+  most_recent_clock,
 };
 
 #[test]
 fn it_combines_at_and_took() {
   let doing = DoingCmd::new();
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-  let expected_start = format!("{today} 14:00");
-  let expected_done = format!("{today} 15:00");
+  let done = most_recent_clock(15, 0);
+  let expected_start = fmt_naive(done - Duration::hours(1));
+  let expected_done = fmt_naive(done);
 
   fs::write(
     doing.doing_file_path(),

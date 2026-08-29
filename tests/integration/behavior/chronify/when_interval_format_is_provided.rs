@@ -1,7 +1,9 @@
-use chrono::{Datelike, Duration, Local};
+use chrono::{Duration, Local};
 use pretty_assertions::assert_eq;
 
-use crate::support::helpers::{DoingCmd, assert_times_within_tolerance, extract_entry_timestamp, fmt_time};
+use crate::support::helpers::{
+  DoingCmd, assert_times_within_tolerance, extract_entry_timestamp, fmt_time, most_recent_clock_time,
+};
 
 #[test]
 fn it_parses_compound_interval() {
@@ -43,12 +45,11 @@ fn it_parses_hhmm_interval() {
 
   let contents = doing.read_doing_file();
   let actual = extract_entry_timestamp(&contents);
-  let now = Local::now();
-  let expected = format!("{:04}-{:02}-{:02} 01:30", now.year(), now.month(), now.day());
 
   assert_eq!(
-    actual, expected,
-    "01:30 should resolve to 01:30 today (time-of-day, not duration)"
+    actual,
+    most_recent_clock_time(1, 30),
+    "01:30 should resolve to the most recent 01:30 (time-of-day, not duration)"
   );
 }
 

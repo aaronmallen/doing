@@ -17,7 +17,7 @@ fn it_limits_to_time_range() {
     .success();
 
   let output = doing
-    .run(["on", &today, "--from", "8am to 12pm"])
+    .run(["on", &today, "--from", &format!("{today} 08:00 to {today} 12:00")])
     .output()
     .expect("failed to run");
 

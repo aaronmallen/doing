@@ -1,11 +1,12 @@
 use std::fs;
 
-use crate::support::helpers::{DoingCmd, assert_times_within_tolerance, extract_entry_timestamp};
+use crate::support::helpers::{
+  DoingCmd, assert_times_within_tolerance, extract_entry_timestamp, most_recent_clock_time,
+};
 
 #[test]
 fn it_combines_back_note_and_section() {
   let doing = DoingCmd::new();
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
 
   // Pre-create the doing file with a Projects section
   fs::write(doing.doing_file_path(), "Currently:\n\nProjects:\n").expect("failed to write doing file");
@@ -38,7 +39,7 @@ fn it_combines_back_note_and_section() {
   let entry_time = extract_entry_timestamp(&contents);
   assert_times_within_tolerance(
     &entry_time,
-    &format!("{today} 14:00"),
+    &most_recent_clock_time(14, 0),
     1,
     "entry should be backdated to 2pm",
   );

@@ -1,10 +1,11 @@
-use crate::support::helpers::{DoingCmd, assert_times_within_tolerance, extract_entry_timestamp, fmt_time};
+use crate::support::helpers::{
+  DoingCmd, assert_times_within_tolerance, extract_entry_timestamp, fmt_time, most_recent_clock_time,
+};
 
 #[test]
 fn it_backdates_with_absolute_time() {
   let doing = DoingCmd::new();
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-  let expected = format!("{today} 14:00");
+  let expected = most_recent_clock_time(14, 0);
 
   doing.run(["now", "--back", "2pm", "Absolute back"]).assert().success();
 

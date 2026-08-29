@@ -5,12 +5,16 @@ use crate::support::helpers::{
 #[test]
 fn it_sets_start_and_done_from_range() {
   let doing = DoingCmd::new();
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-  let expected_start = format!("{today} 13:00");
-  let expected_done = format!("{today} 15:00");
+  let expected_start = "2026-03-22 13:00";
+  let expected_done = "2026-03-22 15:00";
 
   doing
-    .run(["done", "--from", "1pm to 3pm", "From range entry"])
+    .run([
+      "done",
+      "--from",
+      "2026-03-22 13:00 to 2026-03-22 15:00",
+      "From range entry",
+    ])
     .assert()
     .success();
 
@@ -18,6 +22,6 @@ fn it_sets_start_and_done_from_range() {
   let start_time = extract_entry_timestamp(&contents);
   let done_time = extract_done_timestamp(&contents);
 
-  assert_times_within_tolerance(&start_time, &expected_start, 1, "start should be 1pm");
-  assert_times_within_tolerance(&done_time, &expected_done, 1, "@done should be 3pm");
+  assert_times_within_tolerance(&start_time, expected_start, 1, "start should be 1pm");
+  assert_times_within_tolerance(&done_time, expected_done, 1, "@done should be 3pm");
 }

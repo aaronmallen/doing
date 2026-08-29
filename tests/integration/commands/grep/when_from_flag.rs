@@ -16,7 +16,12 @@ fn it_filters_by_date_range() {
     .success();
 
   let output = doing
-    .run(["grep", "search entry", "--from", "8am to 12pm"])
+    .run([
+      "grep",
+      "search entry",
+      "--from",
+      &format!("{today} 08:00 to {today} 12:00"),
+    ])
     .output()
     .expect("failed to run");
 

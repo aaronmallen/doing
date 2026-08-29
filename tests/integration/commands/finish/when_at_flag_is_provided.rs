@@ -1,12 +1,13 @@
 use std::fs;
 
-use crate::support::helpers::{DoingCmd, assert_times_within_tolerance, extract_done_timestamp};
+use crate::support::helpers::{
+  DoingCmd, assert_times_within_tolerance, extract_done_timestamp, most_recent_clock_time,
+};
 
 #[test]
 fn it_sets_done_date_to_specified_time() {
   let doing = DoingCmd::new();
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
-  let expected_done = format!("{today} 11:30");
+  let expected_done = most_recent_clock_time(11, 30);
 
   fs::write(
     doing.doing_file_path(),

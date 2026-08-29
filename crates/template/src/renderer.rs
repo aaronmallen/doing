@@ -334,7 +334,10 @@ fn build_values(entry: &Entry, options: &RenderOptions, config: &Config) -> Hash
   // Note variants
   let note = entry.note();
   if options.include_notes && !note.is_empty() {
-    values.insert(TokenKind::Note, note.to_line(" "));
+    // Standard: keep the line breaks the note was written with
+    values.insert(TokenKind::Note, note.to_line("\n"));
+
+    // Chomped: collapse to a single line
     values.insert(TokenKind::Chompnote, note.to_line(" "));
 
     // Outdented: one less tab than standard
@@ -682,6 +685,48 @@ mod test {
         result,
         "Working on project @coding @done(2024-03-17 15:00)\nSome notes here"
       );
+    }
+
+    #[test]
+    fn it_expands_note_preserving_line_breaks() {
+      let entry = Entry::new(
+        sample_date(),
+        "Working on project",
+        Tags::new(),
+        Note::from_text("first line\nsecond line\nthird line"),
+        "Currently",
+        None::<String>,
+      );
+      let config = sample_config();
+      let options = RenderOptions {
+        template: "%title%note".into(),
+        ..sample_options()
+      };
+
+      let result = render(&entry, &options, &config);
+
+      assert_eq!(result, "Working on project\nfirst line\nsecond line\nthird line");
+    }
+
+    #[test]
+    fn it_expands_chompnote_onto_a_single_line() {
+      let entry = Entry::new(
+        sample_date(),
+        "Working on project",
+        Tags::new(),
+        Note::from_text("first line\nsecond line\nthird line"),
+        "Currently",
+        None::<String>,
+      );
+      let config = sample_config();
+      let options = RenderOptions {
+        template: "%title%chompnote".into(),
+        ..sample_options()
+      };
+
+      let result = render(&entry, &options, &config);
+
+      assert_eq!(result, "Working on projectfirst line second line third line");
     }
 
     #[test]

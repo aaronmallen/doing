@@ -69,8 +69,8 @@ yansi = { features = ["detect-env", "detect-tty", "hyperlink"], version = "1" }
 
 [workspace.dependencies.self_update]
 default-features = false
-features = ["archive-tar", "compression-flate2", "reqwest", "rustls"]
-version = "0.43"
+features = ["compression-tar-gz", "github", "progress-bar", "reqwest", "rustls"]
+version = "1.1"
 
 [dependencies]
 chrono.workspace = true

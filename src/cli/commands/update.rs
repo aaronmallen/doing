@@ -83,10 +83,10 @@ fn fetch_latest_version() -> Result<String> {
     .map_err(|e| crate::Error::Update(e.to_string()))?;
 
   let latest = releases
-    .first()
+    .latest()
     .ok_or_else(|| crate::Error::Update("no releases found".to_string()))?;
 
-  Ok(latest.version.clone())
+  Ok(latest.version().to_string())
 }
 
 fn perform_update(target_version: &str) -> Result<()> {
@@ -95,8 +95,11 @@ fn perform_update(target_version: &str) -> Result<()> {
     .repo_name(REPO_NAME)
     .bin_name("doing")
     .current_version(env!("CARGO_PKG_VERSION"))
-    .target_version_tag(target_version)
-    .identifier("tar.gz")
+    .release_tag(target_version)
+    // Releases ship `<name>-<target>.tar.gz` beside `<name>-<target>.sha256`.
+    // The archive is the only asset carrying "tar.gz", so this picks it and can
+    // never select the checksum file.
+    .asset_identifier("tar.gz")
     .show_download_progress(true)
     .no_confirm(true)
     .build()
@@ -110,6 +113,107 @@ fn perform_update(target_version: &str) -> Result<()> {
 #[cfg(test)]
 mod test {
   use super::*;
+
+  mod asset_selection {
+    use super::*;
+
+    /// Reaches GitHub, so it is off by default. Run it with
+    /// `cargo test -p doing --lib asset_selection -- --ignored`.
+    ///
+    /// Every release ships `doing-v<x>-<target>.tar.gz` next to
+    /// `doing-v<x>-<target>.sha256`. Picking the checksum file would install a
+    /// text file over the user's binary, so pin down which asset the identifier
+    /// actually resolves to against the real release.
+    #[test]
+    #[ignore = "requires network access to the GitHub releases API"]
+    fn it_selects_the_archive_and_never_the_checksum() {
+      let releases = self_update::backends::github::ReleaseList::configure()
+        .repo_owner(REPO_OWNER)
+        .repo_name(REPO_NAME)
+        .build()
+        .expect("failed to configure release list")
+        .fetch()
+        .expect("failed to fetch releases");
+
+      let latest = releases.latest().expect("expected at least one release");
+
+      for target in [
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "x86_64-unknown-linux-musl",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl",
+      ] {
+        let asset = latest
+          .asset_for(target, Some("tar.gz"))
+          .unwrap_or_else(|| panic!("no asset matched {target}"));
+
+        assert!(
+          asset.name().ends_with(".tar.gz"),
+          "{target} resolved to {}, which is not the archive",
+          asset.name()
+        );
+        assert!(
+          !asset.name().contains(".sha256"),
+          "{target} resolved to the checksum file {}",
+          asset.name()
+        );
+        assert!(
+          asset.name().contains(target),
+          "{target} resolved to {}, which is a different platform",
+          asset.name()
+        );
+      }
+    }
+  }
+
+  mod end_to_end {
+    use super::*;
+
+    /// Reaches GitHub and downloads a release, so it is off by default. Run it
+    /// with `cargo test -p doing --lib end_to_end -- --ignored`.
+    ///
+    /// Exercises the whole path the user gets: resolve the tag, pick the asset,
+    /// download it, unpack it and install the binary. Installs into a temp file
+    /// rather than over the running binary, and then runs what landed there to
+    /// prove an executable arrived rather than a checksum or an archive.
+    #[test]
+    #[ignore = "requires network access and downloads a release archive"]
+    fn it_downloads_and_installs_a_working_binary() {
+      let dir = tempfile::tempdir().expect("failed to create temp dir");
+      let install_path = dir.path().join("doing");
+      std::fs::write(&install_path, "placeholder").expect("failed to seed install path");
+
+      let status = self_update::backends::github::Update::configure()
+        .repo_owner(REPO_OWNER)
+        .repo_name(REPO_NAME)
+        .bin_name("doing")
+        .bin_install_path(&install_path)
+        .current_version("0.0.1")
+        .release_tag("0.2.1")
+        .asset_identifier("tar.gz")
+        .show_download_progress(false)
+        .no_confirm(true)
+        .build()
+        .expect("failed to configure update")
+        .update()
+        .expect("update failed");
+
+      assert!(status.is_updated(), "expected an update, got {status:?}");
+
+      let output = std::process::Command::new(&install_path)
+        .arg("--version")
+        .output()
+        .expect("installed file did not run as a binary");
+
+      let version = String::from_utf8_lossy(&output.stdout);
+      assert!(
+        version.contains("0.2.1"),
+        "installed binary reported {version:?}, expected 0.2.1"
+      );
+    }
+  }
 
   mod version_diff {
     use super::*;

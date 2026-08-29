@@ -139,10 +139,9 @@ impl Command {
       .section_by_name_mut(section_name)
       .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
-    let last = section
-      .entries_mut()
-      .last_mut()
+    let index = newest_entry_index(section.entries(), false)
       .ok_or_else(|| crate::Error::Config("no entries in section".into()))?;
+    let last = &mut section.entries_mut()[index];
 
     let display_title = last.full_title();
     last.tags_mut().remove("done");
@@ -212,14 +211,8 @@ impl Command {
       .section_by_name_mut(section_name)
       .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
-    let last = if self.unfinished {
-      section.entries_mut().iter_mut().rev().find(|e| e.unfinished())
-    } else {
-      section.entries_mut().last_mut()
-    };
-
-    let last = match last {
-      Some(entry) => entry,
+    let last = match newest_entry_index(section.entries(), self.unfinished) {
+      Some(index) => &mut section.entries_mut()[index],
       None => {
         if section.entries().is_empty() {
           return Err(crate::Error::Config("no items matched your search".into()));
@@ -262,6 +255,21 @@ impl Command {
     ctx.status(format!("Marked \"{}\" as @done", display_title));
     Ok(())
   }
+}
+
+/// Return the index of the most recent entry by date, optionally skipping
+/// entries that already carry a `@done` tag.
+///
+/// Entries are stored in file order, which need not be chronological, so the
+/// most recent entry is the one with the greatest date rather than the last
+/// one in the list. Ties resolve to the later entry in file order.
+fn newest_entry_index(entries: &[Entry], unfinished_only: bool) -> Option<usize> {
+  entries
+    .iter()
+    .enumerate()
+    .filter(|(_, entry)| !unfinished_only || entry.unfinished())
+    .max_by_key(|(_, entry)| entry.date())
+    .map(|(index, _)| index)
 }
 
 #[cfg(test)]
@@ -496,6 +504,64 @@ mod test {
       assert_eq!(entries.len(), 2);
       assert!(entries[0].finished());
       assert!(entries[1].finished());
+    }
+  }
+
+  mod newest_entry_index {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    fn entry_at(year: i32, done: bool) -> Entry {
+      let tags = if done {
+        Tags::from_iter(vec![Tag::new("done", None::<String>)])
+      } else {
+        Tags::new()
+      };
+
+      Entry::new(
+        Local.with_ymd_and_hms(year, 6, 1, 18, 30, 0).unwrap(),
+        format!("Task {year}"),
+        tags,
+        Note::new(),
+        "Currently",
+        None::<String>,
+      )
+    }
+
+    #[test]
+    fn it_ignores_file_order_and_picks_the_greatest_date() {
+      let entries = vec![entry_at(2009, false), entry_at(2008, false), entry_at(2007, false)];
+
+      assert_eq!(super::super::newest_entry_index(&entries, false), Some(0));
+    }
+
+    #[test]
+    fn it_picks_the_newest_unfinished_entry_not_the_last_one() {
+      let entries = vec![entry_at(2009, false), entry_at(2008, false)];
+
+      assert_eq!(super::super::newest_entry_index(&entries, true), Some(0));
+    }
+
+    #[test]
+    fn it_returns_none_for_an_empty_slice() {
+      let entries: Vec<Entry> = Vec::new();
+
+      assert_eq!(super::super::newest_entry_index(&entries, false), None);
+    }
+
+    #[test]
+    fn it_returns_none_when_every_entry_is_done() {
+      let entries = vec![entry_at(2009, true), entry_at(2007, true)];
+
+      assert_eq!(super::super::newest_entry_index(&entries, true), None);
+    }
+
+    #[test]
+    fn it_skips_done_entries_when_unfinished_only() {
+      let entries = vec![entry_at(2009, true), entry_at(2008, false), entry_at(2007, true)];
+
+      assert_eq!(super::super::newest_entry_index(&entries, true), Some(1));
     }
   }
 

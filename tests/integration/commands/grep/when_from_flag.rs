@@ -1,10 +1,12 @@
-use crate::support::helpers::DoingCmd;
+use crate::support::helpers::{DoingCmd, most_recent_clock};
 
 #[test]
 fn it_filters_by_date_range() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+  // "8am to 12pm" resolves onto whichever day 8am last fell on, so the
+  // entries have to be written on that same day.
+  let today = most_recent_clock(8, 0).format("%Y-%m-%d").to_string();
 
   doing
     .run(["now", "--back", &format!("{today} 09:00"), "Morning search entry"])
@@ -16,12 +18,7 @@ fn it_filters_by_date_range() {
     .success();
 
   let output = doing
-    .run([
-      "grep",
-      "search entry",
-      "--from",
-      &format!("{today} 08:00 to {today} 12:00"),
-    ])
+    .run(["grep", "search entry", "--from", "8am to 12pm"])
     .output()
     .expect("failed to run");
 

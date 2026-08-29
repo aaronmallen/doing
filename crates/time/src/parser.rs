@@ -63,6 +63,15 @@ pub fn chronify(input: &str) -> Result<DateTime<Local>> {
 }
 
 /// Apply a `NaiveTime` to a date, returning a `DateTime<Local>` or `None` for DST gaps.
+/// Parse a clock-only expression into a `NaiveTime`.
+///
+/// Recognizes `noon`, `midnight`, `3pm`, `3:30pm` and `15:00`, and returns
+/// `None` for anything carrying a date. That lets a caller tell a bare clock
+/// time, whose day has to be inferred, from a timestamp that already names one.
+pub fn clock_time(input: &str) -> Option<NaiveTime> {
+  resolve_time_expression(&input.trim().to_lowercase())
+}
+
 fn apply_time_to_date(dt: DateTime<Local>, time: NaiveTime) -> Option<DateTime<Local>> {
   Local.from_local_datetime(&dt.date_naive().and_time(time)).earliest()
 }

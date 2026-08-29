@@ -1,10 +1,12 @@
-use crate::support::helpers::DoingCmd;
+use crate::support::helpers::{DoingCmd, most_recent_clock};
 
 #[test]
 fn it_limits_to_time_range() {
   let doing = DoingCmd::new();
 
-  let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+  // "8am to 12pm" resolves onto whichever day 8am last fell on, so the
+  // entries have to be written on that same day.
+  let today = most_recent_clock(8, 0).format("%Y-%m-%d").to_string();
 
   // Create entries at specific times today
   doing
@@ -17,7 +19,7 @@ fn it_limits_to_time_range() {
     .success();
 
   let output = doing
-    .run(["on", &today, "--from", &format!("{today} 08:00 to {today} 12:00")])
+    .run(["on", &today, "--from", "8am to 12pm"])
     .output()
     .expect("failed to run");
 

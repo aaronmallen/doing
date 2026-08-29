@@ -14,7 +14,8 @@ use crate::{Result, cli::AppContext};
 /// the entry using the --back, --took, and --at flags, making it an easy way
 /// to add entries in post and maintain accurate time tracking.
 ///
-/// With no arguments, tags the last entry as @done.
+/// With no arguments, tags the most recent unfinished entry as @done. Pass
+/// `--update` to restamp an entry that already carries a @done tag.
 #[derive(Args, Clone, Debug)]
 pub struct Command {
   /// Immediately archive the entry
@@ -75,6 +76,10 @@ pub struct Command {
   /// Finish last entry not already marked @done
   #[arg(short, long)]
   unfinished: bool,
+
+  /// Overwrite an existing @done tag with a new timestamp
+  #[arg(long)]
+  update: bool,
 }
 
 impl Command {
@@ -211,7 +216,9 @@ impl Command {
       .section_by_name_mut(section_name)
       .ok_or_else(|| crate::cli::section_not_found_err(section_name))?;
 
-    let last = match newest_entry_index(section.entries(), self.unfinished) {
+    let unfinished_only = self.unfinished || !self.update;
+
+    let last = match newest_entry_index(section.entries(), unfinished_only) {
       Some(index) => &mut section.entries_mut()[index],
       None => {
         if section.entries().is_empty() {
@@ -298,6 +305,7 @@ mod test {
       title: vec![],
       took: None,
       unfinished: false,
+      update: false,
     }
   }
 
@@ -344,6 +352,33 @@ mod test {
     section.add_entry(Entry::new(
       Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
       "Previous task",
+      Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
+  }
+
+  fn sample_ctx_with_newest_done(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Newest task, already done",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 16:00"))]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Older task, still open",
       Tags::new(),
       Note::new(),
       "Currently",
@@ -742,6 +777,23 @@ mod test {
     }
 
     #[test]
+    fn it_preserves_an_existing_done_timestamp_by_default() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_newest_done(dir.path());
+      let cmd = default_cmd();
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+
+      assert_eq!(
+        entries[0].done_date(),
+        Some(Local.with_ymd_and_hms(2024, 3, 17, 16, 0, 0).unwrap())
+      );
+      assert!(entries[1].finished());
+    }
+
+    #[test]
     fn it_reports_all_done_when_no_unfinished_entries() {
       let dir = tempfile::tempdir().unwrap();
       let path = dir.path().join("doing.md");
@@ -770,6 +822,25 @@ mod test {
       let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
       assert_eq!(entries.len(), 1);
       assert_eq!(entries[0].tags().len(), 1);
+    }
+    #[test]
+    fn it_restamps_an_existing_done_tag_with_update() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_newest_done(dir.path());
+      let cmd = Command {
+        update: true,
+        ..default_cmd()
+      };
+
+      cmd.call(&mut ctx).unwrap();
+
+      let entries: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+
+      assert_ne!(
+        entries[0].done_date(),
+        Some(Local.with_ymd_and_hms(2024, 3, 17, 16, 0, 0).unwrap())
+      );
+      assert!(entries[1].unfinished());
     }
   }
 }

@@ -1,4 +1,7 @@
-use std::{path::Path, process::Command};
+use std::{
+  path::Path,
+  process::{Command, Stdio},
+};
 
 use doing_config::Config;
 
@@ -78,6 +81,36 @@ pub fn resolve_pager(config: &Config) -> String {
   }
 
   "less -FRX".into()
+}
+
+/// Parse a shell-style command string and start it without waiting for it to exit.
+///
+/// Behaves like [`launch`] except that it returns as soon as the child starts.
+/// Use it where `doing` has no work left once the program is running, and never
+/// for a terminal program that needs the terminal to itself.
+///
+/// The child's streams are detached from ours. Were they inherited, the child
+/// would hold our pipes open after we exit, and anything reading `doing`'s
+/// output would wait for the editor after all.
+pub fn spawn(command: &str, file: Option<&Path>) -> Result<()> {
+  let parts: Vec<&str> = command.split_whitespace().collect();
+  let (cmd, args) = parts
+    .split_first()
+    .ok_or_else(|| Error::Config("command must not be empty".into()))?;
+
+  let mut process = Command::new(cmd);
+  process.args(args);
+  if let Some(path) = file {
+    process.arg(path);
+  }
+
+  process
+    .stdin(Stdio::null())
+    .stdout(Stdio::null())
+    .stderr(Stdio::null())
+    .spawn()?;
+
+  Ok(())
 }
 
 #[cfg(test)]
@@ -215,6 +248,29 @@ mod test {
       let pager = super::super::resolve_pager(&config);
 
       assert_eq!(pager, "bat");
+    }
+  }
+  mod spawn {
+    use super::*;
+
+    #[test]
+    fn it_returns_error_for_empty_command() {
+      let result = spawn("", None);
+
+      assert!(result.is_err());
+      assert!(result.unwrap_err().to_string().contains("must not be empty"));
+    }
+
+    #[test]
+    fn it_returns_without_waiting_for_the_child_to_exit() {
+      let start = std::time::Instant::now();
+
+      spawn("sleep 5", None).expect("expected sleep to start");
+
+      assert!(
+        start.elapsed() < std::time::Duration::from_secs(2),
+        "expected spawn to return before the child exited"
+      );
     }
   }
 }

@@ -10,6 +10,10 @@ use crate::{Error, Result, cli::AppContext};
 /// `-b` to specify a macOS bundle identifier, or `-e` to override the
 /// editor. Use `--backup` to open the most recent backup file instead.
 ///
+/// `doing open` waits for the editor to exit, because a terminal editor
+/// needs the terminal to itself. Pass `--no-wait` for an editor that opens
+/// its own window and would otherwise hold the shell.
+///
 /// # Examples
 ///
 /// ```text
@@ -18,6 +22,7 @@ use crate::{Error, Result, cli::AppContext};
 /// doing open -e vim       # open doing file in vim
 /// doing open -b com.apple.TextEdit  # open with macOS bundle id
 /// doing open --backup     # open the most recent backup
+/// doing open --no-wait    # do not wait for the editor to close
 /// ```
 #[derive(Args, Clone, Debug)]
 pub struct Command {
@@ -36,6 +41,10 @@ pub struct Command {
   /// Override the default editor
   #[arg(short = 'e', long = "editor")]
   editor: Option<String>,
+
+  /// Return immediately instead of waiting for the editor to exit
+  #[arg(long = "no-wait")]
+  no_wait: bool,
 }
 
 impl Command {
@@ -55,6 +64,10 @@ impl Command {
     }
 
     let editor = resolve_open_editor(&self.app, &self.editor, ctx);
+
+    if self.no_wait {
+      return crate::cli::process::spawn(&editor, Some(&file_path));
+    }
 
     crate::cli::process::launch(&editor, Some(&file_path))
   }

@@ -109,7 +109,7 @@ fn remove_section(name: &str, archive: bool, ctx: &mut AppContext) -> Result<()>
       .document
       .section_by_name_mut(name)
       .ok_or_else(|| Error::Config(format!("section '{name}' not found")))?;
-    let entries: Vec<Entry> = section.entries_mut().drain(..).collect();
+    let entries: Vec<Entry> = std::mem::take(section.entries_mut());
     let count = entries.len();
 
     if count > 0 {

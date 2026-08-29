@@ -7,6 +7,23 @@ and this project adheres to [Break Versioning].
 
 ## [Unreleased]
 
+## [v0.2.2] - 2026-08-29
+
+### Added
+
+- `--no-wait` flag on `open` returns as soon as the editor starts, for editors that open their own
+  window instead of taking over the terminal (see [#435])
+- `--update` flag on `done` restamps an entry that already carries a `@done` time (see [#434])
+
+### Fixed
+
+- `done` now finishes the most recent entry by date rather than the first one in the file, and
+  leaves already-finished entries alone (see [#434])
+- `%note` keeps the line breaks a note was written with; `%chompnote` collapses a note onto one
+  line (see [#426])
+- A clock-only range like `--from "9am to 5pm"` now stays on a single day instead of inverting into
+  a multi-day span when the current time falls between its two ends (see [#439])
+
 ## [v0.2.1] - 2026-05-01
 
 ### Added
@@ -672,8 +689,12 @@ Initial alpha release
 [#423]: https://github.com/aaronmallen/doing/issues/423
 [#424]: https://github.com/aaronmallen/doing/issues/424
 [#425]: https://github.com/aaronmallen/doing/issues/425
+[#426]: https://github.com/aaronmallen/doing/issues/426
+[#434]: https://github.com/aaronmallen/doing/issues/434
+[#435]: https://github.com/aaronmallen/doing/issues/435
+[#439]: https://github.com/aaronmallen/doing/issues/439
 
-[Unreleased]: https://github.com/aaronmallen/doing/compare/0.2.1...main
+[Unreleased]: https://github.com/aaronmallen/doing/compare/0.2.2...main
 [v0.0.1-alpha.2]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.1...0.0.1-alpha.2
 [v0.0.1-alpha.3]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.2...0.0.1-alpha.3
 [v0.0.1-alpha.4.1]: https://github.com/aaronmallen/doing/compare/0.0.1-alpha.3...0.0.1-alpha.4.1
@@ -696,3 +717,4 @@ Initial alpha release
 [v0.1.13]: https://github.com/aaronmallen/doing/compare/0.1.12...0.1.13
 [v0.2.0]: https://github.com/aaronmallen/doing/compare/0.1.13...0.2.0
 [v0.2.1]: https://github.com/aaronmallen/doing/compare/0.2.0...0.2.1
+[v0.2.2]: https://github.com/aaronmallen/doing/compare/0.2.1...0.2.2

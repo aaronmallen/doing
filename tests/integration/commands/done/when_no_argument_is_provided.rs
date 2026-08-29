@@ -69,7 +69,7 @@ fn it_outputs_status_to_stderr() {
 }
 
 #[test]
-fn it_retags_already_done_entry_with_new_timestamp() {
+fn it_preserves_an_existing_done_timestamp() {
   let doing = DoingCmd::new();
 
   fs::write(
@@ -87,11 +87,40 @@ fn it_retags_already_done_entry_with_new_timestamp() {
     .expect("expected entry in doing file");
 
   assert!(
-    entry_line.contains("@done("),
-    "expected @done tag on re-tagged entry, got: {entry_line}"
+    entry_line.contains("@done(2026-03-23 11:00)"),
+    "expected the original @done timestamp to survive, got: {entry_line}"
   );
+}
+
+#[test]
+fn it_picks_the_newest_entry_when_the_file_is_ordered_newest_first() {
+  let doing = DoingCmd::new();
+
+  fs::write(
+    doing.doing_file_path(),
+    "Currently:\n\t- 2009-06-01 18:30 | Newest task\n\t- 2008-06-01 18:30 | Middle task\n\t- 2007-06-01 18:30 | Oldest task\n",
+  )
+  .expect("failed to write doing file");
+
+  doing.run(["done"]).assert().success();
+
+  let contents = doing.read_doing_file();
+
+  let newest = contents
+    .lines()
+    .find(|l| l.contains("Newest task"))
+    .expect("expected newest entry in doing file");
   assert!(
-    !entry_line.contains("@done(2026-03-23 11:00)"),
-    "expected new @done timestamp (not original 11:00), got: {entry_line}"
+    newest.contains("@done("),
+    "expected the newest entry by date to be marked @done, got: {newest}"
+  );
+
+  let oldest = contents
+    .lines()
+    .find(|l| l.contains("Oldest task"))
+    .expect("expected oldest entry in doing file");
+  assert!(
+    !oldest.contains("@done("),
+    "expected the last entry in file order to be left alone, got: {oldest}"
   );
 }

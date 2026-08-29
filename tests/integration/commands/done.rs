@@ -12,6 +12,7 @@ mod when_remove_flag_is_provided;
 mod when_section_flag_is_provided;
 mod when_took_flag_is_provided;
 mod when_unfinished_flag_is_provided;
+mod when_update_flag_is_provided;
 
 use crate::support::helpers::DoingCmd;
 

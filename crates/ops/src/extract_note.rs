@@ -8,6 +8,8 @@
 /// # Examples
 ///
 /// ```
+/// use doing_ops::extract_note::extract_note;
+///
 /// let (title, note) = extract_note("Working on project (some context)");
 /// assert_eq!(title, "Working on project");
 /// assert_eq!(note.unwrap(), "some context");

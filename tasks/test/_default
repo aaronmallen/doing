@@ -8,10 +8,17 @@
 set -e
 
 FILTER_ARGS=""
+DOC_FILTER_ARGS=""
 if [ -n "${usage_filter}" ]; then
   FILTER_ARGS="--no-fail-fast --filter-expr 'test(/${usage_filter}/)'"
+  DOC_FILTER_ARGS="--no-fail-fast ${usage_filter}"
 fi
 
 eval cargo llvm-cov nextest --workspace --summary-only --all-features --no-tests pass $FILTER_ARGS
+
+# nextest cannot run doctests, so without this pass they are never run at all.
+# It builds outside the coverage target dir, so the reports below are unaffected
+# and doctests do not count toward coverage.
+eval cargo test --doc --workspace --all-features $DOC_FILTER_ARGS
 cargo llvm-cov report --html --output-dir coverage
 cargo llvm-cov report --cobertura --output-path coverage/cobertura.xml

@@ -23,13 +23,16 @@ You can create custom sections to organize your work however you like.
 
 ## Entries
 
-An entry is a single line inside a section, indented with a tab. It consists of a timestamp and a title separated by a pipe, optionally followed by a unique id:
+An entry is a single line inside a section, indented with a tab. It consists of a timestamp and a title
+separated by a pipe, optionally followed by a unique id:
 
 ```text
-	- 2026-03-30 14:05 | Writing API integration tests <0123456789abcdef0123456789abcdef>
+    - 2026-03-30 14:05 | Writing API integration tests <0123456789abcdef0123456789abcdef>
 ```
 
-Entries always start with a tab and a dash (`-`). The timestamp at the front records when the entry was created. When you write entries by hand, the 32 character id in angle brackets is optional and `doing` will manage it for you.
+Entries always start with a tab and a dash (`-`). The timestamp at the front records when the entry was
+created. When you write entries by hand, the 32 character id in angle brackets is optional and `doing` will
+manage it for you.
 
 ## Tags
 
@@ -37,7 +40,7 @@ Tags are words prefixed with `@`. They can appear anywhere in the entry title. S
 in parentheses:
 
 ```text
-	- 2026-03-30 15:30 | Deploy staging server @deploy @done(2026-03-30 15:30)
+    - 2026-03-30 15:30 | Deploy staging server @deploy @done(2026-03-30 15:30)
 ```
 
 Common built-in tags:
@@ -54,9 +57,9 @@ useful for filtering entries with commands like `doing show` and `doing tag`.
 Entries can have multi-line notes attached to them. Notes are indented lines that follow an entry, using two tabs:
 
 ```text
-	- 2026-03-30 10:00 | Investigating memory leak in worker pool
-		Heap profile shows growth in the connection cache.
-		Suspect the idle timeout is not firing.
+    - 2026-03-30 10:00 | Investigating memory leak in worker pool
+        Heap profile shows growth in the connection cache.
+        Suspect the idle timeout is not firing.
 ```
 
 You can add notes when creating an entry with the `--note` or `-n` flag, or edit them later with
@@ -68,13 +71,13 @@ Here is an example of a doing file on disk:
 
 ```taskpaper
 Currently:
-	- 2026-03-30 14:30 | Refactoring error handling in CLI commands
-		Switching from anyhow to thiserror for typed errors.
-	- 2026-03-30 13:00 | Writing unit tests for tag parser
+    - 2026-03-30 14:30 | Refactoring error handling in CLI commands
+        Switching from anyhow to thiserror for typed errors.
+    - 2026-03-30 13:00 | Writing unit tests for tag parser
 
 Archive:
-	- 2026-03-30 12:00 | Set up CI pipeline for release builds @done(2026-03-30 12:00) @project(infra)
-	- 2026-03-29 17:00 | Fix off-by-one in date range query @done(2026-03-29 17:00) @bugfix
+    - 2026-03-30 12:00 | Set up CI pipeline for release builds @done(2026-03-30 12:00) @project(infra)
+    - 2026-03-29 17:00 | Fix off-by-one in date range query @done(2026-03-29 17:00) @bugfix
 ```
 
 ## Templates

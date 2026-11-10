@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Launch the documentation site"
+
+set -e
+
+cd docs/site && bun run docs:dev

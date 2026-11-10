@@ -1,0 +1,336 @@
+use clap::Args;
+use doing_config::SortOrder;
+use doing_ops::{
+  backup::write_with_backup,
+  filter::{Age, filter_entries},
+};
+use doing_template::renderer::{RenderOptions, format_items};
+
+use crate::{
+  Result,
+  cli::{
+    AppContext,
+    args::{DisplayArgs, FilterArgs},
+    editor,
+  },
+};
+
+/// Show the single most recent entry.
+///
+/// Displays the last entry added to the doing file. Use `--section` or
+/// `--tag` to pick which "last" entry to show. Defaults to the `last`
+/// template from config.
+///
+/// # Examples
+///
+/// ```text
+/// doing last                    # most recent entry
+/// doing last -S Later           # most recent in "Later"
+/// doing last --tag meeting      # most recent tagged @meeting
+/// ```
+#[derive(Args, Clone, Debug)]
+pub struct Command {
+  /// Delete the last entry
+  #[arg(short, long)]
+  delete: bool,
+
+  #[command(flatten)]
+  display: DisplayArgs,
+
+  /// Open the last entry in an editor for modification
+  #[arg(short, long)]
+  editor: bool,
+
+  #[command(flatten)]
+  filter: FilterArgs,
+
+  /// Use a pager for output
+  #[arg(short, long)]
+  pager: bool,
+}
+
+impl Command {
+  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    let filtered = self.find_last_entry(ctx)?;
+
+    if filtered.is_empty() {
+      let mut filters = Vec::new();
+      if let Some(section) = &self.filter.section {
+        filters.push(format!("section={section}"));
+      }
+      if self.filter.unfinished {
+        filters.push("unfinished".to_string());
+      }
+      for tag in &self.filter.tag {
+        filters.push(format!("tag={tag}"));
+      }
+      if let Some(search) = &self.filter.search {
+        filters.push(format!("search={search}"));
+      }
+      if filters.is_empty() {
+        ctx.status("No matching entry found");
+      } else {
+        ctx.status(format!("No matching entry found (filters: {})", filters.join(", ")));
+      }
+      return Ok(());
+    }
+
+    if self.delete {
+      return self.action_delete(ctx, &filtered);
+    }
+
+    if self.editor {
+      return self.action_editor(ctx, &filtered);
+    }
+
+    super::today::display_filtered_entries(&filtered, &self.display, ctx, "last", self.pager)
+  }
+
+  fn action_delete(&self, ctx: &mut AppContext, entries: &[doing_taskpaper::Entry]) -> Result<()> {
+    let entry = &entries[0];
+    if let Some(section) = ctx.document.section_by_name_mut(entry.section()) {
+      section.remove_entry(entry.id());
+    }
+    write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
+    ctx.status("Deleted last entry");
+    Ok(())
+  }
+
+  fn action_editor(&self, ctx: &mut AppContext, entries: &[doing_taskpaper::Entry]) -> Result<()> {
+    let entry = &entries[0];
+    let mut render_options = RenderOptions::from_config("default", &ctx.config);
+    render_options.include_notes = ctx.include_notes;
+    let initial = format_items(std::slice::from_ref(entry), &render_options, &ctx.config, false);
+    let edited = editor::edit(&initial, &ctx.config)?;
+
+    let new_title = edited.trim();
+    if let Some(section) = ctx.document.section_by_name_mut(entry.section())
+      && let Some(e) = section.entries_mut().iter_mut().find(|e| e.id() == entry.id())
+    {
+      e.set_title(new_title);
+    }
+
+    write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
+    ctx.status("Edited last entry");
+    Ok(())
+  }
+
+  fn find_last_entry(&self, ctx: &AppContext) -> Result<Vec<doing_taskpaper::Entry>> {
+    let section_name = self.filter.section.as_deref().unwrap_or("all");
+
+    let all_entries: Vec<_> = ctx.document.entries_in_section(section_name).cloned().collect();
+
+    let mut options = self.filter.clone().to_filter_options(&ctx.config, ctx.include_notes)?;
+    options.section = Some(section_name.to_string());
+    options.count = Some(1);
+    options.age = Some(Age::Newest);
+    options.sort = Some(SortOrder::Desc);
+
+    Ok(filter_entries(all_entries, &options))
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use std::fs;
+
+  use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Document, Entry, Note, Section, Tag, Tags};
+
+  use super::*;
+
+  fn default_cmd() -> Command {
+    Command {
+      delete: false,
+      display: DisplayArgs::default(),
+      editor: false,
+      filter: FilterArgs::default(),
+      pager: false,
+    }
+  }
+
+  fn sample_ctx() -> AppContext {
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Working on project",
+      Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Meeting with team",
+      Tags::from_iter(vec![Tag::new("meeting", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+
+    let mut ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
+    ctx.document = doc;
+    ctx
+  }
+
+  fn sample_ctx_with_done_last() -> AppContext {
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Active task",
+      Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Done task",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 16:00"))]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+
+    let mut ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
+    ctx.document = doc;
+    ctx
+  }
+
+  fn sample_ctx_with_file(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Working on project",
+      Tags::from_iter(vec![Tag::new("coding", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Meeting with team",
+      Tags::from_iter(vec![Tag::new("meeting", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
+  }
+
+  mod action_delete {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_deletes_the_last_entry() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_file(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let last = vec![entries[1].clone()];
+      let cmd = default_cmd();
+
+      cmd.action_delete(&mut ctx, &last).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 1);
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert_eq!(current[0].title(), "Working on project");
+    }
+  }
+
+  mod call {
+    use super::*;
+
+    #[test]
+    fn it_filters_by_section() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        filter: FilterArgs {
+          section: Some("Currently".into()),
+          ..FilterArgs::default()
+        },
+        ..default_cmd()
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_filters_by_tag() {
+      let mut ctx = sample_ctx();
+      let cmd = Command {
+        filter: FilterArgs {
+          tag: vec!["coding".into()],
+          ..FilterArgs::default()
+        },
+        ..default_cmd()
+      };
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_handles_empty_document() {
+      let mut ctx = AppContext::for_test(std::path::PathBuf::from("/tmp/test_doing.md"));
+      let cmd = default_cmd();
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_returns_ok() {
+      let mut ctx = sample_ctx();
+      let cmd = default_cmd();
+
+      let result = cmd.call(&mut ctx);
+
+      assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_shows_finished_entries_by_default() {
+      let ctx = sample_ctx_with_done_last();
+      let cmd = default_cmd();
+
+      let entries = cmd.find_last_entry(&ctx).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Done task");
+    }
+
+    #[test]
+    fn it_skips_done_entries_with_unfinished_flag() {
+      let ctx = sample_ctx_with_done_last();
+      let cmd = Command {
+        filter: FilterArgs {
+          unfinished: true,
+          ..FilterArgs::default()
+        },
+        ..default_cmd()
+      };
+
+      let entries = cmd.find_last_entry(&ctx).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Active task");
+    }
+  }
+}

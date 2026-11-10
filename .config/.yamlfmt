@@ -1,0 +1,14 @@
+exclude:
+  - .cargo
+  - .mise
+  - .mise-data
+  - coverage
+  - docs/site/node_modules
+  - target
+  - tmp
+formatter:
+  eof_newline: true
+  line_ending: lf
+  retain_line_breaks_single: true
+  trim_trailing_whitespace: true
+  type: basic

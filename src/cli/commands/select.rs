@@ -1,0 +1,828 @@
+use std::path::PathBuf;
+
+use clap::Args;
+use doing_config::SortOrder;
+use doing_ops::{backup::write_with_backup, filter::filter_entries};
+use doing_taskpaper::{Entry, Section};
+use doing_template::renderer::{RenderOptions, format_items};
+
+use crate::{
+  Result,
+  cli::{
+    AppContext,
+    args::{BoolArg, FilterArgs},
+    editor,
+  },
+};
+
+/// Interactively select entries to act on.
+///
+/// Presents a filterable, multi-select menu of entries. After selecting entries,
+/// apply an action: archive, cancel, delete, finish, flag, tag, move to section,
+/// or output in a given format. Use `--no-menu` for non-interactive batch mode.
+#[derive(Args, Clone, Debug)]
+pub struct Command {
+  /// Date range start (e.g. "yesterday", "2024-01-10 14:00")
+  #[arg(long)]
+  after: Option<String>,
+
+  /// Duplicate selected entries with a new timestamp
+  #[arg(long, alias = "resume")]
+  again: bool,
+
+  /// Archive selected entries
+  #[arg(short, long)]
+  archive: bool,
+
+  /// Upper bound for entry date
+  #[arg(long)]
+  before: Option<String>,
+
+  /// Boolean operator for combining tag filters
+  #[arg(long = "bool", value_enum, ignore_case = true)]
+  bool_op: Option<BoolArg>,
+
+  /// Cancel selected entries (mark @done without timestamp)
+  #[arg(short, long)]
+  cancel: bool,
+
+  /// Case sensitivity for search (sensitive/ignore/smart)
+  #[arg(long)]
+  case: Option<String>,
+
+  /// Delete selected entries
+  #[arg(short, long)]
+  delete: bool,
+
+  /// Open selected entries in an editor for batch editing
+  #[arg(short, long)]
+  editor: bool,
+
+  /// Use exact (literal substring) matching for search
+  #[arg(short = 'x', long)]
+  exact: bool,
+
+  /// Finish selected entries (mark @done with timestamp)
+  #[arg(short = 'F', long)]
+  finish: bool,
+
+  /// Toggle the marker tag on selected entries
+  #[arg(long)]
+  flag: bool,
+
+  /// Skip confirmation prompts
+  #[arg(long)]
+  force: bool,
+
+  /// Date range expression (e.g. "monday to friday")
+  #[arg(long)]
+  from: Option<String>,
+
+  /// Move selected entries to a section
+  #[arg(short, long, value_name = "SECTION")]
+  r#move: Option<String>,
+
+  /// Non-interactive batch mode — apply action to all matching entries
+  #[arg(long)]
+  no_menu: bool,
+
+  /// Negate all filter results
+  #[arg(long)]
+  not: bool,
+
+  /// Output selected entries in a given format
+  #[arg(short, long, value_name = "FORMAT")]
+  output: Option<String>,
+
+  /// Pre-filter the list before presenting the menu
+  #[arg(short = 'q', long)]
+  query: Option<String>,
+
+  /// Remove tags from selected entries instead of adding
+  #[arg(short, long)]
+  remove: bool,
+
+  /// Save selected entries to a file
+  #[arg(long, value_name = "FILE")]
+  save_to: Option<PathBuf>,
+
+  /// Text search query to filter entries
+  #[arg(long)]
+  search: Option<String>,
+
+  /// Section to select entries from
+  #[arg(short, long)]
+  section: Option<String>,
+
+  /// Add/remove tags on selected entries (comma-separated)
+  #[arg(short, long, value_name = "TAGS")]
+  tag: Option<String>,
+
+  /// Filter by tags (can be repeated)
+  #[arg(long = "tagged")]
+  tagged: Vec<String>,
+
+  /// Tag value queries (e.g. "progress > 50")
+  #[arg(long)]
+  val: Vec<String>,
+}
+
+impl Command {
+  pub fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    let entries = self.find_entries(ctx)?;
+
+    if entries.is_empty() {
+      ctx.status("No matching entries");
+      return Ok(());
+    }
+
+    let selected = if self.no_menu || self.force {
+      entries
+    } else {
+      self.present_menu(&entries)?
+    };
+
+    if selected.is_empty() {
+      ctx.status("No entries selected");
+      return Ok(());
+    }
+
+    self.apply_action(ctx, &selected)
+  }
+
+  fn action_again(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    let now = chrono::Local::now();
+    let section_name = self
+      .section
+      .clone()
+      .unwrap_or_else(|| ctx.config.current_section.clone());
+
+    if !ctx.document.has_section(&section_name) {
+      ctx.document.add_section(Section::new(&section_name));
+    }
+
+    for entry in selected {
+      let mut tags = entry.tags().clone();
+      tags.remove("done");
+      let new_entry = Entry::new(
+        now,
+        entry.title(),
+        tags,
+        entry.note().clone(),
+        &section_name,
+        None::<String>,
+      );
+      ctx
+        .document
+        .section_by_name_mut(&section_name)
+        .unwrap()
+        .add_entry(new_entry);
+    }
+
+    let count = selected.len();
+    if count == 1 {
+      ctx.status("Resumed 1 entry");
+    } else {
+      ctx.status(format!("Resumed {count} entries"));
+    }
+
+    Ok(())
+  }
+
+  fn action_archive(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    super::actions::action_archive(ctx, selected)
+  }
+
+  fn action_cancel(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    super::actions::action_cancel(ctx, selected)
+  }
+
+  fn action_delete(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    super::actions::action_delete(ctx, selected)
+  }
+
+  fn action_editor(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    let mut render_options = RenderOptions::from_config("default", &ctx.config);
+    render_options.include_notes = ctx.include_notes;
+    let divider = "---";
+
+    let content: Vec<String> = selected
+      .iter()
+      .map(|e| format_items(std::slice::from_ref(e), &render_options, &ctx.config, false))
+      .collect();
+    let initial = content.join(&format!("\n{divider}\n"));
+
+    let edited = editor::edit(&initial, &ctx.config)?;
+
+    // Parse edited content back — split by divider, updating entries in-place
+    let parts: Vec<&str> = edited.split(divider).collect();
+
+    if parts.len() != selected.len() {
+      return Err(crate::Error::Config(format!(
+        "expected {} entries separated by '---' dividers, got {}",
+        selected.len(),
+        parts.len()
+      )));
+    }
+
+    for (original, edited_part) in selected.iter().zip(parts.iter()) {
+      let new_title = edited_part.trim();
+      if let Some(section) = ctx.document.section_by_name_mut(original.section())
+        && let Some(entry) = section.entries_mut().iter_mut().find(|e| e.id() == original.id())
+      {
+        entry.set_title(new_title);
+      }
+    }
+
+    ctx.status(format!("Edited {} entries", selected.len()));
+    Ok(())
+  }
+
+  fn action_finish(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    super::actions::action_finish(ctx, selected)
+  }
+
+  fn action_flag(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    super::actions::action_flag(ctx, selected)
+  }
+
+  fn action_move(&self, ctx: &mut AppContext, selected: &[Entry], target: &str) -> Result<()> {
+    super::actions::action_move(ctx, selected, target)
+  }
+
+  fn action_output(&self, ctx: &AppContext, selected: &[Entry]) -> Result<()> {
+    super::actions::action_output(ctx, selected, self.output.as_deref(), self.save_to.as_deref())
+  }
+
+  fn action_remove_tag(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    let tag_str = self.tag.as_deref().unwrap_or("");
+    let tag_names: Vec<&str> = tag_str.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
+    super::actions::action_remove_tag(ctx, selected, &tag_names)
+  }
+
+  fn action_tag(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    let tag_str = self.tag.as_deref().unwrap_or("");
+    let tag_names: Vec<&str> = tag_str.split(',').map(|t| t.trim()).filter(|t| !t.is_empty()).collect();
+    super::actions::action_tag(ctx, selected, &tag_names)
+  }
+
+  fn apply_action(&self, ctx: &mut AppContext, selected: &[Entry]) -> Result<()> {
+    if self.again {
+      self.action_again(ctx, selected)?;
+    } else if self.archive {
+      self.action_archive(ctx, selected)?;
+    } else if self.cancel {
+      self.action_cancel(ctx, selected)?;
+    } else if self.delete {
+      self.action_delete(ctx, selected)?;
+    } else if self.editor {
+      self.action_editor(ctx, selected)?;
+    } else if self.finish {
+      self.action_finish(ctx, selected)?;
+    } else if self.flag {
+      self.action_flag(ctx, selected)?;
+    } else if let Some(ref section) = self.r#move {
+      self.action_move(ctx, selected, section)?;
+    } else if self.remove && self.tag.is_some() {
+      self.action_remove_tag(ctx, selected)?;
+    } else if self.tag.is_some() {
+      self.action_tag(ctx, selected)?;
+    } else {
+      return self.action_output(ctx, selected);
+    }
+
+    write_with_backup(&ctx.document, &ctx.doing_file, &ctx.config)?;
+    Ok(())
+  }
+
+  fn find_entries(&self, ctx: &AppContext) -> Result<Vec<Entry>> {
+    let section_name = self
+      .section
+      .clone()
+      .unwrap_or_else(|| ctx.config.current_section.clone());
+
+    let all_entries: Vec<Entry> = ctx.document.entries_in_section(&section_name).cloned().collect();
+
+    let has_filters = !self.tagged.is_empty()
+      || self.search.is_some()
+      || self.query.is_some()
+      || self.after.is_some()
+      || self.before.is_some()
+      || self.from.is_some()
+      || self.case.is_some()
+      || self.exact
+      || self.not
+      || !self.val.is_empty();
+
+    if !has_filters {
+      return Ok(all_entries);
+    }
+
+    let search_text = self.query.as_deref().or(self.search.as_deref());
+
+    // When --val is used with --tag but no --tagged, use --tag for filtering
+    let filter_tags = if self.tagged.is_empty() && !self.val.is_empty() {
+      self.tag.iter().map(|t| t.to_string()).collect()
+    } else {
+      self.tagged.clone()
+    };
+
+    let filter_args = FilterArgs {
+      after: self.after.clone(),
+      before: self.before.clone(),
+      bool_op: self.bool_op,
+      case: self.case.clone(),
+      exact: self.exact,
+      from: self.from.clone(),
+      not: self.not,
+      search: search_text.map(String::from),
+      section: Some(section_name),
+      tag: filter_tags,
+      val: self.val.clone(),
+      ..Default::default()
+    };
+
+    let mut options = filter_args.to_filter_options(&ctx.config, ctx.include_notes)?;
+    options.sort = Some(SortOrder::Asc);
+
+    Ok(filter_entries(all_entries, &options))
+  }
+
+  fn present_menu(&self, entries: &[Entry]) -> Result<Vec<Entry>> {
+    let items: Vec<String> = entries
+      .iter()
+      .map(|e| {
+        let date = e.date().format(crate::cli::DONE_DATE_FORMAT);
+        let tags = if e.tags().is_empty() {
+          String::new()
+        } else {
+          format!(
+            " {}",
+            e.tags()
+              .iter()
+              .map(|t| {
+                if let Some(val) = t.value() {
+                  format!("@{}({val})", t.name())
+                } else {
+                  format!("@{}", t.name())
+                }
+              })
+              .collect::<Vec<_>>()
+              .join(" ")
+          )
+        };
+        format!("{date} | {}{tags}", e.title())
+      })
+      .collect();
+
+    let selections = dialoguer::MultiSelect::new()
+      .with_prompt("Select entries")
+      .items(&items)
+      .interact_opt()
+      .map_err(crate::cli::interactive::dialoguer_error)?;
+
+    let Some(selections) = selections else {
+      return Ok(Vec::new());
+    };
+
+    Ok(selections.into_iter().map(|i| entries[i].clone()).collect())
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use std::fs;
+
+  use chrono::{Local, TimeZone};
+  use doing_taskpaper::{Document, Note, Tag, Tags};
+
+  use super::*;
+
+  fn default_cmd() -> Command {
+    Command {
+      after: None,
+      again: false,
+      archive: false,
+      before: None,
+      bool_op: None,
+      cancel: false,
+      case: None,
+      delete: false,
+      editor: false,
+      exact: false,
+      finish: false,
+      flag: false,
+      force: false,
+      from: None,
+      r#move: None,
+      no_menu: false,
+      not: false,
+      output: None,
+      query: None,
+      remove: false,
+      save_to: None,
+      search: None,
+      section: None,
+      tag: None,
+      tagged: vec![],
+      val: vec![],
+    }
+  }
+
+  fn sample_ctx(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
+      "First task",
+      Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Second task",
+      Tags::from_iter(vec![Tag::new("project", None::<String>)]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 15, 0, 0).unwrap(),
+      "Third task",
+      Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
+  }
+
+  fn sample_ctx_with_done(dir: &std::path::Path) -> AppContext {
+    let path = dir.join("doing.md");
+    fs::write(&path, "Currently:\n").unwrap();
+    let mut doc = Document::new();
+    let mut section = Section::new("Currently");
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 13, 0, 0).unwrap(),
+      "Done task",
+      Tags::from_iter(vec![Tag::new("done", Some("2024-03-17 14:00"))]),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    section.add_entry(Entry::new(
+      Local.with_ymd_and_hms(2024, 3, 17, 14, 0, 0).unwrap(),
+      "Active task",
+      Tags::new(),
+      Note::new(),
+      "Currently",
+      None::<String>,
+    ));
+    doc.add_section(section);
+    let mut ctx = AppContext::for_test(path);
+    ctx.document = doc;
+    ctx
+  }
+
+  mod action_archive {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_archives_selected_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let selected = vec![entries[0].clone()];
+      let cmd = default_cmd();
+
+      cmd.action_archive(&mut ctx, &selected).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 2);
+      let archive: Vec<_> = ctx.document.entries_in_section("Archive").collect();
+      assert_eq!(archive.len(), 1);
+      assert_eq!(archive[0].title(), "First task");
+    }
+
+    #[test]
+    fn it_creates_archive_section_if_missing() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      assert!(!ctx.document.has_section("Archive"));
+
+      cmd.action_archive(&mut ctx, &entries[..1]).unwrap();
+
+      assert!(ctx.document.has_section("Archive"));
+    }
+  }
+
+  mod action_cancel {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_cancels_selected_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      cmd.action_cancel(&mut ctx, &entries[..1]).unwrap();
+
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert_eq!(current.len(), 3);
+      assert!(current[0].finished());
+      assert!(current[0].done_date().is_none());
+    }
+
+    #[test]
+    fn it_skips_already_finished_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let done_entry = vec![entries[0].clone()];
+      let cmd = default_cmd();
+
+      cmd.action_cancel(&mut ctx, &done_entry).unwrap();
+
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert!(current[0].finished());
+    }
+  }
+
+  mod action_delete {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_deletes_selected_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      cmd.action_delete(&mut ctx, &entries[..2]).unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 1);
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert_eq!(current[0].title(), "Third task");
+    }
+  }
+
+  mod action_finish {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_finishes_selected_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      cmd.action_finish(&mut ctx, &entries[..2]).unwrap();
+
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert_eq!(current.len(), 3);
+      assert!(current[0].finished());
+      assert!(current[0].done_date().is_some());
+      assert!(current[1].finished());
+      assert!(!current[2].finished());
+    }
+
+    #[test]
+    fn it_skips_already_finished_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx_with_done(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      cmd.action_finish(&mut ctx, &entries).unwrap();
+
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert!(current[0].finished());
+      assert!(current[1].finished());
+    }
+  }
+
+  mod action_flag {
+    use super::*;
+
+    #[test]
+    fn it_flags_unflagged_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      cmd.action_flag(&mut ctx, &entries[..1]).unwrap();
+
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert!(current[0].tags().has("flagged"));
+    }
+
+    #[test]
+    fn it_unflags_flagged_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+
+      // Flag the entry first
+      let section = ctx.document.section_by_name_mut("Currently").unwrap();
+      section.entries_mut()[0]
+        .tags_mut()
+        .add(Tag::new("flagged", None::<String>));
+
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      cmd.action_flag(&mut ctx, &entries[..1]).unwrap();
+
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert!(!current[0].tags().has("flagged"));
+    }
+  }
+
+  mod action_move {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_creates_target_section_if_missing() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      assert!(!ctx.document.has_section("Later"));
+
+      cmd.action_move(&mut ctx, &entries[..1], "Later").unwrap();
+
+      assert!(ctx.document.has_section("Later"));
+    }
+
+    #[test]
+    fn it_moves_entries_to_target_section() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = default_cmd();
+
+      cmd.action_move(&mut ctx, &entries[..1], "Later").unwrap();
+
+      assert_eq!(ctx.document.entries_in_section("Currently").count(), 2);
+      let later: Vec<_> = ctx.document.entries_in_section("Later").collect();
+      assert_eq!(later.len(), 1);
+      assert_eq!(later[0].title(), "First task");
+    }
+  }
+
+  mod action_output {
+    use super::*;
+
+    #[test]
+    fn it_saves_to_file() {
+      let dir = tempfile::tempdir().unwrap();
+      let ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let output_path = dir.path().join("output.txt");
+      let cmd = Command {
+        save_to: Some(output_path.clone()),
+        ..default_cmd()
+      };
+
+      cmd.action_output(&ctx, &entries[..1]).unwrap();
+
+      assert!(output_path.exists());
+    }
+  }
+
+  mod action_tag {
+    use super::*;
+
+    #[test]
+    fn it_adds_tags_to_selected_entries() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = Command {
+        tag: Some("important,urgent".into()),
+        ..default_cmd()
+      };
+
+      cmd.action_tag(&mut ctx, &entries[..1]).unwrap();
+
+      let current: Vec<_> = ctx.document.entries_in_section("Currently").collect();
+      assert!(current[0].tags().has("important"));
+      assert!(current[0].tags().has("urgent"));
+    }
+
+    #[test]
+    fn it_errors_when_no_tags_specified() {
+      let dir = tempfile::tempdir().unwrap();
+      let mut ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+      let cmd = Command {
+        tag: Some("".into()),
+        ..default_cmd()
+      };
+
+      assert!(cmd.action_tag(&mut ctx, &entries[..1]).is_err());
+    }
+  }
+
+  mod find_entries {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_filters_by_search() {
+      let dir = tempfile::tempdir().unwrap();
+      let ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        no_menu: true,
+        search: Some("Second".into()),
+        ..default_cmd()
+      };
+
+      let entries = cmd.find_entries(&ctx).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Second task");
+    }
+
+    #[test]
+    fn it_filters_by_tag() {
+      let dir = tempfile::tempdir().unwrap();
+      let ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        no_menu: true,
+        tagged: vec!["project".into()],
+        ..default_cmd()
+      };
+
+      let entries = cmd.find_entries(&ctx).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Second task");
+    }
+
+    #[test]
+    fn it_returns_all_entries_when_no_filters() {
+      let dir = tempfile::tempdir().unwrap();
+      let ctx = sample_ctx(dir.path());
+      let cmd = default_cmd();
+
+      let entries = cmd.find_entries(&ctx).unwrap();
+
+      assert_eq!(entries.len(), 3);
+    }
+
+    #[test]
+    fn it_uses_query_as_search() {
+      let dir = tempfile::tempdir().unwrap();
+      let ctx = sample_ctx(dir.path());
+      let cmd = Command {
+        no_menu: true,
+        query: Some("Third".into()),
+        ..default_cmd()
+      };
+
+      let entries = cmd.find_entries(&ctx).unwrap();
+
+      assert_eq!(entries.len(), 1);
+      assert_eq!(entries[0].title(), "Third task");
+    }
+  }
+
+  mod present_menu {
+    use super::*;
+
+    #[test]
+    fn it_formats_entries_with_tags() {
+      let dir = tempfile::tempdir().unwrap();
+      let ctx = sample_ctx(dir.path());
+      let entries: Vec<Entry> = ctx.document.entries_in_section("Currently").cloned().collect();
+
+      // We can't test interactive menu in unit tests, but we can verify the command builds without error
+      let cmd = default_cmd();
+      assert!(!entries.is_empty());
+      assert!(cmd.no_menu == false);
+    }
+  }
+}

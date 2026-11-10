@@ -1,0 +1,23 @@
+[package]
+categories = ["date-and-time", "command-line-utilities"]
+description = "Time parsing and formatting for the doing CLI"
+edition.workspace = true
+keywords = ["cli", "doing", "time-tracking", "time-parsing"]
+license.workspace = true
+name = "doing-time"
+readme = "README.md"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.10"
+
+[package.metadata.workspaces]
+independent = true
+
+[dependencies]
+chrono.workspace = true
+doing-error.workspace = true
+regex.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

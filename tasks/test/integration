@@ -1,0 +1,16 @@
+#!/usr/bin/env sh
+#MISE description="Run integration tests"
+#USAGE flag "--filter" help="Filter tests by name" {
+#USAGE   arg "<filter>"
+#USAGE }
+
+set -e
+
+FILTER_ARGS=""
+if [ -n "${usage_filter}" ]; then
+  FILTER_ARGS="--no-fail-fast --filter-expr 'test(/${usage_filter}/)'"
+fi
+
+eval cargo llvm-cov nextest --test "'*'" --summary-only --all-features --no-tests pass $FILTER_ARGS
+cargo llvm-cov report --html --output-dir coverage
+cargo llvm-cov report --cobertura --output-path coverage/cobertura.xml

@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Build doing-error"
+
+set -e
+
+cargo build -p "doing-error" --all-features

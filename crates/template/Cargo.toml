@@ -1,0 +1,28 @@
+[package]
+categories = ["command-line-utilities", "template-engine"]
+description = "Template parsing and rendering for the doing CLI"
+edition.workspace = true
+keywords = ["cli", "doing", "time-tracking", "template"]
+license.workspace = true
+name = "doing-template"
+readme = "README.md"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.1.13"
+
+[package.metadata.workspaces]
+independent = true
+
+[dependencies]
+chrono.workspace = true
+doing-config.workspace = true
+doing-error.workspace = true
+doing-taskpaper.workspace = true
+doing-time.workspace = true
+regex.workspace = true
+unicode-width.workspace = true
+yansi.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+temp-env.workspace = true

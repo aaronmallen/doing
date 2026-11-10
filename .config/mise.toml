@@ -1,0 +1,35 @@
+[task_config]
+includes = ["tasks"]
+
+[tasks.format]
+description = "Format all files"
+alias = ["fmt"]
+depends = ["format:**"]
+
+[tasks.lint]
+description = "Lint all files"
+alias = ["l"]
+depends = ["lint:**"]
+
+[tools]
+bun = "latest"
+"cargo:cargo-audit" = "latest"
+"cargo:cargo-llvm-cov" = "latest"
+"cargo:cargo-nextest" = "latest"
+"cargo:cargo-outdated" = "latest"
+"cargo:cargo-sort" = "latest"
+"cargo:cargo-workspaces" = "latest"
+editorconfig-checker = "latest"
+hyperfine = "latest"
+markdownlint-cli2 = "latest"
+taplo = "latest"
+usage = "latest"
+yamlfmt = "latest"
+
+[[tools.rust]]
+components = "clippy"
+version = "latest"
+
+[[tools.rust]]
+components = "rustfmt"
+version = "nightly"

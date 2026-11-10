@@ -1,0 +1,12 @@
+name: Shared Setup
+description: Install mise, Rust toolchain, and development dependencies
+runs:
+  using: "composite"
+  steps:
+    - uses: https://github.com/jdx/mise-action@v5
+      with:
+        cache: false
+        github_token: ""
+    - shell: bash
+      run: |-
+        rustup component add --toolchain nightly-x86_64-unknown-linux-gnu rustfmt

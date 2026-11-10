@@ -1,0 +1,520 @@
+pub mod args;
+pub mod commands;
+pub mod editor;
+pub mod entry_location;
+pub mod interactive;
+pub mod pager;
+pub mod process;
+#[cfg(test)]
+pub mod test_helpers;
+pub mod title_note;
+
+use std::{ffi::OsString, io::IsTerminal, path::PathBuf};
+
+use clap::{ArgAction, CommandFactory, Parser, Subcommand};
+use doing_config::Config;
+use doing_taskpaper::{Document, Section, io as taskpaper_io};
+use log::debug;
+use yansi::Condition;
+
+use crate::Result;
+
+/// The date-time format string used for `@done` tag values throughout the CLI.
+pub const DONE_DATE_FORMAT: &str = "%Y-%m-%d %H:%M";
+
+/// Resolve a tag value from `--date` and `--value` flags.
+///
+/// When `date` is `true`, returns the current local time formatted with
+/// [`DONE_DATE_FORMAT`]. Otherwise returns `value` as-is.
+pub fn resolve_tag_value(date: bool, value: &Option<String>) -> Option<String> {
+  if date {
+    Some(chrono::Local::now().format(DONE_DATE_FORMAT).to_string())
+  } else {
+    value.clone()
+  }
+}
+
+/// Create a "section not found" error for the given section name.
+pub fn section_not_found_err(section_name: &str) -> crate::Error {
+  crate::Error::Config(format!("section \"{section_name}\" not found"))
+}
+
+/// Shared application context passed to all command handlers.
+#[allow(dead_code)]
+pub struct AppContext {
+  pub config: Config,
+  pub default_answer: bool,
+  pub document: Document,
+  pub doing_file: PathBuf,
+  pub include_notes: bool,
+  pub no: bool,
+  pub noauto: bool,
+  pub quiet: bool,
+  pub stdout: bool,
+  pub use_color: bool,
+  pub use_pager: bool,
+  pub yes: bool,
+}
+
+impl AppContext {
+  /// Confirm that a new section should be created.
+  ///
+  /// When running interactively (TTY), prompts the user to confirm before creating.
+  /// Respects `--yes` and `--no` global flags. In non-interactive mode (e.g. piped
+  /// input), sections are created silently.
+  pub fn confirm_new_section(&self, section_name: &str) -> Result<bool> {
+    if self.yes {
+      return Ok(true);
+    }
+    if self.no {
+      return Ok(false);
+    }
+    if self.default_answer || !std::io::stderr().is_terminal() {
+      return Ok(true);
+    }
+
+    let result = dialoguer::Confirm::new()
+      .with_prompt(format!("Section \"{section_name}\" does not exist. Create it?"))
+      .default(true)
+      .interact_opt()
+      .map_err(crate::cli::interactive::dialoguer_error)?;
+
+    Ok(result.unwrap_or(false))
+  }
+
+  /// Ensure a section exists in the document, prompting for confirmation if needed.
+  ///
+  /// Returns `Ok(true)` if the section exists (or was created), `Ok(false)` if creation
+  /// was declined, or an error if the prompt failed.
+  pub fn ensure_section(&mut self, section_name: &str) -> Result<bool> {
+    if self.document.has_section(section_name) {
+      return Ok(true);
+    }
+
+    if !self.confirm_new_section(section_name)? {
+      return Ok(false);
+    }
+
+    self.document.add_section(Section::new(section_name));
+    Ok(true)
+  }
+
+  /// Create a minimal `AppContext` for unit tests.
+  ///
+  /// Uses `Config::default()`, an empty document, and sensible test defaults.
+  /// Callers can override any field after construction.
+  #[cfg(test)]
+  pub fn for_test(doing_file: impl Into<PathBuf>) -> Self {
+    Self {
+      config: Config::default(),
+      default_answer: false,
+      document: Document::new(),
+      doing_file: doing_file.into(),
+      include_notes: true,
+      no: false,
+      noauto: false,
+      quiet: false,
+      stdout: false,
+      use_color: false,
+      use_pager: false,
+      yes: false,
+    }
+  }
+
+  /// Resolve a section name from an optional override, falling back to the config default.
+  pub fn resolve_section(&self, section: &Option<String>) -> String {
+    section.clone().unwrap_or_else(|| self.config.current_section.clone())
+  }
+
+  /// Print a user-facing status message to stderr.
+  ///
+  /// Respects `--quiet` — when quiet mode is active, the message is suppressed.
+  pub fn status(&self, msg: impl std::fmt::Display) {
+    if !self.quiet {
+      if self.stdout {
+        println!("{msg}");
+      } else {
+        eprintln!("{msg}");
+      }
+    }
+  }
+}
+
+/// A CLI for a What Was I Doing system.
+#[derive(Debug, Parser)]
+#[command(
+  about = env!("CARGO_PKG_DESCRIPTION"),
+  author = "Aaron Allen <@aaronmallen>",
+  long_about = "Doing uses a TaskPaper-like formatting to keep a plain text record of what \
+    you've been doing, complete with tag-based time tracking. The command line tool allows you \
+    to add entries, annotate with tags and notes, and view your entries with myriad options, \
+    with a focus on a \"natural\" language syntax.",
+  name = "doing",
+  version = env!("CARGO_PKG_VERSION"),
+)]
+pub struct Cli {
+  /// Colored output
+  #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_color", global = true)]
+  color: bool,
+
+  #[arg(long = "no-color", action = ArgAction::SetTrue, hide = true, overrides_with = "color", global = true)]
+  no_color: bool,
+
+  #[command(subcommand)]
+  command: Option<Command>,
+
+  /// Enable debug output
+  #[arg(long, global = true)]
+  debug: bool,
+
+  /// Answer yes/no menus with default option
+  #[arg(long, global = true)]
+  default: bool,
+
+  /// Specify a different doing_file [env: DOING_FILE=]
+  #[arg(short = 'f', long, global = true)]
+  doing_file: Option<PathBuf>,
+
+  /// Answer all yes/no menus with no
+  #[arg(long, global = true)]
+  no: bool,
+
+  /// Exclude auto tags and default tags
+  #[arg(short = 'X', long, action = ArgAction::SetTrue, overrides_with = "no_noauto", global = true)]
+  noauto: bool,
+
+  #[arg(
+    long = "no-noauto",
+    action = ArgAction::SetTrue,
+    hide = true,
+    overrides_with = "noauto",
+    global = true
+  )]
+  no_noauto: bool,
+
+  /// Output notes if included in the template
+  #[arg(long, action = ArgAction::SetTrue, overrides_with = "no_notes", global = true)]
+  notes: bool,
+
+  #[arg(
+    long = "no-notes",
+    action = ArgAction::SetTrue,
+    hide = true,
+    overrides_with = "notes",
+    global = true
+  )]
+  no_notes: bool,
+
+  /// Use a pager when output is longer than screen
+  #[arg(short = 'p', long, action = ArgAction::SetTrue, overrides_with = "no_pager", global = true)]
+  pager: bool,
+
+  #[arg(
+    long = "no-pager",
+    action = ArgAction::SetTrue,
+    hide = true,
+    overrides_with = "pager",
+    global = true
+  )]
+  no_pager: bool,
+
+  /// Silence status messages
+  #[arg(long, global = true)]
+  quiet: bool,
+
+  /// Send results report to STDOUT instead of STDERR
+  #[arg(long, global = true)]
+  stdout: bool,
+
+  /// Answer all yes/no menus with yes
+  #[arg(long, global = true)]
+  yes: bool,
+}
+
+impl Cli {
+  fn call(&self) -> Result<()> {
+    doing_template::colors::init();
+    init_logger(self.log_level());
+
+    debug!("CLI parsed successfully");
+
+    let config = Config::load()?;
+
+    if let Some(config_path) = doing_config::loader::discover_global_config() {
+      debug!("Using config file: {}", config_path.display());
+    } else {
+      debug!("No config file found, using defaults");
+    }
+
+    let doing_file = self.doing_file.clone().unwrap_or_else(|| config.doing_file.clone());
+
+    debug!("Using doing file: {}", doing_file.display());
+
+    Document::create_file(&doing_file, &config.current_section)?;
+    let document = taskpaper_io::read_file(&doing_file)?;
+
+    let include_notes = if self.notes {
+      true
+    } else if self.no_notes {
+      false
+    } else {
+      config.include_notes
+    };
+
+    let use_color = if self.color {
+      true
+    } else if self.no_color {
+      false
+    } else {
+      Condition::stdouterr_are_tty_live()
+    };
+
+    if use_color {
+      yansi::enable();
+    } else {
+      yansi::disable();
+    }
+
+    let use_pager = if self.pager {
+      true
+    } else if self.no_pager {
+      false
+    } else {
+      config.paginate
+    };
+
+    let quiet = self.quiet || doing_config::env::DOING_QUIET.value().unwrap_or(false);
+
+    let mut ctx = AppContext {
+      config,
+      default_answer: self.default,
+      document,
+      doing_file,
+      include_notes,
+      no: self.no,
+      noauto: self.noauto && !self.no_noauto,
+      quiet,
+      stdout: self.stdout,
+      use_color,
+      use_pager,
+      yes: self.yes,
+    };
+
+    let default_cmd = Command::Recent(commands::recent::Command::default());
+    self.command.as_ref().unwrap_or(&default_cmd).call(&mut ctx)
+  }
+
+  fn log_level(&self) -> log::LevelFilter {
+    let env_debug = doing_config::env::DOING_DEBUG.value().unwrap_or(false);
+    let env_level = doing_config::env::DOING_LOG_LEVEL.value().ok();
+    let env_quiet = doing_config::env::DOING_QUIET.value().unwrap_or(false);
+
+    // Quiet always wins, then debug, then env level, then default (info)
+    if self.quiet || env_quiet {
+      log::LevelFilter::Error
+    } else if self.debug || env_debug {
+      log::LevelFilter::Debug
+    } else if let Some(ref level) = env_level {
+      match level.to_lowercase().as_str() {
+        "debug" => log::LevelFilter::Debug,
+        "error" => log::LevelFilter::Error,
+        "info" => log::LevelFilter::Info,
+        "trace" => log::LevelFilter::Trace,
+        "warn" => log::LevelFilter::Warn,
+        _ => log::LevelFilter::Info,
+      }
+    } else {
+      log::LevelFilter::Info
+    }
+  }
+}
+
+/// All available subcommands.
+#[derive(Debug, Subcommand)]
+enum Command {
+  /// Repeat the last entry
+  #[command(visible_alias = "resume")]
+  Again(commands::again::Command),
+  /// Move entries to the Archive section
+  #[command(visible_alias = "move")]
+  Archive(commands::archive::Command),
+  /// Apply autotagging rules to existing entries
+  Autotag(commands::autotag::Command),
+  /// Manage time budgets for tags
+  Budget(commands::budget::Command),
+  /// Mark the last entry as cancelled
+  Cancel(commands::cancel::Command),
+  /// List recent changes in Doing
+  #[command(visible_alias = "changelog")]
+  Changes(commands::changes::Command),
+  /// Fuzzy select an entry to act on
+  Choose(commands::choose::Command),
+  /// Show available color template tokens
+  Colors(commands::colors::Command),
+  /// Manage optional commands
+  Commands(commands::commands::Command),
+  /// List commands accepting a given option
+  #[command(hide = true)]
+  CommandsAccepting(commands::commands_accepting::Command),
+  /// Generate shell completions
+  Completion(commands::completion::Command),
+  /// View, edit, and manage configuration
+  Config(commands::config::Command),
+  /// Add a completed entry
+  #[command(visible_alias = "did")]
+  Done(commands::done::Command),
+  /// Catch-all for unknown subcommands (checked against custom views)
+  #[command(external_subcommand)]
+  External(Vec<OsString>),
+  /// Mark the last entry as finished
+  Finish(commands::finish::Command),
+  /// Search for entries matching a pattern
+  #[command(visible_alias = "search")]
+  Grep(commands::grep::Command),
+  /// Import entries from other sources
+  Import(commands::import::Command),
+  /// Show the last entry
+  Last(commands::last::Command),
+  /// Toggle the marker tag on the last entry
+  #[command(visible_alias = "flag")]
+  Mark(commands::mark::Command),
+  /// Add an entry while finishing the last
+  Meanwhile(commands::meanwhile::Command),
+  /// Add or display notes on the last entry
+  Note(commands::note::Command),
+  /// Add a new entry
+  #[command(visible_alias = "next")]
+  Now(commands::now::Command),
+  /// Show entries from a specific date
+  On(commands::on::Command),
+  /// Open the doing file in an editor
+  Open(commands::open::Command),
+  /// List installed plugins
+  Plugins(commands::plugins::Command),
+  /// Show recent entries
+  Recent(commands::recent::Command),
+  /// Redo the last undone change
+  Redo(commands::redo::Command),
+  /// Reset the start date of the last entry
+  #[command(visible_alias = "begin")]
+  Reset(commands::reset::Command),
+  /// Move entries to a dated archive file
+  Rotate(commands::rotate::Command),
+  /// List available sections
+  Sections(commands::sections::Command),
+  /// Interactively select entries to act on
+  Select(commands::select::Command),
+  /// Update doing to the latest version
+  SelfUpdate(commands::update::Command),
+  /// Show entries from a section
+  Show(commands::show::Command),
+  /// Show entries since a given date
+  Since(commands::since::Command),
+  /// Add or remove tags from entries
+  Tag(commands::tag::Command),
+  /// Set the default tags directory
+  TagDir(commands::tag_dir::Command),
+  /// List all tags in the doing file
+  Tags(commands::tags::Command),
+  /// Show or edit entry templates
+  Template(commands::template::Command),
+  /// Show entries from today
+  Today(commands::today::Command),
+  /// Undo the last change
+  Undo(commands::undo::Command),
+  /// Display a custom view
+  View(commands::view::Command),
+  /// List available views
+  Views(commands::views::Command),
+  /// Show entries from yesterday
+  Yesterday(commands::yesterday::Command),
+}
+
+impl Command {
+  fn call(&self, ctx: &mut AppContext) -> Result<()> {
+    match self {
+      Self::Again(cmd) => cmd.call(ctx),
+      Self::Archive(cmd) => cmd.call(ctx),
+      Self::Autotag(cmd) => cmd.call(ctx),
+      Self::Budget(cmd) => cmd.call(ctx),
+      Self::Cancel(cmd) => cmd.call(ctx),
+      Self::Changes(cmd) => cmd.call(ctx),
+      Self::Choose(cmd) => cmd.call(ctx),
+      Self::Colors(cmd) => cmd.call(),
+      Self::Commands(cmd) => cmd.call(ctx, &Cli::command()),
+      Self::CommandsAccepting(cmd) => cmd.call(&Cli::command()),
+      Self::Completion(cmd) => cmd.call(),
+      Self::Config(cmd) => cmd.call(ctx),
+      Self::Done(cmd) => cmd.call(ctx),
+      Self::External(args) => {
+        let name = args.first().and_then(|s| s.to_str()).unwrap_or("");
+        if ctx.config.views.contains_key(name) {
+          commands::view::Command::call_external(name, ctx)
+        } else if args.len() > 1 {
+          let title: Vec<String> = args.iter().filter_map(|s| s.to_str().map(String::from)).collect();
+          commands::now::Command::call_external(title, ctx)
+        } else {
+          let mut message = format!("unknown command: {name}");
+          if let Some(suggestion) = suggest_subcommand(name) {
+            message.push_str(&format!("\n\n\tDid you mean '{suggestion}'?"));
+          }
+          Err(crate::Error::Config(message))
+        }
+      }
+      Self::Finish(cmd) => cmd.call(ctx),
+      Self::Grep(cmd) => cmd.call(ctx),
+      Self::Import(cmd) => cmd.call(ctx),
+      Self::Last(cmd) => cmd.call(ctx),
+      Self::Mark(cmd) => cmd.call(ctx),
+      Self::Meanwhile(cmd) => cmd.call(ctx),
+      Self::Note(cmd) => cmd.call(ctx),
+      Self::Now(cmd) => cmd.call(ctx),
+      Self::On(cmd) => cmd.call(ctx),
+      Self::Open(cmd) => cmd.call(ctx),
+      Self::Plugins(cmd) => cmd.call(),
+      Self::Recent(cmd) => cmd.call(ctx),
+      Self::Redo(cmd) => cmd.call(ctx),
+      Self::Reset(cmd) => cmd.call(ctx),
+      Self::Rotate(cmd) => cmd.call(ctx),
+      Self::Sections(cmd) => cmd.call(ctx),
+      Self::Select(cmd) => cmd.call(ctx),
+      Self::SelfUpdate(cmd) => cmd.call(),
+      Self::Show(cmd) => cmd.call(ctx),
+      Self::Since(cmd) => cmd.call(ctx),
+      Self::Tag(cmd) => cmd.call(ctx),
+      Self::TagDir(cmd) => cmd.call(ctx),
+      Self::Tags(cmd) => cmd.call(ctx),
+      Self::Template(cmd) => cmd.call(ctx),
+      Self::Today(cmd) => cmd.call(ctx),
+      Self::Undo(cmd) => cmd.call(ctx),
+      Self::View(cmd) => cmd.call(ctx),
+      Self::Views(cmd) => cmd.call(ctx),
+      Self::Yesterday(cmd) => cmd.call(ctx),
+    }
+  }
+}
+
+pub fn run() -> Result<()> {
+  Cli::parse().call()
+}
+
+fn init_logger(level: log::LevelFilter) {
+  env_logger::Builder::new().filter_level(level).init();
+}
+
+fn suggest_subcommand(name: &str) -> Option<String> {
+  let threshold = 0.6;
+  Cli::command()
+    .get_subcommands()
+    .filter_map(|cmd| {
+      let cmd_name = cmd.get_name();
+      let similarity = strsim::jaro_winkler(name, cmd_name);
+      if similarity >= threshold {
+        Some((cmd_name.to_owned(), similarity))
+      } else {
+        None
+      }
+    })
+    .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+    .map(|(name, _)| name)
+}

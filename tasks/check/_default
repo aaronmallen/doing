@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Check for compilation errors"
+#MISE alias=["c"]
+
+set -e
+
+cargo check --workspace --all-targets --all-features

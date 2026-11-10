@@ -1,0 +1,24 @@
+[package]
+categories = ["command-line-utilities", "parser-implementations"]
+description = "TaskPaper document parser and serializer for the doing CLI"
+edition.workspace = true
+keywords = ["cli", "doing", "taskpaper", "parser"]
+license.workspace = true
+name = "doing-taskpaper"
+readme = "README.md"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.4.1"
+
+[package.metadata.workspaces]
+independent = true
+
+[dependencies]
+chrono.workspace = true
+doing-error.workspace = true
+md5.workspace = true
+regex.workspace = true
+tempfile.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true

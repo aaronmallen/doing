@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Build doing-config"
+
+set -e
+
+cargo build -p "doing-config" --all-features

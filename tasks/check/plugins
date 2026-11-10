@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Check doing-plugins for compilation errors"
+
+set -e
+
+cargo check -p "doing-plugins" --all-targets --all-features

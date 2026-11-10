@@ -1,0 +1,3 @@
+[registries.forgejo]
+credential-provider = "cargo:token"
+index = "sparse+https://aaronmallen.dev/api/packages/aaron/cargo/"

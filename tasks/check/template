@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Check doing-template for compilation errors"
+
+set -e
+
+cargo check -p "doing-template" --all-targets --all-features

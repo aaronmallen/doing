@@ -1,0 +1,6 @@
+mod when_cli_starts;
+mod when_doing_file_does_not_exist;
+mod when_doing_file_is_empty;
+mod when_doing_file_is_malformed;
+mod when_help_command_is_used;
+mod when_invalid_command_is_provided;

@@ -1,0 +1,89 @@
+/*
+ * doing color palette
+ *
+ *   Orange       #F97316  — primary brand
+ *   Orange Dark  #EA580C  — hover / pressed
+ *   Orange Light #FB923C  — highlights
+ *   Obsidian     #0D0E12  — deep background
+ *   Dusk         #141519  — card / section background
+ *   Border       #30323A  — borders, dividers
+ *   Dim          #585E6E  — de-emphasized text
+ *   Pewter       #7C8294  — secondary text
+ *   Silver       #C4C8D4  — primary text
+ *   Amber        #CC9820  — warnings
+ *   Jade         #36BE78  — success
+ *   Error        #D03838  — errors
+ */
+
+:root {
+  /* Brand */
+  --vp-c-brand-1: #EA580C;
+  --vp-c-brand-2: #C2410C;
+  --vp-c-brand-3: #F97316;
+  --vp-c-brand-soft: rgba(249, 115, 22, 0.14);
+
+  /* Tip / Success / Warning / Danger */
+  --vp-c-tip-1: #F97316;
+  --vp-c-tip-soft: rgba(249, 115, 22, 0.14);
+  --vp-c-success-1: #36BE78;
+  --vp-c-success-soft: rgba(54, 190, 120, 0.14);
+  --vp-c-warning-1: #CC9820;
+  --vp-c-warning-soft: rgba(204, 152, 32, 0.14);
+  --vp-c-danger-1: #D03838;
+  --vp-c-danger-soft: rgba(208, 56, 56, 0.14);
+}
+
+.dark {
+  /* Background layers */
+  --vp-c-bg: #0D0E12;
+  --vp-c-bg-alt: #141519;
+  --vp-c-bg-elv: #141519;
+  --vp-c-bg-soft: #141519;
+
+  /* Borders */
+  --vp-c-border: #30323A;
+  --vp-c-divider: #30323A;
+  --vp-c-gutter: #30323A;
+
+  /* Text */
+  --vp-c-text-1: #C4C8D4;
+  --vp-c-text-2: #7C8294;
+  --vp-c-text-3: #585E6E;
+
+  /* Brand in dark mode */
+  --vp-c-brand-1: #F97316;
+  --vp-c-brand-2: #FB923C;
+  --vp-c-brand-3: #EA580C;
+  --vp-c-brand-soft: rgba(249, 115, 22, 0.14);
+
+  /* Home hero */
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #F97316, #FB923C);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(251, 146, 60, 0.1));
+  --vp-home-hero-image-filter: blur(40px);
+}
+
+/* Code blocks */
+.dark .vp-code-group .tabs label.active {
+  color: #F97316;
+}
+
+.dark .vp-doc [class*='language-'] code {
+  color: #C4C8D4;
+}
+
+/* Sidebar active link */
+.dark .VPSidebar .is-active > .link > .text {
+  color: #F97316;
+}
+
+/* Nav bar title */
+.VPNavBarTitle .title {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Hero name gradient */
+.VPHero .name {
+  font-weight: 800;
+}

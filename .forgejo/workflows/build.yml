@@ -1,0 +1,44 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+      - uses: ./.forgejo/actions/setup
+      - name: Lint
+        run: mise run lint
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+      - uses: ./.forgejo/actions/setup
+      - name: Check
+        run: mise run check
+  test-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+      - uses: ./.forgejo/actions/setup
+      - name: Test
+        run: mise run test:unit
+  test-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+      - uses: ./.forgejo/actions/setup
+      - name: Integration Test
+        run: mise run test:integration
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v7
+      - uses: ./.forgejo/actions/setup
+      - name: Build
+        run: mise run build

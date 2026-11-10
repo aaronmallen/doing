@@ -1,0 +1,9 @@
+mod when_all_flag;
+mod when_changes_flag;
+mod when_lookup_flag;
+mod when_markdown_flag;
+mod when_no_flags;
+mod when_only_flag;
+mod when_prefix_flag;
+mod when_search_flag;
+mod when_sort_flag;

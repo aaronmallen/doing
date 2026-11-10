@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Format markdown files"
+#MISE alias=["fmt:markdown", "fmt:md", "format:md"]
+
+set -e
+
+tasks/lint/markdown --fix

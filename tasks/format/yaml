@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+#MISE description="Format yaml files"
+#MISE alias=["fmt:yaml", "fmt:yml", "format:yml"]
+
+set -e
+
+yamlfmt -conf .config/.yamlfmt .

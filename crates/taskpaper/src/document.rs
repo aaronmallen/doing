@@ -1,0 +1,500 @@
+use std::{
+  collections::HashSet,
+  fmt::{Display, Formatter, Result as FmtResult},
+  path::Path,
+};
+
+use doing_error::Result;
+
+use crate::{Entry, Section};
+
+/// A complete TaskPaper doing file represented as an ordered list of sections.
+///
+/// The document preserves section ordering from the original file and can track
+/// non-entry content at the top and bottom of the file for round-trip fidelity.
+#[derive(Clone, Debug)]
+pub struct Document {
+  other_content_bottom: Vec<String>,
+  other_content_top: Vec<String>,
+  sections: Vec<Section>,
+}
+
+impl Document {
+  /// Create a new doing file at `path` with a single default section.
+  ///
+  /// If the file already exists and is non-empty, this is a no-op.
+  /// Creates parent directories as needed.
+  pub fn create_file(path: &Path, default_section: &str) -> Result<()> {
+    crate::io::create_file(path, default_section)
+  }
+
+  /// Create a new empty document.
+  pub fn new() -> Self {
+    Self {
+      other_content_bottom: Vec::new(),
+      other_content_top: Vec::new(),
+      sections: Vec::new(),
+    }
+  }
+
+  /// Parse a doing file string into a structured `Document`.
+  pub fn parse(content: &str) -> Self {
+    crate::parser::parse(content)
+  }
+
+  /// Add a section to the document. If a section with the same name (case-insensitive)
+  /// already exists, merge entries from the new section into the existing one.
+  pub fn add_section(&mut self, section: Section) {
+    if let Some(existing) = self.section_by_name_mut(section.title()) {
+      for entry in section.into_entries() {
+        existing.add_entry(entry);
+      }
+    } else {
+      self.sections.push(section);
+    }
+  }
+
+  /// Return all entries across all sections.
+  pub fn all_entries(&self) -> impl Iterator<Item = &Entry> {
+    self.sections.iter().flat_map(|s| s.entries())
+  }
+
+  /// Deduplicate entries across all sections by ID, keeping the first occurrence.
+  pub fn dedup(&mut self) {
+    let mut seen = HashSet::new();
+    for section in &mut self.sections {
+      section.entries_mut().retain(|e| seen.insert(e.id().to_owned()));
+    }
+  }
+
+  /// Return entries from a specific section by name (case-insensitive).
+  /// If `name` is "all" (case-insensitive), returns entries from all sections.
+  pub fn entries_in_section<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a Entry> {
+    let all = name.eq_ignore_ascii_case("all");
+    self
+      .sections
+      .iter()
+      .filter(move |s| all || s.title().eq_ignore_ascii_case(name))
+      .flat_map(|s| s.entries())
+  }
+
+  /// Return `true` if a section with the given name exists (case-insensitive).
+  pub fn has_section(&self, name: &str) -> bool {
+    self.sections.iter().any(|s| s.title().eq_ignore_ascii_case(name))
+  }
+
+  /// Return `true` if the document has no sections.
+  pub fn is_empty(&self) -> bool {
+    self.sections.is_empty()
+  }
+
+  /// Return the number of sections in the document.
+  pub fn len(&self) -> usize {
+    self.sections.len()
+  }
+
+  /// Return non-entry content from the bottom of the file.
+  pub fn other_content_bottom(&self) -> &[String] {
+    &self.other_content_bottom
+  }
+
+  /// Return a mutable reference to non-entry content from the bottom of the file.
+  pub fn other_content_bottom_mut(&mut self) -> &mut Vec<String> {
+    &mut self.other_content_bottom
+  }
+
+  /// Return non-entry content from the top of the file.
+  pub fn other_content_top(&self) -> &[String] {
+    &self.other_content_top
+  }
+
+  /// Return a mutable reference to non-entry content from the top of the file.
+  pub fn other_content_top_mut(&mut self) -> &mut Vec<String> {
+    &mut self.other_content_top
+  }
+
+  /// Remove a section by name (case-insensitive), returning the number removed.
+  pub fn remove_section(&mut self, name: &str) -> usize {
+    let before = self.sections.len();
+    self.sections.retain(|s| !s.title().eq_ignore_ascii_case(name));
+    before - self.sections.len()
+  }
+
+  /// Look up a section by name (case-insensitive).
+  pub fn section_by_name(&self, name: &str) -> Option<&Section> {
+    self.sections.iter().find(|s| s.title().eq_ignore_ascii_case(name))
+  }
+
+  /// Look up a mutable section by name (case-insensitive).
+  pub fn section_by_name_mut(&mut self, name: &str) -> Option<&mut Section> {
+    self.sections.iter_mut().find(|s| s.title().eq_ignore_ascii_case(name))
+  }
+
+  /// Return a slice of all sections.
+  pub fn sections(&self) -> &[Section] {
+    &self.sections
+  }
+
+  /// Return a mutable reference to all sections.
+  pub fn sections_mut(&mut self) -> &mut Vec<Section> {
+    &mut self.sections
+  }
+
+  /// Sort entries within each section by date then title, in ascending order.
+  /// If `reverse` is true, sort in descending order.
+  pub fn sort_entries(&mut self, reverse: bool) {
+    for section in &mut self.sections {
+      section
+        .entries_mut()
+        .sort_by(|a, b| a.date().cmp(&b.date()).then_with(|| a.title().cmp(b.title())));
+      if reverse {
+        section.entries_mut().reverse();
+      }
+    }
+  }
+}
+
+impl Default for Document {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+impl Display for Document {
+  /// Format as a complete TaskPaper doing file.
+  fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    for line in &self.other_content_top {
+      writeln!(f, "{line}")?;
+    }
+    for (i, section) in self.sections.iter().enumerate() {
+      if i > 0 || !self.other_content_top.is_empty() {
+        writeln!(f)?;
+      }
+      write!(f, "{section}")?;
+    }
+    for line in &self.other_content_bottom {
+      write!(f, "\n{line}")?;
+    }
+    Ok(())
+  }
+}
+
+#[cfg(test)]
+mod test {
+  use super::*;
+
+  mod add_section {
+    use chrono::Local;
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+    use crate::{Note, Tags};
+
+    #[test]
+    fn it_adds_a_section() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+
+      assert_eq!(doc.len(), 1);
+    }
+
+    #[test]
+    fn it_merges_duplicate_section_entries() {
+      let mut doc = Document::new();
+      let mut s1 = Section::new("Archive");
+      s1.add_entry(Entry::new(
+        Local::now(),
+        "Task A",
+        Tags::new(),
+        Note::new(),
+        "Archive",
+        None::<String>,
+      ));
+      let mut s2 = Section::new("Archive");
+      s2.add_entry(Entry::new(
+        Local::now(),
+        "Task B",
+        Tags::new(),
+        Note::new(),
+        "Archive",
+        None::<String>,
+      ));
+      doc.add_section(s1);
+      doc.add_section(s2);
+
+      assert_eq!(doc.len(), 1);
+      assert_eq!(doc.section_by_name("Archive").unwrap().len(), 2);
+    }
+
+    #[test]
+    fn it_merges_duplicate_section_names_case_insensitively() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+      doc.add_section(Section::new("currently"));
+
+      assert_eq!(doc.len(), 1);
+    }
+  }
+
+  mod all_entries {
+    use chrono::Local;
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+    use crate::{Note, Tags};
+
+    #[test]
+    fn it_returns_entries_across_all_sections() {
+      let mut doc = Document::new();
+      let mut s1 = Section::new("Currently");
+      s1.add_entry(Entry::new(
+        Local::now(),
+        "Task A",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      ));
+      let mut s2 = Section::new("Archive");
+      s2.add_entry(Entry::new(
+        Local::now(),
+        "Task B",
+        Tags::new(),
+        Note::new(),
+        "Archive",
+        None::<String>,
+      ));
+      doc.add_section(s1);
+      doc.add_section(s2);
+
+      assert_eq!(doc.all_entries().count(), 2);
+    }
+  }
+
+  mod dedup {
+    use chrono::Local;
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+    use crate::{Note, Tags};
+
+    #[test]
+    fn it_removes_duplicate_entries_by_id() {
+      let entry = Entry::new(
+        Local::now(),
+        "Task A",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        Some("aaaabbbbccccddddeeeeffffaaaabbbb"),
+      );
+      let mut s1 = Section::new("Currently");
+      s1.add_entry(entry.clone());
+      let mut s2 = Section::new("Archive");
+      s2.add_entry(entry);
+      let mut doc = Document::new();
+      doc.add_section(s1);
+      doc.add_section(s2);
+
+      doc.dedup();
+
+      assert_eq!(doc.all_entries().count(), 1);
+      assert_eq!(doc.sections()[0].len(), 1);
+      assert_eq!(doc.sections()[1].len(), 0);
+    }
+  }
+
+  mod display {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_formats_empty_document() {
+      let doc = Document::new();
+
+      assert_eq!(format!("{doc}"), "");
+    }
+
+    #[test]
+    fn it_formats_sections_in_order() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+      doc.add_section(Section::new("Archive"));
+
+      let output = format!("{doc}");
+
+      assert!(output.starts_with("Currently:"));
+      assert!(output.contains("\nArchive:"));
+    }
+
+    #[test]
+    fn it_includes_other_content_top() {
+      let mut doc = Document::new();
+      doc.other_content_top_mut().push("# My Doing File".to_string());
+      doc.add_section(Section::new("Currently"));
+
+      let output = format!("{doc}");
+
+      assert!(output.starts_with("# My Doing File\n"));
+      assert!(output.contains("Currently:"));
+    }
+
+    #[test]
+    fn it_includes_other_content_bottom() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+      doc.other_content_bottom_mut().push("# Footer".to_string());
+
+      let output = format!("{doc}");
+
+      assert!(output.contains("Currently:"));
+      assert!(output.ends_with("# Footer"));
+    }
+  }
+
+  mod entries_in_section {
+    use chrono::Local;
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+    use crate::{Note, Tags};
+
+    #[test]
+    fn it_returns_entries_from_named_section() {
+      let mut doc = Document::new();
+      let mut section = Section::new("Currently");
+      section.add_entry(Entry::new(
+        Local::now(),
+        "Task A",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      ));
+      doc.add_section(section);
+
+      assert_eq!(doc.entries_in_section("currently").count(), 1);
+    }
+
+    #[test]
+    fn it_returns_all_entries_for_all() {
+      let mut doc = Document::new();
+      let mut s1 = Section::new("Currently");
+      s1.add_entry(Entry::new(
+        Local::now(),
+        "Task A",
+        Tags::new(),
+        Note::new(),
+        "Currently",
+        None::<String>,
+      ));
+      let mut s2 = Section::new("Archive");
+      s2.add_entry(Entry::new(
+        Local::now(),
+        "Task B",
+        Tags::new(),
+        Note::new(),
+        "Archive",
+        None::<String>,
+      ));
+      doc.add_section(s1);
+      doc.add_section(s2);
+
+      assert_eq!(doc.entries_in_section("All").count(), 2);
+    }
+
+    #[test]
+    fn it_returns_empty_for_unknown_section() {
+      let doc = Document::new();
+
+      assert_eq!(doc.entries_in_section("Nonexistent").count(), 0);
+    }
+  }
+
+  mod has_section {
+    use super::*;
+
+    #[test]
+    fn it_finds_section_case_insensitively() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+
+      assert!(doc.has_section("currently"));
+      assert!(doc.has_section("CURRENTLY"));
+    }
+
+    #[test]
+    fn it_returns_false_for_missing_section() {
+      let doc = Document::new();
+
+      assert!(!doc.has_section("Currently"));
+    }
+  }
+
+  mod remove_section {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_removes_matching_section() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+
+      let removed = doc.remove_section("currently");
+
+      assert_eq!(removed, 1);
+      assert_eq!(doc.len(), 0);
+    }
+
+    #[test]
+    fn it_returns_zero_when_no_match() {
+      let mut doc = Document::new();
+
+      let removed = doc.remove_section("Nonexistent");
+
+      assert_eq!(removed, 0);
+    }
+  }
+
+  mod section_by_name {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_finds_section_case_insensitively() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+
+      let section = doc.section_by_name("currently");
+
+      assert!(section.is_some());
+      assert_eq!(section.unwrap().title(), "Currently");
+    }
+
+    #[test]
+    fn it_returns_none_for_missing_section() {
+      let doc = Document::new();
+
+      assert!(doc.section_by_name("Currently").is_none());
+    }
+  }
+
+  mod sections {
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    #[test]
+    fn it_returns_sections_in_order() {
+      let mut doc = Document::new();
+      doc.add_section(Section::new("Currently"));
+      doc.add_section(Section::new("Archive"));
+
+      let names: Vec<&str> = doc.sections().iter().map(|s| s.title()).collect();
+      assert_eq!(names, vec!["Currently", "Archive"]);
+    }
+  }
+}

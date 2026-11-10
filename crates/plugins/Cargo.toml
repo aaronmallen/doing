@@ -1,0 +1,33 @@
+[package]
+categories = ["command-line-utilities"]
+description = "Export and import plugins for the doing CLI"
+edition.workspace = true
+keywords = ["cli", "doing", "time-tracking", "plugins"]
+license.workspace = true
+name = "doing-plugins"
+readme = "README.md"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.3.4"
+
+[package.metadata.workspaces]
+independent = true
+
+[dependencies]
+chrono.workspace = true
+chrono-tz.workspace = true
+doing-config.workspace = true
+doing-error.workspace = true
+doing-taskpaper.workspace = true
+doing-template.workspace = true
+doing-time.workspace = true
+indexmap.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+unicode-width.workspace = true
+yansi.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+tempfile.workspace = true

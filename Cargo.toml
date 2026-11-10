@@ -1,0 +1,104 @@
+
+[package]
+categories = ["command-line-utilities"]
+description = "A command line tool for remembering what you were doing and tracking what you've done"
+edition.workspace = true
+include = ["/CHANGELOG.md", "/LICENSE", "/README.md", "/src/"]
+keywords = ["cli", "time-tracking", "productivity", "todo"]
+license.workspace = true
+name = "doing"
+readme = "README.md"
+repository.workspace = true
+rust-version.workspace = true
+version = "0.2.3"
+
+[package.metadata.binstall]
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
+pkg-url = "{ repo }/releases/download/{ version }/{ name }-v{ version }-{ target }.tar.gz"
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+
+[workspace.metadata.workspaces]
+independent = true
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://aaronmallen.dev/aaron/doing"
+rust-version = "1.88.0"
+
+[workspace.dependencies]
+assert_cmd = "2"
+chrono = { features = ["serde"], version = "0.4" }
+chrono-tz = "0.10"
+clap = { features = ["derive", "suggestions"], version = "4" }
+clap_complete = "4"
+clap_mangen = "0.3"
+dialoguer = "0.12"
+dir_spec = "0.5"
+doing-config = { path = "crates/config", version = "0.1.8" }
+doing-error = { path = "crates/error", version = "0.1.2" }
+doing-ops = { path = "crates/ops", version = "0.2.7" }
+doing-plugins = { path = "crates/plugins", version = "0.3.4" }
+doing-taskpaper = { path = "crates/taskpaper", version = "0.4.1" }
+doing-template = { path = "crates/template", version = "0.1.13" }
+doing-time = { path = "crates/time", version = "0.1.10" }
+env_logger = "0.11"
+indexmap = "2"
+json_comments = "0.2"
+log = "0.4"
+md5 = "0.8"
+predicates = "3"
+pretty_assertions = "1"
+regex = "1"
+serde = { features = ["derive"], version = "1" }
+serde_json = "1"
+strsim = "0.11"
+sublime_fuzzy = "0.7"
+temp-env = "0.3"
+tempfile = "3"
+thiserror = "2"
+toml = "1"
+toml_edit = "0.25"
+typed-env = "0.3"
+unicode-width = "0.2"
+yaml_serde = "0.10"
+yansi = { features = ["detect-env", "detect-tty", "hyperlink"], version = "1" }
+
+[workspace.dependencies.self_update]
+default-features = false
+features = ["compression-tar-gz", "gitea", "progress-bar", "reqwest", "rustls"]
+version = "1.1"
+
+[dependencies]
+chrono.workspace = true
+clap.workspace = true
+clap_complete.workspace = true
+clap_mangen.workspace = true
+dialoguer.workspace = true
+dir_spec.workspace = true
+doing-config.workspace = true
+doing-error.workspace = true
+doing-ops.workspace = true
+doing-plugins.workspace = true
+doing-taskpaper.workspace = true
+doing-template.workspace = true
+doing-time.workspace = true
+env_logger.workspace = true
+log.workspace = true
+regex.workspace = true
+self_update.workspace = true
+serde_json.workspace = true
+strsim.workspace = true
+tempfile.workspace = true
+toml.workspace = true
+toml_edit.workspace = true
+yaml_serde.workspace = true
+yansi.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+pretty_assertions.workspace = true

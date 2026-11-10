@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Build doing-taskpaper"
+
+set -e
+
+cargo build -p "doing-taskpaper" --all-features

@@ -1,0 +1,16 @@
+mod when_color_flag_is_provided;
+mod when_debug_flag_is_provided;
+mod when_default_flag_is_provided;
+mod when_doing_file_flag_is_provided;
+mod when_multiple_global_flags_combine;
+mod when_no_color_flag_is_provided;
+mod when_no_flag_is_provided;
+mod when_no_notes_flag_is_provided;
+mod when_no_pager_flag_is_provided;
+mod when_noauto_flag_is_provided;
+mod when_notes_flag_is_provided;
+mod when_pager_flag_is_provided;
+mod when_quiet_flag_is_provided;
+mod when_stdout_flag_is_provided;
+mod when_version_flag_is_provided;
+mod when_yes_flag_is_provided;

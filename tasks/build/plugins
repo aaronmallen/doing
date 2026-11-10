@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+#MISE description="Build doing-plugins"
+
+set -e
+
+cargo build -p "doing-plugins" --all-features

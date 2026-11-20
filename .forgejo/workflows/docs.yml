@@ -30,6 +30,6 @@ jobs:
           curl -fsSL https://codeberg.org/git-pages/git-pages-cli/releases/download/v1.13.0/git-pages-cli.linux-amd64 -o "$RUNNER_TEMP/git-pages-cli"
           echo "dca13dee2bdc4b26d19840a25904c93d6514578688c78d54ddee61c00901cf37  $RUNNER_TEMP/git-pages-cli" | sha256sum --check
           chmod +x "$RUNNER_TEMP/git-pages-cli"
-          "$RUNNER_TEMP/git-pages-cli" https://doing.aaronmallen.dev/ \
+          "$RUNNER_TEMP/git-pages-cli" http://doing.aaronmallen.dev/ \
             --server 192.168.1.238:30180 --token "$PAGES_TOKEN" \
             --upload-dir docs/site/.vitepress/dist/ --parents --strict --comment "$GITHUB_SHA"
